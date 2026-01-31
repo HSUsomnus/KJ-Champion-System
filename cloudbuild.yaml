@@ -1,5 +1,8 @@
 # Google Cloud Build 設定檔
 # 用於自動建置和部署到 Cloud Run
+# options 避免觸發程序使用自訂服務帳戶時出現 logs_bucket 錯誤
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 steps:
   # 建置 Docker 映像檔
