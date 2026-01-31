@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="新增行程">
+  <title>新增行程</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="stylesheet" href="/css/style.css?v=3">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <!-- 網址帶 ?eruda=1 時載入 Eruda，方便手機 LINE 瀏覽器看 Console -->
+  <script src="/js/eruda-loader.js"></script>
+  <div class="container page-add-event">
+    <div class="page-header-fixed">
+      <div class="page-header-row">
+        <button type="button" class="btn-refresh-cache" onclick="if(window.cacheService){window.cacheService.clearCache();}location.reload();" title="清除快取並重新整理" aria-label="清除快取並重新整理">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <h1 class="text-center page-title add-event-page-title">➕ 新增行程</h1>
+      </div>
+    </div>
+
+    <div class="add-event-content-scroll">
+    <div class="card">
+      <form id="event-add-form">
+        <div class="form-group">
+          <label class="form-label">標題 *</label>
+          <input type="text" id="add-title" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">類型 *</label>
+          <select id="add-type" class="form-select" required>
+            <option value="學員上課">學員上課</option>
+            <option value="活動">活動</option>
+            <option value="諮詢簽約">諮詢簽約</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="add-all-day" style="width: auto; margin-right: 8px;">
+            整日活動
+          </label>
+        </div>
+
+        <div class="form-group" id="date-time-group">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label">開始日期 *</label>
+              <input type="date" id="add-date" class="form-input" required>
+            </div>
+            <div>
+              <label class="form-label">結束日期</label>
+              <input type="date" id="add-end-date" class="form-input" title="同一天可不填，留空則與開始日期相同">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label class="form-label">開始時間 *</label>
+              <input type="time" id="add-start-time" class="form-input" required>
+            </div>
+            <div>
+              <label class="form-label">結束時間 *</label>
+              <input type="time" id="add-end-time" class="form-input" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">備註</label>
+          <textarea id="add-description" class="form-textarea"></textarea>
+        </div>
+
+        <div class="event-actions">
+          <a href="/index.html" id="add-cancel-link" class="btn btn-secondary">取消</a>
+          <button type="submit" class="btn btn-primary">儲存並新增</button>
+        </div>
+      </form>
+    </div>
+    </div>
+  </div>
+
+  <!-- 底部導航欄（固定） -->
+  <nav class="bottom-nav">
+    <a href="/index.html" class="nav-item active">
+      <div>📅</div>
+      <span>行事曆</span>
+    </a>
+    <a href="/list.html" class="nav-item">
+      <div>📋</div>
+      <span>列表</span>
+    </a>
+    <a href="/members.html" class="nav-item">
+      <div>👥</div>
+      <span>成員</span>
+    </a>
+    <a href="/profile.html" class="nav-item">
+      <div>👤</div>
+      <span>個人</span>
+    </a>
+  </nav>
+
+  <script src="/js/liff.js"></script>
+  <script src="/js/scroll-restore.js"></script>
+  <script src="/js/share-dialog.js"></script>
+  <script src="/js/timePicker.js"></script>
+  <script src="/js/datePicker.js"></script>
+  <script src="/js/add-event.js"></script>
+</body>
+</html>

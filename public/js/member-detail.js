@@ -1,0 +1,114 @@
+/**
+ * 成員詳情頁面的前端邏輯
+ * 負責顯示其他成員的個人資料（唯讀模式）
+ */
+
+let memberLineId = null;
+
+/**
+ * 初始化成員詳情頁面
+ */
+async function initMemberDetail() {
+  // 從 URL 取得成員 LINE ID
+  const urlParams = new URLSearchParams(window.location.search);
+  memberLineId = urlParams.get('id');
+
+  if (!memberLineId) {
+    document.getElementById('loading').innerHTML = `
+      <div class="empty-state">
+        <div>❌</div>
+        <p>找不到成員 ID</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 載入成員資料
+  await loadMemberDetail();
+}
+
+/**
+ * 載入成員詳情
+ */
+async function loadMemberDetail() {
+  const loading = document.getElementById('loading');
+  const memberDisplay = document.getElementById('member-display');
+
+  try {
+    const userId = window.LIFF ? window.LIFF.getUserId() : null;
+    const url = `/api/members/${memberLineId}${userId ? `?userId=${userId}` : ''}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.success) {
+      renderMemberDetail(data.data);
+      loading.classList.add('hidden');
+      memberDisplay.classList.remove('hidden');
+    } else {
+      throw new Error(data.message || '載入成員資料失敗');
+    }
+  } catch (error) {
+    console.error('載入成員詳情錯誤:', error);
+    loading.innerHTML = `
+      <div class="empty-state">
+        <div>❌</div>
+        <p>載入失敗：${error.message}</p>
+        <button class="btn btn-primary mt-16" onclick="if(window.__savePageState) window.__savePageState(); window.location.href='/members.html';">
+          返回成員列表
+        </button>
+      </div>
+    `;
+  }
+}
+
+/**
+ * 渲染成員詳情
+ */
+function renderMemberDetail(member) {
+  // 顯示姓名
+  document.getElementById('member-name').textContent = member.name || '未設定';
+  
+  // 更新星等顯示
+  updateStarDisplay(member.starLevel || '白星');
+  
+  // 顯示詳細資料
+  document.getElementById('view-name').textContent = member.name || '未設定';
+  document.getElementById('view-email').textContent = member.email || '未設定';
+  document.getElementById('view-phone').textContent = member.phone || '未設定';
+  document.getElementById('view-starLevel').textContent = member.starLevel || '白星';
+  
+  // 格式化課程紀錄
+  const courseRecord = member.courseRecord || '';
+  const courses = courseRecord.split(',').map(c => c.trim()).filter(c => c);
+  document.getElementById('view-courseRecord').textContent = courses.length > 0 ? courses.join('、') : '未設定';
+  
+  // 顯示 LINE 頭像（經後端代理，避免 LINE CDN 不顯示；無則用預設圖）
+  const avatarImg = document.getElementById('member-avatar');
+  if (avatarImg) {
+    const placeholderUrl = 'https://via.placeholder.com/100?text=👤';
+    const hasAvatar = member.pictureUrl && String(member.pictureUrl).trim();
+    avatarImg.src = hasAvatar ? `/api/members/avatar/${encodeURIComponent(member.lineId)}` : placeholderUrl;
+    avatarImg.onerror = function() {
+      this.src = placeholderUrl;
+    };
+  }
+}
+
+/**
+ * 更新星等顯示
+ */
+function updateStarDisplay(starLevel) {
+  const starBadge = document.getElementById('member-star-icon');
+  if (starBadge) {
+    starBadge.className = 'member-star ' + (starLevel || '白星');
+    starBadge.textContent = starLevel || '白星';
+  }
+}
+
+// 頁面載入時初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMemberDetail);
+} else {
+  initMemberDetail();
+}

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手機預覽 - LINE LIFF 行事曆</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .toolbar {
+      color: #fff;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .toolbar h1 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+    .toolbar-links {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .toolbar-links a {
+      display: inline-block;
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .toolbar-links a:hover, .toolbar-links a.active {
+      background: #06C755;
+    }
+    .phone-frame {
+      width: 375px;
+      height: 712px;
+      background: #111;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: 
+        0 0 0 2px #333,
+        0 0 0 4px #111,
+        0 25px 50px -12px rgba(0,0,0,0.5),
+        inset 0 0 6px rgba(255,255,255,0.05);
+      position: relative;
+    }
+    /* 模擬 iPhone 內 LINE LIFF 開啟網頁：上方為 LIFF 網址列，無劉海 */
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: 32px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* LINE LIFF 網址列樣式（參考 LINE 內建瀏覽器 header：返回、網址、Action 按鈕） */
+    .liff-url-bar {
+      flex-shrink: 0;
+      height: 44px;
+      min-height: 44px;
+      background: #e8e8ed;
+      border-bottom: 1px solid #c8c8cc;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      gap: 8px;
+      -webkit-appearance: none;
+    }
+    .liff-bar-back {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 20px;
+      border: none;
+      background: transparent;
+      flex-shrink: 0;
+    }
+    .liff-bar-url {
+      flex: 1;
+      min-width: 0;
+      height: 28px;
+      line-height: 28px;
+      padding: 0 10px;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #666;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .liff-bar-action {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      background: #06C755;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .phone-content {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .phone-content iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+    .hint {
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      margin-top: 16px;
+      text-align: center;
+      max-width: 375px;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <h1>📱 手機畫面預覽（開發模式）</h1>
+    <p class="toolbar-desc" style="font-size:14px; opacity:0.9; margin-bottom:10px;">已跳過 LINE 登入，可直接操作測試</p>
+    <div class="toolbar-links">
+      <a href="#" class="active" data-src="/index.html?dev=1">行事曆</a>
+      <a href="#" data-src="/add-event.html?dev=1">新增行程</a>
+      <a href="#" data-src="/list.html?dev=1">列表</a>
+      <a href="#" data-src="/members.html?dev=1">成員</a>
+      <a href="#" data-src="/profile.html?dev=1">個人</a>
+    </div>
+  </div>
+
+  <div class="phone-frame">
+    <div class="phone-screen">
+      <!-- 模擬 LINE LIFF 上方網址列：返回鈕可觸發 iframe 上一頁，模擬真實 LIFF -->
+      <div class="liff-url-bar">
+        <button type="button" class="liff-bar-back" id="liff-bar-back" aria-label="返回">‹</button>
+        <div class="liff-bar-url" title="liff.line.me">liff.line.me</div>
+        <button type="button" class="liff-bar-action" aria-label="更多">⋮</button>
+      </div>
+      <div class="phone-content">
+        <iframe id="app-frame" src="/index.html?dev=1" title="LINE LIFF 行事曆"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">模擬 iPhone 內 LINE LIFF 開啟網頁（上方網址列）｜切換分頁可預覽不同頁面</p>
+
+  <script>
+    // 上方分頁：切換預覽頁面
+    document.querySelectorAll('.toolbar-links a').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        var src = this.getAttribute('data-src');
+        document.getElementById('app-frame').src = src;
+        document.querySelectorAll('.toolbar-links a').forEach(function(a) { a.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+    // 網址列返回鈕：模擬真實 LIFF，讓 iframe 內上一頁
+    document.getElementById('liff-bar-back').addEventListener('click', function() {
+      try {
+        var frame = document.getElementById('app-frame');
+        if (frame && frame.contentWindow && frame.contentWindow.history.length > 1) {
+          frame.contentWindow.history.back();
+        }
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>

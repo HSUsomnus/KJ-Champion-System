@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="成員列表">
+  <title>成員列表</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <!-- 網址帶 ?eruda=1 時載入 Eruda，方便手機 LINE 瀏覽器看 Console -->
+  <script src="/js/eruda-loader.js"></script>
+  <div class="container page-members">
+    <div class="members-page-fixed">
+      <div class="page-header-row">
+        <button type="button" class="btn-refresh-cache" onclick="if(window.cacheService){window.cacheService.clearCache();}location.reload();" title="清除快取並重新整理" aria-label="清除快取並重新整理">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <h1 class="text-center page-title">👥 成員列表</h1>
+      </div>
+      <div class="card">
+        <button class="btn btn-primary btn-block" onclick="inviteMember()">
+          ➕ 邀請新夥伴
+        </button>
+      </div>
+    </div>
+    <!-- 僅此區可捲動：成員字卡 -->
+    <div id="members-list" class="members-cards-scroll data-loading-parent">
+      <div class="loading data-loading data-loading-overlay">
+        <div class="data-loading-inner">
+          <img src="/images/logo.png" alt="康九" class="data-loading-logo">
+          <p class="data-loading-text">載入中...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部導航欄 -->
+  <nav class="bottom-nav">
+    <a href="/index.html" class="nav-item">
+      <div>📅</div>
+      <span>行事曆</span>
+    </a>
+    <a href="/list.html" class="nav-item">
+      <div>📋</div>
+      <span>列表</span>
+    </a>
+    <a href="/members.html" class="nav-item active">
+      <div>👥</div>
+      <span>成員</span>
+    </a>
+    <a href="/profile.html" class="nav-item">
+      <div>👤</div>
+      <span>個人</span>
+    </a>
+  </nav>
+
+  <script src="/js/liff.js"></script>
+  <script src="/js/scroll-restore.js"></script>
+  <script src="/js/share-dialog.js"></script>
+  <script src="/js/members.js"></script>
+</body>
+</html>
