@@ -202,18 +202,30 @@ gcloud run services describe line-liff-calendar --region=asia-east1 --format='va
 
 ## ✅ 驗證部署
 
-1. **健康檢查**
+> **⚠️ 重要**：下面指令裡的 `your-cloud-run-url` 是**佔位符**，要換成你實際的 Cloud Run 網址。  
+> 例如你的網址是 `line-liff-calendar-786384110287.asia-east1.run.app`，就用這個網址取代。
+
+1. **先取得你的 Cloud Run 網址**（若還沒有）
    ```bash
-   curl https://your-cloud-run-url.run.app/health
+   gcloud run services describe line-liff-calendar --region=asia-east1 --format='value(status.url)'
+   ```
+   會印出類似：`https://line-liff-calendar-786384110287.asia-east1.run.app`
+
+2. **健康檢查**（把網址換成上面取得的）
+   ```bash
+   curl https://line-liff-calendar-786384110287.asia-east1.run.app/health
    ```
    應該回傳：`{"status":"ok","timestamp":"..."}`
 
-2. **測試 API**
+3. **測試 API**（網址用**步驟 1**取得的那個，或從下面兩個地方找）
    ```bash
-   curl https://your-cloud-run-url.run.app/api/line/liff-id
+   curl https://line-liff-calendar-786384110287.asia-east1.run.app/api/line/liff-id
    ```
+   **實際網址從哪裡找？**
+   - **方法 A**：終端機執行 `gcloud run services describe line-liff-calendar --region=asia-east1 --format='value(status.url)'`，會印出你的完整網址（含 `https://`）。
+   - **方法 B**：到 [Google Cloud Console](https://console.cloud.google.com/) → **Cloud Run** → 點你的服務 **line-liff-calendar** → 上方「**URL**」那一行就是（可複製）。
 
-3. **在 LINE 中測試**
+4. **在 LINE 中測試**
    - 在 LINE 中開啟 LIFF 應用程式
    - 測試各個功能是否正常運作
 
@@ -238,6 +250,31 @@ gcloud run services logs read line-liff-calendar --region=asia-east1
 5. **定期更新依賴套件**
 
 ## 🐛 常見問題
+
+### 問題：出現 403 Forbidden（你的客戶端沒有權限取得此 URL）
+這表示 Cloud Run 目前**不允許未登入的訪客**存取。LIFF 要在 LINE 裡開網頁，必須讓「所有人」都能呼叫你的服務。
+
+**解法**：在終端機執行（允許未驗證的呼叫）：
+```bash
+gcloud run services add-iam-policy-binding line-liff-calendar \
+  --region=asia-east1 \
+  --member="allUsers" \
+  --role="roles/run.invoker"
+```
+執行時若問「Allow unauthenticated invocations?」，選 **Y**。完成後再開一次你的 Cloud Run 網址或 `/health`，應可正常回應。
+
+### 問題：成員列表／個人資料出現「取得成員資料失敗: error:1E08010C:DECODER routines::unsupported」
+這表示 **Google Service Account 私鑰**在 Cloud Run 環境變數裡格式不對（例如換行被破壞），後端連 Google Sheets 時解碼失敗。
+
+**解法**：到 **Cloud Run** → 你的服務 **line-liff-calendar** → **編輯與部署新修訂版本** → **變數與密碼**，檢查 `GOOGLE_PRIVATE_KEY`：
+1. **必須是完整 PEM**：從 `-----BEGIN PRIVATE KEY-----` 到 `-----END PRIVATE KEY-----` 整段貼上。
+2. **換行**：若用「一長串 + 反斜線 n」的寫法，請用 `\n`（反斜線 + 字母 n），不要用實際按 Enter 的換行（有些介面會吃掉換行）。
+3. **重新貼上**：從本機 `Key/你的服務帳戶.json` 裡複製 `private_key` 整段，在 .env 格式是：  
+   `GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n第一行\n第二行...\n-----END PRIVATE KEY-----\n"`  
+   貼到 Cloud Run 時可維持同一格式（一整行，中間用 `\n`）。
+4. 儲存後**再部署一次**（或等自動部署），然後在 LINE 裡重新開啟成員／個人頁面測試。
+
+若已改用 **Secret Manager** 存私鑰，請確認 Secret 內容也是完整 PEM 且換行正確。
 
 ### 問題：部署後無法連線
 - 檢查環境變數是否正確設定

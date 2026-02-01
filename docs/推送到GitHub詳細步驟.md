@@ -130,6 +130,9 @@ git push
 
 ## 三、推送後讓 Cloud Run 自動部署（Auto run）
 
+**完整圖文步驟**請看：**[docs/Cloud-Run自動部署設定步驟.md](Cloud-Run自動部署設定步驟.md)**
+
+以下為精簡流程：
 ### 1. 在 Google Cloud Console 設定 Cloud Build 觸發器
 
 1. 打開 [Google Cloud Console](https://console.cloud.google.com/) → 選你的專案。

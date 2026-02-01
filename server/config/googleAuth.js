@@ -12,11 +12,21 @@ const getServiceAccountAuth = () => {
   try {
     // 從環境變數讀取 Service Account 資訊
     const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    let privateKey = process.env.GOOGLE_PRIVATE_KEY;
     const projectId = process.env.GOOGLE_PROJECT_ID;
 
     if (!serviceAccountEmail || !privateKey || !projectId) {
       throw new Error('缺少必要的 Google API 環境變數設定');
+    }
+
+    // 私鑰格式整理：Cloud Run / 環境變數常把換行存成 \n 或 \r\n，需還原成單一換行
+    privateKey = privateKey.trim();
+    // 還原「反斜線 + n」為換行（例如 .env 或 Console 裡填 \n）
+    privateKey = privateKey.replace(/\\n/g, '\n');
+    // 統一換行為 \n（避免 \r\n 或 \r 導致 DECODER 錯誤）
+    privateKey = privateKey.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      throw new Error('GOOGLE_PRIVATE_KEY 格式不正確，應為完整 PEM（含 -----BEGIN PRIVATE KEY-----），請檢查 Cloud Run 環境變數');
     }
 
     // 建立 JWT 認證客戶端
