@@ -33,6 +33,23 @@ function isDevMode() {
 }
 
 /**
+ * 每次用戶進入系統時呼叫：將目前 LINE 頭像與資料庫比對，有更新則同步到 Google Sheet
+ * 不阻塞畫面，背景執行即可
+ */
+function syncAvatarOnEntry(userId, pictureUrl) {
+  if (!userId) return;
+  fetch('/api/profile/sync-avatar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Line-User-Id': userId },
+    body: JSON.stringify({ pictureUrl: pictureUrl || '' }),
+  }).then(function (res) { return res.json(); }).then(function (data) {
+    if (data.synced) console.log('🔄 LINE 頭像已同步更新');
+  }).catch(function (err) {
+    console.warn('同步頭像略過:', err && err.message ? err.message : err);
+  });
+}
+
+/**
  * 初始化 LINE LIFF
  * @returns {Promise<void>}
  */
@@ -79,7 +96,10 @@ async function initLIFF() {
       const profile = await liff.getProfile();
       liffUserId = profile.userId;
       liffProfile = profile;
-      
+      // 每次進入系統：檢查用戶是否換 LINE 頭像，有更新則同步到 Google Sheet
+      if (!isDevMode() && liffUserId) {
+        syncAvatarOnEntry(liffUserId, (profile.pictureUrl || '').trim());
+      }
       console.log('✅ LIFF 初始化成功');
       console.log('使用者 ID:', liffUserId);
     } else {

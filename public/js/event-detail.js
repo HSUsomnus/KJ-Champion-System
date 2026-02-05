@@ -9,6 +9,53 @@ let eventData = null;
 /** 是否已綁定編輯表單的整日／時間監聽（避免重複綁定） */
 let editFormListenersSetup = false;
 
+/** 依行程類型顯示不同的標題提示詞（placeholder + 下方灰色說明） */
+const TITLE_HINTS = {
+  '學員上課': '名字+金流課/藍圖課，ex:小陞金流課',
+  '活動': '時間(選)+名稱+(財商/加盟)(選)，ex:13台北組聚(財商)、醫美茶會',
+  '諮詢簽約': '時間+名字+保單諮詢/財物諮詢/保單簽約/天耀簽約，ex:13小陞財務諮詢'
+};
+/** 若提示詞會斷行，則縮小字體直到單行顯示 */
+function shrinkHintToSingleLine(hintEl) {
+  if (!hintEl) return;
+  hintEl.style.whiteSpace = 'nowrap';
+  hintEl.style.fontSize = '12px';
+  hintEl.style.overflow = '';
+  const minFontSize = 9;
+  function fit() {
+    if (hintEl.scrollWidth > hintEl.clientWidth) {
+      const fs = parseInt(hintEl.style.fontSize, 10) || 12;
+      if (fs > minFontSize) {
+        hintEl.style.fontSize = (fs - 1) + 'px';
+        requestAnimationFrame(fit);
+      } else {
+        // 已縮到最小仍放不下：改為換行，完整顯示不切掉
+        hintEl.style.whiteSpace = 'normal';
+        hintEl.style.overflow = 'visible';
+      }
+    } else {
+      hintEl.classList.add('hint-single-line');
+    }
+  }
+  requestAnimationFrame(fit);
+}
+function updateEditTitleHint() {
+  const typeSelect = document.getElementById('edit-type');
+  const type = typeSelect ? typeSelect.value : '學員上課';
+  const hint = TITLE_HINTS[type] || TITLE_HINTS['學員上課'];
+  const titleInput = document.getElementById('edit-title');
+  const hintEl = document.getElementById('edit-title-hint');
+  if (titleInput) titleInput.placeholder = hint;
+  if (hintEl) {
+    hintEl.textContent = hint;
+    hintEl.classList.remove('hint-single-line');
+    hintEl.style.whiteSpace = '';
+    hintEl.style.fontSize = '';
+    hintEl.style.overflow = '';
+    requestAnimationFrame(() => shrinkHintToSingleLine(hintEl));
+  }
+}
+
 /**
  * 初始化行程詳情頁面
  */
@@ -150,6 +197,8 @@ function editEvent() {
   document.getElementById('edit-title').value = eventData.title || '';
   document.getElementById('edit-type').value = eventData.type || '活動';
   document.getElementById('edit-description').value = eventData.description || '';
+  // 依目前類型更新標題提示詞（placeholder + 下方說明）
+  updateEditTitleHint();
 
   const allDayCheckbox = document.getElementById('edit-all-day');
   const dateInput = document.getElementById('edit-date');
@@ -157,8 +206,9 @@ function editEvent() {
   const startTimeInput = document.getElementById('edit-start-time');
   const endTimeInput = document.getElementById('edit-end-time');
 
-  // 整日：支援 API 回傳 allDay 或 all_day
-  const isAllDay = !!(eventData.allDay ?? eventData.all_day ?? false);
+  // 整日：與新增行程同步——只有「學員上課」默認整日並隱藏時間；活動、諮詢簽約一律顯示時間選擇
+  const eventType = eventData.type || '活動';
+  const isAllDay = (eventType === '學員上課') ? true : false;
 
   if (eventData.start) {
     const start = parseEventDateTime(eventData.start);
@@ -186,6 +236,8 @@ function editEvent() {
         endTimeInput.value = pad(endDate.getHours()) + ':' + pad(endDate.getMinutes());
       }
     }
+    if (window.editDateFp) window.editDateFp.setDate(dateInput.value, false);
+    if (window.editEndDateFp) window.editEndDateFp.setDate(endDateInput.value || dateInput.value, false);
   } else {
     allDayCheckbox.checked = isAllDay;
     if (isAllDay) {
@@ -199,12 +251,34 @@ function editEvent() {
   if (!editFormListenersSetup) {
     setupAllDayToggle();
     setupTimeAutoUpdate();
+    // 只有「學員上課」鎖住默認整日並隱藏時間；選「活動」「諮詢簽約」時改為非整日並顯示時間
+    const editTypeSelect = document.getElementById('edit-type');
+    if (editTypeSelect) {
+      editTypeSelect.addEventListener('change', function () {
+        updateEditTitleHint();
+        const cb = document.getElementById('edit-all-day');
+        const startTimeInput = document.getElementById('edit-start-time');
+        const endTimeInput = document.getElementById('edit-end-time');
+        if (this.value === '學員上課') {
+          if (cb) cb.checked = true;
+          if (startTimeInput) startTimeInput.value = '00:00';
+          if (endTimeInput) endTimeInput.value = '23:59';
+          toggleEditTimeRow(true, startTimeInput, endTimeInput);
+        } else {
+          // 活動、諮詢簽約：預設非整日，顯示時間選擇
+          if (cb) cb.checked = false;
+          if (startTimeInput) startTimeInput.disabled = false;
+          if (endTimeInput) endTimeInput.disabled = false;
+          toggleEditTimeRow(false, startTimeInput, endTimeInput);
+        }
+      });
+    }
     editFormListenersSetup = true;
   }
 
-  if (typeof initTimePickers === 'function') {
-    setTimeout(initTimePickers, 100);
-  }
+  // 方案 3：編輯表單 Flatpickr + 今天／明天 + 時間 Chip（僅首次綁定）
+  initEditFormDatePickers();
+  setupEditFormDateShortcutsAndChips();
 }
 
 /**
@@ -283,6 +357,76 @@ function setupTimeAutoUpdate() {
       }
     }
   });
+}
+
+/**
+ * 方案 3：編輯表單 Flatpickr 日期選擇（僅初始化一次）
+ */
+function initEditFormDatePickers() {
+  if (window.editDateFp) return;
+  const editDateEl = document.getElementById('edit-date');
+  const editEndDateEl = document.getElementById('edit-end-date');
+  if (typeof flatpickr === 'undefined' || !editDateEl) return;
+  window.editDateFp = flatpickr(editDateEl, {
+    dateFormat: 'Y-m-d',
+    locale: (flatpickr.l10ns && flatpickr.l10ns.zh) ? 'zh' : undefined,
+    allowInput: false,
+    onChange: function (selectedDates, dateStr) {
+      if (editEndDateEl && !editEndDateEl.value) {
+        editEndDateEl.value = dateStr;
+        if (window.editEndDateFp) window.editEndDateFp.setDate(dateStr, false);
+      }
+    }
+  });
+  if (editEndDateEl) {
+    window.editEndDateFp = flatpickr(editEndDateEl, {
+      dateFormat: 'Y-m-d',
+      locale: (flatpickr.l10ns && flatpickr.l10ns.zh) ? 'zh' : undefined,
+      allowInput: false
+    });
+  }
+}
+
+/**
+ * 方案 3：編輯表單「今天／明天」按鈕與時間 Chip（僅綁定一次）
+ */
+function setupEditFormDateShortcutsAndChips() {
+  if (window.editFormShortcutsSetup) return;
+  const pad = (n) => n < 10 ? '0' + n : n;
+  document.querySelectorAll('.btn-edit-date-shortcut').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const targetId = this.getAttribute('data-target');
+      const days = parseInt(this.getAttribute('data-days'), 10) || 0;
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      const val = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+      const target = document.getElementById(targetId);
+      if (target) {
+        target.value = val;
+        if (targetId === 'edit-date' && window.editDateFp) window.editDateFp.setDate(val, false);
+        if (targetId === 'edit-end-date' && window.editEndDateFp) window.editEndDateFp.setDate(val, false);
+        if (targetId === 'edit-date') {
+          const endEl = document.getElementById('edit-end-date');
+          if (endEl && !endEl.value) {
+            endEl.value = val;
+            if (window.editEndDateFp) window.editEndDateFp.setDate(val, false);
+          }
+        }
+      }
+    });
+  });
+  document.querySelectorAll('#edit-date-time-group .time-chips').forEach(function (wrap) {
+    const targetId = wrap.getAttribute('data-target');
+    const timeInput = targetId ? document.getElementById(targetId) : null;
+    if (!timeInput) return;
+    wrap.querySelectorAll('.time-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        const t = this.getAttribute('data-time');
+        if (t) timeInput.value = t;
+      });
+    });
+  });
+  window.editFormShortcutsSetup = true;
 }
 
 /**

@@ -104,6 +104,39 @@ router.post('/register', verifyLineUser, async (req, res) => {
 });
 
 /**
+ * POST /api/profile/sync-avatar
+ * 每次用戶進入系統時由前端呼叫：比對 LINE 頭像與資料庫，有更新則寫回 Google Sheet
+ * 需要驗證 LINE User ID，body: { pictureUrl }
+ */
+router.post('/sync-avatar', verifyLineUser, async (req, res) => {
+  try {
+    const lineId = req.lineUserId;
+    const pictureUrl = (req.body && req.body.pictureUrl != null) ? String(req.body.pictureUrl).trim() : '';
+
+    const member = await sheetService.getMemberByLineId(lineId);
+    if (!member) {
+      return res.json({ success: true, synced: false, message: '未註冊，不更新頭像' });
+    }
+
+    const storedUrl = (member.pictureUrl || '').trim();
+    if (storedUrl === pictureUrl) {
+      return res.json({ success: true, synced: false, message: '頭像未變更' });
+    }
+
+    await sheetService.updateMember(lineId, { pictureUrl: pictureUrl || '' });
+    versionService.incrementVersion();
+
+    return res.json({ success: true, synced: true, message: '頭像已同步更新' });
+  } catch (error) {
+    console.error('同步頭像錯誤:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || '同步頭像失敗',
+    });
+  }
+});
+
+/**
  * PUT /api/profile
  * 更新個人資料
  * 需要驗證 LINE User ID

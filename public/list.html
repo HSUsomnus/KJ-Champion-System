@@ -25,7 +25,8 @@
     <!-- 分頁切換：標題列固定，底下字卡可捲動 -->
     <div class="tab-container" id="tab-container">
       <div class="tab-header list-tabs-fixed">
-        <button class="tab-btn active" data-tab="學員上課">學員上課</button>
+        <button class="tab-btn active" data-tab="全部">全部</button>
+        <button class="tab-btn" data-tab="學員上課">學員上課</button>
         <button class="tab-btn" data-tab="活動">活動</button>
         <button class="tab-btn" data-tab="諮詢簽約">諮詢簽約</button>
       </div>
@@ -33,8 +34,18 @@
       <!-- 僅此區可捲動：行程字卡 -->
       <div class="tab-content-wrapper tab-cards-scroll" id="tab-content-wrapper">
 
+        <!-- 全部分頁（預設顯示） -->
+        <div id="tab-全部" class="tab-content active data-loading-parent">
+          <div class="loading data-loading data-loading-overlay">
+            <div class="data-loading-inner">
+              <img src="/images/logo.png" alt="康九" class="data-loading-logo">
+              <p class="data-loading-text">載入中...</p>
+            </div>
+          </div>
+        </div>
+
         <!-- 學員上課分頁 -->
-        <div id="tab-學員上課" class="tab-content active data-loading-parent">
+        <div id="tab-學員上課" class="tab-content data-loading-parent">
           <div class="loading data-loading data-loading-overlay">
             <div class="data-loading-inner">
               <img src="/images/logo.png" alt="康九" class="data-loading-logo">

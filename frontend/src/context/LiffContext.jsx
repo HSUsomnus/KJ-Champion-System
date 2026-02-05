@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import liff from '@line/liff'
-import { fetchLiffId } from '../api'
+import { fetchLiffId, syncProfileAvatar } from '../api'
 
 // 開發模式：可設為 true 跳過 LIFF，用模擬 userId 測試 API
 const DEV_SKIP_LIFF = import.meta.env.DEV && import.meta.env.VITE_DEV_SKIP_LIFF === '1'
@@ -52,6 +52,8 @@ export function LiffProvider({ children }) {
             setUserId(p.userId)
             setProfile(p)
             setLoggedIn(true)
+            // 每次進入系統：檢查 LINE 頭像是否變更，有則同步到 Google Sheet
+            syncProfileAvatar(p.userId, (p.pictureUrl || '').trim())
           }
         }
         if (!cancelled) setReady(true)

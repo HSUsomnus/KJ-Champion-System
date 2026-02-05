@@ -250,15 +250,16 @@ router.get('/share-month-message', optionalLineUser, async (req, res) => {
   try {
     const { year, month, type } = req.query;
 
-    if (!year || !month || !type) {
+    if (!year || !month) {
       return res.status(400).json({
         success: false,
-        message: '請提供 year、month 和 type 參數',
+        message: '請提供 year 和 month 參數',
       });
     }
 
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
+    const typeFilter = (type === '全部' || !type) ? null : type;
     const startDate = new Date(yearNum, monthNum - 1, 1);
     const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59);
     const calendar = await require('../config/googleAuth').getCalendarClient();
@@ -274,8 +275,9 @@ router.get('/share-month-message', optionalLineUser, async (req, res) => {
 
     const events = (response.data.items || [])
       .filter(item => {
+        if (!typeFilter) return true;
         const eventType = item.extendedProperties?.private?.type || '活動';
-        return eventType === type;
+        return eventType === typeFilter;
       })
       .map(item => ({
         id: item.id,
@@ -288,7 +290,8 @@ router.get('/share-month-message', optionalLineUser, async (req, res) => {
         allDay: !item.start?.dateTime,
       }));
 
-    const shareMessage = lineService.generateMonthShareMessage(events, yearNum, monthNum, type);
+    const typeLabel = typeFilter || '全部';
+    const shareMessage = lineService.generateMonthShareMessage(events, yearNum, monthNum, typeLabel);
 
     res.json({
       success: true,

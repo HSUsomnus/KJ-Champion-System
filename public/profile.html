@@ -12,7 +12,7 @@
 <body>
   <!-- 網址帶 ?eruda=1 時載入 Eruda，方便手機 LINE 瀏覽器看 Console -->
   <script src="/js/eruda-loader.js"></script>
-  <div class="container data-loading-parent">
+  <div class="container page-profile data-loading-parent">
     <!-- 頁面標題：註冊頁顯示「註冊」，個人資料頁顯示「個人資料」 -->
     <div class="page-header-row">
       <button type="button" class="btn-refresh-cache" onclick="if(window.cacheService){window.cacheService.clearCache();}location.reload();" title="清除快取並重新整理" aria-label="清除快取並重新整理">
@@ -21,7 +21,7 @@
       <h1 id="page-title-text" class="text-center page-title">👤 個人資料</h1>
     </div>
 
-    <!-- 資料加載動畫（與行事曆進入動畫一致：透明毛玻璃 + 康九 logo） -->
+    <!-- 資料加載動畫（個人資料頁：無磨砂玻璃） -->
     <div id="loading" class="loading data-loading data-loading-overlay">
       <div class="data-loading-inner">
         <img src="/images/logo.png" alt="康九" class="data-loading-logo">
@@ -68,19 +68,19 @@
           <label class="form-label" style="font-weight: 600;">📋 進階資訊</label>
           <div class="form-group">
             <label class="form-label">課程紀錄</label>
-            <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px; min-height: auto;" id="view-courseRecord">-</div>
+            <div class="form-input text-wrap-nice" style="background-color: var(--bg-color); border: none; padding: 12px; min-height: auto;" id="view-courseRecord">-</div>
           </div>
           <div class="form-group">
             <label class="form-label">是否為特斯拉出行加盟主</label>
-            <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px;" id="view-teslaFranchisee">-</div>
+            <div class="form-input text-wrap-nice" style="background-color: var(--bg-color); border: none; padding: 12px;" id="view-teslaFranchisee">-</div>
           </div>
           <div class="form-group">
             <label class="form-label">團隊負責事項</label>
-            <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px; min-height: auto;" id="view-teamResponsibilities">-</div>
+            <div class="form-input text-wrap-nice" style="background-color: var(--bg-color); border: none; padding: 12px; min-height: auto;" id="view-teamResponsibilities">-</div>
           </div>
           <div class="form-group">
             <label class="form-label">課程志工</label>
-            <div id="view-volunteerRecords" class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px; min-height: auto;">-</div>
+            <div id="view-volunteerRecords" class="form-input text-wrap-nice" style="background-color: var(--bg-color); border: none; padding: 12px; min-height: auto;">-</div>
           </div>
         </div>
 

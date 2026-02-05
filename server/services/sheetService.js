@@ -6,6 +6,20 @@
 const { getSheetsClient, getSheetConfig } = require('../config/googleAuth');
 
 /**
+ * 將電話號碼統一轉成字串並回傳給前端
+ * - Sheets 可能回傳數字（例如 912345678），先轉字串
+ * - 若為 9 碼且以 9 開頭（台灣手機少存了前導 0），自動補 0 成 0912345678
+ */
+const phoneToText = (v) => {
+  if (v == null || v === '') return '';
+  const s = String(v).trim();
+  if (!s) return '';
+  // 台灣手機 09XX：若為 9 碼且開頭是 9，視為少存了前導 0，自動補上
+  if (/^9\d{8}$/.test(s)) return '0' + s;
+  return s;
+};
+
+/**
  * 取得所有成員資料
  * @returns {Promise<Array>} 成員陣列
  */
@@ -30,7 +44,7 @@ const getAllMembers = async () => {
         lineId: row[0] || '',
         name: row[1] || '',
         email: row[2] || '',
-        phone: row[3] || '',
+        phone: phoneToText(row[3]),
         starLevel: row[4] || '白星',
         courseRecord: row[5] || '',
         pictureUrl: row[6] || '',
@@ -104,22 +118,22 @@ const createMember = async (memberData) => {
       memberData.volunteerRecords || '',
     ]];
 
-    // 新增資料到 Google Sheets
+    // 新增資料到 Google Sheets（使用 RAW 避免電話欄位 09XX 被當成數字而掉前導 0）
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
       range: `${sheetName}!A:J`,
-      valueInputOption: 'USER_ENTERED',
+      valueInputOption: 'RAW',
       resource: {
         values: values,
       },
     });
 
-    // 回傳新增的成員資料（含進階資訊）
+    // 回傳新增的成員資料（含進階資訊）；電話一律以字串回傳
     return {
       lineId: memberData.lineId,
       name: memberData.name,
       email: memberData.email,
-      phone: memberData.phone,
+      phone: phoneToText(memberData.phone),
       starLevel: memberData.starLevel || '白星',
       courseRecord: memberData.courseRecord || '',
       pictureUrl: memberData.pictureUrl || '',
@@ -150,12 +164,13 @@ const updateMember = async (lineId, memberData) => {
     const sheets = await getSheetsClient();
     const { sheetId, sheetName } = getSheetConfig();
 
-    // 準備更新的資料（含進階資訊 H、I、J）
+    // 準備更新的資料（含進階資訊 H、I、J）；電話寫入前轉成字串
+    const phoneVal = memberData.phone !== undefined ? memberData.phone : member.phone;
     const values = [[
       lineId,
       memberData.name !== undefined ? memberData.name : member.name,
       memberData.email !== undefined ? memberData.email : member.email,
-      memberData.phone !== undefined ? memberData.phone : member.phone,
+      phoneToText(phoneVal),
       memberData.starLevel !== undefined ? memberData.starLevel : member.starLevel,
       memberData.courseRecord !== undefined ? memberData.courseRecord : member.courseRecord,
       memberData.pictureUrl !== undefined ? memberData.pictureUrl : (member.pictureUrl || ''),
@@ -164,22 +179,22 @@ const updateMember = async (lineId, memberData) => {
       memberData.volunteerRecords !== undefined ? memberData.volunteerRecords : (member.volunteerRecords || ''),
     ]];
 
-    // 更新 Google Sheets 中的資料
+    // 更新 Google Sheets 中的資料（使用 RAW 避免電話欄位 09XX 被當成數字而掉前導 0）
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
       range: `${sheetName}!A${member.rowIndex}:J${member.rowIndex}`,
-      valueInputOption: 'USER_ENTERED',
+      valueInputOption: 'RAW',
       resource: {
         values: values,
       },
     });
 
-    // 回傳更新後的成員資料（含進階資訊）
+    // 回傳更新後的成員資料（含進階資訊）；電話一律以字串回傳
     return {
       lineId: lineId,
       name: memberData.name !== undefined ? memberData.name : member.name,
       email: memberData.email !== undefined ? memberData.email : member.email,
-      phone: memberData.phone !== undefined ? memberData.phone : member.phone,
+      phone: phoneToText(phoneVal),
       starLevel: memberData.starLevel !== undefined ? memberData.starLevel : member.starLevel,
       courseRecord: memberData.courseRecord !== undefined ? memberData.courseRecord : member.courseRecord,
       pictureUrl: memberData.pictureUrl !== undefined ? memberData.pictureUrl : (member.pictureUrl || ''),

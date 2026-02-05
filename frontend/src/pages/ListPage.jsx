@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import EventCard from '../components/EventCard'
 
-const TABS = ['學員上課', '活動', '諮詢簽約']
+const TABS = ['全部', '學員上課', '活動', '諮詢簽約']
 
 const MOCK_EVENTS = {
+  全部: [
+    { id: '1', title: '學員課程討論', type: '學員上課', start: '2023-10-05T09:00:00+08:00', end: '2023-10-05T11:00:00+08:00', allDay: false },
+    { id: '2', title: '團隊腦力激盪會議', type: '活動', start: '2023-10-05', end: '2023-10-05', allDay: true },
+    { id: '3', title: '專案進度審核', type: '諮詢簽約', start: '2023-10-05T14:00:00+08:00', end: '2023-10-05T15:30:00+08:00', allDay: false },
+  ],
   學員上課: [
     { id: '1', title: '學員課程討論', type: '學員上課', start: '2023-10-05T09:00:00+08:00', end: '2023-10-05T11:00:00+08:00', allDay: false },
   ],
@@ -18,7 +23,7 @@ const MOCK_EVENTS = {
 }
 
 export default function ListPage() {
-  const [activeTab, setActiveTab] = useState('學員上課')
+  const [activeTab, setActiveTab] = useState('全部')
   const events = MOCK_EVENTS[activeTab] || []
 
   return (
@@ -49,7 +54,9 @@ export default function ListPage() {
           </div>
           <div className="space-y-4 pt-2">
             {events.length === 0 ? (
-              <p className="text-slate-500 dark:text-gray-400 text-center py-8">目前沒有行程</p>
+              <p className="text-slate-500 dark:text-gray-400 text-center py-8">
+                {activeTab === '全部' ? '目前沒有行程' : `目前沒有 ${activeTab} 類型的行程`}
+              </p>
             ) : (
               events.map((ev) => <EventCard key={ev.id} event={ev} />)
             )}

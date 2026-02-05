@@ -3,8 +3,9 @@
  * 負責顯示三個類型分頁的行程列表
  */
 
-// 當前載入的月份資料（每個類型）
+// 當前載入的月份資料（每個類型）；「全部」不篩選類型
 const eventsByType = {
+  '全部': {},
   '學員上課': {},
   '活動': {},
   '諮詢簽約': {},
@@ -14,9 +15,9 @@ const eventsByType = {
 let currentMonth = new Date().getMonth() + 1;
 let currentYear = new Date().getFullYear();
 
-// 當前顯示的分頁索引
+// 當前顯示的分頁索引（0 = 全部，預設最先顯示）
 let currentTabIndex = 0;
-const tabTypes = ['學員上課', '活動', '諮詢簽約'];
+const tabTypes = ['全部', '學員上課', '活動', '諮詢簽約'];
 
 /**
  * 初始化列表頁面
@@ -27,6 +28,7 @@ async function initList() {
   // 從詳情／新增返回時（bfcache 還原）重新載入當前分頁，避免字卡與詳情不一致
   window.addEventListener('pageshow', function (e) {
     if (e.persisted) {
+      eventsByType['全部'] = {};
       eventsByType['學員上課'] = {};
       eventsByType['活動'] = {};
       eventsByType['諮詢簽約'] = {};
@@ -35,14 +37,14 @@ async function initList() {
   });
 
   window.addEventListener('liffReady', () => {
-    loadEventsForType('學員上課');
+    loadEventsForType('全部');
   });
 
   if (window.LIFF && window.LIFF.isInitialized()) {
-    loadEventsForType('學員上課');
+    loadEventsForType('全部');
   } else {
     setTimeout(() => {
-      loadEventsForType('學員上課');
+      loadEventsForType('全部');
     }, 100);
   }
 }
@@ -58,10 +60,11 @@ function setupAddButton() {
   const dev = window.LIFF && window.LIFF.isDevMode && window.LIFF.isDevMode();
   const q = dev ? '?dev=1&' : '?';
   
-  // 監聽分頁切換，更新新增按鈕的連結
+  // 監聽分頁切換，更新新增按鈕的連結（「全部」分頁時預設類型為學員上課）
   const updateAddButton = () => {
     const currentType = tabTypes[currentTabIndex];
-    addBtn.href = `/add-event.html${q}type=${encodeURIComponent(currentType)}&return=${encodeURIComponent('/list.html' + (dev ? '?dev=1' : ''))}`;
+    const typeForAdd = (currentType === '全部') ? '學員上課' : currentType;
+    addBtn.href = `/add-event.html${q}type=${encodeURIComponent(typeForAdd)}&return=${encodeURIComponent('/list.html' + (dev ? '?dev=1' : ''))}`;
   };
   
   updateAddButton();
@@ -162,9 +165,10 @@ async function loadEventsForType(type) {
         continue;
       }
 
-      // 從 API 載入
+      // 從 API 載入（「全部」不傳 type，後端回傳所有類型）
       const userId = window.LIFF ? window.LIFF.getUserId() : null;
-      const url = `/api/calendar/month?year=${year}&month=${actualMonth}&type=${encodeURIComponent(type)}${userId ? `&userId=${userId}` : ''}`;
+      const typeParam = (type === '全部') ? '' : `&type=${encodeURIComponent(type)}`;
+      const url = `/api/calendar/month?year=${year}&month=${actualMonth}${typeParam}${userId ? `&userId=${userId}` : ''}`;
       
       const response = await fetch(url);
       const data = await response.json();
@@ -193,10 +197,11 @@ async function loadEventsForType(type) {
  */
 function renderEventsList(container, events, type) {
   if (events.length === 0) {
+    const emptyLabel = (type === '全部') ? '目前沒有行程' : `目前沒有 ${type} 類型的行程`;
     container.innerHTML = `
       <div class="empty-state">
         <div>📅</div>
-        <p>目前沒有 ${type} 類型的行程</p>
+        <p>${emptyLabel}</p>
       </div>
     `;
     return;
@@ -225,12 +230,13 @@ function renderEventsList(container, events, type) {
     // 月份標題 + 右側按鈕（分享整月 + 新增）
     // 將 type 轉換為安全的 JavaScript 字串（處理單引號）
     const safeType = escapeHtml(type).replace(/'/g, "\\'");
+    const typeForAdd = (type === '全部') ? '學員上課' : type;
 
-    // 組合「新增」連結（保留 dev，並回到列表頁）
+    // 組合「新增」連結（保留 dev，並回到列表頁；「全部」時預設類型學員上課）
     const dev = window.LIFF && window.LIFF.isDevMode && window.LIFF.isDevMode();
     const q = dev ? '?dev=1&' : '?';
     const returnUrl = '/list.html' + (dev ? '?dev=1' : '');
-    const addHref = `/add-event.html${q}type=${encodeURIComponent(type)}&return=${encodeURIComponent(returnUrl)}`;
+    const addHref = `/add-event.html${q}type=${encodeURIComponent(typeForAdd)}&return=${encodeURIComponent(returnUrl)}`;
 
     html += `
       <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0;">

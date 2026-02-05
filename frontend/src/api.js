@@ -75,3 +75,17 @@ export async function fetchProfile(userId) {
   }
   return data.data
 }
+
+/**
+ * 進入系統時同步 LINE 頭像到 Google Sheet（有變更才更新，不阻塞畫面）
+ */
+export function syncProfileAvatar(userId, pictureUrl) {
+  if (!userId) return
+  fetch('/api/profile/sync-avatar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Line-User-Id': userId },
+    body: JSON.stringify({ pictureUrl: pictureUrl || '' }),
+  })
+    .then((res) => res.json())
+    .catch(() => {})
+}

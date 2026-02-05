@@ -7,6 +7,8 @@
   <title>新增行程</title>
   <link rel="icon" type="image/png" href="/images/logo.png">
   <link rel="stylesheet" href="/css/style.css?v=3">
+  <!-- Flatpickr：手機自動用原生選擇器，桌面用月曆 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
@@ -28,6 +30,7 @@
         <div class="form-group">
           <label class="form-label">標題 *</label>
           <input type="text" id="add-title" class="form-input" required>
+          <p id="add-title-hint" class="form-hint form-hint-below" aria-hidden="true"></p>
         </div>
 
         <div class="form-group">
@@ -47,24 +50,50 @@
         </div>
 
         <div class="form-group" id="date-time-group">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-            <div>
-              <label class="form-label">開始日期 *</label>
-              <input type="date" id="add-date" class="form-input" required>
-            </div>
-            <div>
-              <label class="form-label">結束日期</label>
-              <input type="date" id="add-end-date" class="form-input" title="同一天可不填，留空則與開始日期相同">
+          <!-- 開始／結束日期：Flatpickr + 今天／明天快捷 -->
+          <div class="date-row date-row-start" style="margin-bottom: 12px;">
+            <label class="form-label">開始日期 *</label>
+            <div class="date-input-row">
+              <input type="text" id="add-date" class="form-input" placeholder="YYYY-MM-DD" required readonly data-input>
+              <span class="date-shortcuts">
+                <button type="button" class="btn-date-shortcut" data-target="add-date" data-days="0">今天</button>
+                <button type="button" class="btn-date-shortcut" data-target="add-date" data-days="1">明天</button>
+              </span>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="date-row date-row-end" style="margin-bottom: 12px;">
+            <label class="form-label">結束日期</label>
+            <div class="date-input-row">
+              <input type="text" id="add-end-date" class="form-input" placeholder="同一天可不填" title="留空則與開始日期相同" readonly data-input>
+              <span class="date-shortcuts">
+                <button type="button" class="btn-date-shortcut" data-target="add-end-date" data-days="0">今天</button>
+                <button type="button" class="btn-date-shortcut" data-target="add-end-date" data-days="1">明天</button>
+              </span>
+            </div>
+          </div>
+          <!-- 開始／結束時間：整日勾選時隱藏此區塊 -->
+          <div id="add-time-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div>
               <label class="form-label">開始時間 *</label>
               <input type="time" id="add-start-time" class="form-input" required>
+              <div class="time-chips" data-target="add-start-time">
+                <span class="time-chip" data-time="09:00">09:00</span>
+                <span class="time-chip" data-time="10:00">10:00</span>
+                <span class="time-chip" data-time="14:00">14:00</span>
+                <span class="time-chip" data-time="19:00">19:00</span>
+                <span class="time-chip" data-time="20:00">20:00</span>
+              </div>
             </div>
             <div>
               <label class="form-label">結束時間 *</label>
               <input type="time" id="add-end-time" class="form-input" required>
+              <div class="time-chips" data-target="add-end-time">
+                <span class="time-chip" data-time="10:00">10:00</span>
+                <span class="time-chip" data-time="11:00">11:00</span>
+                <span class="time-chip" data-time="15:00">15:00</span>
+                <span class="time-chip" data-time="20:00">20:00</span>
+                <span class="time-chip" data-time="21:00">21:00</span>
+              </div>
             </div>
           </div>
         </div>
@@ -106,8 +135,8 @@
   <script src="/js/liff.js"></script>
   <script src="/js/scroll-restore.js"></script>
   <script src="/js/share-dialog.js"></script>
-  <script src="/js/timePicker.js"></script>
-  <script src="/js/datePicker.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/zh.js"></script>
   <script src="/js/add-event.js"></script>
 </body>
 </html>
