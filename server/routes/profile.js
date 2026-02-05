@@ -47,7 +47,7 @@ router.get('/', verifyLineUser, async (req, res) => {
 router.post('/register', verifyLineUser, async (req, res) => {
   try {
     const lineId = req.lineUserId;
-    const { name, email, phone, starLevel, courseRecord, pictureUrl } = req.body;
+    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords } = req.body;
 
     // 驗證必填欄位
     if (!name) {
@@ -72,7 +72,7 @@ router.post('/register', verifyLineUser, async (req, res) => {
       ? starLevel 
       : '白星';
 
-    // 新增成員資料（含 LINE 頭像 URL，註冊時由前端傳入）
+    // 新增成員資料（含進階資訊）
     const member = await sheetService.createMember({
       lineId,
       name,
@@ -81,6 +81,9 @@ router.post('/register', verifyLineUser, async (req, res) => {
       starLevel: memberStarLevel,
       courseRecord: courseRecord || '',
       pictureUrl: pictureUrl || '',
+      teslaFranchisee: teslaFranchisee || '',
+      teamResponsibilities: teamResponsibilities || '',
+      volunteerRecords: volunteerRecords || '',
     });
 
     // 更新版本號
@@ -108,7 +111,7 @@ router.post('/register', verifyLineUser, async (req, res) => {
 router.put('/', verifyLineUser, async (req, res) => {
   try {
     const lineId = req.lineUserId;
-    const { name, email, phone, starLevel, courseRecord, pictureUrl } = req.body;
+    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords } = req.body;
 
     // 驗證星等（如果有的話）
     let memberStarLevel = starLevel;
@@ -119,7 +122,7 @@ router.put('/', verifyLineUser, async (req, res) => {
       }
     }
 
-    // 更新成員資料（可一併更新 LINE 頭像 URL）
+    // 更新成員資料（含進階資訊）
     const member = await sheetService.updateMember(lineId, {
       name,
       email,
@@ -127,6 +130,9 @@ router.put('/', verifyLineUser, async (req, res) => {
       starLevel: memberStarLevel,
       courseRecord,
       pictureUrl,
+      teslaFranchisee,
+      teamResponsibilities,
+      volunteerRecords,
     });
 
     // 更新版本號

@@ -77,11 +77,26 @@ function renderMemberDetail(member) {
   document.getElementById('view-email').textContent = member.email || '未設定';
   document.getElementById('view-phone').textContent = member.phone || '未設定';
   document.getElementById('view-starLevel').textContent = member.starLevel || '白星';
-  
-  // 格式化課程紀錄
+
+  // 進階資訊：課程紀錄
   const courseRecord = member.courseRecord || '';
   const courses = courseRecord.split(',').map(c => c.trim()).filter(c => c);
   document.getElementById('view-courseRecord').textContent = courses.length > 0 ? courses.join('、') : '未設定';
+
+  // 進階資訊：是否為特斯拉出行加盟主
+  const teslaEl = document.getElementById('view-teslaFranchisee');
+  if (teslaEl) teslaEl.textContent = member.teslaFranchisee === '是' || member.teslaFranchisee === '否' ? member.teslaFranchisee : '未填';
+
+  // 進階資訊：團隊負責事項
+  const teamEl = document.getElementById('view-teamResponsibilities');
+  if (teamEl) teamEl.textContent = (member.teamResponsibilities || '').trim() || '未填';
+
+  // 進階資訊：課程志工
+  const volunteerEl = document.getElementById('view-volunteerRecords');
+  if (volunteerEl) {
+    const list = parseVolunteerRecords(member.volunteerRecords);
+    volunteerEl.textContent = list.length === 0 ? '無' : list.map(r => `${r.date} ${r.option}`).join('、');
+  }
   
   // 顯示 LINE 頭像（經後端代理，避免 LINE CDN 不顯示；無則用預設圖）
   const avatarImg = document.getElementById('member-avatar');
@@ -92,6 +107,19 @@ function renderMemberDetail(member) {
     avatarImg.onerror = function() {
       this.src = placeholderUrl;
     };
+  }
+}
+
+/**
+ * 解析課程志工紀錄 JSON 字串
+ */
+function parseVolunteerRecords(str) {
+  if (!str || typeof str !== 'string') return [];
+  try {
+    const arr = JSON.parse(str);
+    return Array.isArray(arr) ? arr.filter(r => r && (r.date || r.option)) : [];
+  } catch (e) {
+    return [];
   }
 }
 

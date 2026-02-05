@@ -1,5 +1,6 @@
-# 環境變數檔案
+# 環境變數檔案（絕不推送）
 .env
+.env.backup
 .env.local
 .env.*.local
 
@@ -41,6 +42,9 @@ build/
 
 # 金鑰、憑證資料夾（絕對不要推上 GitHub）
 Key/
+
+# 本機歸檔（未推送／重複資料，僅整理用）
+_archive_unpushed/
 
 # 本機工具（可選，避免把二進位推上去）
 ngrok

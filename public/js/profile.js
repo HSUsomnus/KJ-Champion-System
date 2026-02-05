@@ -144,13 +144,23 @@ async function loadProfile() {
       document.getElementById('email').value = userProfile.email || '';
       document.getElementById('phone').value = userProfile.phone || '';
       document.getElementById('starLevel').value = userProfile.starLevel || '白星';
-      
-      // 處理課程紀錄複選框（從逗號分隔的字串轉換）
+
+      // 進階資訊：課程紀錄複選框
       const courseRecord = userProfile.courseRecord || '';
       const selectedCourses = courseRecord.split(',').map(c => c.trim()).filter(c => c);
       document.querySelectorAll('input[name="courseRecord"]').forEach(checkbox => {
         checkbox.checked = selectedCourses.includes(checkbox.value);
       });
+
+      // 進階資訊：特斯拉加盟主、團隊負責事項
+      const teslaSelect = document.getElementById('teslaFranchisee');
+      if (teslaSelect) teslaSelect.value = userProfile.teslaFranchisee || '';
+      const teamInput = document.getElementById('teamResponsibilities');
+      if (teamInput) teamInput.value = userProfile.teamResponsibilities || '';
+
+      // 進階資訊：課程志工紀錄列表
+      renderVolunteerRecordsList(parseVolunteerRecords(userProfile.volunteerRecords));
+      setupVolunteerAddForm();
 
       // 更新顯示的姓名
       const nameDisplay = document.getElementById('profile-name');
@@ -221,21 +231,53 @@ function updateStarDisplay(starLevel) {
 }
 
 /**
- * 更新個人資料顯示（唯讀模式）
+ * 更新個人資料顯示（唯讀模式），含進階資訊
  */
 function updateProfileView(profile) {
   document.getElementById('view-name').textContent = profile.name || '未設定';
   document.getElementById('view-email').textContent = profile.email || '未設定';
   document.getElementById('view-phone').textContent = profile.phone || '未設定';
   document.getElementById('view-starLevel').textContent = profile.starLevel || '白星';
-  
-  // 課程紀錄
+
+  // 進階資訊：課程紀錄
   const courseRecord = profile.courseRecord || '';
   if (courseRecord) {
     const courses = courseRecord.split(',').map(c => c.trim()).filter(c => c);
     document.getElementById('view-courseRecord').textContent = courses.join('、') || '無';
   } else {
     document.getElementById('view-courseRecord').textContent = '無';
+  }
+
+  // 進階資訊：是否為特斯拉出行加盟主
+  const teslaEl = document.getElementById('view-teslaFranchisee');
+  if (teslaEl) teslaEl.textContent = profile.teslaFranchisee === '是' || profile.teslaFranchisee === '否' ? profile.teslaFranchisee : '未填';
+
+  // 進階資訊：團隊負責事項
+  const teamEl = document.getElementById('view-teamResponsibilities');
+  if (teamEl) teamEl.textContent = (profile.teamResponsibilities || '').trim() || '未填';
+
+  // 進階資訊：課程志工（解析 JSON 陣列顯示）
+  const volunteerEl = document.getElementById('view-volunteerRecords');
+  if (volunteerEl) {
+    const list = parseVolunteerRecords(profile.volunteerRecords);
+    if (list.length === 0) {
+      volunteerEl.textContent = '無';
+    } else {
+      volunteerEl.textContent = list.map(r => `${r.date} ${r.option}`).join('、');
+    }
+  }
+}
+
+/**
+ * 解析課程志工紀錄 JSON 字串，回傳陣列 [{ date, option }, ...]
+ */
+function parseVolunteerRecords(str) {
+  if (!str || typeof str !== 'string') return [];
+  try {
+    const arr = JSON.parse(str);
+    return Array.isArray(arr) ? arr.filter(r => r && (r.date || r.option)) : [];
+  } catch (e) {
+    return [];
   }
 }
 
@@ -257,16 +299,85 @@ function cancelEditMode() {
     document.getElementById('email').value = userProfile.email || '';
     document.getElementById('phone').value = userProfile.phone || '';
     document.getElementById('starLevel').value = userProfile.starLevel || '白星';
-    
     const courseRecord = userProfile.courseRecord || '';
     const selectedCourses = courseRecord.split(',').map(c => c.trim()).filter(c => c);
     document.querySelectorAll('input[name="courseRecord"]').forEach(checkbox => {
       checkbox.checked = selectedCourses.includes(checkbox.value);
     });
+    const teslaSelect = document.getElementById('teslaFranchisee');
+    if (teslaSelect) teslaSelect.value = userProfile.teslaFranchisee || '';
+    const teamInput = document.getElementById('teamResponsibilities');
+    if (teamInput) teamInput.value = userProfile.teamResponsibilities || '';
+    renderVolunteerRecordsList(parseVolunteerRecords(userProfile.volunteerRecords));
   }
-  
   document.getElementById('profile-view-mode').classList.remove('hidden');
   document.getElementById('profile-edit-mode').classList.add('hidden');
+}
+
+/** 課程志工紀錄暫存（編輯時使用），陣列 [{ date, option }, ...] */
+let volunteerRecordsEdit = [];
+
+/**
+ * 渲染課程志工紀錄列表（編輯模式用），並更新暫存
+ */
+function renderVolunteerRecordsList(list) {
+  volunteerRecordsEdit = Array.isArray(list) ? list.slice() : [];
+  const container = document.getElementById('volunteer-records-list');
+  if (!container) return;
+  if (volunteerRecordsEdit.length === 0) {
+    container.innerHTML = '<p class="text-muted" style="margin:0; font-size: 14px;">尚無記錄，可點「新增記錄」</p>';
+    return;
+  }
+  container.innerHTML = volunteerRecordsEdit.map((r, i) => `
+    <div class="volunteer-record-item" data-index="${i}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color, #eee);">
+      <span>${r.date || ''} ${r.option || ''}</span>
+      <button type="button" class="btn btn-small" data-index="${i}" aria-label="刪除此筆">刪除</button>
+    </div>
+  `).join('');
+  // 綁定刪除按鈕
+  container.querySelectorAll('.volunteer-record-item button').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const idx = parseInt(this.getAttribute('data-index'), 10);
+      volunteerRecordsEdit.splice(idx, 1);
+      renderVolunteerRecordsList(volunteerRecordsEdit);
+    });
+  });
+}
+
+/**
+ * 設定「新增記錄」表單：顯示/隱藏、確定/取消
+ */
+function setupVolunteerAddForm() {
+  const btnAdd = document.getElementById('btn-add-volunteer');
+  const form = document.getElementById('volunteer-add-form');
+  const btnConfirm = document.getElementById('volunteer-confirm');
+  const btnCancel = document.getElementById('volunteer-cancel');
+  const inputDate = document.getElementById('volunteer-date');
+  const inputOption = document.getElementById('volunteer-option');
+  if (!btnAdd || !form) return;
+
+  btnAdd.addEventListener('click', function () {
+    form.classList.remove('hidden');
+    if (inputDate) inputDate.value = new Date().toISOString().slice(0, 10);
+    if (inputOption) inputOption.value = '金流';
+  });
+
+  function hideForm() {
+    form.classList.add('hidden');
+  }
+
+  if (btnCancel) btnCancel.addEventListener('click', hideForm);
+  if (btnConfirm) {
+    btnConfirm.addEventListener('click', function () {
+      const date = inputDate ? inputDate.value : '';
+      const option = inputOption ? inputOption.value : '金流';
+      if (date) {
+        volunteerRecordsEdit.push({ date, option });
+        renderVolunteerRecordsList(volunteerRecordsEdit);
+      }
+      hideForm();
+    });
+  }
 }
 
 /**
@@ -301,6 +412,9 @@ async function updateProfile() {
       starLevel: document.getElementById('starLevel').value,
       courseRecord: getSelectedCourses(),
       pictureUrl: pictureUrl,
+      teslaFranchisee: document.getElementById('teslaFranchisee').value || '',
+      teamResponsibilities: document.getElementById('teamResponsibilities').value || '',
+      volunteerRecords: JSON.stringify(volunteerRecordsEdit),
     };
     
     // 更新星等顯示
@@ -325,6 +439,9 @@ async function updateProfile() {
         phone: formData.phone,
         starLevel: formData.starLevel,
         courseRecord: formData.courseRecord,
+        teslaFranchisee: formData.teslaFranchisee,
+        teamResponsibilities: formData.teamResponsibilities,
+        volunteerRecords: formData.volunteerRecords,
       };
       // 更新唯讀區塊的顯示內容
       updateProfileView(userProfile);
@@ -418,6 +535,9 @@ async function registerUser() {
       starLevel: document.getElementById('reg-starLevel').value,
       courseRecord: getSelectedCourses('reg-'),
       pictureUrl: pictureUrl,
+      teslaFranchisee: document.getElementById('reg-teslaFranchisee') ? document.getElementById('reg-teslaFranchisee').value : '',
+      teamResponsibilities: document.getElementById('reg-teamResponsibilities') ? document.getElementById('reg-teamResponsibilities').value : '',
+      volunteerRecords: '[]',
     };
 
     const response = await fetch('/api/profile/register', {
