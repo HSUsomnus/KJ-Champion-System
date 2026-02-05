@@ -1,5 +1,8 @@
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { useLiff } from '../context/LiffContext'
 import PageHeader from '../components/PageHeader'
+import { fetchEvent } from '../api'
 
 const TYPE_STYLES = {
   學員上課: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-200',
@@ -7,25 +10,54 @@ const TYPE_STYLES = {
   諮詢簽約: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-200',
 }
 
-const MOCK_EVENT = {
-  id: '1',
-  title: '私人教練課程 - 高強度間歇',
-  type: '學員上課',
-  start: '2023年 10月 24日 (二) 14:00',
-  end: '2023年 10月 24日 (二) 16:00',
-  description: '學員需要自備毛巾與水壺。今日課程重點在於心肺功能訓練與核心肌群強化。請提早 10 分鐘到達暖身。',
+/** 將 API 的 start/end 轉成顯示用字串（日期 + 是否整日） */
+function formatEventTime(event) {
+  const start = event?.start
+  if (!start) return { startStr: '', endStr: '' }
+  const isAllDay = event?.allDay || /^\d{4}-\d{2}-\d{2}$/.test(String(start).trim())
+  const d = new Date(start + (isAllDay ? 'T12:00:00' : ''))
+  const dateStr = `${d.getFullYear()}年 ${d.getMonth() + 1}月 ${d.getDate()}日 (${['日','一','二','三','四','五','六'][d.getDay()]})`
+  if (isAllDay) return { startStr: dateStr + ' 整日', endStr: '' }
+  const timeStr = d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+  const end = event?.end
+  const endTime = end ? new Date(end).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : ''
+  return { startStr: `${dateStr} ${timeStr}`, endStr: endTime ? `${dateStr} ${endTime}` : '' }
 }
 
 export default function EventDetailPage() {
   const { id } = useParams()
-  const event = MOCK_EVENT
-  const typeClass = TYPE_STYLES[event?.type] || 'bg-amber-100 text-amber-700'
+  const { userId } = useLiff()
+  const [event, setEvent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  if (!event) {
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    fetchEvent(id, userId || undefined)
+      .then((data) => { if (!cancelled) setEvent(data) })
+      .catch((err) => { if (!cancelled) setError(err.message || '載入失敗') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [id, userId])
+
+  const typeClass = TYPE_STYLES[event?.type] || 'bg-amber-100 text-amber-700'
+  const { startStr, endStr } = event ? formatEventTime(event) : { startStr: '', endStr: '' }
+
+  if (loading) {
     return (
       <>
         <PageHeader title="行程詳情" onRefresh={() => window.location.reload()} />
-        <div className="p-4 text-slate-500">找不到該行程</div>
+        <div className="p-4 text-slate-500">載入中...</div>
+      </>
+    )
+  }
+  if (error || !event) {
+    return (
+      <>
+        <PageHeader title="行程詳情" onRefresh={() => window.location.reload()} />
+        <div className="p-4 text-slate-500">{error || '找不到該行程'}</div>
       </>
     )
   }
@@ -50,18 +82,20 @@ export default function EventDetailPage() {
               </div>
               <div>
                 <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wide">開始時間</p>
-                <p className="text-slate-900 dark:text-white text-base font-semibold mt-0.5">{event.start}</p>
+                <p className="text-slate-900 dark:text-white text-base font-semibold mt-0.5">{startStr}</p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <span className="material-symbols-outlined">schedule</span>
+            {endStr && (
+              <div className="flex items-start gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <span className="material-symbols-outlined">schedule</span>
+                </div>
+                <div>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wide">結束時間</p>
+                  <p className="text-slate-900 dark:text-white text-base font-semibold mt-0.5">{endStr}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wide">結束時間</p>
-                <p className="text-slate-900 dark:text-white text-base font-semibold mt-0.5">{event.end}</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -71,7 +105,7 @@ export default function EventDetailPage() {
             備註
           </h3>
           <div className="bg-white dark:bg-surface-dark rounded-xl p-4 border border-gray-100 dark:border-white/5 shadow-sm">
-            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{event.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{event.description || '無'}</p>
           </div>
         </div>
 
@@ -83,22 +117,29 @@ export default function EventDetailPage() {
             <span className="material-symbols-outlined">share</span>
             分享行程
           </button>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              className="flex items-center justify-center gap-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-semibold py-3.5 px-6 rounded-xl active:scale-[0.98] transition-all"
-            >
-              <span className="material-symbols-outlined text-[20px]">edit</span>
-              編輯
-            </button>
-            <button
-              type="button"
-              className="flex items-center justify-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-transparent hover:bg-red-100 dark:hover:bg-red-900/30 font-semibold py-3.5 px-6 rounded-xl active:scale-[0.98] transition-all"
-            >
-              <span className="material-symbols-outlined text-[20px]">delete</span>
-              刪除
-            </button>
-          </div>
+          {!event.isBirthdayEvent && (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 text-slate-900 dark:text-white font-semibold py-3.5 px-6 rounded-xl active:scale-[0.98] transition-all"
+              >
+                <span className="material-symbols-outlined text-[20px]">edit</span>
+                編輯
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-transparent hover:bg-red-100 dark:hover:bg-red-900/30 font-semibold py-3.5 px-6 rounded-xl active:scale-[0.98] transition-all"
+              >
+                <span className="material-symbols-outlined text-[20px]">delete</span>
+                刪除
+              </button>
+            </div>
+          )}
+          {event.isBirthdayEvent && (
+            <p className="text-slate-500 dark:text-slate-400 text-sm text-center py-2">
+              系統生成的生日行程僅供查看，不可編輯或刪除
+            </p>
+          )}
         </div>
       </div>
     </>

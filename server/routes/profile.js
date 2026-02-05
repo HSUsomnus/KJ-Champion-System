@@ -47,7 +47,7 @@ router.get('/', verifyLineUser, async (req, res) => {
 router.post('/register', verifyLineUser, async (req, res) => {
   try {
     const lineId = req.lineUserId;
-    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords } = req.body;
+    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords, birthday, displayName } = req.body;
 
     // 驗證必填欄位
     if (!name) {
@@ -72,7 +72,7 @@ router.post('/register', verifyLineUser, async (req, res) => {
       ? starLevel 
       : '白星';
 
-    // 新增成員資料（含進階資訊）
+    // 新增成員資料（含進階資訊、生日、顯示名稱）
     const member = await sheetService.createMember({
       lineId,
       name,
@@ -84,6 +84,8 @@ router.post('/register', verifyLineUser, async (req, res) => {
       teslaFranchisee: teslaFranchisee || '',
       teamResponsibilities: teamResponsibilities || '',
       volunteerRecords: volunteerRecords || '',
+      birthday: birthday || '',
+      displayName: displayName || '',
     });
 
     // 更新版本號
@@ -144,7 +146,7 @@ router.post('/sync-avatar', verifyLineUser, async (req, res) => {
 router.put('/', verifyLineUser, async (req, res) => {
   try {
     const lineId = req.lineUserId;
-    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords } = req.body;
+    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords, birthday, displayName } = req.body;
 
     // 驗證星等（如果有的話）
     let memberStarLevel = starLevel;
@@ -155,7 +157,7 @@ router.put('/', verifyLineUser, async (req, res) => {
       }
     }
 
-    // 更新成員資料（含進階資訊）
+    // 更新成員資料（含進階資訊、生日、顯示名稱）
     const member = await sheetService.updateMember(lineId, {
       name,
       email,
@@ -166,6 +168,8 @@ router.put('/', verifyLineUser, async (req, res) => {
       teslaFranchisee,
       teamResponsibilities,
       volunteerRecords,
+      birthday,
+      displayName,
     });
 
     // 更新版本號

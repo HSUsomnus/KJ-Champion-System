@@ -18,7 +18,7 @@ function formatEventDisplay(event) {
 }
 
 export default function EventCard({ event }) {
-  const { id, title, type } = event
+  const { id, title, type, isBirthdayEvent } = event
   const { date, time, isAllDay } = formatEventDisplay(event)
   const typeClass = TYPE_STYLES[type] || 'bg-primary'
 
@@ -44,9 +44,11 @@ export default function EventCard({ event }) {
           <Link
             to={`/event/${id}`}
             className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="編輯"
+            aria-label={isBirthdayEvent ? '查看' : '編輯'}
           >
-            <span className="material-symbols-outlined text-[20px]">edit</span>
+            <span className="material-symbols-outlined text-[20px]">
+              {isBirthdayEvent ? 'visibility' : 'edit'}
+            </span>
           </Link>
           <button
             type="button"

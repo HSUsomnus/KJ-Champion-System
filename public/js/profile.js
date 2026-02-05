@@ -81,25 +81,23 @@ async function checkRegistration() {
 }
 
 /**
- * 載入 LINE 使用者資料（用於顯示頭像和姓名）
+ * 載入 LINE 使用者資料（頭像、LINE 顯示名稱）
+ * 頭像下方顯示 LINE 名字（displayName）
  */
 function loadLineProfile() {
   if (window.LIFF) {
     const profile = window.LIFF.getProfile();
     if (profile) {
       const avatarImg = document.getElementById('profile-avatar');
-      const nameDisplay = document.getElementById('profile-name');
-      
+      const lineNameEl = document.getElementById('profile-line-name');
       if (avatarImg && profile.pictureUrl) {
         avatarImg.src = profile.pictureUrl;
       }
-      if (nameDisplay && profile.displayName) {
-        nameDisplay.textContent = profile.displayName;
+      if (lineNameEl) {
+        lineNameEl.textContent = profile.displayName || 'LINE 名字';
       }
     }
   }
-  
-  // 如果還沒有星等資料，顯示預設白星
   const starBadge = document.getElementById('profile-star-icon');
   if (starBadge && !starBadge.textContent) {
     updateStarDisplay('白星');
@@ -152,6 +150,10 @@ async function loadProfile() {
         checkbox.checked = selectedCourses.includes(checkbox.value);
       });
 
+      // 基本資料：生日（編輯時顯示完整年月日）
+      const birthdayInput = document.getElementById('birthday');
+      if (birthdayInput) birthdayInput.value = userProfile.birthday || '';
+
       // 進階資訊：特斯拉加盟主、團隊負責事項
       const teslaSelect = document.getElementById('teslaFranchisee');
       if (teslaSelect) teslaSelect.value = userProfile.teslaFranchisee || '';
@@ -162,14 +164,27 @@ async function loadProfile() {
       renderVolunteerRecordsList(parseVolunteerRecords(userProfile.volunteerRecords));
       setupVolunteerAddForm();
 
-      // 更新顯示的姓名
-      const nameDisplay = document.getElementById('profile-name');
-      if (nameDisplay) {
-        nameDisplay.textContent = userProfile.name || '未設定';
+      // 頭像下方顯示 LINE 名字（優先從 getProfile，無則用後端 displayName）
+      const lineNameEl = document.getElementById('profile-line-name');
+      if (lineNameEl) {
+        const lineProfile = window.LIFF && window.LIFF.getProfile ? window.LIFF.getProfile() : null;
+        lineNameEl.textContent = (lineProfile && lineProfile.displayName) ? lineProfile.displayName : (userProfile.displayName || 'LINE 名字');
       }
-
-      // 更新星等顯示
       updateStarDisplay(userProfile.starLevel || '白星');
+
+      // 若基本資料未填完整，彈窗提示並進入編輯模式
+      if (!isBasicInfoComplete(userProfile)) {
+        loading.classList.add('hidden');
+        registerForm.classList.add('hidden');
+        profileDisplay.classList.remove('hidden');
+        document.getElementById('profile-view-mode').classList.add('hidden');
+        document.getElementById('profile-edit-mode').classList.remove('hidden');
+        (async function () {
+          if (window.showAppAlert) await window.showAppAlert('請補齊基本資料後儲存');
+          else alert('請補齊基本資料後儲存');
+        })();
+        return;
+      }
 
       // 顯示個人資料（預設為唯讀模式）
       loading.classList.add('hidden');
@@ -231,13 +246,37 @@ function updateStarDisplay(starLevel) {
 }
 
 /**
- * 更新個人資料顯示（唯讀模式），含進階資訊
+ * 生日唯讀時只顯示月/日（不顯示年）
+ * @param {string} yyyyMmDd - YYYY-MM-DD 或空
+ * @returns {string}
+ */
+function formatBirthdayView(yyyyMmDd) {
+  if (!yyyyMmDd || typeof yyyyMmDd !== 'string') return '未填';
+  const parts = yyyyMmDd.trim().split('-');
+  if (parts.length >= 2) return parts[1] + '/' + parts[2];
+  return yyyyMmDd;
+}
+
+/**
+ * 檢查基本資料是否已填寫完整（真實姓名必填且不可為空／未設定）
+ * @param {Object} profile - 成員資料
+ * @returns {boolean}
+ */
+function isBasicInfoComplete(profile) {
+  const name = (profile && profile.name) ? String(profile.name).trim() : '';
+  if (!name || name === '未設定') return false;
+  return true;
+}
+
+/**
+ * 更新個人資料顯示（唯讀模式），含基本資料與進階資訊
  */
 function updateProfileView(profile) {
   document.getElementById('view-name').textContent = profile.name || '未設定';
   document.getElementById('view-email').textContent = profile.email || '未設定';
   document.getElementById('view-phone').textContent = profile.phone || '未設定';
   document.getElementById('view-starLevel').textContent = profile.starLevel || '白星';
+  document.getElementById('view-birthday').textContent = formatBirthdayView(profile.birthday);
 
   // 進階資訊：課程紀錄
   const courseRecord = profile.courseRecord || '';
@@ -309,6 +348,8 @@ function cancelEditMode() {
     const teamInput = document.getElementById('teamResponsibilities');
     if (teamInput) teamInput.value = userProfile.teamResponsibilities || '';
     renderVolunteerRecordsList(parseVolunteerRecords(userProfile.volunteerRecords));
+    const birthdayInput = document.getElementById('birthday');
+    if (birthdayInput) birthdayInput.value = userProfile.birthday || '';
   }
   document.getElementById('profile-view-mode').classList.remove('hidden');
   document.getElementById('profile-edit-mode').classList.add('hidden');
@@ -401,10 +442,10 @@ async function updateProfile() {
       return;
     }
 
-    // 一併更新 LINE 頭像 URL（成員列表／詳情會顯示）
+    // 一併更新 LINE 頭像 URL 與顯示名稱（成員列表用）
     const lineProfile = window.LIFF && window.LIFF.getProfile ? window.LIFF.getProfile() : null;
     const pictureUrl = (lineProfile && lineProfile.pictureUrl) ? lineProfile.pictureUrl : '';
-
+    const displayName = (lineProfile && lineProfile.displayName) ? lineProfile.displayName : '';
     const formData = {
       name: document.getElementById('name').value,
       email: document.getElementById('email').value,
@@ -415,6 +456,8 @@ async function updateProfile() {
       teslaFranchisee: document.getElementById('teslaFranchisee').value || '',
       teamResponsibilities: document.getElementById('teamResponsibilities').value || '',
       volunteerRecords: JSON.stringify(volunteerRecordsEdit),
+      birthday: document.getElementById('birthday') ? document.getElementById('birthday').value : '',
+      displayName: displayName,
     };
     
     // 更新星等顯示
@@ -442,6 +485,8 @@ async function updateProfile() {
         teslaFranchisee: formData.teslaFranchisee,
         teamResponsibilities: formData.teamResponsibilities,
         volunteerRecords: formData.volunteerRecords,
+        birthday: formData.birthday,
+        displayName: formData.displayName,
       };
       // 更新唯讀區塊的顯示內容
       updateProfileView(userProfile);
@@ -528,6 +573,7 @@ async function registerUser() {
     const lineProfile = window.LIFF && window.LIFF.getProfile ? window.LIFF.getProfile() : null;
     const pictureUrl = (lineProfile && lineProfile.pictureUrl) ? lineProfile.pictureUrl : '';
 
+    const regBirthday = document.getElementById('reg-birthday') ? document.getElementById('reg-birthday').value : '';
     const formData = {
       name: (document.getElementById('reg-name').value || '').trim(),
       email: (document.getElementById('reg-email').value || '').trim(),
@@ -538,6 +584,8 @@ async function registerUser() {
       teslaFranchisee: document.getElementById('reg-teslaFranchisee') ? document.getElementById('reg-teslaFranchisee').value : '',
       teamResponsibilities: document.getElementById('reg-teamResponsibilities') ? document.getElementById('reg-teamResponsibilities').value : '',
       volunteerRecords: '[]',
+      birthday: regBirthday || '',
+      displayName: (lineProfile && lineProfile.displayName) ? lineProfile.displayName : '',
     };
 
     const response = await fetch('/api/profile/register', {

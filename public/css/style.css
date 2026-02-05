@@ -932,7 +932,20 @@ h3 {
 .member-name {
   font-size: 18px;
   font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.member-real-name {
+  font-size: 13px;
+  color: var(--text-light);
   margin-bottom: 4px;
+}
+
+.member-card-arrow {
+  flex-shrink: 0;
+  font-size: 18px;
+  color: var(--text-light);
+  margin-left: 8px;
 }
 
 .member-star {

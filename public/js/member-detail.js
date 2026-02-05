@@ -66,13 +66,10 @@ async function loadMemberDetail() {
  * 渲染成員詳情
  */
 function renderMemberDetail(member) {
-  // 顯示姓名
-  document.getElementById('member-name').textContent = member.name || '未設定';
-  
-  // 更新星等顯示
+  // 頭部顯示 LINE 名字（顯示名稱），無則用真實姓名
+  const displayName = (member.displayName && String(member.displayName).trim()) ? member.displayName : (member.name || '未設定');
+  document.getElementById('member-name').textContent = displayName;
   updateStarDisplay(member.starLevel || '白星');
-  
-  // 顯示詳細資料
   document.getElementById('view-name').textContent = member.name || '未設定';
   document.getElementById('view-email').textContent = member.email || '未設定';
   document.getElementById('view-phone').textContent = member.phone || '未設定';

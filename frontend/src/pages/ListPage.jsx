@@ -1,30 +1,44 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useLiff } from '../context/LiffContext'
 import PageHeader from '../components/PageHeader'
 import EventCard from '../components/EventCard'
+import { fetchMonthEvents } from '../api'
 
 const TABS = ['全部', '學員上課', '活動', '諮詢簽約']
 
-const MOCK_EVENTS = {
-  全部: [
-    { id: '1', title: '學員課程討論', type: '學員上課', start: '2023-10-05T09:00:00+08:00', end: '2023-10-05T11:00:00+08:00', allDay: false },
-    { id: '2', title: '團隊腦力激盪會議', type: '活動', start: '2023-10-05', end: '2023-10-05', allDay: true },
-    { id: '3', title: '專案進度審核', type: '諮詢簽約', start: '2023-10-05T14:00:00+08:00', end: '2023-10-05T15:30:00+08:00', allDay: false },
-  ],
-  學員上課: [
-    { id: '1', title: '學員課程討論', type: '學員上課', start: '2023-10-05T09:00:00+08:00', end: '2023-10-05T11:00:00+08:00', allDay: false },
-  ],
-  活動: [
-    { id: '2', title: '團隊腦力激盪會議', type: '活動', start: '2023-10-05', end: '2023-10-05', allDay: true },
-  ],
-  諮詢簽約: [
-    { id: '3', title: '專案進度審核', type: '諮詢簽約', start: '2023-10-05T14:00:00+08:00', end: '2023-10-05T15:30:00+08:00', allDay: false },
-  ],
-}
-
 export default function ListPage() {
+  const { userId } = useLiff()
   const [activeTab, setActiveTab] = useState('全部')
-  const events = MOCK_EVENTS[activeTab] || []
+  const [current, setCurrent] = useState(() => {
+    const d = new Date()
+    return new Date(d.getFullYear(), d.getMonth(), 1)
+  })
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const year = current.getFullYear()
+  const month = current.getMonth() + 1
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    const typeParam = activeTab === '全部' ? null : activeTab
+    fetchMonthEvents(year, month, typeParam, userId || undefined)
+      .then((data) => {
+        if (!cancelled) setEvents(Array.isArray(data) ? data : [])
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || '載入失敗')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [year, month, activeTab, userId])
+
+  const yearMonthLabel = `${year}年 ${month}月`
 
   return (
     <>
@@ -49,17 +63,38 @@ export default function ListPage() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto no-scrollbar px-4 py-4 pb-[100px]">
-          <div className="sticky top-0 z-10 bg-background-light dark:bg-background-dark py-2">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">2023年 10月</h3>
+          <div className="sticky top-0 z-10 bg-background-light dark:bg-background-dark py-2 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{yearMonthLabel}</h3>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrent((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+                aria-label="上個月"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrent((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+                aria-label="下個月"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </button>
+            </div>
           </div>
           <div className="space-y-4 pt-2">
-            {events.length === 0 ? (
+            {loading && <p className="text-slate-500 dark:text-gray-400 text-center py-8">載入中...</p>}
+            {error && <p className="text-red-500 text-sm text-center py-4">{error}</p>}
+            {!loading && !error && events.length === 0 && (
               <p className="text-slate-500 dark:text-gray-400 text-center py-8">
                 {activeTab === '全部' ? '目前沒有行程' : `目前沒有 ${activeTab} 類型的行程`}
               </p>
-            ) : (
-              events.map((ev) => <EventCard key={ev.id} event={ev} />)
             )}
+            {!loading && !error && events.length > 0 && events.map((ev) => (
+              <EventCard key={ev.id} event={ev} />
+            ))}
           </div>
           <div className="h-8" />
         </div>

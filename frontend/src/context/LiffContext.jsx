@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import liff from '@line/liff'
-import { fetchLiffId, syncProfileAvatar } from '../api'
+import { fetchLiffId, syncProfileAvatar, syncBirthdayEvent, refreshAppCacheOnLiffEnter } from '../api'
 
 // 開發模式：可設為 true 跳過 LIFF，用模擬 userId 測試 API
 const DEV_SKIP_LIFF = import.meta.env.DEV && import.meta.env.VITE_DEV_SKIP_LIFF === '1'
@@ -39,12 +39,16 @@ export function LiffProvider({ children }) {
           setUserId(DEV_MOCK_USER_ID)
           setProfile({ userId: DEV_MOCK_USER_ID, displayName: '開發測試員', pictureUrl: '' })
           setLoggedIn(true)
+          refreshAppCacheOnLiffEnter()
           setReady(true)
           return
         }
 
         const liffId = await fetchLiffId()
         await liff.init({ liffId })
+
+        // 每次進入 LIFF：清除舊快取並向後端取得最新資料重新建立快取
+        refreshAppCacheOnLiffEnter()
 
         if (liff.isLoggedIn()) {
           const p = await liff.getProfile()
@@ -54,6 +58,8 @@ export function LiffProvider({ children }) {
             setLoggedIn(true)
             // 每次進入系統：檢查 LINE 頭像是否變更，有則同步到 Google Sheet
             syncProfileAvatar(p.userId, (p.pictureUrl || '').trim())
+            // 每次進入系統：檢查生日行程日期是否與個人資料一致，若不符則由後端更新
+            syncBirthdayEvent(p.userId)
           }
         }
         if (!cancelled) setReady(true)

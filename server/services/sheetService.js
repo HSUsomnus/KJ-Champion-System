@@ -28,15 +28,15 @@ const getAllMembers = async () => {
     const sheets = await getSheetsClient();
     const { sheetId, sheetName } = getSheetConfig();
 
-    // 讀取 Google Sheets 的資料（G 頭像URL；H 特斯拉加盟主；I 團隊負責事項；J 課程志工紀錄 JSON）
+    // 讀取 Google Sheets 的資料（K 生日；L LINE 顯示名稱）
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: `${sheetName}!A2:J`,
+      range: `${sheetName}!A2:L`,
     });
 
     const rows = response.data.values || [];
     
-    // 轉換成物件陣列（A~G 基本資料，H~J 進階資訊）
+    // 轉換成物件陣列（A~G 基本資料，H~J 進階資訊，K~L 生日與顯示名稱）
     const members = rows
       .filter(row => row[0]) // 過濾掉空行（至少要有 LINE ID）
       .map((row, index) => ({
@@ -48,9 +48,11 @@ const getAllMembers = async () => {
         starLevel: row[4] || '白星',
         courseRecord: row[5] || '',
         pictureUrl: row[6] || '',
-        teslaFranchisee: row[7] || '',           // H：是否為特斯拉出行加盟主（是／否）
-        teamResponsibilities: row[8] || '',     // I：團隊負責事項
-        volunteerRecords: row[9] || '',        // J：課程志工紀錄（JSON 字串）
+        teslaFranchisee: row[7] || '',
+        teamResponsibilities: row[8] || '',
+        volunteerRecords: row[9] || '',
+        birthday: row[10] || '',        // K：生日（YYYY-MM-DD）
+        displayName: row[11] || '',    // L：LINE 顯示名稱（成員列表用）
       }));
 
     return members;
@@ -97,6 +99,8 @@ const isMemberRegistered = async (lineId) => {
  * @param {string} [memberData.teslaFranchisee] - 是否為特斯拉出行加盟主（是／否）
  * @param {string} [memberData.teamResponsibilities] - 團隊負責事項
  * @param {string} [memberData.volunteerRecords] - 課程志工紀錄（JSON 字串）
+ * @param {string} [memberData.birthday] - 生日（YYYY-MM-DD）
+ * @param {string} [memberData.displayName] - LINE 顯示名稱
  * @returns {Promise<Object>} 新增的成員物件
  */
 const createMember = async (memberData) => {
@@ -104,7 +108,7 @@ const createMember = async (memberData) => {
     const sheets = await getSheetsClient();
     const { sheetId, sheetName } = getSheetConfig();
 
-    // 準備要新增的資料列（含進階資訊 H、I、J）
+    // 準備要新增的資料列（含 K 生日、L 顯示名稱）
     const values = [[
       memberData.lineId || '',
       memberData.name || '',
@@ -116,19 +120,21 @@ const createMember = async (memberData) => {
       memberData.teslaFranchisee || '',
       memberData.teamResponsibilities || '',
       memberData.volunteerRecords || '',
+      memberData.birthday || '',
+      memberData.displayName || '',
     ]];
 
     // 新增資料到 Google Sheets（使用 RAW 避免電話欄位 09XX 被當成數字而掉前導 0）
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: `${sheetName}!A:J`,
+      range: `${sheetName}!A:L`,
       valueInputOption: 'RAW',
       resource: {
         values: values,
       },
     });
 
-    // 回傳新增的成員資料（含進階資訊）；電話一律以字串回傳
+    // 回傳新增的成員資料（含生日、顯示名稱）；電話一律以字串回傳
     return {
       lineId: memberData.lineId,
       name: memberData.name,
@@ -140,6 +146,8 @@ const createMember = async (memberData) => {
       teslaFranchisee: memberData.teslaFranchisee || '',
       teamResponsibilities: memberData.teamResponsibilities || '',
       volunteerRecords: memberData.volunteerRecords || '',
+      birthday: memberData.birthday || '',
+      displayName: memberData.displayName || '',
     };
   } catch (error) {
     console.error('❌ 新增成員資料失敗:', error.message);
@@ -164,7 +172,7 @@ const updateMember = async (lineId, memberData) => {
     const sheets = await getSheetsClient();
     const { sheetId, sheetName } = getSheetConfig();
 
-    // 準備更新的資料（含進階資訊 H、I、J）；電話寫入前轉成字串
+    // 準備更新的資料（含 K 生日、L 顯示名稱）；電話寫入前轉成字串
     const phoneVal = memberData.phone !== undefined ? memberData.phone : member.phone;
     const values = [[
       lineId,
@@ -177,19 +185,21 @@ const updateMember = async (lineId, memberData) => {
       memberData.teslaFranchisee !== undefined ? memberData.teslaFranchisee : (member.teslaFranchisee || ''),
       memberData.teamResponsibilities !== undefined ? memberData.teamResponsibilities : (member.teamResponsibilities || ''),
       memberData.volunteerRecords !== undefined ? memberData.volunteerRecords : (member.volunteerRecords || ''),
+      memberData.birthday !== undefined ? memberData.birthday : (member.birthday || ''),
+      memberData.displayName !== undefined ? memberData.displayName : (member.displayName || ''),
     ]];
 
     // 更新 Google Sheets 中的資料（使用 RAW 避免電話欄位 09XX 被當成數字而掉前導 0）
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `${sheetName}!A${member.rowIndex}:J${member.rowIndex}`,
+      range: `${sheetName}!A${member.rowIndex}:L${member.rowIndex}`,
       valueInputOption: 'RAW',
       resource: {
         values: values,
       },
     });
 
-    // 回傳更新後的成員資料（含進階資訊）；電話一律以字串回傳
+    // 回傳更新後的成員資料（含生日、顯示名稱）；電話一律以字串回傳
     return {
       lineId: lineId,
       name: memberData.name !== undefined ? memberData.name : member.name,
@@ -201,6 +211,8 @@ const updateMember = async (lineId, memberData) => {
       teslaFranchisee: memberData.teslaFranchisee !== undefined ? memberData.teslaFranchisee : (member.teslaFranchisee || ''),
       teamResponsibilities: memberData.teamResponsibilities !== undefined ? memberData.teamResponsibilities : (member.teamResponsibilities || ''),
       volunteerRecords: memberData.volunteerRecords !== undefined ? memberData.volunteerRecords : (member.volunteerRecords || ''),
+      birthday: memberData.birthday !== undefined ? memberData.birthday : (member.birthday || ''),
+      displayName: memberData.displayName !== undefined ? memberData.displayName : (member.displayName || ''),
     };
   } catch (error) {
     console.error('❌ 更新成員資料失敗:', error.message);

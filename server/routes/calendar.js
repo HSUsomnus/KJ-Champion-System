@@ -7,6 +7,34 @@ const router = express.Router();
 const { verifyLineUser, optionalLineUser } = require('../middleware/auth');
 const calendarService = require('../services/calendarService');
 const versionService = require('../services/versionService');
+const sheetService = require('../services/sheetService');
+
+/**
+ * POST /api/calendar/sync-my-birthday
+ * 每次用戶進入 LIFF 時呼叫：檢查該用戶的生日行程日期是否與個人資料生日一致，若不一致則更新行程
+ * 需要驗證 LINE User ID（標頭 X-Line-User-Id 或 query userId）
+ */
+router.post('/sync-my-birthday', verifyLineUser, async (req, res) => {
+  try {
+    const member = await sheetService.getMemberByLineId(req.lineUserId);
+    if (!member) {
+      return res.json({ success: true, data: { updated: 0 }, message: '未註冊成員' });
+    }
+    const updated = await calendarService.syncMemberBirthdayEvents(member);
+    if (updated > 0) versionService.incrementVersion();
+    res.json({
+      success: true,
+      data: { updated },
+      message: updated > 0 ? `已更新 ${updated} 筆生日行程日期` : '生日行程日期已是最新',
+    });
+  } catch (error) {
+    console.error('同步生日行程錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '同步生日行程失敗',
+    });
+  }
+});
 
 /**
  * GET /api/calendar/events
@@ -27,6 +55,8 @@ router.get('/events', optionalLineUser, async (req, res) => {
     const timeMin = `${startDate}T00:00:00+08:00`;
     const timeMax = `${endDate}T23:59:59+08:00`;
 
+    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+    if (birthdayCreated > 0) versionService.incrementVersion();
     const events = await calendarService.getGroupEvents(timeMin, timeMax);
 
     res.json({
@@ -50,6 +80,10 @@ router.get('/events', optionalLineUser, async (req, res) => {
 router.get('/today', optionalLineUser, async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
+    const timeMin = `${date}T00:00:00+08:00`;
+    const timeMax = `${date}T23:59:59+08:00`;
+    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+    if (birthdayCreated > 0) versionService.incrementVersion();
     const events = await calendarService.getTodayGroupEvents(date);
 
     res.json({
@@ -83,6 +117,11 @@ router.get('/month', optionalLineUser, async (req, res) => {
       });
     }
 
+    const timeMin = `${year}-${String(month).padStart(2, '0')}-01T00:00:00+08:00`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const timeMax = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59+08:00`;
+    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+    if (birthdayCreated > 0) versionService.incrementVersion();
     const events = await calendarService.getGroupEventsByMonth(year, month, type);
 
     res.json({
@@ -149,14 +188,24 @@ router.post('/events', verifyLineUser, async (req, res) => {
 /**
  * PUT /api/calendar/events/:eventId
  * 更新團體行程
- * 需要驗證 LINE User ID
+ * 需要驗證 LINE User ID；系統生成的生日行程不可編輯
  */
 router.put('/events/:eventId', verifyLineUser, async (req, res) => {
   try {
     const { eventId } = req.params;
+    const existing = await calendarService.getGroupEventById(eventId).catch(() => null);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: '找不到該行程' });
+    }
+    if (existing.isBirthdayEvent) {
+      return res.status(403).json({
+        success: false,
+        message: '系統生成的生日行程不可編輯',
+      });
+    }
+
     const { title, description, start, end, location, type, allDay } = req.body;
 
-    // 驗證行程類型（如果有的話）
     let eventType = type;
     if (type) {
       const validTypes = ['學員上課', '活動', '諮詢簽約'];
@@ -195,11 +244,21 @@ router.put('/events/:eventId', verifyLineUser, async (req, res) => {
 /**
  * DELETE /api/calendar/events/:eventId
  * 刪除團體行程
- * 需要驗證 LINE User ID
+ * 需要驗證 LINE User ID；系統生成的生日行程不可刪除
  */
 router.delete('/events/:eventId', verifyLineUser, async (req, res) => {
   try {
     const { eventId } = req.params;
+    const existing = await calendarService.getGroupEventById(eventId).catch(() => null);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: '找不到該行程' });
+    }
+    if (existing.isBirthdayEvent) {
+      return res.status(403).json({
+        success: false,
+        message: '系統生成的生日行程不可刪除',
+      });
+    }
     await calendarService.deleteGroupEvent(eventId);
 
     // 更新版本號
@@ -247,6 +306,8 @@ router.get('/version', optionalLineUser, async (req, res) => {
     const timeMin = now.toISOString();
     const timeMax = oneYearLater.toISOString();
 
+    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+    if (birthdayCreated > 0) versionService.incrementVersion();
     const events = await calendarService.getGroupEvents(timeMin, timeMax);
 
     // 取得所有成員
@@ -273,36 +334,20 @@ router.get('/version', optionalLineUser, async (req, res) => {
 
 /**
  * GET /api/calendar/events/:eventId
- * 取得單一行程的詳細資訊
+ * 取得單一行程的詳細資訊（含 isBirthdayEvent，前端據此隱藏編輯/刪除）
  */
 router.get('/events/:eventId', optionalLineUser, async (req, res) => {
   try {
     const { eventId } = req.params;
-    const calendar = await require('../config/googleAuth').getCalendarClient();
-    const calendarId = require('../config/googleAuth').getGroupCalendarId();
-
-    const response = await calendar.events.get({
-      calendarId: calendarId,
-      eventId: eventId,
-    });
-
-    const event = {
-      id: response.data.id,
-      title: response.data.summary || '無標題',
-      description: response.data.description || '',
-      start: response.data.start?.dateTime || response.data.start?.date,
-      end: response.data.end?.dateTime || response.data.end?.date,
-      location: response.data.location || '',
-      type: response.data.extendedProperties?.private?.type || '活動',
-      allDay: !response.data.start?.dateTime,
-      creator: response.data.creator?.email || '',
-    };
-
+    const event = await calendarService.getGroupEventById(eventId);
     res.json({
       success: true,
       data: event,
     });
   } catch (error) {
+    if (error.response?.status === 404 || error.code === 404) {
+      return res.status(404).json({ success: false, message: '找不到該行程' });
+    }
     console.error('取得行程詳情錯誤:', error);
     res.status(500).json({
       success: false,

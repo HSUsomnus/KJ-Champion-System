@@ -4,6 +4,7 @@
  */
 
 const { getCalendarClient, getGroupCalendarId } = require('../config/googleAuth');
+const sheetService = require('./sheetService');
 
 /**
  * 取得指定日期範圍的團體行程
@@ -25,7 +26,7 @@ const getGroupEvents = async (timeMin, timeMax) => {
       orderBy: 'startTime',
     });
 
-    // 轉換成我們需要的格式
+    // 轉換成我們需要的格式（含是否為系統生成的生日行程，此類不可編輯/刪除）
     const events = (response.data.items || []).map(event => ({
       id: event.id,
       title: event.summary || '無標題',
@@ -33,12 +34,10 @@ const getGroupEvents = async (timeMin, timeMax) => {
       start: event.start?.dateTime || event.start?.date,
       end: event.end?.dateTime || event.end?.date,
       location: event.location || '',
-      // 從擴充屬性中取得行程類型（如果有的話）
       type: event.extendedProperties?.private?.type || '活動',
-      // 建立者資訊
       creator: event.creator?.email || '',
-      // 是否為全天事件
       allDay: !event.start?.dateTime,
+      isBirthdayEvent: event.extendedProperties?.private?.isBirthday === '1',
     }));
 
     return events;
@@ -50,13 +49,16 @@ const getGroupEvents = async (timeMin, timeMax) => {
 
 /**
  * 取得當日的團體行程
+ * timeMax 用次日 00:00:00，確保整日行程（如生日）會被 Google API 列入
  * @param {string} date - 日期 (YYYY-MM-DD 格式)
  * @returns {Promise<Array>} 當日行程陣列
  */
 const getTodayGroupEvents = async (date) => {
-  // 設定當日的開始和結束時間
-  const timeMin = `${date}T00:00:00+08:00`; // 台灣時區
-  const timeMax = `${date}T23:59:59+08:00`;
+  const timeMin = `${date}T00:00:00+08:00`;
+  const [y, m, d] = date.split('-').map(Number);
+  const next = new Date(y, m - 1, d + 1);
+  const nextStr = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+  const timeMax = `${nextStr}T00:00:00+08:00`;
 
   return await getGroupEvents(timeMin, timeMax);
 };
@@ -76,6 +78,120 @@ const toGoogleAllDayRange = (startISO, endISO) => {
 };
 
 /**
+ * 從生日字串解析出月、日（支援 YYYY-MM-DD 或 MM-DD）
+ * @param {string} birthdayStr - 生日字串
+ * @returns {{ month: number, day: number } | null}
+ */
+const parseBirthdayMonthDay = (birthdayStr) => {
+  const s = String(birthdayStr || '').trim();
+  if (!s) return null;
+  // 支援 YYYY-MM-DD（取後半 MM-DD）或 MM-DD
+  const match = s.match(/^(?:\d{4}-)?(\d{1,2})-(\d{1,2})$/);
+  if (!match) return null;
+  const month = parseInt(match[1], 10);
+  const day = parseInt(match[2], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { month, day };
+};
+
+/**
+ * 確保指定日期範圍內，所有有生日的成員都有一筆「真實姓名+生日」的整日活動
+ * 若該日已有同名生日行程則不重複建立
+ * @param {string} timeMin - 開始時間 (ISO 8601)
+ * @param {string} timeMax - 結束時間 (ISO 8601)
+ * @returns {Promise<number>} 本次新建立的生日行程數量
+ */
+const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
+  const startDate = String(timeMin).trim().slice(0, 10);
+  const endDate = String(timeMax).trim().slice(0, 10);
+  const startYear = parseInt(startDate.slice(0, 4), 10);
+  const endYear = parseInt(endDate.slice(0, 4), 10);
+
+  const members = await sheetService.getAllMembers();
+  const withBirthday = members.filter(m => {
+    const name = (m.name || '').trim();
+    const parsed = parseBirthdayMonthDay(m.birthday);
+    return name && parsed;
+  });
+
+  let created = 0;
+  for (const member of withBirthday) {
+    const { month, day } = parseBirthdayMonthDay(member.birthday);
+    const title = `${member.name.trim()}生日`;
+
+    for (let y = startYear; y <= endYear; y++) {
+      const d = new Date(y, month - 1, day);
+      if (d.getMonth() !== month - 1 || d.getDate() !== day) continue; // 無效日如 2/30
+      const dateStr = `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (dateStr < startDate || dateStr > endDate) continue;
+
+      const dayMin = `${dateStr}T00:00:00+08:00`;
+      const [dy, dm, dd] = dateStr.split('-').map(Number);
+      const nextD = new Date(dy, dm - 1, dd + 1);
+      const nextStr = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, '0')}-${String(nextD.getDate()).padStart(2, '0')}`;
+      const dayMax = `${nextStr}T00:00:00+08:00`;
+      const existing = await getGroupEvents(dayMin, dayMax);
+      const hasBirthday = existing.some(ev => ev.title === title);
+      if (hasBirthday) continue;
+
+      await createGroupEvent({
+        title,
+        description: '',
+        start: dateStr,
+        end: dateStr,
+        allDay: true,
+        location: '',
+        type: '活動',
+        isBirthdayEvent: true,
+      });
+      created += 1;
+    }
+  }
+  return created;
+};
+
+/**
+ * 檢查並更新該成員的生日行程：若日曆上「真實姓名+生日」的行程日期與成員目前生日不符，則更新為新日期
+ * （例如用戶在個人資料改了生日，每次進入 LIFF 時會把既有生日行程改到正確的月日）
+ * @param {Object} member - 成員物件（至少含 name、birthday）
+ * @returns {Promise<number>} 被更新的行程數量
+ */
+const syncMemberBirthdayEvents = async (member) => {
+  const name = (member.name || '').trim();
+  const parsed = parseBirthdayMonthDay(member.birthday);
+  if (!name || !parsed) return 0;
+
+  const { month, day } = parsed;
+  const title = `${name}生日`;
+  const year = new Date().getFullYear();
+  const timeMin = `${year - 1}-01-01T00:00:00+08:00`;
+  const timeMax = `${year + 1}-12-31T23:59:59+08:00`;
+
+  const events = await getGroupEvents(timeMin, timeMax);
+  const myBirthdayEvents = events.filter(ev => ev.title === title);
+
+  let updated = 0;
+  for (const ev of myBirthdayEvents) {
+    const startStr = (ev.start || '').slice(0, 10);
+    if (startStr.length < 10) continue;
+    const eventMonth = parseInt(startStr.slice(5, 7), 10);
+    const eventDay = parseInt(startStr.slice(8, 10), 10);
+    if (eventMonth === month && eventDay === day) continue;
+
+    const eventYear = startStr.slice(0, 4);
+    const newDate = `${eventYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    await updateGroupEvent(ev.id, {
+      title,
+      start: newDate,
+      end: newDate,
+      allDay: true,
+    });
+    updated += 1;
+  }
+  return updated;
+};
+
+/**
  * 新增團體行程
  * @param {Object} eventData - 行程資料
  * @param {string} eventData.title - 行程標題
@@ -85,6 +201,7 @@ const toGoogleAllDayRange = (startISO, endISO) => {
  * @param {boolean} eventData.allDay - 是否整日（整日時用 date 寫入 Google）
  * @param {string} eventData.location - 地點
  * @param {string} eventData.type - 行程類型（學員上課、活動、諮詢簽約）
+ * @param {boolean} [eventData.isBirthdayEvent] - 是否為系統生成的生日行程（寫入 Google 後不可編輯/刪除）
  * @returns {Promise<Object>} 新增的行程物件
  */
 const createGroupEvent = async (eventData) => {
@@ -105,6 +222,13 @@ const createGroupEvent = async (eventData) => {
       endPayload = { dateTime: eventData.end, timeZone: 'Asia/Taipei' };
     }
 
+    const extendedPrivate = {
+      type: eventData.type || '活動',
+    };
+    if (eventData.isBirthdayEvent) {
+      extendedPrivate.isBirthday = '1';
+    }
+
     const event = {
       summary: eventData.title,
       description: eventData.description || '',
@@ -112,9 +236,7 @@ const createGroupEvent = async (eventData) => {
       start: startPayload,
       end: endPayload,
       extendedProperties: {
-        private: {
-          type: eventData.type || '活動',
-        },
+        private: extendedPrivate,
       },
     };
 
@@ -123,7 +245,6 @@ const createGroupEvent = async (eventData) => {
       resource: event,
     });
 
-    // 回傳格式化的行程資料
     return {
       id: response.data.id,
       title: response.data.summary,
@@ -133,6 +254,7 @@ const createGroupEvent = async (eventData) => {
       location: response.data.location || '',
       type: response.data.extendedProperties?.private?.type || '活動',
       allDay: !response.data.start?.dateTime,
+      isBirthdayEvent: response.data.extendedProperties?.private?.isBirthday === '1',
     };
   } catch (error) {
     console.error('❌ 新增團體行程失敗:', error.message);
@@ -231,6 +353,33 @@ const deleteGroupEvent = async (eventId) => {
 };
 
 /**
+ * 取得單一團體行程（含 isBirthdayEvent，供後端判斷是否允許編輯/刪除）
+ * @param {string} eventId - 行程 ID
+ * @returns {Promise<Object>} 行程物件，找不到時拋錯
+ */
+const getGroupEventById = async (eventId) => {
+  const calendar = await getCalendarClient();
+  const calendarId = getGroupCalendarId();
+  const response = await calendar.events.get({
+    calendarId: calendarId,
+    eventId: eventId,
+  });
+  const event = response.data;
+  return {
+    id: event.id,
+    title: event.summary || '無標題',
+    description: event.description || '',
+    start: event.start?.dateTime || event.start?.date,
+    end: event.end?.dateTime || event.end?.date,
+    location: event.location || '',
+    type: event.extendedProperties?.private?.type || '活動',
+    creator: event.creator?.email || '',
+    allDay: !event.start?.dateTime,
+    isBirthdayEvent: event.extendedProperties?.private?.isBirthday === '1',
+  };
+};
+
+/**
  * 取得指定月份的團體行程（用於列表模式）
  * @param {number} year - 年份
  * @param {number} month - 月份 (1-12)
@@ -258,8 +407,11 @@ const getGroupEventsByMonth = async (year, month, type = null) => {
 module.exports = {
   getGroupEvents,
   getTodayGroupEvents,
+  getGroupEventById,
   createGroupEvent,
   updateGroupEvent,
   deleteGroupEvent,
   getGroupEventsByMonth,
+  ensureBirthdayEventsInRange,
+  syncMemberBirthdayEvents,
 };

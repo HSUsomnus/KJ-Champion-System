@@ -79,22 +79,26 @@ function renderMembers(members, currentUserId) {
     return (starOrder[b.starLevel] || 0) - (starOrder[a.starLevel] || 0);
   });
 
-  // 頭像：有 pictureUrl 則用後端代理 URL，避免 LINE CDN 不顯示；無則用預設圖
+  // 頭像：有 pictureUrl 則用後端代理 URL；字卡主標為 LINE 名字，真實姓名小字，右側 > 提示可點擊
   const placeholderUrl = 'https://via.placeholder.com/60?text=👤';
   container.innerHTML = sortedMembers.map(member => {
     const hasAvatar = member.pictureUrl && String(member.pictureUrl).trim();
     const avatarUrl = hasAvatar ? `/api/members/avatar/${encodeURIComponent(member.lineId)}` : placeholderUrl;
     const isSelf = currentUserId && member.lineId === currentUserId;
+    const displayName = (member.displayName && String(member.displayName).trim()) ? member.displayName : (member.name || '未設定');
+    const realName = member.name && String(member.name).trim() ? member.name : '';
     return `
     <div class="member-card" data-line-id="${escapeHtml(member.lineId)}" data-is-self="${isSelf ? '1' : '0'}" onclick="handleMemberCardClick(this)">
-      <img src="${avatarUrl}" alt="${escapeHtml(member.name)}" class="member-avatar" 
+      <img src="${avatarUrl}" alt="${escapeHtml(displayName)}" class="member-avatar" 
            onerror="this.src='${placeholderUrl.replace(/'/g, "\\'")}'">
       <div class="member-info">
-        <div class="member-name">${escapeHtml(member.name || '未設定')}</div>
+        <div class="member-name">${escapeHtml(displayName)}</div>
+        ${realName && realName !== displayName ? `<div class="member-real-name">${escapeHtml(realName)}</div>` : ''}
         <span class="member-star ${escapeHtml(member.starLevel || '白星')}">
           ${escapeHtml(member.starLevel || '白星')}
         </span>
       </div>
+      <span class="member-card-arrow" aria-hidden="true">&gt;</span>
     </div>
   `;
   }).join('');

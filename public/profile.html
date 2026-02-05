@@ -31,11 +31,10 @@
 
     <!-- 個人資料顯示 -->
     <div id="profile-display" class="hidden">
-      <!-- LINE 頭像和姓名 -->
+      <!-- LINE 頭像與 LINE 名字、星等 -->
       <div class="card text-center">
         <img id="profile-avatar" src="" alt="頭像" class="member-avatar" style="width: 100px; height: 100px; margin: 0 auto 16px;">
-        <h2 id="profile-name">姓名</h2>
-        <!-- 星等顯示：有顏色外框包住圖示+文字 -->
+        <p id="profile-line-name" class="profile-line-name" style="margin: 0 0 4px; font-size: 1rem; color: var(--text-light);">LINE 名字</p>
         <div id="profile-star-display" class="profile-star-display" style="margin-top: 8px;">
           <span id="profile-star-icon" class="member-star 白星">白星</span>
         </div>
@@ -43,24 +42,26 @@
 
       <!-- 個人資料顯示（唯讀模式） -->
       <div class="card" id="profile-view-mode">
+        <label class="form-label" style="font-weight: 600;">📌 基本資料</label>
         <div class="form-group">
           <label class="form-label">真實姓名</label>
           <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px;" id="view-name">-</div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Email</label>
           <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px;" id="view-email">-</div>
         </div>
-
         <div class="form-group">
           <label class="form-label">電話號碼</label>
           <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px;" id="view-phone">-</div>
         </div>
-
         <div class="form-group">
           <label class="form-label">星等</label>
           <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px;" id="view-starLevel">-</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">生日</label>
+          <div class="form-input" style="background-color: var(--bg-color); border: none; padding: 12px;" id="view-birthday">-</div>
         </div>
 
         <!-- 進階資訊區塊（含課程紀錄、特斯拉加盟主、團隊負責事項、課程志工） -->
@@ -90,21 +91,19 @@
       <!-- 個人資料表單（編輯模式） -->
       <div class="card hidden" id="profile-edit-mode">
         <form id="profile-form">
+          <label class="form-label" style="font-weight: 600;">📌 基本資料</label>
           <div class="form-group">
             <label class="form-label">真實姓名</label>
             <input type="text" id="name" class="form-input" required>
           </div>
-
           <div class="form-group">
             <label class="form-label">Email</label>
             <input type="email" id="email" class="form-input">
           </div>
-
           <div class="form-group">
             <label class="form-label">電話號碼</label>
             <input type="tel" id="phone" class="form-input">
           </div>
-
           <div class="form-group">
             <label class="form-label">星等</label>
             <select id="starLevel" class="form-select">
@@ -114,6 +113,10 @@
               <option value="紅星">紅星</option>
               <option value="紫星">紫星</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">生日（編輯時顯示完整年月日）</label>
+            <input type="date" id="birthday" class="form-input">
           </div>
 
           <!-- 進階資訊（編輯模式） -->
@@ -197,17 +200,14 @@
             <label class="form-label">真實姓名 *</label>
             <input type="text" id="reg-name" class="form-input" required>
           </div>
-
           <div class="form-group">
             <label class="form-label">Email</label>
             <input type="email" id="reg-email" class="form-input">
           </div>
-
           <div class="form-group">
             <label class="form-label">電話號碼</label>
             <input type="tel" id="reg-phone" class="form-input">
           </div>
-
           <div class="form-group">
             <label class="form-label">星等</label>
             <select id="reg-starLevel" class="form-select">
@@ -217,6 +217,10 @@
               <option value="紅星">紅星</option>
               <option value="紫星">紫星</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">生日</label>
+            <input type="date" id="reg-birthday" class="form-input">
           </div>
 
           <!-- 進階資訊（註冊時可選填） -->

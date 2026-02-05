@@ -22,6 +22,23 @@ export async function fetchTodayEvents(date, userId) {
 }
 
 /**
+ * 取得指定月份的團體行程（用於行程列表，含生日行程）
+ * @param {number} year - 年份
+ * @param {number} month - 月份 1–12
+ * @param {string} [type] - 選填，篩選類型：學員上課 / 活動 / 諮詢簽約，傳「全部」或不傳則不篩選
+ * @param {string} [userId] - LINE User ID（選填）
+ */
+export async function fetchMonthEvents(year, month, type, userId) {
+  const params = new URLSearchParams({ year: String(year), month: String(month) })
+  if (type && type !== '全部') params.set('type', type)
+  if (userId) params.set('userId', userId)
+  const res = await fetch(`/api/calendar/month?${params}`)
+  const data = await res.json()
+  if (!data.success) throw new Error(data.message || '取得行程失敗')
+  return data.data
+}
+
+/**
  * 取得單一行程詳情
  */
 export async function fetchEvent(eventId, userId) {
@@ -87,5 +104,60 @@ export function syncProfileAvatar(userId, pictureUrl) {
     body: JSON.stringify({ pictureUrl: pictureUrl || '' }),
   })
     .then((res) => res.json())
+    .catch(() => {})
+}
+
+/**
+ * 進入 LIFF 時同步生日行程：檢查日曆上「姓名+生日」的日期是否與個人資料生日一致，若不一致則由後端更新
+ * 不阻塞畫面，靜默呼叫
+ */
+export function syncBirthdayEvent(userId) {
+  if (!userId) return
+  fetch('/api/calendar/sync-my-birthday', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Line-User-Id': userId },
+  })
+    .then((res) => res.json())
+    .catch(() => {})
+}
+
+// 與 public/js/cacheService.js 相同的 key，供進入 LIFF 時清除並重建快取
+const CACHE_KEY_VERSION = 'app_data_version'
+const CACHE_KEY_EVENTS = 'app_data_events'
+const CACHE_KEY_MEMBERS = 'app_data_members'
+
+/**
+ * 清除本地快取（版本號、行程、成員）
+ */
+export function clearAppCache() {
+  try {
+    localStorage.removeItem(CACHE_KEY_VERSION)
+    localStorage.removeItem(CACHE_KEY_EVENTS)
+    localStorage.removeItem(CACHE_KEY_MEMBERS)
+  } catch (e) {
+    // 忽略 localStorage 不可用（如無痕模式）
+  }
+}
+
+/**
+ * 進入 LIFF 時：先清除快取，再向後端取得最新版本與資料並寫回 localStorage
+ * 不阻塞畫面，靜默執行；與舊版 cacheService 共用同一份快取，確保資料一致
+ */
+export function refreshAppCacheOnLiffEnter() {
+  clearAppCache()
+  fetch('/api/calendar/version')
+    .then((res) => res.json())
+    .then((data) => {
+      if (!data.success || !data.data) return
+      const { version, events, members } = data.data
+      if (version == null) return
+      try {
+        localStorage.setItem(CACHE_KEY_VERSION, String(version))
+        localStorage.setItem(CACHE_KEY_EVENTS, JSON.stringify(events || []))
+        localStorage.setItem(CACHE_KEY_MEMBERS, JSON.stringify(members || []))
+      } catch (e) {
+        // 忽略寫入失敗
+      }
+    })
     .catch(() => {})
 }
