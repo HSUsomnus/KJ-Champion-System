@@ -8,7 +8,11 @@
     "dev": "nodemon server/server.js",
     "test": "jest",
     "build": "echo 'Build completed'",
-    "seed:members": "node scripts/seed-members.js"
+    "seed:members": "node scripts/seed-members.js",
+    "migrate:members": "node scripts/migrate-sheet-to-supabase.js",
+    "sync:calendar": "node scripts/sync-calendar-to-supabase.js",
+    "watch:register": "node scripts/register-calendar-watch.js",
+    "watch:renew": "node scripts/renew-calendar-watch.js"
   },
   "keywords": [
     "line",
@@ -20,16 +24,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "googleapis": "^126.0.1",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5",
     "axios": "^1.6.2",
-    "express-rate-limit": "^7.1.5"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "googleapis": "^126.0.1",
+    "pg": "^8.18.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -1,9 +1,23 @@
 /**
  * Google Sheets 服務層
  * 處理所有與 Google Sheets 相關的業務邏輯
+ *
+ * 【成員快取】為避免多人同時使用時超過 Google Sheets API「每分鐘讀取請求」配額，
+ * 將 getAllMembers 結果快取 90 秒，寫入（新增/更新成員）時會清除快取。
  */
 
 const { getSheetsClient, getSheetConfig } = require('../config/googleAuth');
+
+// 成員資料快取：減少 Google Sheets API 呼叫，避免 6+ 人同時用時觸發配額限制
+const MEMBERS_CACHE_TTL_MS = 90 * 1000; // 90 秒
+let membersCache = { data: null, expiresAt: 0 };
+
+/**
+ * 清除成員快取（新增/更新成員後呼叫，確保下次讀取拿到最新資料）
+ */
+const clearMembersCache = () => {
+  membersCache = { data: null, expiresAt: 0 };
+};
 
 /**
  * 將電話號碼統一轉成字串並回傳給前端
@@ -20,10 +34,15 @@ const phoneToText = (v) => {
 };
 
 /**
- * 取得所有成員資料
+ * 取得所有成員資料（含快取：90 秒內重複請求直接回傳快取，減少 API 呼叫）
  * @returns {Promise<Array>} 成員陣列
  */
 const getAllMembers = async () => {
+  const now = Date.now();
+  if (membersCache.data && membersCache.expiresAt > now) {
+    return membersCache.data;
+  }
+
   try {
     const sheets = await getSheetsClient();
     const { sheetId, sheetName } = getSheetConfig();
@@ -55,6 +74,7 @@ const getAllMembers = async () => {
         displayName: row[11] || '',    // L：LINE 顯示名稱（成員列表用）
       }));
 
+    membersCache = { data: members, expiresAt: Date.now() + MEMBERS_CACHE_TTL_MS };
     return members;
   } catch (error) {
     console.error('❌ 取得成員資料失敗:', error.message);
@@ -134,6 +154,8 @@ const createMember = async (memberData) => {
       },
     });
 
+    clearMembersCache();
+
     // 回傳新增的成員資料（含生日、顯示名稱）；電話一律以字串回傳
     return {
       lineId: memberData.lineId,
@@ -198,6 +220,8 @@ const updateMember = async (lineId, memberData) => {
         values: values,
       },
     });
+
+    clearMembersCache();
 
     // 回傳更新後的成員資料（含生日、顯示名稱）；電話一律以字串回傳
     return {

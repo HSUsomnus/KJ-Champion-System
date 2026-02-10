@@ -17,16 +17,32 @@ let liffUserId = null;
 let liffProfile = null;
 
 /**
- * 取得執行模式（依你設定的 APP_RUN_MODE，不自動判斷）
+ * 檢查網址是否帶有 dev 參數（?dev=1 或 ?dev=0）
+ * 本機測試時可透過 URL ?dev=1 / ?dev=0 切換模式
+ */
+function getDevParamFromUrl() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var dev = params.get('dev');
+    if (dev === '1') return 'development';
+    if (dev === '0') return 'production';
+  } catch (e) {}
+  return null;
+}
+
+/**
+ * 取得執行模式（URL 參數 ?dev=1 / ?dev=0 可覆蓋 APP_RUN_MODE）
  */
 function getRunMode() {
+  var urlOverride = getDevParamFromUrl();
+  if (urlOverride) return urlOverride;
   var m = (typeof APP_RUN_MODE === 'string' && APP_RUN_MODE) || 'production';
   if (m !== 'development' && m !== 'internal' && m !== 'production') return 'production';
   return m;
 }
 
 /**
- * 是否為開發模式（僅當 APP_RUN_MODE === 'development' 時為 true）
+ * 是否為開發模式（URL ?dev=1 或 APP_RUN_MODE === 'development' 時為 true）
  */
 function isDevMode() {
   return getRunMode() === 'development';

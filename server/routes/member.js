@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { optionalLineUser } = require('../middleware/auth');
-const sheetService = require('../services/sheetService');
+const memberDbService = require('../services/memberDbService');
 
 /**
  * GET /api/members
@@ -13,7 +13,7 @@ const sheetService = require('../services/sheetService');
  */
 router.get('/', optionalLineUser, async (req, res) => {
   try {
-    const members = await sheetService.getAllMembers();
+    const members = await memberDbService.getAllMembers();
 
     res.json({
       success: true,
@@ -44,7 +44,7 @@ router.get('/check', async (req, res) => {
       });
     }
 
-    const isRegistered = await sheetService.isMemberRegistered(userId);
+    const isRegistered = await memberDbService.isMemberRegistered(userId);
 
     res.json({
       success: true,
@@ -68,7 +68,7 @@ router.get('/check', async (req, res) => {
 router.get('/avatar/:lineId', optionalLineUser, async (req, res) => {
   try {
     const { lineId } = req.params;
-    const member = await sheetService.getMemberByLineId(lineId);
+    const member = await memberDbService.getMemberByLineId(lineId);
     if (!member || !member.pictureUrl || !String(member.pictureUrl).trim()) {
       return res.status(404).send('No avatar');
     }

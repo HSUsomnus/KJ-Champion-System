@@ -280,7 +280,7 @@ const generateInviteFlexMessage = (liffId, baseUrl, options = {}) => {
           margin: 'lg',
           spacing: 'xs',
         },
-        // 四顆按鈕：與舊專案一致，只設 color（按鈕色）；舊專案 Python+LIFF 用此方式顯示藍／橘／綠
+        // 按鈕區：與舊專案一致，只設 color（按鈕色）；如果 LINE 好友連結未設定則只顯示前 3 個按鈕
         {
           type: 'box',
           layout: 'vertical',
@@ -318,7 +318,8 @@ const generateInviteFlexMessage = (liffId, baseUrl, options = {}) => {
               height: 'sm',
               color: '#9C27B0',
             },
-            {
+            // 第 4 個按鈕：只有當 LINE 好友連結有設定時才顯示，避免 uri 為 undefined 導致字卡錯誤
+            ...(lineAddFriendUrl ? [{
               type: 'button',
               action: {
                 type: 'uri',
@@ -328,7 +329,7 @@ const generateInviteFlexMessage = (liffId, baseUrl, options = {}) => {
               style: 'primary',
               height: 'sm',
               color: '#00B900',
-            },
+            }] : []),
           ],
           spacing: 'sm',
           margin: 'md',

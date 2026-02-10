@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifyLineUser } = require('../middleware/auth');
-const sheetService = require('../services/sheetService');
+const memberDbService = require('../services/memberDbService');
 const versionService = require('../services/versionService');
 
 /**
@@ -16,7 +16,7 @@ const versionService = require('../services/versionService');
 router.get('/', verifyLineUser, async (req, res) => {
   try {
     const lineId = req.lineUserId;
-    const member = await sheetService.getMemberByLineId(lineId);
+    const member = await memberDbService.getMemberByLineId(lineId);
 
     if (!member) {
       return res.status(404).json({
@@ -58,7 +58,7 @@ router.post('/register', verifyLineUser, async (req, res) => {
     }
 
     // 檢查是否已經註冊
-    const isRegistered = await sheetService.isMemberRegistered(lineId);
+    const isRegistered = await memberDbService.isMemberRegistered(lineId);
     if (isRegistered) {
       return res.status(400).json({
         success: false,
@@ -73,7 +73,7 @@ router.post('/register', verifyLineUser, async (req, res) => {
       : '白星';
 
     // 新增成員資料（含進階資訊、生日、顯示名稱）
-    const member = await sheetService.createMember({
+    const member = await memberDbService.createMember({
       lineId,
       name,
       email: email || '',
@@ -115,7 +115,7 @@ router.post('/sync-avatar', verifyLineUser, async (req, res) => {
     const lineId = req.lineUserId;
     const pictureUrl = (req.body && req.body.pictureUrl != null) ? String(req.body.pictureUrl).trim() : '';
 
-    const member = await sheetService.getMemberByLineId(lineId);
+    const member = await memberDbService.getMemberByLineId(lineId);
     if (!member) {
       return res.json({ success: true, synced: false, message: '未註冊，不更新頭像' });
     }
@@ -125,7 +125,7 @@ router.post('/sync-avatar', verifyLineUser, async (req, res) => {
       return res.json({ success: true, synced: false, message: '頭像未變更' });
     }
 
-    await sheetService.updateMember(lineId, { pictureUrl: pictureUrl || '' });
+    await memberDbService.updateMember(lineId, { pictureUrl: pictureUrl || '' });
     versionService.incrementVersion();
 
     return res.json({ success: true, synced: true, message: '頭像已同步更新' });
@@ -158,7 +158,7 @@ router.put('/', verifyLineUser, async (req, res) => {
     }
 
     // 更新成員資料（含進階資訊、生日、顯示名稱）
-    const member = await sheetService.updateMember(lineId, {
+    const member = await memberDbService.updateMember(lineId, {
       name,
       email,
       phone,

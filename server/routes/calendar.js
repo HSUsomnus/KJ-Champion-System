@@ -7,7 +7,9 @@ const router = express.Router();
 const { verifyLineUser, optionalLineUser } = require('../middleware/auth');
 const calendarService = require('../services/calendarService');
 const versionService = require('../services/versionService');
-const sheetService = require('../services/sheetService');
+const memberDbService = require('../services/memberDbService');
+const calendarSyncService = require('../services/calendarSyncService');
+const eventDbService = require('../services/eventDbService');
 
 /**
  * POST /api/calendar/sync-my-birthday
@@ -16,7 +18,7 @@ const sheetService = require('../services/sheetService');
  */
 router.post('/sync-my-birthday', verifyLineUser, async (req, res) => {
   try {
-    const member = await sheetService.getMemberByLineId(req.lineUserId);
+    const member = await memberDbService.getMemberByLineId(req.lineUserId);
     if (!member) {
       return res.json({ success: true, data: { updated: 0 }, message: '未註冊成員' });
     }
@@ -57,7 +59,7 @@ router.get('/events', optionalLineUser, async (req, res) => {
 
     const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
     if (birthdayCreated > 0) versionService.incrementVersion();
-    const events = await calendarService.getGroupEvents(timeMin, timeMax);
+    const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
     res.json({
       success: true,
@@ -84,7 +86,7 @@ router.get('/today', optionalLineUser, async (req, res) => {
     const timeMax = `${date}T23:59:59+08:00`;
     const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
     if (birthdayCreated > 0) versionService.incrementVersion();
-    const events = await calendarService.getTodayGroupEvents(date);
+    const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
     res.json({
       success: true,
@@ -122,7 +124,7 @@ router.get('/month', optionalLineUser, async (req, res) => {
     const timeMax = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59+08:00`;
     const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
     if (birthdayCreated > 0) versionService.incrementVersion();
-    const events = await calendarService.getGroupEventsByMonth(year, month, type);
+    const events = await eventDbService.getEventsByMonth(year, month, type);
 
     res.json({
       success: true,
@@ -308,11 +310,10 @@ router.get('/version', optionalLineUser, async (req, res) => {
 
     const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
     if (birthdayCreated > 0) versionService.incrementVersion();
-    const events = await calendarService.getGroupEvents(timeMin, timeMax);
+    const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
     // 取得所有成員
-    const sheetService = require('../services/sheetService');
-    const members = await sheetService.getAllMembers();
+    const members = await memberDbService.getAllMembers();
 
     res.json({
       success: true,
@@ -339,19 +340,60 @@ router.get('/version', optionalLineUser, async (req, res) => {
 router.get('/events/:eventId', optionalLineUser, async (req, res) => {
   try {
     const { eventId } = req.params;
-    const event = await calendarService.getGroupEventById(eventId);
+    const event = await eventDbService.getEventById(eventId);
+    
+    if (!event) {
+      return res.status(404).json({ success: false, message: '找不到該行程' });
+    }
     res.json({
       success: true,
       data: event,
     });
   } catch (error) {
-    if (error.response?.status === 404 || error.code === 404) {
-      return res.status(404).json({ success: false, message: '找不到該行程' });
-    }
     console.error('取得行程詳情錯誤:', error);
     res.status(500).json({
       success: false,
       message: error.message || '取得行程詳情失敗',
+    });
+  }
+});
+
+/**
+ * POST /api/calendar/webhook
+ * 接收 Google Calendar Push Notification
+ */
+router.post('/webhook', async (req, res) => {
+  try {
+    const result = await calendarSyncService.handleWebhook(req.headers);
+    res.json(result);
+  } catch (error) {
+    console.error('Webhook 處理錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Webhook 處理失敗',
+    });
+  }
+});
+
+/**
+ * GET /api/cron/sync
+ * Vercel Cron Job：定時同步 Google Calendar 至 Supabase
+ */
+router.get('/cron/sync', async (req, res) => {
+  try {
+    // 驗證請求來自 Vercel Cron
+    const authHeader = req.headers.authorization;
+    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    
+    const result = await calendarSyncService.syncRecentMonths();
+    res.json(result);
+  } catch (error) {
+    console.error('Cron 同步錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Cron 同步失敗',
     });
   }
 });

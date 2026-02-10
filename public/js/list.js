@@ -24,6 +24,7 @@ const tabTypes = ['全部', '學員上課', '活動', '諮詢簽約'];
  */
 async function initList() {
   setupTabs();
+  setupMonthNavigation();
 
   // 從詳情／新增返回時（bfcache 還原）重新載入當前分頁，避免字卡與詳情不一致
   window.addEventListener('pageshow', function (e) {
@@ -37,13 +38,16 @@ async function initList() {
   });
 
   window.addEventListener('liffReady', () => {
+    updateMonthDisplay();
     loadEventsForType('全部');
   });
 
   if (window.LIFF && window.LIFF.isInitialized()) {
+    updateMonthDisplay();
     loadEventsForType('全部');
   } else {
     setTimeout(() => {
+      updateMonthDisplay();
       loadEventsForType('全部');
     }, 100);
   }
@@ -132,7 +136,67 @@ function setupTabs() {
 }
 
 /**
- * 載入指定類型的行程
+ * 設定月份切換按鈕
+ */
+function setupMonthNavigation() {
+  const prevBtn = document.getElementById('prev-month-btn');
+  const nextBtn = document.getElementById('next-month-btn');
+  
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      changeMonth(-1);
+    });
+  }
+  
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      changeMonth(1);
+    });
+  }
+}
+
+/**
+ * 切換月份（direction: -1 = 上一個月, 1 = 下一個月）
+ */
+function changeMonth(direction) {
+  currentMonth += direction;
+  
+  // 處理跨年
+  if (currentMonth < 1) {
+    currentMonth = 12;
+    currentYear--;
+  } else if (currentMonth > 12) {
+    currentMonth = 1;
+    currentYear++;
+  }
+  
+  // 清除當前月份的快取資料（讓它重新載入）
+  const cacheKey = `${currentYear}-${currentMonth}`;
+  tabTypes.forEach(type => {
+    if (eventsByType[type] && eventsByType[type][cacheKey]) {
+      delete eventsByType[type][cacheKey];
+    }
+  });
+  
+  // 更新月份顯示
+  updateMonthDisplay();
+  
+  // 重新載入當前分頁的資料
+  loadEventsForType(tabTypes[currentTabIndex]);
+}
+
+/**
+ * 更新月份顯示文字
+ */
+function updateMonthDisplay() {
+  const display = document.getElementById('current-month-display');
+  if (display) {
+    display.textContent = `${currentYear}年${currentMonth}月`;
+  }
+}
+
+/**
+ * 載入指定類型的行程（僅載入當前選擇的月份）
  */
 async function loadEventsForType(type) {
   const tabContent = document.getElementById(`tab-${type}`);
@@ -149,33 +213,25 @@ async function loadEventsForType(type) {
   `;
 
   try {
-    // 載入當前月份和之後幾個月的資料
-    const monthsToLoad = 3; // 載入接下來 3 個月的資料
+    // 只載入當前選擇的月份
+    const cacheKey = `${currentYear}-${currentMonth}`;
     let allEvents = [];
 
-    for (let i = 0; i < monthsToLoad; i++) {
-      const month = currentMonth + i;
-      const year = currentYear + Math.floor((month - 1) / 12);
-      const actualMonth = ((month - 1) % 12) + 1;
-
-      // 檢查是否已經載入過
-      const cacheKey = `${year}-${actualMonth}`;
-      if (eventsByType[type][cacheKey]) {
-        allEvents = allEvents.concat(eventsByType[type][cacheKey]);
-        continue;
-      }
-
+    // 檢查是否已經載入過
+    if (eventsByType[type][cacheKey]) {
+      allEvents = eventsByType[type][cacheKey];
+    } else {
       // 從 API 載入（「全部」不傳 type，後端回傳所有類型）
       const userId = window.LIFF ? window.LIFF.getUserId() : null;
       const typeParam = (type === '全部') ? '' : `&type=${encodeURIComponent(type)}`;
-      const url = `/api/calendar/month?year=${year}&month=${actualMonth}${typeParam}${userId ? `&userId=${userId}` : ''}`;
+      const url = `/api/calendar/month?year=${currentYear}&month=${currentMonth}${typeParam}${userId ? `&userId=${userId}` : ''}`;
       
       const response = await fetch(url);
       const data = await response.json();
 
       if (data.success) {
         eventsByType[type][cacheKey] = data.data;
-        allEvents = allEvents.concat(data.data);
+        allEvents = data.data;
       }
     }
 

@@ -88,19 +88,24 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 啟動伺服器
-app.listen(PORT, () => {
-  console.log(`🚀 伺服器已啟動在 http://localhost:${PORT}`);
-  console.log(`📅 環境: ${process.env.NODE_ENV || 'development'}`);
-});
+// 匯出 app 供 Vercel Serverless 使用
+module.exports = app;
 
-// 優雅關閉處理
-process.on('SIGTERM', () => {
-  console.log('收到 SIGTERM 訊號，正在關閉伺服器...');
-  process.exit(0);
-});
+// 本機開發時啟動伺服器
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 伺服器已啟動在 http://localhost:${PORT}`);
+    console.log(`📅 環境: ${process.env.NODE_ENV || 'development'}`);
+  });
 
-process.on('SIGINT', () => {
-  console.log('收到 SIGINT 訊號，正在關閉伺服器...');
-  process.exit(0);
-});
+  // 優雅關閉處理
+  process.on('SIGTERM', () => {
+    console.log('收到 SIGTERM 訊號，正在關閉伺服器...');
+    process.exit(0);
+  });
+
+  process.on('SIGINT', () => {
+    console.log('收到 SIGINT 訊號，正在關閉伺服器...');
+    process.exit(0);
+  });
+}

@@ -4,7 +4,7 @@
  */
 
 const { getCalendarClient, getGroupCalendarId } = require('../config/googleAuth');
-const sheetService = require('./sheetService');
+const memberDbService = require('./memberDbService');
 
 /**
  * 取得指定日期範圍的團體行程
@@ -107,7 +107,7 @@ const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
   const startYear = parseInt(startDate.slice(0, 4), 10);
   const endYear = parseInt(endDate.slice(0, 4), 10);
 
-  const members = await sheetService.getAllMembers();
+  const members = await memberDbService.getAllMembers();
   const withBirthday = members.filter(m => {
     const name = (m.name || '').trim();
     const parsed = parseBirthdayMonthDay(m.birthday);
