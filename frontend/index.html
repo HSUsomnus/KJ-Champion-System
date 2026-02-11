@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/logo.png" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="LINE LIFF 行事曆系統 - 團體與個人行程管理"
+    />
+    <title>行事曆</title>
+    <!-- LINE LIFF SDK，必須在 React 之前載入 -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- 網址帶 ?eruda=1 時載入 Eruda，方便手機 LINE 瀏覽器看 Console -->
+    <script>
+      (function () {
+        var p = new URLSearchParams(window.location.search);
+        if (p.get('eruda') === '1') {
+          var s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+          s.onload = function () {
+            eruda.init();
+          };
+          document.body.appendChild(s);
+        }
+      })();
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

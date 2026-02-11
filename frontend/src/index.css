@@ -1,0 +1,29 @@
+/**
+ * 全域樣式
+ * 沿用舊前端的色彩與版面（LINE 品牌綠、手機優先）
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 隱藏滾動條但保持滾動功能 */
+@layer base {
+  html {
+    overflow-x: hidden;
+  }
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+/* 為底部導航欄留空間 */
+body {
+  padding-bottom: 54px;
+}

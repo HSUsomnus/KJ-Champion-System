@@ -5,6 +5,7 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -18,6 +19,12 @@ const lineRoutes = require('./routes/line');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// 判斷使用哪個前端：USE_REACT_FRONTEND=1 且 frontend/dist 存在時使用 React
+const reactDistPath = path.join(__dirname, '../frontend/dist');
+const useReactFrontend =
+  process.env.USE_REACT_FRONTEND === '1' && fs.existsSync(reactDistPath);
+const publicPath = useReactFrontend ? reactDistPath : path.join(__dirname, '../public');
+
 // 中介層設定
 // 允許跨來源請求（CORS）
 app.use(cors());
@@ -29,8 +36,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 提供靜態檔案（前端頁面、CSS、JS）
-// 開發環境：關閉快取，修改 UI 後重開伺服器即可看到變更
-const publicPath = path.join(__dirname, '../public');
 if (process.env.NODE_ENV !== 'production') {
   app.use((req, res, next) => {
     if (req.path.match(/\.(html|css|js)$/)) {
@@ -41,13 +46,13 @@ if (process.env.NODE_ENV !== 'production') {
 }
 app.use(express.static(publicPath));
 
-// 康九 logo 已放在 public/images/logo.png，由上方 express.static 直接提供，無需自訂路由
-
-// 瀏覽器預設會請求 /favicon.ico，用康九 logo 回傳，避免 Console 出現 404
+// favicon：優先從當前 publicPath 取得 logo
 const faviconPath = path.join(publicPath, 'images', 'logo.png');
+const fallbackFavicon = path.join(__dirname, '../public/images/logo.png');
 app.get('/favicon.ico', (req, res) => {
   res.type('image/png');
-  res.sendFile(faviconPath, (err) => {
+  const src = fs.existsSync(faviconPath) ? faviconPath : fallbackFavicon;
+  res.sendFile(src, (err) => {
     if (err) res.status(404).end();
   });
 });
@@ -68,8 +73,18 @@ app.get('/health', (req, res) => {
 
 // 根路徑：回傳前端主頁
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
+
+// React SPA fallback：非 API、非實際檔案的 GET 請求都回傳 index.html
+if (useReactFrontend) {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(reactDistPath, 'index.html'), (err) => {
+      if (err) next();
+    });
+  });
+}
 
 // 404 錯誤處理
 app.use((req, res) => {
