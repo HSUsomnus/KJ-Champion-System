@@ -20,6 +20,23 @@
       <h1 class="page-title-center">📊 財力上傳</h1>
     </div>
 
+    <!-- 登入驗證表單 -->
+    <div id="auth-form" class="hidden">
+      <div class="card">
+        <h2 class="card-title text-center">🔐 身份驗證</h2>
+        <p style="color: var(--text-light); font-size: 14px; margin-bottom: 16px; text-align: center;">
+          請輸入您的 LINE User ID 以繼續
+        </p>
+        <div class="form-group">
+          <label class="form-label">LINE User ID</label>
+          <input type="text" id="auth-user-id" class="form-input" placeholder="請輸入您的 LINE User ID">
+        </div>
+        <button type="button" class="btn btn-primary btn-block" onclick="verifyUserId()">
+          驗證並繼續
+        </button>
+      </div>
+    </div>
+
     <!-- 載入動畫 -->
     <div id="loading" class="loading data-loading">
       <div class="data-loading-inner">
@@ -40,9 +57,9 @@
       <div class="card" style="margin-top: 16px;">
         <h2 class="card-title">📤 上傳新財力文件</h2>
         <p style="color: var(--text-light); font-size: 14px; margin-bottom: 12px;">
-          支援格式：Excel (.xlsx, .xls), CSV (.csv)
+          支援格式：Excel (.xlsx, .xls), CSV (.csv), 或任何試算表檔案
         </p>
-        <input type="file" id="file-input" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" style="display: none;">
+        <input type="file" id="file-input" style="display: none;">
         <button type="button" class="btn btn-primary btn-block" onclick="selectFile()">
           選擇檔案
         </button>
