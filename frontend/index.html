@@ -17,30 +17,45 @@
   </head>
   <body>
     <div id="root">
-      <!-- 初始載入提示（React 載入前顯示） -->
-      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #F5F5F5;">
+      <!-- 初始載入提示（React 載入前顯示，使用行內樣式確保一定可見） -->
+      <div id="initial-loading" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #F5F5F5;">
         <div style="text-align: center;">
           <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
-          <p style="color: #666; font-size: 14px;">載入中...</p>
+          <p id="loading-text" style="color: #666; font-size: 14px;">載入中...</p>
+          <p id="loading-detail" style="color: #999; font-size: 12px; margin-top: 8px; display: none;"></p>
         </div>
       </div>
     </div>
-    <!-- 網址帶 ?eruda=1 時載入 Eruda，方便手機 LINE 瀏覽器看 Console -->
+
+    <!-- Eruda 偵錯工具：在 LIFF 環境或帶 ?eruda=1 時自動載入 -->
     <script>
       (function () {
         try {
-          var p = new URLSearchParams(window.location.search);
-          if (p.get('eruda') === '1') {
+          // 判斷是否該載入 eruda
+          var search = window.location.search || '';
+          var hash = window.location.hash || '';
+          var href = window.location.href || '';
+          // 條件：URL 帶 eruda=1 參數，或在 LIFF 環境（liff.state），或 localStorage 有設定
+          var shouldLoad = (
+            search.indexOf('eruda=1') !== -1 ||
+            hash.indexOf('eruda=1') !== -1 ||
+            href.indexOf('eruda=1') !== -1 ||
+            (typeof localStorage !== 'undefined' && localStorage.getItem('eruda') === '1')
+          );
+
+          if (shouldLoad) {
             var s = document.createElement('script');
             s.src = 'https://cdn.jsdelivr.net/npm/eruda';
             s.onload = function () {
               if (window.eruda) {
                 eruda.init();
                 console.log('✅ Eruda 已載入');
+                console.log('📍 URL:', window.location.href);
+                console.log('📍 UserAgent:', navigator.userAgent);
               }
             };
-            s.onerror = function() {
-              console.error('❌ Eruda 載入失敗');
+            s.onerror = function () {
+              console.error('❌ Eruda CDN 載入失敗');
             };
             document.body.appendChild(s);
           }
@@ -48,15 +63,44 @@
           console.error('Eruda loader error:', e);
         }
       })();
-      
-      // 檢測 React 是否成功掛載（3秒後檢查）
-      setTimeout(function() {
-        var root = document.getElementById('root');
-        if (root && root.innerHTML.indexOf('載入中') !== -1) {
-          console.error('❌ React 可能未成功載入');
-          console.log('Root innerHTML:', root.innerHTML.substring(0, 200));
-        }
-      }, 3000);
+
+      // 卡住偵測：如果 15 秒後還在「載入中」，顯示錯誤與 reload 按鈕
+      (function () {
+        var startTime = Date.now();
+
+        // 5 秒後更新提示文字
+        setTimeout(function () {
+          var loadingText = document.getElementById('loading-text');
+          var detail = document.getElementById('loading-detail');
+          if (loadingText && loadingText.textContent === '載入中...') {
+            loadingText.textContent = '仍在載入中，請稍候...';
+            if (detail) {
+              detail.style.display = 'block';
+              detail.textContent = '如果持續卡住，請下拉重新整理';
+            }
+          }
+        }, 5000);
+
+        // 15 秒後如果 React 還沒掛載，顯示錯誤
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          var initialLoading = document.getElementById('initial-loading');
+          // 如果初始載入畫面還在，代表 React 沒成功掛載
+          if (initialLoading && root && root.contains(initialLoading)) {
+            console.error('❌ React 在 15 秒內未成功掛載');
+            console.log('Root innerHTML:', root.innerHTML.substring(0, 300));
+            root.innerHTML =
+              '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F5F5;padding:20px">' +
+              '<div style="text-align:center;max-width:360px">' +
+              '<div style="font-size:48px;margin-bottom:16px">⚠️</div>' +
+              '<h2 style="color:#333;font-size:18px;margin-bottom:8px">載入逾時</h2>' +
+              '<p style="color:#666;font-size:14px;margin-bottom:16px">應用程式花了太久時間載入，可能網路不穩或系統異常。</p>' +
+              '<button onclick="location.reload()" style="padding:12px 32px;border-radius:10px;background:#06C755;color:white;border:none;font-size:15px;cursor:pointer;font-weight:600">重新載入</button>' +
+              '<p style="color:#999;font-size:12px;margin-top:16px">偵錯提示：在 localStorage 設定 eruda=1 可開啟 Console</p>' +
+              '</div></div>';
+          }
+        }, 15000);
+      })();
     </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>

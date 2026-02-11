@@ -17,6 +17,16 @@ function isDevMode() {
   }
 }
 
+// 幫任何 Promise 加上超時保護，避免永遠卡住
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} 超時（${ms / 1000}秒）`)), ms)
+    ),
+  ]);
+}
+
 export function LiffProvider({ children }) {
   const [state, setState] = useState({
     ready: false,
@@ -30,8 +40,8 @@ export function LiffProvider({ children }) {
 
     async function init() {
       try {
-        console.log('🔧 LIFF 初始化開始...');
-        
+        console.log('🔧 LIFF 初始化開始...', new Date().toISOString());
+
         // 開發模式：使用模擬 LINE ID
         if (isDevMode()) {
           console.log('🛠️ 開發模式：使用模擬 LINE ID');
@@ -56,7 +66,7 @@ export function LiffProvider({ children }) {
         }
 
         if (!window.liff) {
-          console.error('❌ LIFF SDK 未載入');
+          console.error('❌ LIFF SDK 未載入（等了 5 秒）');
           if (!cancelled) {
             setState({ ready: true, userId: null, profile: null, error: 'LIFF SDK 未載入' });
           }
@@ -65,19 +75,36 @@ export function LiffProvider({ children }) {
 
         console.log('✅ LIFF SDK 已載入');
 
-        // 從後端取得 LIFF ID
-        const res = await fetch('/api/line/liff-id');
+        // 從後端取得 LIFF ID（加 8 秒超時保護）
+        console.log('⏳ 正在取得 LIFF ID...');
+        const res = await withTimeout(
+          fetch('/api/line/liff-id'),
+          8000,
+          '取得 LIFF ID'
+        );
         const data = await res.json();
         if (!data.success) throw new Error('無法取得 LIFF ID');
 
         const liffId = data.data.liffId;
         console.log('✅ 已取得 LIFF ID:', liffId);
 
-        await window.liff.init({ liffId });
+        // liff.init() 加 10 秒超時保護（這是最常卡住的地方！）
+        console.log('⏳ 正在執行 liff.init()...');
+        await withTimeout(
+          window.liff.init({ liffId }),
+          10000,
+          'liff.init()'
+        );
         console.log('✅ LIFF 初始化成功');
 
         if (window.liff.isLoggedIn()) {
-          const profile = await window.liff.getProfile();
+          // getProfile 也加超時保護
+          console.log('⏳ 正在取得使用者資料...');
+          const profile = await withTimeout(
+            window.liff.getProfile(),
+            8000,
+            'liff.getProfile()'
+          );
           console.log('✅ 已登入，User ID:', profile.userId);
           if (!cancelled) {
             setState({ ready: true, userId: profile.userId, profile, error: null });
@@ -107,13 +134,13 @@ export function LiffProvider({ children }) {
     }
   };
 
-  // 在 LIFF 未準備好時顯示載入畫面
+  // 在 LIFF 未準備好時顯示載入畫面（使用行內樣式確保一定可見）
   if (!state.ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-page">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-pulse">📅</div>
-          <p className="text-text-light">初始化中...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5F5' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16, animation: 'pulse 2s infinite' }}>📅</div>
+          <p style={{ color: '#666', fontSize: 14 }}>初始化中...</p>
         </div>
       </div>
     );

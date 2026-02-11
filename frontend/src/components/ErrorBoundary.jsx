@@ -21,21 +21,21 @@ export default class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-bg-page p-4">
-          <div className="text-center max-w-md">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-xl font-bold mb-2 text-text-main">應用程式載入失敗</h2>
-            <p className="text-text-light mb-4">
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F5F5F5', padding: 16 }}>
+          <div style={{ textAlign: 'center', maxWidth: 400 }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+            <h2 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8, color: '#333' }}>應用程式載入失敗</h2>
+            <p style={{ color: '#666', fontSize: 14, marginBottom: 16 }}>
               {this.state.error?.message || '發生未知錯誤'}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-3 rounded-lg bg-primary text-white"
+              style={{ padding: '12px 32px', borderRadius: 10, background: '#06C755', color: 'white', border: 'none', fontSize: 15, cursor: 'pointer', fontWeight: 600 }}
             >
               重新載入
             </button>
-            <p className="text-xs text-text-light mt-4">
-              若問題持續，請在網址加上 ?eruda=1 查看 Console
+            <p style={{ color: '#999', fontSize: 12, marginTop: 16 }}>
+              偵錯提示：在 localStorage 設定 eruda=1 可開啟 Console
             </p>
           </div>
         </div>

@@ -37,10 +37,10 @@ export default function EntryGate({ children }) {
 
   if (!ready || !checked) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="text-center">
-          <div className="animate-pulse text-4xl mb-4">📅</div>
-          <p className="text-text-light">載入中...</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '40vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 36, marginBottom: 16 }}>📅</div>
+          <p style={{ color: '#666', fontSize: 14 }}>載入中...</p>
         </div>
       </div>
     );
@@ -49,15 +49,15 @@ export default function EntryGate({ children }) {
   // 未登入：顯示 LINE 登入區
   if (!userId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
-        <h2 className="text-2xl font-bold mb-4">📅 行事曆</h2>
-        <p className="text-text-light text-center mb-8">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', padding: '0 24px' }}>
+        <h2 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>📅 行事曆</h2>
+        <p style={{ color: '#666', textAlign: 'center', marginBottom: 32 }}>
           請使用 LINE 帳號登入，以使用行程與成員功能。
         </p>
         <button
           type="button"
           onClick={login}
-          className="px-8 py-3 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors"
+          style={{ padding: '12px 32px', borderRadius: 10, background: '#06C755', color: 'white', border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
         >
           使用 LINE 登入
         </button>
