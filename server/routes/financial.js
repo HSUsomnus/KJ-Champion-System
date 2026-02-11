@@ -225,8 +225,8 @@ router.post('/:id/comment', async (req, res) => {
       });
     }
     
-    const isAdmin = editorMember.role === 'admin';
-    const isManager = editorMember.role === 'manager';
+    const isAdmin = editorMember.role === '開發者';
+    const isManager = editorMember.role === '負責人';
 
     // 只有開發者和負責人可以編輯評語
     if (!isAdmin && !isManager) {
@@ -297,8 +297,8 @@ router.get('/check-permission', async (req, res) => {
     // 從資料庫檢查編輯者權限
     const editorMember = await memberDbService.getMemberByLineId(editorId);
     
-    const isAdmin = editorMember && editorMember.role === 'admin';
-    const isManager = editorMember && editorMember.role === 'manager';
+    const isAdmin = editorMember && editorMember.role === '開發者';
+    const isManager = editorMember && editorMember.role === '負責人';
     
     // 檢查是否為上級
     const isSuperior = await memberDbService.isSuperior(editorId, targetUserId);

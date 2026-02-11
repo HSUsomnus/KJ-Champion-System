@@ -35,7 +35,7 @@ const rowToMember = (row) => ({
   birthday: row.birthday || '',
   displayName: row.display_name || '',
   invitedBy: row.invited_by || null, // 邀請人（上級）的 LINE ID
-  role: row.role || 'member', // 成員角色：member, manager, admin
+  role: row.role || '一般人', // 成員角色：一般人, 負責人, 開發者
 });
 
 /**
@@ -242,13 +242,13 @@ const getSuperior = async (lineId) => {
 /**
  * 更新成員角色
  * @param {string} lineId - LINE User ID
- * @param {string} role - 新角色（member, manager, admin）
+ * @param {string} role - 新角色（一般人, 負責人, 開發者）
  * @returns {Promise<Object>} 更新後的成員物件
  */
 const updateMemberRole = async (lineId, role) => {
   try {
     // 驗證 role 值
-    const validRoles = ['member', 'manager', 'admin'];
+    const validRoles = ['一般人', '負責人', '開發者'];
     if (!validRoles.includes(role)) {
       throw new Error(`無效的角色值: ${role}`);
     }

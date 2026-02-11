@@ -127,22 +127,20 @@ function renderMembers(members, currentUserId) {
     // 權限標籤和選單（只有開發者可見）
     let roleHtml = '';
     if (isAdmin) {
-      const role = member.role || 'member';
+      const role = member.role || '一般人';
       if (isRoleEditMode) {
         // 編輯模式：顯示下拉選單
         roleHtml = `
           <select class="role-select" data-line-id="${escapeHtml(member.lineId)}" onclick="event.stopPropagation()">
-            <option value="member" ${role === 'member' ? 'selected' : ''}>一般人</option>
-            <option value="manager" ${role === 'manager' ? 'selected' : ''}>負責人</option>
-            <option value="admin" ${role === 'admin' ? 'selected' : ''}>管理者</option>
+            <option value="一般人" ${role === '一般人' ? 'selected' : ''}>一般人</option>
+            <option value="負責人" ${role === '負責人' ? 'selected' : ''}>負責人</option>
+            <option value="開發者" ${role === '開發者' ? 'selected' : ''}>開發者</option>
           </select>
         `;
       } else {
         // 查看模式：顯示權限標籤
-        const roleLabels = { member: '一般人', manager: '負責人', admin: '管理者' };
-        const roleLabel = roleLabels[role] || '一般人';
-        const roleClass = role === 'member' ? 'member' : role;
-        roleHtml = `<span class="member-role-badge ${roleClass}">${roleLabel}</span>`;
+        const roleClass = role === '一般人' ? 'member' : (role === '負責人' ? 'manager' : 'admin');
+        roleHtml = `<span class="member-role-badge ${roleClass}">${role}</span>`;
       }
     }
     

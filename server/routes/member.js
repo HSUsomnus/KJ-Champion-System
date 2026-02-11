@@ -222,7 +222,7 @@ router.put('/update-roles', async (req, res) => {
 
     // 檢查是否為開發者（從資料庫讀取）
     const editor = await memberDbService.getMemberByLineId(editorId);
-    const isAdmin = editor && editor.role === 'admin';
+    const isAdmin = editor && editor.role === '開發者';
     
     if (!isAdmin) {
       return res.status(403).json({
