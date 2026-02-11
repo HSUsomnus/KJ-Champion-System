@@ -88,17 +88,6 @@ router.post('/register', verifyLineUser, async (req, res) => {
       displayName: displayName || '',
     });
 
-    // 若有填生日，建立該成員的生日行程到 Calendar（後續會同步到資料庫）
-    if (birthday) {
-      try {
-        const calendarService = require('../services/calendarService');
-        await calendarService.syncMemberBirthdayEvents(member);
-        console.log(`✅ 已建立 ${member.name} 的生日行程`);
-      } catch (syncError) {
-        console.warn('⚠️ 建立生日行程失敗（不影響註冊）:', syncError.message);
-      }
-    }
-
     // 更新版本號
     versionService.incrementVersion();
 
@@ -159,15 +148,6 @@ router.put('/', verifyLineUser, async (req, res) => {
     const lineId = req.lineUserId;
     const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords, birthday, displayName } = req.body;
 
-    // 取得舊資料（用於比對生日是否有變更）
-    const oldMember = await memberDbService.getMemberByLineId(lineId);
-    if (!oldMember) {
-      return res.status(404).json({
-        success: false,
-        message: '找不到個人資料',
-      });
-    }
-
     // 驗證星等（如果有的話）
     let memberStarLevel = starLevel;
     if (starLevel) {
@@ -191,20 +171,6 @@ router.put('/', verifyLineUser, async (req, res) => {
       birthday,
       displayName,
     });
-
-    // 若生日或姓名有變更，同步更新 Calendar 的生日行程
-    const birthdayChanged = birthday !== undefined && birthday !== oldMember.birthday;
-    const nameChanged = name !== undefined && name !== oldMember.name;
-    
-    if (birthdayChanged || nameChanged) {
-      try {
-        const calendarService = require('../services/calendarService');
-        await calendarService.syncMemberBirthdayEvents(member);
-        console.log(`✅ 已同步 ${member.name} 的生日行程`);
-      } catch (syncError) {
-        console.warn('⚠️ 同步生日行程失敗（不影響個人資料更新）:', syncError.message);
-      }
-    }
 
     // 更新版本號
     versionService.incrementVersion();

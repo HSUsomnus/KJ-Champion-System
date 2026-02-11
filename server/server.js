@@ -13,7 +13,6 @@ const calendarRoutes = require('./routes/calendar');
 const memberRoutes = require('./routes/member');
 const profileRoutes = require('./routes/profile');
 const lineRoutes = require('./routes/line');
-const adminRoutes = require('./routes/admin');
 
 // 建立 Express 應用程式
 const app = express();
@@ -58,7 +57,6 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/line', lineRoutes);
-app.use('/api/admin', adminRoutes);
 
 // 健康檢查端點（供 Cloud Run 使用）
 app.get('/health', (req, res) => {

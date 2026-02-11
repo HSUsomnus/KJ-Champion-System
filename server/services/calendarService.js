@@ -151,14 +151,10 @@ const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
 };
 
 /**
- * 檢查並同步該成員的生日行程：
- * 1. 掃描並刪除重複的生日行程（保留正確 ID 的那個）
- * 2. 確保標題包含 "🎂" emoji
- * 3. 若 Calendar 上沒有該成員生日行程，建立新的
- * 4. 若有但日期不符，更新為新日期
- * 5. 同步到資料庫
- * @param {Object} member - 成員物件（至少含 lineId, name、birthday）
- * @returns {Promise<number>} 被建立或更新的行程數量
+ * 檢查並更新該成員的生日行程：若日曆上「真實姓名+生日」的行程日期與成員目前生日不符，則更新為新日期
+ * （例如用戶在個人資料改了生日，每次進入 LIFF 時會把既有生日行程改到正確的月日）
+ * @param {Object} member - 成員物件（至少含 name、birthday）
+ * @returns {Promise<number>} 被更新的行程數量
  */
 const syncMemberBirthdayEvents = async (member) => {
   const name = (member.name || '').trim();
@@ -166,145 +162,33 @@ const syncMemberBirthdayEvents = async (member) => {
   if (!name || !parsed) return 0;
 
   const { month, day } = parsed;
-  const correctTitle = `🎂 ${name}生日`;
-  const currentYear = new Date().getFullYear();
-  
-  const yearsToCheck = [currentYear, currentYear + 1];
-  const eventDbService = require('./eventDbService');
-  
-  let totalSynced = 0;
+  const title = `${name}生日`;
+  const year = new Date().getFullYear();
+  const timeMin = `${year - 1}-01-01T00:00:00+08:00`;
+  const timeMax = `${year + 1}-12-31T23:59:59+08:00`;
 
-  // Step 1: 掃描並清理重複的生日行程
-  try {
-    const calendar = await getCalendarClient();
-    const calendarId = getGroupCalendarId();
-    
-    // 掃描前後兩年的行程，找出所有可能是該成員生日的行程
-    const scanStartYear = currentYear - 1;
-    const scanEndYear = currentYear + 2;
-    const timeMin = `${scanStartYear}-01-01T00:00:00+08:00`;
-    const timeMax = `${scanEndYear}-12-31T23:59:59+08:00`;
-    
-    const allEvents = await getGroupEvents(timeMin, timeMax);
-    
-    // 找出所有標題包含該成員名字且包含「生日」的行程
-    const possibleBirthdayEvents = allEvents.filter(ev => {
-      const title = (ev.title || '').trim();
-      return title.includes(name) && title.includes('生日');
+  const events = await getGroupEvents(timeMin, timeMax);
+  const myBirthdayEvents = events.filter(ev => ev.title === title);
+
+  let updated = 0;
+  for (const ev of myBirthdayEvents) {
+    const startStr = (ev.start || '').slice(0, 10);
+    if (startStr.length < 10) continue;
+    const eventMonth = parseInt(startStr.slice(5, 7), 10);
+    const eventDay = parseInt(startStr.slice(8, 10), 10);
+    if (eventMonth === month && eventDay === day) continue;
+
+    const eventYear = startStr.slice(0, 4);
+    const newDate = `${eventYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    await updateGroupEvent(ev.id, {
+      title,
+      start: newDate,
+      end: newDate,
+      allDay: true,
     });
-    
-    // 按年份分組
-    for (const year of yearsToCheck) {
-      const correctId = `birthday_${member.lineId}_${year}`;
-      const eventsForYear = possibleBirthdayEvents.filter(ev => {
-        const startStr = (ev.start || '').slice(0, 4);
-        return parseInt(startStr, 10) === year;
-      });
-      
-      // 保留正確 ID 的，刪除其他重複的
-      for (const ev of eventsForYear) {
-        if (ev.id !== correctId) {
-          try {
-            await calendar.events.delete({
-              calendarId: calendarId,
-              eventId: ev.id,
-            });
-            console.log(`  🗑️ 刪除重複生日行程: ${ev.title} (ID: ${ev.id})`);
-          } catch (delErr) {
-            console.warn(`  ⚠️ 刪除重複行程失敗 (${ev.id}):`, delErr.message);
-          }
-        }
-      }
-    }
-  } catch (scanError) {
-    console.warn('⚠️ 掃描重複生日行程時發生錯誤:', scanError.message);
+    updated += 1;
   }
-
-  // Step 2: 同步正確的生日行程
-  for (const year of yearsToCheck) {
-    const birthdayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const birthdayId = `birthday_${member.lineId}_${year}`;
-    
-    try {
-      const calendar = await getCalendarClient();
-      const calendarId = getGroupCalendarId();
-      
-      let existingEvent = null;
-      try {
-        const response = await calendar.events.get({
-          calendarId: calendarId,
-          eventId: birthdayId,
-        });
-        existingEvent = response.data;
-      } catch (err) {
-        // 404 表示不存在，需要建立
-        if (err.code !== 404) throw err;
-      }
-
-      if (existingEvent) {
-        // 已存在，檢查日期和標題是否正確
-        const existingDate = existingEvent.start?.date;
-        const existingTitle = existingEvent.summary || '';
-        const needsUpdate = existingDate !== birthdayDate || existingTitle !== correctTitle;
-        
-        if (needsUpdate) {
-          await calendar.events.update({
-            calendarId: calendarId,
-            eventId: birthdayId,
-            requestBody: {
-              summary: correctTitle,
-              start: { date: birthdayDate },
-              end: { date: birthdayDate },
-              description: '',
-              location: '',
-              extendedProperties: {
-                private: { type: '活動', isBirthday: '1' },
-              },
-            },
-          });
-          console.log(`  ✏️ 更新生日行程: ${correctTitle} (${birthdayDate})`);
-          totalSynced++;
-        }
-      } else {
-        // 不存在，建立新的
-        await calendar.events.insert({
-          calendarId: calendarId,
-          requestBody: {
-            id: birthdayId,
-            summary: correctTitle,
-            start: { date: birthdayDate },
-            end: { date: birthdayDate },
-            description: '',
-            location: '',
-            extendedProperties: {
-              private: { type: '活動', isBirthday: '1' },
-            },
-          },
-        });
-        console.log(`  ➕ 建立生日行程: ${correctTitle} (${birthdayDate})`);
-        totalSynced++;
-      }
-
-      // 同步到資料庫
-      await eventDbService.upsertEvents([{
-        id: birthdayId,
-        title: correctTitle,
-        description: '',
-        start: `${birthdayDate}T00:00:00+08:00`,
-        end: `${birthdayDate}T23:59:59+08:00`,
-        allDay: true,
-        location: '',
-        type: '活動',
-        isBirthdayEvent: true,
-        creator: '',
-      }]);
-      
-    } catch (error) {
-      console.warn(`⚠️ 同步 ${year} 年生日行程失敗:`, error.message);
-    }
-  }
-
-  return totalSynced;
+  return updated;
 };
 
 /**

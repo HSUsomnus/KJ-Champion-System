@@ -34,7 +34,6 @@ const rowToMember = (row) => ({
   volunteerRecords: row.volunteer_records || '',
   birthday: row.birthday || '',
   displayName: row.display_name || '',
-  role: row.role || '一般人',
 });
 
 /**
@@ -180,65 +179,10 @@ const updateMember = async (lineId, memberData) => {
   }
 };
 
-/**
- * 取得成員的權限角色
- * @param {string} lineId - LINE User ID
- * @returns {Promise<string>} 權限角色：開發者、管理者、負責人、一般人
- */
-const getMemberRole = async (lineId) => {
-  try {
-    const result = await db.query(
-      `SELECT role FROM members WHERE line_id = $1`,
-      [lineId]
-    );
-    
-    if (result.rows.length === 0) {
-      return '一般人'; // 預設為一般人
-    }
-    
-    return result.rows[0].role || '一般人';
-  } catch (error) {
-    console.error('❌ 查詢成員權限失敗:', error.message);
-    return '一般人'; // 錯誤時預設為一般人
-  }
-};
-
-/**
- * 更新成員的權限角色（只有開發者可以操作）
- * @param {string} lineId - LINE User ID
- * @param {string} newRole - 新的權限角色
- * @returns {Promise<Object>} 更新後的成員物件
- */
-const updateMemberRole = async (lineId, newRole) => {
-  const validRoles = ['開發者', '管理者', '負責人', '一般人'];
-  
-  if (!validRoles.includes(newRole)) {
-    throw new Error(`無效的權限角色: ${newRole}`);
-  }
-
-  try {
-    const result = await db.query(
-      `UPDATE members SET role = $1, updated_at = NOW() WHERE line_id = $2 RETURNING *`,
-      [newRole, lineId]
-    );
-
-    if (result.rows.length === 0) {
-      throw new Error('找不到該成員');
-    }
-
-    return rowToMember(result.rows[0]);
-  } catch (error) {
-    console.error('❌ 更新成員權限失敗:', error.message);
-    throw new Error(`更新成員權限失敗: ${error.message}`);
-  }
-};
-
 module.exports = {
   getAllMembers,
   getMemberByLineId,
   isMemberRegistered,
   createMember,
   updateMember,
-  getMemberRole,
-  updateMemberRole,
 };

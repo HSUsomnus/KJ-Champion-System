@@ -41,7 +41,6 @@ router.post('/sync-my-birthday', verifyLineUser, async (req, res) => {
 /**
  * GET /api/calendar/events
  * 取得指定日期範圍的團體行程
- * 並行策略：立即從資料庫讀取回傳，背景同步 Calendar API
  * 查詢參數: startDate (YYYY-MM-DD), endDate (YYYY-MM-DD)
  */
 router.get('/events', optionalLineUser, async (req, res) => {
@@ -58,15 +57,10 @@ router.get('/events', optionalLineUser, async (req, res) => {
     const timeMin = `${startDate}T00:00:00+08:00`;
     const timeMax = `${endDate}T23:59:59+08:00`;
 
-    // 1. 立即從資料庫讀取
+    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+    if (birthdayCreated > 0) versionService.incrementVersion();
     const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
-    // 2. 背景同步
-    syncCalendarInBackground(timeMin, timeMax).catch(err => {
-      console.warn('⚠️ 背景同步略過:', err.message);
-    });
-
-    // 3. 立即回傳
     res.json({
       success: true,
       data: events,
@@ -83,7 +77,6 @@ router.get('/events', optionalLineUser, async (req, res) => {
 /**
  * GET /api/calendar/today
  * 取得當日的團體行程
- * 並行策略：立即從資料庫讀取回傳，背景同步 Calendar API
  * 查詢參數: date (YYYY-MM-DD，選填，預設為今天)
  */
 router.get('/today', optionalLineUser, async (req, res) => {
@@ -91,16 +84,10 @@ router.get('/today', optionalLineUser, async (req, res) => {
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const timeMin = `${date}T00:00:00+08:00`;
     const timeMax = `${date}T23:59:59+08:00`;
-    
-    // 1. 立即從資料庫讀取
+    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+    if (birthdayCreated > 0) versionService.incrementVersion();
     const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
-    // 2. 背景同步
-    syncCalendarInBackground(timeMin, timeMax).catch(err => {
-      console.warn('⚠️ 背景同步略過:', err.message);
-    });
-
-    // 3. 立即回傳
     res.json({
       success: true,
       data: events,
@@ -117,7 +104,6 @@ router.get('/today', optionalLineUser, async (req, res) => {
 /**
  * GET /api/calendar/month
  * 取得指定月份的團體行程（用於列表模式）
- * 並行策略：立即從資料庫讀取回傳，背景同步 Calendar API
  * 查詢參數: year, month, type (選填)
  */
 router.get('/month', optionalLineUser, async (req, res) => {
@@ -133,19 +119,13 @@ router.get('/month', optionalLineUser, async (req, res) => {
       });
     }
 
-    // 1. 立即從資料庫讀取（主要來源，快速回應）
-    const events = await eventDbService.getEventsByMonth(year, month, type);
-
-    // 2. 背景同步 Calendar 到資料庫（不阻塞回應）
     const timeMin = `${year}-${String(month).padStart(2, '0')}-01T00:00:00+08:00`;
     const lastDay = new Date(year, month, 0).getDate();
     const timeMax = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59+08:00`;
-    
-    syncCalendarInBackground(timeMin, timeMax).catch(err => {
-      console.warn('⚠️ 背景同步略過（不影響前端）:', err.message);
-    });
+    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+    if (birthdayCreated > 0) versionService.incrementVersion();
+    const events = await eventDbService.getEventsByMonth(year, month, type);
 
-    // 3. 立即回傳資料庫資料
     res.json({
       success: true,
       data: events,
@@ -158,45 +138,6 @@ router.get('/month', optionalLineUser, async (req, res) => {
     });
   }
 });
-
-/**
- * 背景同步函式：從 Calendar API 取得最新行程並同步到資料庫
- * 若達配額限制或其他錯誤，靜默失敗不影響前端
- */
-async function syncCalendarInBackground(timeMin, timeMax) {
-  try {
-    // 從 Calendar API 取得行程
-    const calendarEvents = await calendarService.getGroupEvents(timeMin, timeMax);
-    
-    // 確保生日行程存在
-    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
-    if (birthdayCreated > 0) {
-      // 重新取得（包含新建的生日行程）
-      const updatedEvents = await calendarService.getGroupEvents(timeMin, timeMax);
-      await eventDbService.upsertEvents(updatedEvents);
-    } else {
-      await eventDbService.upsertEvents(calendarEvents);
-    }
-    
-    // 刪除已從 Calendar 移除的行程
-    const eventIds = calendarEvents.map(e => e.id);
-    await eventDbService.deleteEventsNotIn(eventIds, timeMin, timeMax);
-    
-    if (birthdayCreated > 0) {
-      versionService.incrementVersion();
-    }
-    
-    console.log(`✅ 背景同步完成: ${timeMin.slice(0, 7)}`);
-  } catch (error) {
-    // 若達配額限制，記錄但不拋出（繼續使用資料庫資料）
-    if (error.message && (error.message.includes('quota') || error.message.includes('rate limit') || error.message.includes('429'))) {
-      console.warn(`⚠️ Calendar API 配額已達上限，使用資料庫快取`);
-    } else {
-      console.warn(`⚠️ 背景同步錯誤:`, error.message);
-    }
-    // 不 throw，讓前端繼續正常運作
-  }
-}
 
 /**
  * POST /api/calendar/events
