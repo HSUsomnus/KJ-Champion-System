@@ -17,44 +17,31 @@ function formatYMD(d) {
 // 將 ISO 時間字符串轉成 HH:MM 格式（正確處理時區）
 function formatTime(isoString) {
   if (!isoString) return '';
-  try {
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return '';
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-  } catch (e) {
-    console.error('formatTime error:', e);
-    return '';
-  }
+  const date = new Date(isoString);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
 }
 
 // 格式化行程日期時間顯示
 function formatEventDisplay(event) {
-  if (!event || !event.start) return '';
-  try {
-    const startDate = new Date(event.start);
-    const endDate = new Date(event.end || event.start);
-    
-    if (isNaN(startDate.getTime())) return '';
-    
-    const startDateStr = `${startDate.getMonth() + 1}/${startDate.getDate()}`;
-    
-    if (event.allDay) {
-      const endDateStr = `${endDate.getMonth() + 1}/${endDate.getDate()}`;
-      if (startDateStr === endDateStr) {
-        return `${startDateStr} 全天`;
-      }
-      return `${startDateStr} ~ ${endDateStr} 全天`;
+  if (!event.start) return '';
+  const startDate = new Date(event.start);
+  const endDate = new Date(event.end);
+  
+  const startDateStr = `${startDate.getMonth() + 1}/${startDate.getDate()}`;
+  
+  if (event.allDay) {
+    const endDateStr = `${endDate.getMonth() + 1}/${endDate.getDate()}`;
+    if (startDateStr === endDateStr) {
+      return `${startDateStr} 全天`;
     }
-    
-    const startTime = formatTime(event.start);
-    const endTime = formatTime(event.end);
-    return `${startDateStr} ${startTime} ~ ${endTime}`;
-  } catch (e) {
-    console.error('formatEventDisplay error:', e, event);
-    return '';
+    return `${startDateStr} ~ ${endDateStr} 全天`;
   }
+  
+  const startTime = formatTime(event.start);
+  const endTime = formatTime(event.end);
+  return `${startDateStr} ${startTime} ~ ${endTime}`;
 }
 
 export default function ListPage() {
