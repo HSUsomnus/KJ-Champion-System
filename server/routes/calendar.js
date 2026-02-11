@@ -57,8 +57,15 @@ router.get('/events', optionalLineUser, async (req, res) => {
     const timeMin = `${startDate}T00:00:00+08:00`;
     const timeMax = `${endDate}T23:59:59+08:00`;
 
-    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
-    if (birthdayCreated > 0) versionService.incrementVersion();
+    // 嘗試確保生日行程（如果 Google Calendar 未設定則跳過）
+    try {
+      const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+      if (birthdayCreated > 0) versionService.incrementVersion();
+    } catch (err) {
+      console.warn('⚠️  生日行程檢查失敗（可能未設定 Google Calendar）:', err.message);
+    }
+
+    // 直接從資料庫讀取行程
     const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
     res.json({
@@ -84,8 +91,16 @@ router.get('/today', optionalLineUser, async (req, res) => {
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const timeMin = `${date}T00:00:00+08:00`;
     const timeMax = `${date}T23:59:59+08:00`;
-    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
-    if (birthdayCreated > 0) versionService.incrementVersion();
+    
+    // 嘗試確保生日行程（如果 Google Calendar 未設定則跳過）
+    try {
+      const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+      if (birthdayCreated > 0) versionService.incrementVersion();
+    } catch (err) {
+      console.warn('⚠️  生日行程檢查失敗（可能未設定 Google Calendar）:', err.message);
+    }
+
+    // 直接從資料庫讀取行程
     const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
     res.json({
@@ -122,8 +137,16 @@ router.get('/month', optionalLineUser, async (req, res) => {
     const timeMin = `${year}-${String(month).padStart(2, '0')}-01T00:00:00+08:00`;
     const lastDay = new Date(year, month, 0).getDate();
     const timeMax = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59+08:00`;
-    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
-    if (birthdayCreated > 0) versionService.incrementVersion();
+    
+    // 嘗試確保生日行程（如果 Google Calendar 未設定則跳過）
+    try {
+      const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+      if (birthdayCreated > 0) versionService.incrementVersion();
+    } catch (err) {
+      console.warn('⚠️  生日行程檢查失敗（可能未設定 Google Calendar）:', err.message);
+    }
+
+    // 直接從資料庫讀取行程
     const events = await eventDbService.getEventsByMonth(year, month, type);
 
     res.json({
@@ -308,8 +331,15 @@ router.get('/version', optionalLineUser, async (req, res) => {
     const timeMin = now.toISOString();
     const timeMax = oneYearLater.toISOString();
 
-    const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
-    if (birthdayCreated > 0) versionService.incrementVersion();
+    // 嘗試確保生日行程（如果 Google Calendar 未設定則跳過）
+    try {
+      const birthdayCreated = await calendarService.ensureBirthdayEventsInRange(timeMin, timeMax);
+      if (birthdayCreated > 0) versionService.incrementVersion();
+    } catch (err) {
+      console.warn('⚠️  生日行程檢查失敗（可能未設定 Google Calendar）:', err.message);
+    }
+
+    // 直接從資料庫讀取行程
     const events = await eventDbService.getEventsByRange(timeMin, timeMax);
 
     // 取得所有成員
