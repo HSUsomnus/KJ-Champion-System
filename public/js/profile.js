@@ -65,6 +65,10 @@ async function checkRegistration() {
         loading.classList.add('hidden');
         registerForm.classList.remove('hidden');
         loadLineProfile();
+        
+        // 隱藏標題列的邀請按鈕（註冊頁面不顯示）
+        const inviteBtn = document.getElementById('btn-invite-header');
+        if (inviteBtn) inviteBtn.style.display = 'none';
       }
     } else {
       throw new Error(data.message || '檢查註冊狀態失敗');
@@ -179,6 +183,11 @@ async function loadProfile() {
         profileDisplay.classList.remove('hidden');
         document.getElementById('profile-view-mode').classList.add('hidden');
         document.getElementById('profile-edit-mode').classList.remove('hidden');
+        
+        // 顯示標題列的邀請按鈕
+        const inviteBtn = document.getElementById('btn-invite-header');
+        if (inviteBtn) inviteBtn.style.display = 'flex';
+        
         (async function () {
           if (window.showAppAlert) await window.showAppAlert('請補齊基本資料後儲存');
           else alert('請補齊基本資料後儲存');
@@ -192,6 +201,10 @@ async function loadProfile() {
       profileDisplay.classList.remove('hidden');
       document.getElementById('profile-view-mode').classList.remove('hidden');
       document.getElementById('profile-edit-mode').classList.add('hidden');
+      
+      // 顯示標題列的邀請按鈕（已註冊用戶）
+      const inviteBtn = document.getElementById('btn-invite-header');
+      if (inviteBtn) inviteBtn.style.display = 'flex';
     } else if (data.needRegister) {
       // 需要註冊
       loading.classList.add('hidden');

@@ -1567,6 +1567,35 @@ h3 {
   display: block;
 }
 
+/* 邀請按鈕：對齊右邊、僅圖示無文字 */
+.btn-invite-header {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: #17c950;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 20px;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-invite-header:hover {
+  background: #13a842;
+}
+.btn-invite-header:active {
+  opacity: 0.85;
+}
+
 .mb-16 {
   margin-bottom: 16px;
 }
