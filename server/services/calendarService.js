@@ -151,10 +151,12 @@ const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
 };
 
 /**
- * 檢查並更新該成員的生日行程：若日曆上「真實姓名+生日」的行程日期與成員目前生日不符，則更新為新日期
- * （例如用戶在個人資料改了生日，每次進入 LIFF 時會把既有生日行程改到正確的月日）
- * @param {Object} member - 成員物件（至少含 name、birthday）
- * @returns {Promise<number>} 被更新的行程數量
+ * 檢查並同步該成員的生日行程：
+ * 1. 若 Calendar 上沒有該成員生日行程，建立新的
+ * 2. 若有但日期不符，更新為新日期
+ * 3. 同步到資料庫
+ * @param {Object} member - 成員物件（至少含 lineId, name、birthday）
+ * @returns {Promise<number>} 被建立或更新的行程數量
  */
 const syncMemberBirthdayEvents = async (member) => {
   const name = (member.name || '').trim();
@@ -163,32 +165,95 @@ const syncMemberBirthdayEvents = async (member) => {
 
   const { month, day } = parsed;
   const title = `${name}生日`;
-  const year = new Date().getFullYear();
-  const timeMin = `${year - 1}-01-01T00:00:00+08:00`;
-  const timeMax = `${year + 1}-12-31T23:59:59+08:00`;
+  const currentYear = new Date().getFullYear();
+  
+  // 檢查今年與明年的生日行程（確保至少有未來一年的）
+  const yearsToCheck = [currentYear, currentYear + 1];
+  const eventDbService = require('./eventDbService');
+  
+  let totalSynced = 0;
 
-  const events = await getGroupEvents(timeMin, timeMax);
-  const myBirthdayEvents = events.filter(ev => ev.title === title);
+  for (const year of yearsToCheck) {
+    const birthdayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const birthdayId = `birthday_${member.lineId}_${year}`;
+    
+    try {
+      // 1. 檢查 Calendar 是否已有此生日行程
+      const calendar = await getCalendarClient();
+      const calendarId = getGroupCalendarId();
+      
+      let existingEvent = null;
+      try {
+        const response = await calendar.events.get({
+          calendarId: calendarId,
+          eventId: birthdayId,
+        });
+        existingEvent = response.data;
+      } catch (err) {
+        // 404 表示不存在，需要建立
+        if (err.code !== 404) throw err;
+      }
 
-  let updated = 0;
-  for (const ev of myBirthdayEvents) {
-    const startStr = (ev.start || '').slice(0, 10);
-    if (startStr.length < 10) continue;
-    const eventMonth = parseInt(startStr.slice(5, 7), 10);
-    const eventDay = parseInt(startStr.slice(8, 10), 10);
-    if (eventMonth === month && eventDay === day) continue;
+      if (existingEvent) {
+        // 已存在，檢查日期是否正確
+        const existingDate = existingEvent.start?.date;
+        if (existingDate !== birthdayDate) {
+          // 日期不符，更新
+          await calendar.events.update({
+            calendarId: calendarId,
+            eventId: birthdayId,
+            requestBody: {
+              summary: title,
+              start: { date: birthdayDate },
+              end: { date: birthdayDate },
+              description: '',
+              location: '',
+              extendedProperties: {
+                private: { type: '活動', isBirthday: '1' },
+              },
+            },
+          });
+          totalSynced++;
+        }
+      } else {
+        // 不存在，建立新的
+        await calendar.events.insert({
+          calendarId: calendarId,
+          requestBody: {
+            id: birthdayId,
+            summary: title,
+            start: { date: birthdayDate },
+            end: { date: birthdayDate },
+            description: '',
+            location: '',
+            extendedProperties: {
+              private: { type: '活動', isBirthday: '1' },
+            },
+          },
+        });
+        totalSynced++;
+      }
 
-    const eventYear = startStr.slice(0, 4);
-    const newDate = `${eventYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    await updateGroupEvent(ev.id, {
-      title,
-      start: newDate,
-      end: newDate,
-      allDay: true,
-    });
-    updated += 1;
+      // 2. 同步到資料庫
+      await eventDbService.upsertEvents([{
+        id: birthdayId,
+        title: title,
+        description: '',
+        start: `${birthdayDate}T00:00:00+08:00`,
+        end: `${birthdayDate}T23:59:59+08:00`,
+        allDay: true,
+        location: '',
+        type: '活動',
+        isBirthdayEvent: true,
+        creator: '',
+      }]);
+      
+    } catch (error) {
+      console.warn(`⚠️ 同步 ${year} 年生日行程失敗:`, error.message);
+    }
   }
-  return updated;
+
+  return totalSynced;
 };
 
 /**

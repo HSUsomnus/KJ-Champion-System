@@ -94,6 +94,25 @@ export async function fetchProfile(userId) {
 }
 
 /**
+ * 更新個人資料
+ * @param {string} userId - LINE User ID
+ * @param {Object} profileData - 個人資料（含 name, email, phone, birthday 等）
+ */
+export async function updateProfile(userId, profileData) {
+  const res = await fetch('/api/profile', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Line-User-Id': userId,
+    },
+    body: JSON.stringify(profileData),
+  })
+  const data = await res.json()
+  if (!data.success) throw new Error(data.message || '更新個人資料失敗')
+  return data.data
+}
+
+/**
  * 進入系統時同步 LINE 頭像到 Google Sheet（有變更才更新，不阻塞畫面）
  */
 export function syncProfileAvatar(userId, pictureUrl) {
