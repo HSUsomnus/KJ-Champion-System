@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="管理中心">
+  <title>管理中心</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <div class="container page-management">
+    <!-- 頁面標題 -->
+    <div class="page-header-with-back">
+      <button type="button" class="btn-back" onclick="history.back()">←</button>
+      <h1 class="page-title-center">⚙️ 管理中心</h1>
+    </div>
+
+    <!-- 載入動畫 -->
+    <div id="loading" class="loading data-loading">
+      <div class="data-loading-inner">
+        <img src="/images/logo.png" alt="康九" class="data-loading-logo">
+        <p class="data-loading-text">載入中...</p>
+      </div>
+    </div>
+
+    <!-- 權限不足提示 -->
+    <div id="no-permission" class="hidden">
+      <div class="card text-center" style="margin-top: 40px;">
+        <div style="font-size: 64px; margin-bottom: 16px;">🚫</div>
+        <h2 style="margin-bottom: 16px;">無權限訪問</h2>
+        <p style="color: var(--text-light); margin-bottom: 24px;">
+          您沒有權限訪問此頁面
+        </p>
+        <button class="btn btn-primary" onclick="history.back()">返回</button>
+      </div>
+    </div>
+
+    <!-- 主要內容 -->
+    <div id="main-content" class="hidden">
+      <!-- 分頁導航 -->
+      <div class="tabs-container" style="margin-bottom: 16px;">
+        <button class="tab-btn active" data-tab="data" onclick="switchTab('data')">
+          📊 數據
+        </button>
+        <button class="tab-btn" data-tab="financial" onclick="switchTab('financial')">
+          💰 財力
+        </button>
+      </div>
+
+      <!-- 數據分頁 -->
+      <div id="tab-data" class="tab-content active">
+        <div class="card">
+          <h2 class="card-title">📋 成員進階資訊</h2>
+          <div id="data-list"></div>
+        </div>
+      </div>
+
+      <!-- 財力分頁 -->
+      <div id="tab-financial" class="tab-content hidden">
+        <div class="card">
+          <h2 class="card-title">💰 成員財力總覽</h2>
+          <div id="financial-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/liff.js"></script>
+  <script src="/js/management.js"></script>
+</body>
+</html>

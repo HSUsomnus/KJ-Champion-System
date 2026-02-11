@@ -20,6 +20,11 @@
         </button>
         <h1 class="text-center page-title">👥 成員列表</h1>
         
+        <!-- 管理按鈕（負責人和開發者可見） -->
+        <button type="button" id="management-btn" class="btn-management hidden" onclick="goToManagement()" style="right: 110px;">
+          📊 管理
+        </button>
+        
         <!-- 權限設定按鈕（僅開發者可見） -->
         <button type="button" id="role-edit-btn" class="btn-role-edit hidden" onclick="toggleRoleEditMode()">
           ⚙️ 權限設定

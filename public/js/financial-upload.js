@@ -7,6 +7,7 @@ let selectedFile = null;
 let currentEditorId = ''; // 當前編輯者 ID（用於檢查權限）
 let canViewFinancial = false; // 是否有權限查看財力
 let canEditComments = false; // 是否有權限編輯評語
+let isViewOnly = false; // 是否為唯讀模式（從管理中心進入）
 
 /**
  * 初始化頁面
@@ -16,6 +17,7 @@ async function init() {
   const urlParams = new URLSearchParams(window.location.search);
   userId = urlParams.get('userId');
   const isAuth = urlParams.get('auth') === '1'; // LINE Login 回調標記
+  isViewOnly = urlParams.get('viewOnly') === '1'; // 是否為唯讀模式
 
   // 如果沒有 userId，顯示登入表單
   if (!userId) {
@@ -46,7 +48,11 @@ async function init() {
     // 隱藏載入動畫，顯示主要內容
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('main-content').classList.remove('hidden');
-    document.getElementById('upload-section').classList.remove('hidden');
+    
+    // 如果不是唯讀模式，顯示上傳區域
+    if (!isViewOnly) {
+      document.getElementById('upload-section').classList.remove('hidden');
+    }
   } catch (error) {
     console.error('載入失敗:', error);
     document.getElementById('loading').innerHTML = `

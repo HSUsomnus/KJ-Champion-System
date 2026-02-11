@@ -26,19 +26,21 @@ async function initMembers() {
 }
 
 /**
- * 檢查是否為開發者
+ * 檢查是否為開發者或負責人
  */
 async function checkAdminPermission() {
   currentUserId = window.LIFF ? window.LIFF.getUserId() : null;
   if (!currentUserId) return;
 
   try {
-    // 這裡可以通過環境變數或 API 檢查，暫時先簡單判斷
-    // 實際應該調用 API 檢查
-    const response = await fetch(`/api/members/check-permission?editorId=${currentUserId}&targetUserId=${currentUserId}`);
+    // 取得當前用戶資料
+    const response = await fetch(`/api/members/${currentUserId}`);
     const data = await response.json();
+    
     if (data.success) {
-      isAdmin = data.data.isAdmin || false;
+      const member = data.data;
+      isAdmin = member.role === '開發者';
+      const isManager = member.role === '負責人';
       
       // 如果是開發者，顯示權限設定按鈕
       if (isAdmin) {
@@ -47,10 +49,25 @@ async function checkAdminPermission() {
           roleEditBtn.classList.remove('hidden');
         }
       }
+      
+      // 如果是開發者或負責人，顯示管理按鈕
+      if (isAdmin || isManager) {
+        const managementBtn = document.getElementById('management-btn');
+        if (managementBtn) {
+          managementBtn.classList.remove('hidden');
+        }
+      }
     }
   } catch (error) {
     console.error('檢查管理員權限錯誤:', error);
   }
+}
+
+/**
+ * 前往管理中心
+ */
+function goToManagement() {
+  window.location.href = '/management.html';
 }
 
 /**
