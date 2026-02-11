@@ -151,6 +151,14 @@ export default function ProfilePage() {
       <PageHeader title="個人資料" onRefresh={() => window.location.reload()} />
       <div className="flex-1 overflow-y-auto p-4 pb-28">
         <div className="max-w-2xl mx-auto space-y-4">
+          {/* 系統診斷按鈕（所有人都能看到） */}
+          <button
+            onClick={() => navigate('/debug')}
+            className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg transition-colors"
+          >
+            🔍 系統診斷（開發者工具）
+          </button>
+
           {/* 權限顯示 */}
           {userRole && (
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-3 flex items-center justify-between">
