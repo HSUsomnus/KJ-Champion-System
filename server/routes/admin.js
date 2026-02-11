@@ -5,23 +5,26 @@
 
 const express = require('express');
 const router = express.Router();
-const { verifyLineUser, verifyAdmin, isAdmin } = require('../middleware/auth');
+const { verifyLineUser, verifyAdmin } = require('../middleware/auth');
 const memberDbService = require('../services/memberDbService');
 const calendarService = require('../services/calendarService');
 const versionService = require('../services/versionService');
 
 /**
  * GET /api/admin/check
- * 檢查當前使用者是否為開發人員
+ * 檢查當前使用者的權限等級
  */
 router.get('/check', verifyLineUser, async (req, res) => {
   try {
-    const isAdminUser = isAdmin(req.lineUserId);
+    const { getUserRole } = require('../middleware/auth');
+    const role = await getUserRole(req.lineUserId);
+    const isAdminUser = (role === '開發者');
     
     res.json({
       success: true,
       data: {
         isAdmin: isAdminUser,
+        role: role,
       },
     });
   } catch (error) {
@@ -104,6 +107,67 @@ router.post('/sync-all-birthdays', verifyLineUser, verifyAdmin, async (req, res)
     res.status(500).json({
       success: false,
       message: error.message || '同步失敗',
+    });
+  }
+});
+
+/**
+ * GET /api/admin/members
+ * 取得所有成員及其權限（開發人員專用）
+ */
+router.get('/members', verifyLineUser, verifyAdmin, async (req, res) => {
+  try {
+    const members = await memberDbService.getAllMembers();
+    
+    res.json({
+      success: true,
+      data: members,
+    });
+  } catch (error) {
+    console.error('取得成員列表錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '取得成員列表失敗',
+    });
+  }
+});
+
+/**
+ * PUT /api/admin/members/:lineId/role
+ * 更新指定成員的權限（開發人員專用）
+ */
+router.put('/members/:lineId/role', verifyLineUser, verifyAdmin, async (req, res) => {
+  try {
+    const { lineId } = req.params;
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: '請提供權限角色',
+      });
+    }
+
+    const validRoles = ['開發者', '管理者', '負責人', '一般人'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: `無效的權限角色，有效值：${validRoles.join('、')}`,
+      });
+    }
+
+    const updatedMember = await memberDbService.updateMemberRole(lineId, role);
+
+    res.json({
+      success: true,
+      data: updatedMember,
+      message: `已將 ${updatedMember.name} 的權限更新為 ${role}`,
+    });
+  } catch (error) {
+    console.error('更新成員權限錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '更新權限失敗',
     });
   }
 });

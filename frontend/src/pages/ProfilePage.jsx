@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLiff } from '../context/LiffContext'
 import PageHeader from '../components/PageHeader'
-import { fetchProfile, updateProfile, checkIsAdmin, syncAllBirthdays } from '../api'
+import { fetchProfile, updateProfile, checkUserRole, syncAllBirthdays } from '../api'
 
 export default function ProfilePage() {
   const { userId } = useLiff()
+  const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
+  const [userRole, setUserRole] = useState('一般人')
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState(null)
 
@@ -33,14 +36,15 @@ export default function ProfilePage() {
     setLoading(true)
     setError(null)
     
-    // 同時取得個人資料和開發人員權限
+    // 同時取得個人資料和權限等級
     Promise.all([
       fetchProfile(userId),
-      checkIsAdmin(userId),
+      checkUserRole(userId),
     ])
-      .then(([data, adminStatus]) => {
+      .then(([data, roleData]) => {
         setProfile(data)
-        setIsAdmin(adminStatus)
+        setIsAdmin(roleData.isAdmin)
+        setUserRole(roleData.role || data.role || '一般人')
         setFormData({
           name: data.name || '',
           email: data.email || '',
@@ -133,11 +137,30 @@ export default function ProfilePage() {
 
   const starLevels = ['白星', '綠星', '橙星', '紅星', '紫星']
 
+  const getRoleBadgeColor = (role) => {
+    switch (role) {
+      case '開發者': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+      case '管理者': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      case '負責人': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+    }
+  }
+
   return (
     <>
       <PageHeader title="個人資料" onRefresh={() => window.location.reload()} />
       <div className="flex-1 overflow-y-auto p-4 pb-28">
         <div className="max-w-2xl mx-auto space-y-4">
+          {/* 權限顯示 */}
+          {userRole && (
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-3 flex items-center justify-between">
+              <span className="text-sm text-slate-600 dark:text-slate-400">您的權限</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-bold ${getRoleBadgeColor(userRole)}`}>
+                {userRole}
+              </span>
+            </div>
+          )}
+
           {/* 基本資料 */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 space-y-4">
             <h3 className="font-bold text-lg text-slate-900 dark:text-white">基本資料</h3>
@@ -313,14 +336,24 @@ export default function ProfilePage() {
                 </h3>
               </div>
               
-              <button
-                type="button"
-                onClick={handleSyncAllBirthdays}
-                disabled={syncing}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {syncing ? '同步中...' : '🎂 強制同步所有用戶生日行程'}
-              </button>
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/admin/roles')}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition-all"
+                >
+                  👥 權限管理
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleSyncAllBirthdays}
+                  disabled={syncing}
+                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  {syncing ? '同步中...' : '🎂 強制同步所有用戶生日行程'}
+                </button>
+              </div>
               
               <p className="text-xs text-purple-700 dark:text-purple-300 mt-2">
                 模擬所有用戶更新個人資料，將資料庫中的生日同步到 Calendar 與資料庫

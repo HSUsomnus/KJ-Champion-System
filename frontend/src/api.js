@@ -141,13 +141,21 @@ export function syncBirthdayEvent(userId) {
 }
 
 /**
- * 檢查當前使用者是否為開發人員
+ * 檢查當前使用者的權限等級
  */
-export async function checkIsAdmin(userId) {
+export async function checkUserRole(userId) {
   const res = await fetch(`/api/admin/check?userId=${encodeURIComponent(userId)}`)
   const data = await res.json()
-  if (!data.success) return false
-  return data.data.isAdmin
+  if (!data.success) return { isAdmin: false, role: '一般人' }
+  return data.data
+}
+
+/**
+ * 檢查當前使用者是否為開發人員（向下相容）
+ */
+export async function checkIsAdmin(userId) {
+  const roleData = await checkUserRole(userId)
+  return roleData.isAdmin
 }
 
 /**
@@ -163,6 +171,33 @@ export async function syncAllBirthdays(userId) {
   })
   const data = await res.json()
   if (!data.success) throw new Error(data.message || '同步失敗')
+  return data.data
+}
+
+/**
+ * 取得所有成員及其權限（開發人員專用）
+ */
+export async function fetchAllMembersWithRole(userId) {
+  const res = await fetch(`/api/admin/members?userId=${encodeURIComponent(userId)}`)
+  const data = await res.json()
+  if (!data.success) throw new Error(data.message || '取得成員列表失敗')
+  return data.data
+}
+
+/**
+ * 更新成員權限（開發人員專用）
+ */
+export async function updateMemberRole(userId, targetLineId, newRole) {
+  const res = await fetch(`/api/admin/members/${encodeURIComponent(targetLineId)}/role`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Line-User-Id': userId,
+    },
+    body: JSON.stringify({ role: newRole }),
+  })
+  const data = await res.json()
+  if (!data.success) throw new Error(data.message || '更新權限失敗')
   return data.data
 }
 

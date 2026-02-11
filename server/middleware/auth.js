@@ -57,22 +57,40 @@ const optionalLineUser = (req, res, next) => {
 };
 
 /**
- * 檢查當前 User ID 是否為開發人員（從環境變數讀取）
+ * 檢查當前 User ID 是否為開發人員（從資料庫讀取）
  * @param {string} lineUserId - LINE User ID
- * @returns {boolean} 是否為開發人員
+ * @returns {Promise<boolean>} 是否為開發人員
  */
-const isAdmin = (lineUserId) => {
-  const adminIds = process.env.ADMIN_LINE_USER_IDS || '';
-  if (!adminIds.trim()) return false;
-  
-  const adminList = adminIds.split(',').map(id => id.trim()).filter(Boolean);
-  return adminList.includes(lineUserId);
+const isAdmin = async (lineUserId) => {
+  try {
+    const memberDbService = require('../services/memberDbService');
+    const role = await memberDbService.getMemberRole(lineUserId);
+    return role === '開發者';
+  } catch (error) {
+    console.error('檢查開發人員權限錯誤:', error);
+    return false;
+  }
+};
+
+/**
+ * 檢查當前 User ID 的權限等級
+ * @param {string} lineUserId - LINE User ID
+ * @returns {Promise<string>} 權限角色：開發者、管理者、負責人、一般人
+ */
+const getUserRole = async (lineUserId) => {
+  try {
+    const memberDbService = require('../services/memberDbService');
+    return await memberDbService.getMemberRole(lineUserId);
+  } catch (error) {
+    console.error('取得使用者權限錯誤:', error);
+    return '一般人';
+  }
 };
 
 /**
  * 驗證開發人員權限的中介層（需先經過 verifyLineUser）
  */
-const verifyAdmin = (req, res, next) => {
+const verifyAdmin = async (req, res, next) => {
   if (!req.lineUserId) {
     return res.status(401).json({
       success: false,
@@ -80,7 +98,8 @@ const verifyAdmin = (req, res, next) => {
     });
   }
 
-  if (!isAdmin(req.lineUserId)) {
+  const isAdminUser = await isAdmin(req.lineUserId);
+  if (!isAdminUser) {
     return res.status(403).json({
       success: false,
       message: '需要開發人員權限',
@@ -95,4 +114,5 @@ module.exports = {
   optionalLineUser,
   verifyAdmin,
   isAdmin,
+  getUserRole,
 };
