@@ -139,7 +139,7 @@ async function loadCalendar() {
 }
 
 /**
- * 載入當日行程
+ * 載入當日行程（包含跨日行程）
  */
 async function loadTodayEvents() {
   const today = new Date().toISOString().split('T')[0];
@@ -150,13 +150,14 @@ async function loadTodayEvents() {
     if (window.cacheService) {
       const cachedEvents = window.cacheService.getCachedEvents();
       if (cachedEvents && cachedEvents.length > 0) {
-        // 從快取中過濾出當日的行程
-        const todayStart = new Date(today + 'T00:00:00');
-        const todayEnd = new Date(today + 'T23:59:59');
-        
+        // 從快取中過濾出涵蓋當日的所有行程（包含跨日行程）
         events = cachedEvents.filter(event => {
-          const eventDate = new Date(event.start);
-          return eventDate >= todayStart && eventDate <= todayEnd;
+          const startD = new Date(event.start);
+          const endD = event.end ? new Date(event.end) : startD;
+          const startStr = `${startD.getFullYear()}-${String(startD.getMonth() + 1).padStart(2, '0')}-${String(startD.getDate()).padStart(2, '0')}`;
+          const endStr = `${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`;
+          // 日期在行程區間內（含頭尾）
+          return today >= startStr && today <= endStr;
         });
       }
     }
@@ -314,16 +315,38 @@ function renderCalendar(year, month, events) {
 }
 
 /**
- * 載入指定日期的行程
+ * 載入指定日期的行程（包含跨日行程）
  */
 async function loadDateEvents(date) {
   try {
-    const response = await fetch(`/api/calendar/events?startDate=${date}&endDate=${date}`);
-    const data = await response.json();
-
-    if (data.success) {
-      renderTodayEvents(data.data, date);
+    // 優先使用快取資料
+    let events = [];
+    if (window.cacheService) {
+      const cachedEvents = window.cacheService.getCachedEvents();
+      if (cachedEvents && cachedEvents.length > 0) {
+        // 從快取中過濾出涵蓋這一天的所有行程（包含跨日行程）
+        events = cachedEvents.filter(event => {
+          const startD = new Date(event.start);
+          const endD = event.end ? new Date(event.end) : startD;
+          const startStr = `${startD.getFullYear()}-${String(startD.getMonth() + 1).padStart(2, '0')}-${String(startD.getDate()).padStart(2, '0')}`;
+          const endStr = `${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`;
+          // 日期在行程區間內（含頭尾）
+          return date >= startStr && date <= endStr;
+        });
+      }
     }
+
+    // 如果快取沒有資料，才從 API 載入（但 API 也要改為支持跨日查詢）
+    if (events.length === 0) {
+      const response = await fetch(`/api/calendar/events?startDate=${date}&endDate=${date}`);
+      const data = await response.json();
+
+      if (data.success) {
+        events = data.data;
+      }
+    }
+
+    renderTodayEvents(events, date);
   } catch (error) {
     console.error('載入日期行程錯誤:', error);
   }
