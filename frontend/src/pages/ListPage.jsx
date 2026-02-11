@@ -4,8 +4,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
+import { useLiff } from '../context/LiffContext';
 import { getEvents } from '../services/api';
 
 function formatYMD(d) {
@@ -14,6 +15,8 @@ function formatYMD(d) {
 }
 
 export default function ListPage() {
+  const { userId } = useLiff();
+  const navigate = useNavigate();
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +103,17 @@ export default function ListPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* 新增行程按鈕 */}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => navigate(userId ? `/add-event?date=${formatYMD(new Date(year, month - 1, 1))}` : '/add-event')}
+          className="btn btn-primary btn-block"
+        >
+          ➕ 新增行程
+        </button>
       </div>
 
       {/* 行程列表：與舊版 .event-card 一致 */}

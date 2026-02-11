@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
+import StarBadge from '../components/StarBadge';
 
 export default function MemberDetailPage() {
   const { lineId } = useParams();
@@ -80,8 +81,9 @@ export default function MemberDetailPage() {
       <div className="card">
         {member.pictureUrl && (
           <div className="flex flex-col items-center mb-6">
-            <img src={member.pictureUrl} alt="頭像" className="w-20 h-20 rounded-full object-cover" />
-            <span className="text-sm text-[#666] mt-2">{member.displayName || member.name || 'LINE 名字'}</span>
+            <img src={member.pictureUrl} alt="頭像" className="w-24 h-24 rounded-full object-cover mb-3" />
+            <p className="text-sm text-[#666] mb-2">{member.displayName || member.name || 'LINE 名字'}</p>
+            <StarBadge level={member.starLevel || '白星'} />
           </div>
         )}
 
@@ -91,7 +93,6 @@ export default function MemberDetailPage() {
             { label: 'Email', value: member.email },
             { label: '電話', value: member.phone },
             { label: '生日', value: displayBirthday(member.birthday) },
-            { label: '星等', value: member.starLevel || '白星' },
           ].map(({ label, value }) => (
             <div key={label} className="py-2 border-b border-[#E0E0E0] last:border-0">
               <div className="text-sm text-[#666]">{label}</div>

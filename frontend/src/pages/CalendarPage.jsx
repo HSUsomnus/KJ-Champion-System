@@ -81,7 +81,9 @@ export default function CalendarPage() {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     return monthEvents.filter((e) => {
       const start = (e.start || '').split('T')[0];
-      return start === dateStr;
+      const end = (e.end || '').split('T')[0];
+      // 跨日行程：日期在 start 和 end 之間（含頭尾）
+      return dateStr >= start && dateStr <= end;
     });
   };
 

@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
+import StarBadge from '../components/StarBadge';
 import { getMembers } from '../services/api';
 
 export default function MembersPage() {
@@ -73,9 +74,9 @@ export default function MembersPage() {
               ) : (
                 <div className="w-12 h-12 rounded-full bg-[#E0E0E0] flex items-center justify-center text-[#666] shrink-0">👤</div>
               )}
-              <div className="min-w-0">
-                <div className="font-semibold text-[#333]">{m.name || m.displayName || '未填姓名'}</div>
-                <div className="text-sm text-[#666]">{m.starLevel || '白星'}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-[#333] mb-1">{m.name || m.displayName || '未填姓名'}</div>
+                <StarBadge level={m.starLevel || '白星'} />
               </div>
             </Link>
           ))}

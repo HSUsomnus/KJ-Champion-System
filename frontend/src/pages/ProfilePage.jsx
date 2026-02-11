@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
+import StarBadge from '../components/StarBadge';
 import { useLiff } from '../context/LiffContext';
 import { checkMember, getProfile, updateProfile, registerProfile } from '../services/api';
 import { useAlert } from '../components/AppAlert';
@@ -169,11 +170,14 @@ export default function ProfilePage() {
           <img
             src={liffProfile.pictureUrl}
             alt="頭像"
-            className="w-20 h-20 rounded-full object-cover"
+            className="w-24 h-24 rounded-full object-cover mb-3"
           />
-          <span className="text-sm text-[#666] mt-2">
+          <p className="text-sm text-[#666] mb-2">
             {liffProfile.displayName || 'LINE 名字'}
-          </span>
+          </p>
+          {!isRegister && profile?.starLevel && (
+            <StarBadge level={profile.starLevel} />
+          )}
         </div>
       )}
 
@@ -409,8 +413,8 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
-            <div className="text-sm text-[#666]">星等</div>
-            <div className="font-medium">{profile?.starLevel || '白星'}</div>
+            <div className="text-sm text-[#666] mb-2">星等</div>
+            <StarBadge level={profile?.starLevel || '白星'} />
           </div>
 
           {/* 進階資訊顯示 */}
