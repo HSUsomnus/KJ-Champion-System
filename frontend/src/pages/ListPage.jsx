@@ -14,6 +14,36 @@ function formatYMD(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// 將 ISO 時間字符串轉成 HH:MM 格式（正確處理時區）
+function formatTime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+// 格式化行程日期時間顯示
+function formatEventDisplay(event) {
+  if (!event.start) return '';
+  const startDate = new Date(event.start);
+  const endDate = new Date(event.end);
+  
+  const startDateStr = `${startDate.getMonth() + 1}/${startDate.getDate()}`;
+  
+  if (event.allDay) {
+    const endDateStr = `${endDate.getMonth() + 1}/${endDate.getDate()}`;
+    if (startDateStr === endDateStr) {
+      return `${startDateStr} 全天`;
+    }
+    return `${startDateStr} ~ ${endDateStr} 全天`;
+  }
+  
+  const startTime = formatTime(event.start);
+  const endTime = formatTime(event.end);
+  return `${startDateStr} ${startTime} ~ ${endTime}`;
+}
+
 export default function ListPage() {
   const { userId } = useLiff();
   const navigate = useNavigate();
@@ -135,9 +165,7 @@ export default function ListPage() {
                   </div>
                   <div className="event-info-item">
                     <span>📅</span>
-                    <span>
-                      {(ev.start || '').split('T')[0]} {ev.allDay ? '全天' : (ev.start || '').slice(11, 16)} · {ev.type || '活動'}
-                    </span>
+                    <span>{formatEventDisplay(ev)}</span>
                   </div>
                 </Link>
               ))

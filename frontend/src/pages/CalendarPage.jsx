@@ -15,6 +15,15 @@ function formatYMD(d) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// 將 ISO 時間字符串轉成 HH:MM 格式（正確處理時區）
+function formatTime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
 export default function CalendarPage() {
   const { userId } = useLiff();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -230,7 +239,7 @@ export default function CalendarPage() {
                 <div className="event-info-item">
                   <span>📅</span>
                   <span>
-                    {ev.allDay ? '全天' : (ev.start || '').slice(11, 16)}
+                    {ev.allDay ? '全天' : formatTime(ev.start)}
                     {ev.type && ` · ${ev.type}`}
                   </span>
                 </div>
