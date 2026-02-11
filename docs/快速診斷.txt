@@ -1,0 +1,58 @@
+==========================================
+快速診斷：為什麼看不到權限顯示？
+==========================================
+
+請在 LIFF App 按 F12，在 Console 執行以下指令：
+
+---步驟 1: 取得你的 LINE ID---
+liff.getProfile().then(p => console.log('我的 LINE ID:', p.userId))
+
+複製顯示的 LINE ID，然後執行步驟 2
+
+---步驟 2: 測試 API（替換成你的 LINE ID）---
+fetch('/api/admin/check?userId=U你的LINE_ID')
+  .then(r => r.json())
+  .then(d => console.log('API 結果:', d))
+
+---步驟 3: 測試個人資料 API（替換成你的 LINE ID）---
+fetch('/api/profile?userId=U你的LINE_ID')
+  .then(r => r.json())
+  .then(d => console.log('個人資料:', d.data))
+
+==========================================
+預期結果
+==========================================
+
+步驟 2 應該顯示:
+{
+  success: true,
+  data: {
+    isAdmin: true,
+    role: "開發者"
+  }
+}
+
+步驟 3 應該顯示包含:
+{
+  name: "你的名字",
+  role: "開發者",
+  ...
+}
+
+==========================================
+如果結果不對
+==========================================
+
+1. 如果 role 是 null 或 "一般人":
+   → 到 Supabase SQL Editor 執行:
+   UPDATE members SET role = '開發者' WHERE line_id = 'U你的LINE_ID';
+
+2. 如果出現錯誤 "column role does not exist":
+   → 到 Supabase SQL Editor 執行 database/add-role-column.sql
+
+3. 如果 API 回應 404 或 500:
+   → 檢查 Vercel 部署日誌是否有錯誤
+
+==========================================
+把結果貼給我看
+==========================================
