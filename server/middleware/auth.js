@@ -56,7 +56,43 @@ const optionalLineUser = (req, res, next) => {
   next();
 };
 
+/**
+ * 檢查當前 User ID 是否為開發人員（從環境變數讀取）
+ * @param {string} lineUserId - LINE User ID
+ * @returns {boolean} 是否為開發人員
+ */
+const isAdmin = (lineUserId) => {
+  const adminIds = process.env.ADMIN_LINE_USER_IDS || '';
+  if (!adminIds.trim()) return false;
+  
+  const adminList = adminIds.split(',').map(id => id.trim()).filter(Boolean);
+  return adminList.includes(lineUserId);
+};
+
+/**
+ * 驗證開發人員權限的中介層（需先經過 verifyLineUser）
+ */
+const verifyAdmin = (req, res, next) => {
+  if (!req.lineUserId) {
+    return res.status(401).json({
+      success: false,
+      message: '未驗證使用者',
+    });
+  }
+
+  if (!isAdmin(req.lineUserId)) {
+    return res.status(403).json({
+      success: false,
+      message: '需要開發人員權限',
+    });
+  }
+
+  next();
+};
+
 module.exports = {
   verifyLineUser,
   optionalLineUser,
+  verifyAdmin,
+  isAdmin,
 };

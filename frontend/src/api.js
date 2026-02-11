@@ -140,6 +140,32 @@ export function syncBirthdayEvent(userId) {
     .catch(() => {})
 }
 
+/**
+ * 檢查當前使用者是否為開發人員
+ */
+export async function checkIsAdmin(userId) {
+  const res = await fetch(`/api/admin/check?userId=${encodeURIComponent(userId)}`)
+  const data = await res.json()
+  if (!data.success) return false
+  return data.data.isAdmin
+}
+
+/**
+ * 強制同步所有成員的生日行程（開發人員專用）
+ */
+export async function syncAllBirthdays(userId) {
+  const res = await fetch('/api/admin/sync-all-birthdays', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Line-User-Id': userId,
+    },
+  })
+  const data = await res.json()
+  if (!data.success) throw new Error(data.message || '同步失敗')
+  return data.data
+}
+
 // 與 public/js/cacheService.js 相同的 key，供進入 LIFF 時清除並重建快取
 const CACHE_KEY_VERSION = 'app_data_version'
 const CACHE_KEY_EVENTS = 'app_data_events'
