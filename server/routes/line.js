@@ -312,12 +312,14 @@ router.get('/share-month-message', optionalLineUser, async (req, res) => {
 /**
  * GET /api/line/invite-message
  * 取得邀請訊息的內容（文案每次隨機擇一，康九冠軍事業部四則）
- * 查詢參數: baseUrl（選填）、minimal=1（極簡字卡）
+ * 查詢參數: baseUrl（選填）、minimal=1（極簡字卡）、inviterLineId（邀請人 LINE ID）
  */
 router.get('/invite-message', optionalLineUser, (req, res) => {
   try {
     const baseUrl = req.query.baseUrl || (req.protocol + '://' + req.get('host'));
     const useMinimal = req.query.minimal === '1' || req.query.minimal === 'true';
+    const inviterLineId = req.query.inviterLineId || req.lineUserId || ''; // 邀請人的 LINE ID
+    
     const inviteMessage = lineService.generateInviteMessage();
     const liffId = lineService.getLiffIdForClient();
     // 邀請字卡按鈕連結：步驟 2 用「加入事業部行事曆」連結（開 App 詢問是否新增）；加好友用 env 或 LIFF 網址
@@ -326,9 +328,11 @@ router.get('/invite-message', optionalLineUser, (req, res) => {
       : undefined;
     const lineAddFriendUrl = process.env.LINE_ADD_FRIEND_URL || undefined;
     const flexMessage = useMinimal
-      ? lineService.generateInviteFlexMessageMinimal(liffId)
-      : lineService.generateInviteFlexMessage(liffId, baseUrl, { calendarAddUrl, lineAddFriendUrl });
+      ? lineService.generateInviteFlexMessageMinimal(liffId, inviterLineId)
+      : lineService.generateInviteFlexMessage(liffId, baseUrl, { calendarAddUrl, lineAddFriendUrl, inviterLineId });
 
+    console.log(`✅ 生成邀請訊息 - 邀請人: ${inviterLineId || '未指定'}`);
+    
     res.json({
       success: true,
       data: {

@@ -138,7 +138,12 @@ async function inviteMember() {
   try {
     const baseUrl = window.location.origin;
     const useMinimal = /[?&]minimal=1/.test(location.search);
-    const res = await fetch('/api/line/invite-message?baseUrl=' + encodeURIComponent(baseUrl) + (useMinimal ? '&minimal=1' : ''));
+    // 取得當前用戶的 LINE ID 作為邀請人
+    const inviterLineId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
+    
+    const url = `/api/line/invite-message?baseUrl=${encodeURIComponent(baseUrl)}${useMinimal ? '&minimal=1' : ''}${inviterLineId ? '&inviterLineId=' + encodeURIComponent(inviterLineId) : ''}`;
+    const res = await fetch(url);
+    
     // 先取文字，避免回傳非 JSON（例如 HTML 錯誤頁）時 parse 炸掉
     const text = await res.text();
     let data;

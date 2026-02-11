@@ -117,4 +117,92 @@ router.get('/:lineId', optionalLineUser, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/members/:lineId/subordinates
+ * 取得某人邀請的所有下級成員
+ */
+router.get('/:lineId/subordinates', optionalLineUser, async (req, res) => {
+  try {
+    const { lineId } = req.params;
+    const subordinates = await memberDbService.getSubordinates(lineId);
+
+    res.json({
+      success: true,
+      data: subordinates,
+      count: subordinates.length,
+    });
+  } catch (error) {
+    console.error('取得下級成員錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '取得下級成員失敗',
+    });
+  }
+});
+
+/**
+ * GET /api/members/:lineId/superior
+ * 取得某人的上級（邀請人）
+ */
+router.get('/:lineId/superior', optionalLineUser, async (req, res) => {
+  try {
+    const { lineId } = req.params;
+    const superior = await memberDbService.getSuperior(lineId);
+
+    if (!superior) {
+      return res.json({
+        success: true,
+        data: null,
+        message: '此成員沒有上級',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: superior,
+    });
+  } catch (error) {
+    console.error('取得上級成員錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '取得上級成員失敗',
+    });
+  }
+});
+
+/**
+ * POST /api/members/check-permission
+ * 檢查某人是否為另一人的上級
+ * Body: { superiorLineId, subordinateLineId }
+ */
+router.post('/check-permission', optionalLineUser, async (req, res) => {
+  try {
+    const { superiorLineId, subordinateLineId } = req.body;
+
+    if (!superiorLineId || !subordinateLineId) {
+      return res.status(400).json({
+        success: false,
+        message: '請提供 superiorLineId 和 subordinateLineId',
+      });
+    }
+
+    const isSuperior = await memberDbService.isSuperior(superiorLineId, subordinateLineId);
+
+    res.json({
+      success: true,
+      data: {
+        isSuperior,
+        superiorLineId,
+        subordinateLineId,
+      },
+    });
+  } catch (error) {
+    console.error('檢查權限錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '檢查權限失敗',
+    });
+  }
+});
+
 module.exports = router;

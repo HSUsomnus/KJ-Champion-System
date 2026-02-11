@@ -573,6 +573,13 @@ async function registerUser() {
     const lineProfile = window.LIFF && window.LIFF.getProfile ? window.LIFF.getProfile() : null;
     const pictureUrl = (lineProfile && lineProfile.pictureUrl) ? lineProfile.pictureUrl : '';
 
+    // 從 URL 參數中讀取邀請人 ID（如果有的話）
+    const urlParams = new URLSearchParams(window.location.search);
+    const invitedBy = urlParams.get('invitedBy') || '';
+    if (invitedBy) {
+      console.log('✅ 檢測到邀請人:', invitedBy);
+    }
+
     const regBirthday = document.getElementById('reg-birthday') ? document.getElementById('reg-birthday').value : '';
     const formData = {
       name: (document.getElementById('reg-name').value || '').trim(),
@@ -586,6 +593,7 @@ async function registerUser() {
       volunteerRecords: '[]',
       birthday: regBirthday || '',
       displayName: (lineProfile && lineProfile.displayName) ? lineProfile.displayName : '',
+      invitedBy: invitedBy, // 記錄邀請人的 LINE ID
     };
 
     const response = await fetch('/api/profile/register', {
@@ -617,9 +625,66 @@ async function registerUser() {
   }
 }
 
+/**
+ * 從個人資料頁面邀請新成員
+ */
+async function inviteMemberFromProfile() {
+  try {
+    const baseUrl = window.location.origin;
+    const useMinimal = /[?&]minimal=1/.test(location.search);
+    // 取得當前用戶的 LINE ID 作為邀請人
+    const inviterLineId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
+    
+    const url = `/api/line/invite-message?baseUrl=${encodeURIComponent(baseUrl)}${useMinimal ? '&minimal=1' : ''}${inviterLineId ? '&inviterLineId=' + encodeURIComponent(inviterLineId) : ''}`;
+    const res = await fetch(url);
+    
+    const text = await res.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (e) {
+      console.error('[邀請] 回傳非 JSON', res.status, text.slice(0, 200));
+      const nonJsonErr = res.status + ' ' + (res.statusText || '') + '\n' + (text.slice(0, 200) || '無內容');
+      if (window.showAppAlert) await window.showAppAlert(nonJsonErr);
+      else alert(nonJsonErr);
+      return;
+    }
+
+    if (!data.success || !data.data || !data.data.flexMessage) {
+      const apiErr = (data && data.message) ? data.message : (res.status + ' ' + (res.statusText || '') + (data ? '\n' + JSON.stringify(data).slice(0, 300) : ''));
+      console.error('[邀請] API 失敗', res.status, data);
+      if (window.showAppAlert) await window.showAppAlert(apiErr || String(res.status));
+      else alert(apiErr || String(res.status));
+      return;
+    }
+
+    const flexBubble = data.data.flexMessage;
+    const messages = [{ type: 'flex', altText: '邀請加入我們：請完成以下步驟', contents: flexBubble }];
+
+    if (!window.liff || !window.liff.isLoggedIn()) {
+      if (window.showAppAlert) await window.showAppAlert('請先登入 LINE');
+      else alert('請先登入 LINE');
+      return;
+    }
+
+    const result = await window.liff.shareTargetPicker(messages);
+    if (result) {
+      console.log('[邀請] shareTargetPicker 成功', result);
+    } else {
+      console.log('[邀請] shareTargetPicker 使用者取消');
+    }
+  } catch (error) {
+    console.error('[邀請] 錯誤:', error);
+    const errMsg = (error && error.message) ? error.message : String(error || '');
+    if (window.showAppAlert) await window.showAppAlert('❌ 邀請失敗：' + errMsg);
+    else alert('❌ 邀請失敗：' + errMsg);
+  }
+}
+
 // 匯出函數供全域使用
 window.enableEditMode = enableEditMode;
 window.cancelEditMode = cancelEditMode;
+window.inviteMemberFromProfile = inviteMemberFromProfile;
 
 // 頁面載入時初始化
 if (document.readyState === 'loading') {

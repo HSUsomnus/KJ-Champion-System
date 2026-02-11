@@ -34,6 +34,7 @@ const rowToMember = (row) => ({
   volunteerRecords: row.volunteer_records || '',
   birthday: row.birthday || '',
   displayName: row.display_name || '',
+  invitedBy: row.invited_by || null, // 邀請人（上級）的 LINE ID
 });
 
 /**
@@ -98,8 +99,8 @@ const createMember = async (memberData) => {
       INSERT INTO members (
         line_id, name, email, phone, star_level, course_record,
         picture_url, tesla_franchisee, team_responsibilities,
-        volunteer_records, birthday, display_name
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        volunteer_records, birthday, display_name, invited_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `, [
       memberData.lineId || '',
@@ -114,8 +115,10 @@ const createMember = async (memberData) => {
       memberData.volunteerRecords || '',
       memberData.birthday || '',
       memberData.displayName || '',
+      memberData.invitedBy || null, // 邀請人的 LINE ID
     ]);
 
+    console.log(`✅ 新增成員: ${memberData.name} (邀請人: ${memberData.invitedBy || '無'})`);
     return rowToMember(result.rows[0]);
   } catch (error) {
     console.error('❌ 新增成員資料失敗:', error.message);
@@ -154,8 +157,9 @@ const updateMember = async (lineId, memberData) => {
         volunteer_records = $9,
         birthday = $10,
         display_name = $11,
+        invited_by = $12,
         updated_at = NOW()
-      WHERE line_id = $12
+      WHERE line_id = $13
       RETURNING *
     `, [
       memberData.name !== undefined ? memberData.name : member.name,
@@ -169,6 +173,7 @@ const updateMember = async (lineId, memberData) => {
       memberData.volunteerRecords !== undefined ? memberData.volunteerRecords : member.volunteerRecords,
       memberData.birthday !== undefined ? memberData.birthday : member.birthday,
       memberData.displayName !== undefined ? memberData.displayName : member.displayName,
+      memberData.invitedBy !== undefined ? memberData.invitedBy : member.invitedBy,
       lineId,
     ]);
 
@@ -179,10 +184,67 @@ const updateMember = async (lineId, memberData) => {
   }
 };
 
+/**
+ * 取得某人邀請的所有下級成員
+ * @param {string} inviterLineId - 邀請人的 LINE ID
+ * @returns {Promise<Array>} 下級成員陣列
+ */
+const getSubordinates = async (inviterLineId) => {
+  try {
+    const result = await db.query(
+      `SELECT * FROM members WHERE invited_by = $1 ORDER BY created_at DESC`,
+      [inviterLineId]
+    );
+    
+    return result.rows.map(rowToMember);
+  } catch (error) {
+    console.error('❌ 查詢下級成員失敗:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * 檢查某人是否為另一人的上級
+ * @param {string} superiorLineId - 上級的 LINE ID
+ * @param {string} subordinateLineId - 下級的 LINE ID
+ * @returns {Promise<boolean>} 是否為上級關係
+ */
+const isSuperior = async (superiorLineId, subordinateLineId) => {
+  try {
+    const subordinate = await getMemberByLineId(subordinateLineId);
+    return subordinate && subordinate.invitedBy === superiorLineId;
+  } catch (error) {
+    console.error('❌ 檢查上級關係失敗:', error.message);
+    return false;
+  }
+};
+
+/**
+ * 取得某人的上級（邀請人）
+ * @param {string} lineId - 成員的 LINE ID
+ * @returns {Promise<Object|null>} 上級成員物件，無上級則回傳 null
+ */
+const getSuperior = async (lineId) => {
+  try {
+    const member = await getMemberByLineId(lineId);
+    if (!member || !member.invitedBy) {
+      return null;
+    }
+    
+    return await getMemberByLineId(member.invitedBy);
+  } catch (error) {
+    console.error('❌ 查詢上級成員失敗:', error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllMembers,
   getMemberByLineId,
   isMemberRegistered,
   createMember,
   updateMember,
+  getSubordinates,
+  isSuperior,
+  getSuperior,
 };

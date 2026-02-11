@@ -140,7 +140,7 @@ const generateMonthShareMessage = (events, year, month, type) => {
     return `📅 ${year}年${month}月 ${type}\n\n本月目前沒有 ${type} 類型的行程。`;
   }
 
-  // 格式化日期時間（24小時制）
+  // 格式化日期時間（24小時制，使用台北時區）
   const formatDateTime = (dateTimeStr, allDay = false) => {
     const date = new Date(dateTimeStr);
     const pad = (n) => n < 10 ? '0' + n : n;
@@ -150,6 +150,7 @@ const generateMonthShareMessage = (events, year, month, type) => {
         month: 'long',
         day: 'numeric',
         weekday: 'short',
+        timeZone: 'Asia/Taipei',
       });
     }
     
@@ -157,8 +158,12 @@ const generateMonthShareMessage = (events, year, month, type) => {
       month: 'long',
       day: 'numeric',
       weekday: 'short',
+      timeZone: 'Asia/Taipei',
     });
-    const timeStr = pad(date.getHours()) + ':' + pad(date.getMinutes());
+    
+    // 使用 toLocaleString 確保使用台北時區
+    const taipeiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+    const timeStr = pad(taipeiDate.getHours()) + ':' + pad(taipeiDate.getMinutes());
     return `${dateStr} ${timeStr}`;
   };
 
@@ -214,10 +219,13 @@ const buildCalendarAddUrl = (calendarId) =>
  * 極簡版邀請 Flex 字卡（僅標題 + 一個按鈕），用於測試 shareTargetPicker 是否會顯示字卡
  * 若極簡版能顯示字卡，代表問題在完整版結構；若仍為文字，代表環境或 LINE 行為
  * @param {string} liffId - LIFF ID
+ * @param {string} inviterLineId - 邀請人的 LINE ID（選填）
  * @returns {object} Flex Message contents（bubble）
  */
-const generateInviteFlexMessageMinimal = (liffId) => {
-  const liffUrl = `https://liff.line.me/${liffId}`;
+const generateInviteFlexMessageMinimal = (liffId, inviterLineId = '') => {
+  const liffUrl = inviterLineId 
+    ? `https://liff.line.me/${liffId}?invitedBy=${encodeURIComponent(inviterLineId)}`
+    : `https://liff.line.me/${liffId}`;
   return {
     type: 'bubble',
     body: {
@@ -242,12 +250,18 @@ const generateInviteFlexMessageMinimal = (liffId) => {
  * 文案每次隨機擇一（康九冠軍事業部四則）
  * @param {string} liffId - LIFF ID（用於 LIFF 網址與未設定時的 fallback）
  * @param {string} baseUrl - 本站網址，用於 app-download 導向
- * @param {object} options - 選填。calendarAddUrl＝加入團體日曆連結（開 App 詢問是否新增）；lineAddFriendUrl＝加 LINE 好友連結
+ * @param {object} options - 選填。calendarAddUrl＝加入團體日曆連結（開 App 詢問是否新增）；lineAddFriendUrl＝加 LINE 好友連結；inviterLineId＝邀請人的 LINE ID
  * @returns {object} Flex Message contents（bubble）
  */
 const generateInviteFlexMessage = (liffId, baseUrl, options = {}) => {
   const selectedTemplate = pickRandomInviteTemplate();
-  const liffUrl = liffId ? `https://liff.line.me/${liffId}` : '';
+  // 步驟 3：進入 LIFF，帶上邀請人 ID 參數
+  const inviterLineId = options.inviterLineId || '';
+  const liffUrl = liffId 
+    ? (inviterLineId 
+        ? `https://liff.line.me/${liffId}?invitedBy=${encodeURIComponent(inviterLineId)}`
+        : `https://liff.line.me/${liffId}`)
+    : '';
   const appDownloadUrl = baseUrl ? `${String(baseUrl).replace(/\/$/, '')}/api/line/app-download` : null;
   // 步驟 2：加入團體日曆連結（由 route 傳入 env GROUP_CALENDAR_ID；未傳則用 env）
   const calendarAddUrl = options.calendarAddUrl || buildCalendarAddUrl();

@@ -47,7 +47,7 @@ router.get('/', verifyLineUser, async (req, res) => {
 router.post('/register', verifyLineUser, async (req, res) => {
   try {
     const lineId = req.lineUserId;
-    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords, birthday, displayName } = req.body;
+    const { name, email, phone, starLevel, courseRecord, pictureUrl, teslaFranchisee, teamResponsibilities, volunteerRecords, birthday, displayName, invitedBy } = req.body;
 
     // 驗證必填欄位
     if (!name) {
@@ -72,7 +72,7 @@ router.post('/register', verifyLineUser, async (req, res) => {
       ? starLevel 
       : '白星';
 
-    // 新增成員資料（含進階資訊、生日、顯示名稱）
+    // 新增成員資料（含進階資訊、生日、顯示名稱、邀請人）
     const member = await memberDbService.createMember({
       lineId,
       name,
@@ -86,6 +86,7 @@ router.post('/register', verifyLineUser, async (req, res) => {
       volunteerRecords: volunteerRecords || '',
       birthday: birthday || '',
       displayName: displayName || '',
+      invitedBy: invitedBy || null, // 記錄邀請人的 LINE ID
     });
 
     // 更新版本號
