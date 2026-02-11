@@ -7,8 +7,9 @@ let currentTab = 'data'; // 當前分頁
 let userPermissions = {
   isAdmin: false,
   isManager: false,
-  canViewData: false, // 可查看數據（負責人、開發者）
-  canViewFinancial: false, // 可查看財力（僅開發者）
+  isGuanLiZhe: false, // 管理者角色（如果有的話）
+  canViewData: false, // 可查看數據（負責人、開發者、管理者）
+  canViewFinancial: false, // 可查看財力（負責人、開發者）
 };
 
 /**
@@ -46,8 +47,13 @@ async function checkPermissions() {
       const member = data.data;
       userPermissions.isAdmin = member.role === '開發者';
       userPermissions.isManager = member.role === '負責人';
-      userPermissions.canViewData = userPermissions.isAdmin || userPermissions.isManager;
-      userPermissions.canViewFinancial = userPermissions.isAdmin;
+      userPermissions.isGuanLiZhe = member.role === '管理者';
+      
+      // 數據分頁權限：負責人 + 開發者 + 管理者
+      userPermissions.canViewData = userPermissions.isAdmin || userPermissions.isManager || userPermissions.isGuanLiZhe;
+      
+      // 財力分頁權限：負責人 + 開發者
+      userPermissions.canViewFinancial = userPermissions.isAdmin || userPermissions.isManager;
 
       // 根據權限顯示內容
       if (!userPermissions.canViewData) {
@@ -84,7 +90,7 @@ function showNoPermission() {
 async function switchTab(tabName) {
   // 檢查權限
   if (tabName === 'financial' && !userPermissions.canViewFinancial) {
-    alert('🚫 無權限訪問\n\n只有開發者可以查看財力分頁');
+    alert('🚫 無權限訪問\n\n只有負責人和開發者可以查看財力分頁');
     return;
   }
 
@@ -221,7 +227,7 @@ async function loadFinancialTab() {
       <div class="empty-state">
         <div>🚫</div>
         <p>無權限訪問</p>
-        <p style="font-size: 12px; color: var(--text-light);">只有開發者可以查看財力分頁</p>
+        <p style="font-size: 12px; color: var(--text-light);">只有負責人和開發者可以查看財力分頁</p>
       </div>
     `;
     return;
