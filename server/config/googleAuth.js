@@ -10,7 +10,30 @@ require('dotenv').config();
 // Service Account 用於存取團體日曆和 Google Sheets
 const getServiceAccountAuth = () => {
   try {
-    // 從環境變數讀取 Service Account 資訊
+    // 方案 1：使用完整的 JSON 格式（推薦，避免私鑰換行問題）
+    const googleCredentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+    
+    if (googleCredentialsJson) {
+      try {
+        const credentials = JSON.parse(googleCredentialsJson);
+        const auth = new google.auth.JWT({
+          email: credentials.client_email,
+          key: credentials.private_key, // JSON 裡的 private_key 已經有正確的換行
+          scopes: [
+            'https://www.googleapis.com/auth/calendar',
+            'https://www.googleapis.com/auth/spreadsheets',
+          ],
+          projectId: credentials.project_id,
+        });
+        console.log('✅ 使用 GOOGLE_SERVICE_ACCOUNT_JSON 認證成功');
+        return auth;
+      } catch (parseError) {
+        console.error('❌ GOOGLE_SERVICE_ACCOUNT_JSON 格式錯誤:', parseError.message);
+        // 繼續嘗試方案 2
+      }
+    }
+
+    // 方案 2：使用分開的環境變數（舊方法，可能有換行符問題）
     const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
     const projectId = process.env.GOOGLE_PROJECT_ID;
@@ -41,6 +64,7 @@ const getServiceAccountAuth = () => {
       projectId: projectId,
     });
 
+    console.log('✅ 使用分開的環境變數認證成功');
     return auth;
   } catch (error) {
     console.error('❌ Google Service Account 認證失敗:', error.message);
