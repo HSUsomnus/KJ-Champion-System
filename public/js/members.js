@@ -24,32 +24,10 @@ async function initMembers() {
 }
 
 /**
- * 檢查是否有管理權限（顯示管理按鈕）
+ * 取得當前用戶 ID
  */
 async function checkAdminPermission() {
   currentUserId = window.LIFF ? window.LIFF.getUserId() : null;
-  if (!currentUserId) return;
-
-  try {
-    // 取得當前用戶資料
-    const response = await fetch(`/api/members/${currentUserId}`);
-    const data = await response.json();
-    
-    if (data.success) {
-      const member = data.data;
-      const role = member.role || '一般人';
-      
-      // 開發者、負責人、管理者可看到管理按鈕
-      if (role === '開發者' || role === '負責人' || role === '管理者') {
-        const managementBtn = document.getElementById('management-btn');
-        if (managementBtn) {
-          managementBtn.classList.remove('hidden');
-        }
-      }
-    }
-  } catch (error) {
-    console.error('檢查管理員權限錯誤:', error);
-  }
 }
 
 /**
