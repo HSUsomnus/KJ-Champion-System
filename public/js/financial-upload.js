@@ -4,6 +4,8 @@
 
 let userId = '';
 let selectedFile = null;
+let currentEditorId = ''; // 當前編輯者 ID（用於檢查權限）
+let canEditComments = false; // 是否有權限編輯評語
 
 /**
  * 初始化頁面
@@ -26,8 +28,18 @@ async function init() {
     console.log('✅ LINE Login 驗證成功');
   }
 
+  // 取得當前編輯者 ID（從 URL 或 sessionStorage）
+  currentEditorId = urlParams.get('editorId') || sessionStorage.getItem('editorId') || userId;
+  if (currentEditorId) {
+    sessionStorage.setItem('editorId', currentEditorId);
+  }
+
   // 有 userId，載入文件
   try {
+    // 檢查權限
+    await checkEditPermission();
+    
+    // 載入文件列表
     await loadDocuments();
     
     // 隱藏載入動畫，顯示主要內容
@@ -42,6 +54,23 @@ async function init() {
         <button class="btn btn-primary" onclick="location.reload()">重試</button>
       </div>
     `;
+  }
+}
+
+/**
+ * 檢查是否有權限編輯評語
+ */
+async function checkEditPermission() {
+  try {
+    const response = await fetch(`/api/financial/check-permission?editorId=${encodeURIComponent(currentEditorId)}&targetUserId=${encodeURIComponent(userId)}`);
+    const data = await response.json();
+    if (data.success) {
+      canEditComments = data.data.canEdit;
+      console.log(`權限檢查: ${canEditComments ? '可編輯' : '僅可查看'}`);
+    }
+  } catch (error) {
+    console.error('檢查權限錯誤:', error);
+    canEditComments = false;
   }
 }
 
@@ -89,28 +118,80 @@ function renderDocuments(documents) {
     return;
   }
 
-  container.innerHTML = documents.map(doc => `
-    <div class="document-item" style="padding: 12px; border-bottom: 1px solid var(--border-color);">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="flex: 1; min-width: 0;">
-          <p style="margin: 0 0 4px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            📄 ${escapeHtml(doc.original_filename)}
-          </p>
-          <p style="margin: 0; font-size: 12px; color: var(--text-light);">
-            ${formatFileSize(doc.file_size)} · ${formatDate(doc.uploaded_at)}
-          </p>
+  container.innerHTML = documents.map(doc => {
+    const commentHtml = renderCommentSection(doc);
+    return `
+      <div class="document-item" style="padding: 12px; border-bottom: 1px solid var(--border-color);">
+        <!-- 文件資訊和操作按鈕 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="flex: 1; min-width: 0;">
+            <p style="margin: 0 0 4px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              📄 ${escapeHtml(doc.original_filename)}
+            </p>
+            <p style="margin: 0; font-size: 12px; color: var(--text-light);">
+              ${formatFileSize(doc.file_size)} · ${formatDate(doc.uploaded_at)}
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; margin-left: 12px;">
+            <button class="btn btn-sm btn-secondary" onclick="previewDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')">
+              👁️ 瀏覽
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="downloadDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')">
+              ⬇️ 下載
+            </button>
+          </div>
         </div>
-        <div style="display: flex; gap: 8px; margin-left: 12px;">
-          <button class="btn btn-sm btn-secondary" onclick="previewDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')">
-            👁️ 瀏覽
-          </button>
-          <button class="btn btn-sm btn-primary" onclick="downloadDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')">
-            ⬇️ 下載
-          </button>
-        </div>
+        
+        <!-- 評語區域 -->
+        ${commentHtml}
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+}
+
+/**
+ * 渲染評語區域
+ */
+function renderCommentSection(doc) {
+  const hasComment = doc.comment && doc.comment.trim();
+  const commentAuthor = doc.comment_author_name || '未知';
+  const commentTime = doc.comment_updated_at ? formatDate(doc.comment_updated_at) : '';
+  
+  if (canEditComments) {
+    // 有權限編輯
+    return `
+      <div style="margin-top: 8px; padding: 8px; background: var(--bg-color); border-radius: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-light);">💬 評語</span>
+          <button class="btn btn-sm" onclick="editComment(${doc.id}, '${escapeHtml(doc.comment || '')}', '${commentAuthor}', '${commentTime}')" style="font-size: 12px; padding: 2px 8px;">
+            ${hasComment ? '✏️ 編輯' : '➕ 新增'}
+          </button>
+        </div>
+        ${hasComment ? `
+          <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-color); white-space: pre-wrap;">${escapeHtml(doc.comment)}</p>
+          <p style="margin: 4px 0 0; font-size: 11px; color: var(--text-light);">
+            ${commentAuthor} · ${commentTime}
+          </p>
+        ` : `
+          <p style="margin: 4px 0 0; font-size: 12px; color: var(--text-light); font-style: italic;">尚無評語</p>
+        `}
+      </div>
+    `;
+  } else {
+    // 僅可查看
+    if (!hasComment) {
+      return ''; // 沒有評語就不顯示
+    }
+    return `
+      <div style="margin-top: 8px; padding: 8px; background: var(--bg-color); border-radius: 4px;">
+        <span style="font-size: 12px; font-weight: 600; color: var(--text-light);">💬 評語</span>
+        <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-color); white-space: pre-wrap;">${escapeHtml(doc.comment)}</p>
+        <p style="margin: 4px 0 0; font-size: 11px; color: var(--text-light);">
+          ${commentAuthor} · ${commentTime}
+        </p>
+      </div>
+    `;
+  }
 }
 
 /**
@@ -317,7 +398,56 @@ function formatDate(dateString) {
  * HTML 轉義
  */
 function escapeHtml(text) {
+  if (!text) return '';
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+/**
+ * 編輯評語
+ */
+function editComment(docId, currentComment, author, time) {
+  const newComment = prompt(
+    `編輯評語\n${author && time ? `\n上次編輯：${author} · ${time}` : ''}\n\n請輸入新的評語內容：`,
+    currentComment || ''
+  );
+  
+  // 如果用戶取消或內容沒變，不做任何事
+  if (newComment === null) return;
+  
+  // 儲存評語
+  saveComment(docId, newComment.trim());
+}
+
+/**
+ * 儲存評語
+ */
+async function saveComment(docId, comment) {
+  try {
+    const response = await fetch(`/api/financial/${docId}/comment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: userId,
+        editorId: currentEditorId,
+        comment: comment,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert('✅ 評語已儲存');
+      // 重新載入文件列表
+      await loadDocuments();
+    } else {
+      alert('❌ 儲存失敗：' + (data.message || '未知錯誤'));
+    }
+  } catch (error) {
+    console.error('儲存評語錯誤:', error);
+    alert('❌ 儲存失敗：' + error.message);
+  }
 }

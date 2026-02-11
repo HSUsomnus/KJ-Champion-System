@@ -4,6 +4,7 @@
  */
 
 let memberLineId = null;
+let currentUserId = null;
 
 /**
  * 初始化成員詳情頁面
@@ -23,8 +24,14 @@ async function initMemberDetail() {
     return;
   }
 
+  // 取得當前用戶 ID
+  currentUserId = window.LIFF ? window.LIFF.getUserId() : null;
+
   // 載入成員資料
   await loadMemberDetail();
+  
+  // 檢查是否顯示財力查看按鈕
+  await checkFinancialViewPermission();
 }
 
 /**
@@ -149,6 +156,45 @@ function updateStarDisplay(starLevel) {
     starBadge.className = 'member-star ' + (starLevel || '白星');
     starBadge.textContent = starLevel || '白星';
   }
+}
+
+/**
+ * 檢查是否有權限查看財力（上級或開發者）
+ */
+async function checkFinancialViewPermission() {
+  if (!currentUserId || !memberLineId) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/financial/check-permission?editorId=${encodeURIComponent(currentUserId)}&targetUserId=${encodeURIComponent(memberLineId)}`);
+    const data = await response.json();
+
+    if (data.success && data.data.canEdit) {
+      // 有權限，顯示按鈕
+      const btn = document.getElementById('view-financial-btn');
+      if (btn) {
+        btn.classList.remove('hidden');
+      }
+    }
+  } catch (error) {
+    console.error('檢查財力查看權限錯誤:', error);
+  }
+}
+
+/**
+ * 查看成員的財力上傳
+ */
+function viewMemberFinancial() {
+  if (!memberLineId || !currentUserId) {
+    alert('無法取得必要資訊');
+    return;
+  }
+
+  // 跳轉到財力上傳頁面，帶上目標用戶 ID 和當前用戶 ID（作為編輯者）
+  const baseUrl = window.location.origin;
+  const targetUrl = `${baseUrl}/financial-upload.html?userId=${encodeURIComponent(memberLineId)}&editorId=${encodeURIComponent(currentUserId)}`;
+  window.location.href = targetUrl;
 }
 
 // 頁面載入時初始化
