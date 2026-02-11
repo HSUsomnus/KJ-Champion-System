@@ -294,15 +294,14 @@ router.get('/check-permission', async (req, res) => {
       });
     }
 
-    // 檢查是否為開發者
-    const isAdmin = process.env.ADMIN_LINE_USER_IDS?.split(',').includes(editorId);
+    // 從資料庫檢查編輯者權限
+    const editorMember = await memberDbService.getMemberByLineId(editorId);
+    
+    const isAdmin = editorMember && editorMember.role === 'admin';
+    const isManager = editorMember && editorMember.role === 'manager';
     
     // 檢查是否為上級
     const isSuperior = await memberDbService.isSuperior(editorId, targetUserId);
-    
-    // 檢查是否為負責人
-    const editorMember = await memberDbService.getMemberByLineId(editorId);
-    const isManager = editorMember && editorMember.role === 'manager';
 
     // 查看權限：上級、負責人、開發者都可以查看
     const canView = isAdmin || isManager || isSuperior;
