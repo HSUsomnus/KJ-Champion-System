@@ -21,9 +21,17 @@ const PORT = process.env.PORT || 8080;
 
 // 判斷使用哪個前端：USE_REACT_FRONTEND=1 且 frontend/dist 存在時使用 React
 const reactDistPath = path.join(__dirname, '../frontend/dist');
+const distExists = fs.existsSync(reactDistPath);
 const useReactFrontend =
-  process.env.USE_REACT_FRONTEND === '1' && fs.existsSync(reactDistPath);
+  process.env.USE_REACT_FRONTEND === '1' && distExists;
 const publicPath = useReactFrontend ? reactDistPath : path.join(__dirname, '../public');
+
+// 啟動時記錄前端使用狀態
+console.log('🔧 前端配置:');
+console.log('  USE_REACT_FRONTEND:', process.env.USE_REACT_FRONTEND);
+console.log('  frontend/dist 存在:', distExists);
+console.log('  使用前端:', useReactFrontend ? 'React (frontend/dist)' : 'HTML (public)');
+console.log('  路徑:', publicPath);
 
 // 中介層設定
 // 允許跨來源請求（CORS）
