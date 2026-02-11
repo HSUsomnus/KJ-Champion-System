@@ -5,6 +5,7 @@
 
 const { getCalendarClient, getGroupCalendarId } = require('../config/googleAuth');
 const memberDbService = require('./memberDbService');
+const eventDbService = require('./eventDbService');
 
 /**
  * 取得指定日期範圍的團體行程
@@ -245,7 +246,7 @@ const createGroupEvent = async (eventData) => {
       resource: event,
     });
 
-    return {
+    const newEvent = {
       id: response.data.id,
       title: response.data.summary,
       description: response.data.description || '',
@@ -255,7 +256,19 @@ const createGroupEvent = async (eventData) => {
       type: response.data.extendedProperties?.private?.type || '活動',
       allDay: !response.data.start?.dateTime,
       isBirthdayEvent: response.data.extendedProperties?.private?.isBirthday === '1',
+      creator: response.data.creator?.email || '',
     };
+
+    // 立即同步到資料庫（緩衝區）
+    try {
+      await eventDbService.upsertEvents([newEvent]);
+      console.log(`✅ 新增行程已同步到資料庫: ${newEvent.id}`);
+    } catch (syncError) {
+      console.error('⚠️  同步到資料庫失敗:', syncError.message);
+      // 不拋出錯誤，避免影響主流程
+    }
+
+    return newEvent;
   } catch (error) {
     console.error('❌ 新增團體行程失敗:', error.message);
     throw new Error(`新增團體行程失敗: ${error.message}`);
@@ -316,7 +329,7 @@ const updateGroupEvent = async (eventId, eventData) => {
     });
 
     // 回傳格式化的行程資料
-    return {
+    const updatedEvent = {
       id: response.data.id,
       title: response.data.summary,
       description: response.data.description || '',
@@ -325,7 +338,20 @@ const updateGroupEvent = async (eventId, eventData) => {
       location: response.data.location || '',
       type: response.data.extendedProperties?.private?.type || '活動',
       allDay: !response.data.start?.dateTime,
+      isBirthdayEvent: response.data.extendedProperties?.private?.isBirthday === '1',
+      creator: response.data.creator?.email || '',
     };
+
+    // 立即同步到資料庫（緩衝區）
+    try {
+      await eventDbService.upsertEvents([updatedEvent]);
+      console.log(`✅ 更新行程已同步到資料庫: ${updatedEvent.id}`);
+    } catch (syncError) {
+      console.error('⚠️  同步到資料庫失敗:', syncError.message);
+      // 不拋出錯誤，避免影響主流程
+    }
+
+    return updatedEvent;
   } catch (error) {
     console.error('❌ 更新團體行程失敗:', error.message);
     throw new Error(`更新團體行程失敗: ${error.message}`);
@@ -346,6 +372,15 @@ const deleteGroupEvent = async (eventId) => {
       calendarId: calendarId,
       eventId: eventId,
     });
+
+    // 立即從資料庫刪除（緩衝區）
+    try {
+      await eventDbService.deleteEventById(eventId);
+      console.log(`✅ 刪除行程已同步到資料庫: ${eventId}`);
+    } catch (syncError) {
+      console.error('⚠️  同步刪除到資料庫失敗:', syncError.message);
+      // 不拋出錯誤，避免影響主流程
+    }
   } catch (error) {
     console.error('❌ 刪除團體行程失敗:', error.message);
     throw new Error(`刪除團體行程失敗: ${error.message}`);

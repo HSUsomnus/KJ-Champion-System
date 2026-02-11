@@ -94,3 +94,54 @@ export async function getMembers() {
   if (!data.success) throw new Error(data.message || '取得成員失敗');
   return data.data;
 }
+
+/**
+ * 取得單一行程詳情
+ */
+export async function getEventById(eventId) {
+  const res = await fetch(`${API_BASE}/api/calendar/events/${eventId}`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || '取得行程失敗');
+  return data.data;
+}
+
+/**
+ * 新增行程
+ */
+export async function createEvent(userId, body) {
+  const res = await fetch(`${API_BASE}/api/calendar/events`, {
+    method: 'POST',
+    headers: headers(userId),
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || '新增行程失敗');
+  return data.data;
+}
+
+/**
+ * 更新行程
+ */
+export async function updateEvent(userId, eventId, body) {
+  const res = await fetch(`${API_BASE}/api/calendar/events/${eventId}`, {
+    method: 'PUT',
+    headers: headers(userId),
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || '更新行程失敗');
+  return data.data;
+}
+
+/**
+ * 刪除行程
+ */
+export async function deleteEvent(userId, eventId) {
+  const res = await fetch(`${API_BASE}/api/calendar/events/${eventId}`, {
+    method: 'DELETE',
+    headers: headers(userId),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || '刪除行程失敗');
+  return data;
+}

@@ -161,6 +161,24 @@ const deleteEventsNotIn = async (googleEventIds, timeMin, timeMax) => {
 };
 
 /**
+ * 刪除單一行程（立即同步用）
+ * @param {string} eventId - 行程 ID (Google Calendar event ID)
+ * @returns {Promise<boolean>} 是否刪除成功
+ */
+const deleteEventById = async (eventId) => {
+  try {
+    const result = await db.query(
+      `DELETE FROM events WHERE id = $1 RETURNING id`,
+      [eventId]
+    );
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error('❌ 刪除行程失敗:', error.message);
+    throw error;
+  }
+};
+
+/**
  * 取得指定月份的行程
  * @param {number} year - 年份
  * @param {number} month - 月份 (1-12)
@@ -201,5 +219,6 @@ module.exports = {
   getEventById,
   upsertEvents,
   deleteEventsNotIn,
+  deleteEventById,
   getEventsByMonth,
 };

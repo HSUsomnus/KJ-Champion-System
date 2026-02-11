@@ -11,6 +11,8 @@ import ListPage from './pages/ListPage';
 import MembersPage from './pages/MembersPage';
 import MemberDetailPage from './pages/MemberDetailPage';
 import ProfilePage from './pages/ProfilePage';
+import AddEventPage from './pages/AddEventPage';
+import EventDetailPage from './pages/EventDetailPage';
 
 export default function App() {
   return (
@@ -29,8 +31,8 @@ export default function App() {
           <Route path="list" element={<ListPage />} />
           <Route path="members" element={<MembersPage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="add-event" element={<div className="p-4">新增行程（待實作）</div>} />
-          <Route path="event/:id" element={<div className="p-4">行程詳情（待實作）</div>} />
+          <Route path="add-event" element={<AddEventPage />} />
+          <Route path="event/:id" element={<EventDetailPage />} />
           <Route path="member/:lineId" element={<MemberDetailPage />} />
         </Route>
 
