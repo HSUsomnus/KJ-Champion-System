@@ -695,17 +695,28 @@ async function inviteMemberFromProfile() {
 }
 
 /**
- * 前往財力上傳頁面
+ * 前往財力上傳頁面（在外部瀏覽器開啟）
  */
 function goToFinancialUpload() {
   const userId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
-  if (!userId) {
-    if (window.showAppAlert) window.showAppAlert('無法取得使用者 ID');
-    else alert('無法取得使用者 ID');
-    return;
+  
+  // 財力上傳頁面 URL
+  const baseUrl = window.location.origin;
+  const targetUrl = userId 
+    ? `${baseUrl}/financial-upload.html?userId=${encodeURIComponent(userId)}`
+    : `${baseUrl}/financial-upload.html`;
+  
+  // 如果在 LIFF 環境中，使用外部瀏覽器開啟
+  if (window.liff && window.liff.isInClient && window.liff.isInClient()) {
+    // 在 LINE 內建瀏覽器，使用 openWindow 在外部開啟
+    window.liff.openWindow({
+      url: targetUrl,
+      external: true, // 強制使用外部瀏覽器
+    });
+  } else {
+    // 已經在外部瀏覽器，直接跳轉
+    window.location.href = targetUrl;
   }
-  // 前往財力上傳頁面（非 LIFF，純網頁）
-  window.location.href = `/financial-upload.html?userId=${encodeURIComponent(userId)}`;
 }
 
 // 匯出函數供全域使用

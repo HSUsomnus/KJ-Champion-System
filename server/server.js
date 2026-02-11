@@ -15,6 +15,7 @@ const memberRoutes = require('./routes/member');
 const profileRoutes = require('./routes/profile');
 const lineRoutes = require('./routes/line');
 const financialRoutes = require('./routes/financial');
+const authRoutes = require('./routes/auth');
 
 // 建立 Express 應用程式
 const app = express();
@@ -72,6 +73,7 @@ app.use('/api/members', memberRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/line', lineRoutes);
 app.use('/api/financial', financialRoutes);
+app.use('/api/auth', authRoutes);
 
 // 健康檢查端點（供 Cloud Run 使用）
 app.get('/health', (req, res) => {

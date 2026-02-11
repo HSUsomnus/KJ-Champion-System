@@ -12,20 +12,45 @@ async function init() {
   // 從 URL 取得 userId
   const urlParams = new URLSearchParams(window.location.search);
   userId = urlParams.get('userId');
+  const isAuth = urlParams.get('auth') === '1'; // LINE Login 回調標記
 
-  // 如果沒有 userId，顯示驗證表單
+  // 如果沒有 userId，顯示登入表單
   if (!userId) {
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('auth-form').classList.remove('hidden');
     return;
   }
 
-  // 有 userId，直接載入文件
-  await loadDocuments();
-  
-  // 隱藏載入動畫，顯示主要內容
-  document.getElementById('loading').classList.add('hidden');
-  document.getElementById('main-content').classList.remove('hidden');
+  // 如果是 LINE Login 回調，驗證成功後自動載入
+  if (isAuth) {
+    console.log('✅ LINE Login 驗證成功');
+  }
+
+  // 有 userId，載入文件
+  try {
+    await loadDocuments();
+    
+    // 隱藏載入動畫，顯示主要內容
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+  } catch (error) {
+    console.error('載入失敗:', error);
+    document.getElementById('loading').innerHTML = `
+      <div class="empty-state">
+        <div>❌</div>
+        <p>載入失敗：${error.message}</p>
+        <button class="btn btn-primary" onclick="location.reload()">重試</button>
+      </div>
+    `;
+  }
+}
+
+/**
+ * 使用 LINE 登入
+ */
+function loginWithLine() {
+  const returnUrl = '/financial-upload.html';
+  window.location.href = `/api/auth/line-login?returnUrl=${encodeURIComponent(returnUrl)}`;
 }
 
 /**
