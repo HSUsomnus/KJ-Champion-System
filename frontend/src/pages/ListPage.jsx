@@ -51,77 +51,86 @@ export default function ListPage() {
   return (
     <div>
       <PageHeader title="📋 行程列表" onRefresh={handleRefresh} />
-      
-      {/* 月份切換 */}
-      <div className="flex items-center justify-between mb-4 bg-card-bg rounded-lg p-3 border border-border">
+
+      {/* 月份切換：與舊版 .month-nav-bar 一致 */}
+      <div
+        className="flex items-center justify-between py-3 px-4 mb-4 rounded-xl bg-white"
+        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+      >
         <button
           type="button"
           onClick={prevMonth}
-          className="p-2 text-text-light hover:text-primary transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-[10px] bg-[#06C755] text-white border-0 cursor-pointer transition-all hover:scale-105 active:scale-95"
           aria-label="上一個月"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
-            <polyline points="15 18 9 12 15 6"></polyline>
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <span className="font-semibold text-lg">
+        <span className="text-lg font-semibold text-[#333] text-center flex-1 tracking-wide">
           {year}年{month}月
         </span>
         <button
           type="button"
           onClick={nextMonth}
-          className="p-2 text-text-light hover:text-primary transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-[10px] bg-[#06C755] text-white border-0 cursor-pointer transition-all hover:scale-105 active:scale-95"
           aria-label="下一個月"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
-            <polyline points="9 18 15 12 9 6"></polyline>
+            <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
 
-      {/* 分頁切換 */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
-              activeTab === tab
-                ? 'bg-primary text-white'
-                : 'bg-card-bg text-text-main border border-border'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      {/* 分頁切換：與舊版 .tab-header / .tab-btn 一致 */}
+      <div className="bg-white rounded-xl mb-4 overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div className="flex border-b border-[#E0E0E0]">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-3 px-2 text-[15px] font-medium border-0 bg-transparent cursor-pointer transition-colors relative min-h-9 inline-flex items-center justify-center ${
+                activeTab === tab ? 'text-[#06C755] font-semibold' : 'text-[#666]'
+              }`}
+            >
+              {tab}
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#06C755]" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 行程列表 */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <p className="text-text-light">載入中...</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredEvents.length === 0 ? (
-            <p className="text-text-light text-center py-8">本月暫無{activeTab === '全部' ? '' : activeTab}行程</p>
-          ) : (
-            filteredEvents.map((ev) => (
-              <Link
-                key={ev.id}
-                to={`/event/${ev.id}`}
-                className="block p-3 rounded-lg bg-card-bg border border-border no-underline text-text-main hover:shadow-md transition-shadow"
-              >
-                <div className="font-medium">{ev.title || '無標題'}</div>
-                <div className="text-sm text-text-light">
-                  {(ev.start || '').split('T')[0]} {ev.allDay ? '全天' : (ev.start || '').slice(11, 16)}{' '}
-                  · {ev.type || '活動'}
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
-      )}
+      {/* 行程列表：與舊版 .event-card 一致 */}
+      <div className="pt-1">
+        {loading ? (
+          <div className="flex justify-center py-12 text-[#666]">載入中...</div>
+        ) : (
+          <div className="space-y-3">
+            {filteredEvents.length === 0 ? (
+              <p className="text-[#666] text-center py-10">
+                本月暫無{activeTab === '全部' ? '' : activeTab}行程
+              </p>
+            ) : (
+              filteredEvents.map((ev) => (
+                <Link key={ev.id} to={`/event/${ev.id}`} className="event-card">
+                  <div className="event-card-header">
+                    <span className="event-title">{ev.title || '無標題'}</span>
+                    {ev.type && <span className={`event-type-badge ${ev.type}`}>{ev.type}</span>}
+                  </div>
+                  <div className="event-info-item">
+                    <span>📅</span>
+                    <span>
+                      {(ev.start || '').split('T')[0]} {ev.allDay ? '全天' : (ev.start || '').slice(11, 16)} · {ev.type || '活動'}
+                    </span>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

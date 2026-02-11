@@ -37,9 +37,7 @@ export default function MemberDetailPage() {
     return (
       <div>
         <PageHeader title="👤 成員詳情" />
-        <div className="flex justify-center py-12">
-          <p className="text-text-light">載入中...</p>
-        </div>
+        <div className="flex justify-center py-12 text-[#666]">載入中...</div>
       </div>
     );
   }
@@ -48,9 +46,9 @@ export default function MemberDetailPage() {
     return (
       <div>
         <PageHeader title="👤 成員詳情" />
-        <div className="text-center py-12">
-          <p className="text-text-light mb-4">找不到此成員資料</p>
-          <Link to="/members" className="text-primary">返回成員列表</Link>
+        <div className="card text-center py-10">
+          <p className="text-[#666] mb-4">找不到此成員資料</p>
+          <Link to="/members" className="btn btn-primary">返回成員列表</Link>
         </div>
       </div>
     );
@@ -79,78 +77,50 @@ export default function MemberDetailPage() {
     <div>
       <PageHeader title="👤 成員詳情" />
 
-      {/* 頭像與姓名 */}
-      {member.pictureUrl && (
-        <div className="flex flex-col items-center mb-6">
-          <img
-            src={member.pictureUrl}
-            alt="頭像"
-            className="w-20 h-20 rounded-full object-cover"
-          />
-          <span className="text-sm text-text-light mt-2">
-            {member.displayName || member.name || 'LINE 名字'}
-          </span>
-        </div>
-      )}
+      <div className="card">
+        {member.pictureUrl && (
+          <div className="flex flex-col items-center mb-6">
+            <img src={member.pictureUrl} alt="頭像" className="w-20 h-20 rounded-full object-cover" />
+            <span className="text-sm text-[#666] mt-2">{member.displayName || member.name || 'LINE 名字'}</span>
+          </div>
+        )}
 
-      {/* 基本資料 */}
-      <div className="space-y-3">
-        <div className="p-4 rounded-lg bg-card-bg border border-border">
-          <div className="text-sm text-text-light">姓名</div>
-          <div className="font-medium">{member.name || '-'}</div>
-        </div>
-        <div className="p-4 rounded-lg bg-card-bg border border-border">
-          <div className="text-sm text-text-light">Email</div>
-          <div className="font-medium">{member.email || '-'}</div>
-        </div>
-        <div className="p-4 rounded-lg bg-card-bg border border-border">
-          <div className="text-sm text-text-light">電話</div>
-          <div className="font-medium">{member.phone || '-'}</div>
-        </div>
-        <div className="p-4 rounded-lg bg-card-bg border border-border">
-          <div className="text-sm text-text-light">生日</div>
-          <div className="font-medium">{displayBirthday(member.birthday)}</div>
-        </div>
-        <div className="p-4 rounded-lg bg-card-bg border border-border">
-          <div className="text-sm text-text-light">星等</div>
-          <div className="font-medium">{member.starLevel || '白星'}</div>
-        </div>
+        <div className="space-y-3">
+          {[
+            { label: '姓名', value: member.name },
+            { label: 'Email', value: member.email },
+            { label: '電話', value: member.phone },
+            { label: '生日', value: displayBirthday(member.birthday) },
+            { label: '星等', value: member.starLevel || '白星' },
+          ].map(({ label, value }) => (
+            <div key={label} className="py-2 border-b border-[#E0E0E0] last:border-0">
+              <div className="text-sm text-[#666]">{label}</div>
+              <div className="font-medium text-[#333]">{value || '-'}</div>
+            </div>
+          ))}
 
-        {/* 進階資訊 */}
-        <div className="mt-4 pt-4 border-t border-border">
-          <h3 className="font-semibold mb-3">📋 進階資訊</h3>
-          <div className="space-y-3">
-            <div className="p-4 rounded-lg bg-card-bg border border-border">
-              <div className="text-sm text-text-light">課程紀錄</div>
-              <div className="font-medium">{member.courseRecord || '-'}</div>
-            </div>
-            <div className="p-4 rounded-lg bg-card-bg border border-border">
-              <div className="text-sm text-text-light">是否為特斯拉出行加盟主</div>
-              <div className="font-medium">{member.teslaFranchisee || '-'}</div>
-            </div>
-            <div className="p-4 rounded-lg bg-card-bg border border-border">
-              <div className="text-sm text-text-light">團隊負責事項</div>
-              <div className="font-medium">{member.teamResponsibilities || '-'}</div>
-            </div>
-            <div className="p-4 rounded-lg bg-card-bg border border-border">
-              <div className="text-sm text-text-light">課程志工</div>
-              <div className="font-medium">
-                {volunteerList.length === 0
-                  ? '無'
-                  : volunteerList.map(r => `${r.date} ${r.option}`).join('、')}
-              </div>
+          <div className="mt-4 pt-4 border-t border-[#E0E0E0]">
+            <h3 className="font-semibold text-[#333] mb-3">📋 進階資訊</h3>
+            <div className="space-y-3">
+              {[
+                { label: '課程紀錄', value: member.courseRecord },
+                { label: '是否為特斯拉出行加盟主', value: member.teslaFranchisee },
+                { label: '團隊負責事項', value: member.teamResponsibilities },
+                { label: '課程志工', value: volunteerList.length === 0 ? '無' : volunteerList.map(r => `${r.date} ${r.option}`).join('、') },
+              ].map(({ label, value }) => (
+                <div key={label} className="py-2 border-b border-[#E0E0E0] last:border-0">
+                  <div className="text-sm text-[#666]">{label}</div>
+                  <div className="font-medium text-[#333]">{value || '-'}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 返回按鈕 */}
-      <Link
-        to="/members"
-        className="block w-full py-3 mt-6 rounded-lg bg-card-bg border border-border text-center no-underline text-text-main"
-      >
-        返回成員列表
-      </Link>
+        <Link to="/members" className="btn btn-secondary btn-block mt-6 no-underline">
+          返回成員列表
+        </Link>
+      </div>
     </div>
   );
 }

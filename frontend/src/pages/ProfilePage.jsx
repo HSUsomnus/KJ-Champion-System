@@ -139,7 +139,7 @@ export default function ProfilePage() {
   if (mode === 'loading' && userId) {
     return (
       <div className="flex justify-center py-12">
-        <p className="text-text-light">載入中...</p>
+        <p className="text-[#666]">載入中...</p>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export default function ProfilePage() {
     return (
       <div>
         <PageHeader title="👤 個人資料" />
-        <div className="text-center py-12 text-text-light">
+        <div className="text-center py-12 text-[#666]">
           請使用 LINE 登入以查看個人資料
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function ProfilePage() {
             alt="頭像"
             className="w-20 h-20 rounded-full object-cover"
           />
-          <span className="text-sm text-text-light mt-2">
+          <span className="text-sm text-[#666] mt-2">
             {liffProfile.displayName || 'LINE 名字'}
           </span>
         </div>
@@ -180,48 +180,48 @@ export default function ProfilePage() {
       {(isRegister || isEditing) ? (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-text-light mb-1">姓名 *</label>
+            <label className="block text-sm text-[#666] mb-1">姓名 *</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border"
+              className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
               required
             />
           </div>
           <div>
-            <label className="block text-sm text-text-light mb-1">Email</label>
+            <label className="block text-sm text-[#666] mb-1">Email</label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border"
+              className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
             />
           </div>
           <div>
-            <label className="block text-sm text-text-light mb-1">電話</label>
+            <label className="block text-sm text-[#666] mb-1">電話</label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border"
+              className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
             />
           </div>
           <div>
-            <label className="block text-sm text-text-light mb-1">生日</label>
+            <label className="block text-sm text-[#666] mb-1">生日</label>
             <input
               type="date"
               value={form.birthday}
               onChange={(e) => setForm((f) => ({ ...f, birthday: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border"
+              className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
             />
           </div>
           <div>
-            <label className="block text-sm text-text-light mb-1">星等</label>
+            <label className="block text-sm text-[#666] mb-1">星等</label>
             <select
               value={form.starLevel}
               onChange={(e) => setForm((f) => ({ ...f, starLevel: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border"
+              className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
             >
               {STAR_OPTIONS.map((s) => (
                 <option key={s} value={s}>
@@ -237,7 +237,7 @@ export default function ProfilePage() {
 
             {/* 課程紀錄 */}
             <div className="mb-4">
-              <label className="block text-sm text-text-light mb-2">課程紀錄</label>
+              <label className="block text-sm text-[#666] mb-2">課程紀錄</label>
               <div className="space-y-2">
                 {COURSE_OPTIONS.map((course) => {
                   const courses = form.courseRecord.split(',').map(c => c.trim()).filter(Boolean);
@@ -264,11 +264,11 @@ export default function ProfilePage() {
 
             {/* 特斯拉加盟主 */}
             <div className="mb-4">
-              <label className="block text-sm text-text-light mb-1">是否為特斯拉出行加盟主</label>
+              <label className="block text-sm text-[#666] mb-1">是否為特斯拉出行加盟主</label>
               <select
                 value={form.teslaFranchisee}
                 onChange={(e) => setForm((f) => ({ ...f, teslaFranchisee: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border border-border"
+                className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
               >
                 <option value="">未填</option>
                 <option value="是">是</option>
@@ -278,26 +278,26 @@ export default function ProfilePage() {
 
             {/* 團隊負責事項 */}
             <div className="mb-4">
-              <label className="block text-sm text-text-light mb-1">團隊負責事項</label>
+              <label className="block text-sm text-[#666] mb-1">團隊負責事項</label>
               <input
                 type="text"
                 value={form.teamResponsibilities}
                 onChange={(e) => setForm((f) => ({ ...f, teamResponsibilities: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border border-border"
+                className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
                 placeholder="請輸入負責事項"
               />
             </div>
 
             {/* 課程志工 */}
             <div className="mb-4">
-              <label className="block text-sm text-text-light mb-2">課程志工</label>
+              <label className="block text-sm text-[#666] mb-2">課程志工</label>
               {/* 已有的記錄列表 */}
               <div className="mb-2 space-y-2">
                 {volunteerRecords.length === 0 ? (
-                  <p className="text-sm text-text-light">尚無記錄，可點「新增記錄」</p>
+                  <p className="text-sm text-[#666]">尚無記錄，可點「新增記錄」</p>
                 ) : (
                   volunteerRecords.map((record, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 border border-border rounded">
+                    <div key={index} className="flex items-center justify-between p-2 border border-[#E0E0E0] rounded">
                       <span className="text-sm">{record.date} {record.option}</span>
                       <button
                         type="button"
@@ -317,28 +317,28 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowVolunteerForm(!showVolunteerForm)}
-                className="px-4 py-2 rounded-lg bg-card-bg border border-border text-sm"
+                className="px-4 py-2 rounded-lg bg-white border border-[#E0E0E0] text-sm"
               >
                 ➕ 新增記錄
               </button>
               {/* 新增表單 */}
               {showVolunteerForm && (
-                <div className="mt-3 p-3 bg-bg-page rounded-lg border border-border">
+                <div className="mt-3 p-3 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0]">
                   <div className="mb-3">
-                    <label className="block text-sm text-text-light mb-1">日期</label>
+                    <label className="block text-sm text-[#666] mb-1">日期</label>
                     <input
                       type="date"
                       value={newVolunteer.date}
                       onChange={(e) => setNewVolunteer((v) => ({ ...v, date: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-border"
+                      className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="block text-sm text-text-light mb-1">選項</label>
+                    <label className="block text-sm text-[#666] mb-1">選項</label>
                     <select
                       value={newVolunteer.option}
                       onChange={(e) => setNewVolunteer((v) => ({ ...v, option: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-border"
+                      className="w-full px-3 py-2 rounded-lg border border-[#E0E0E0]"
                     >
                       <option value="金流">金流</option>
                       <option value="藍圖">藍圖</option>
@@ -354,14 +354,14 @@ export default function ProfilePage() {
                           setShowVolunteerForm(false);
                         }
                       }}
-                      className="flex-1 py-2 rounded-lg bg-primary text-white"
+                      className="flex-1 py-2 rounded-lg bg-[#06C755] text-white"
                     >
                       確定
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowVolunteerForm(false)}
-                      className="flex-1 py-2 rounded-lg bg-card-bg border border-border"
+                      className="flex-1 py-2 rounded-lg bg-white border border-[#E0E0E0]"
                     >
                       取消
                     </button>
@@ -373,27 +373,27 @@ export default function ProfilePage() {
 
           <button
             type="submit"
-            className="w-full py-3 rounded-lg bg-primary text-white font-medium"
+            className="btn btn-primary btn-block"
           >
             {isRegister ? '註冊' : '儲存'}
           </button>
         </form>
       ) : (
         <div className="space-y-3">
-          <div className="p-4 rounded-lg bg-card-bg border border-border">
-            <div className="text-sm text-text-light">姓名</div>
+          <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+            <div className="text-sm text-[#666]">姓名</div>
             <div className="font-medium">{profile?.name || '-'}</div>
           </div>
-          <div className="p-4 rounded-lg bg-card-bg border border-border">
-            <div className="text-sm text-text-light">Email</div>
+          <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+            <div className="text-sm text-[#666]">Email</div>
             <div className="font-medium">{profile?.email || '-'}</div>
           </div>
-          <div className="p-4 rounded-lg bg-card-bg border border-border">
-            <div className="text-sm text-text-light">電話</div>
+          <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+            <div className="text-sm text-[#666]">電話</div>
             <div className="font-medium">{profile?.phone || '-'}</div>
           </div>
-          <div className="p-4 rounded-lg bg-card-bg border border-border">
-            <div className="text-sm text-text-light">生日</div>
+          <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+            <div className="text-sm text-[#666]">生日</div>
             <div className="font-medium">
               {profile?.birthday
                 ? (() => {
@@ -408,8 +408,8 @@ export default function ProfilePage() {
                 : '-'}
             </div>
           </div>
-          <div className="p-4 rounded-lg bg-card-bg border border-border">
-            <div className="text-sm text-text-light">星等</div>
+          <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+            <div className="text-sm text-[#666]">星等</div>
             <div className="font-medium">{profile?.starLevel || '白星'}</div>
           </div>
 
@@ -417,20 +417,20 @@ export default function ProfilePage() {
           <div className="mt-4 pt-4 border-t border-border">
             <h3 className="font-semibold mb-3">📋 進階資訊</h3>
             <div className="space-y-3">
-              <div className="p-4 rounded-lg bg-card-bg border border-border">
-                <div className="text-sm text-text-light">課程紀錄</div>
+              <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+                <div className="text-sm text-[#666]">課程紀錄</div>
                 <div className="font-medium">{profile?.courseRecord || '-'}</div>
               </div>
-              <div className="p-4 rounded-lg bg-card-bg border border-border">
-                <div className="text-sm text-text-light">是否為特斯拉出行加盟主</div>
+              <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+                <div className="text-sm text-[#666]">是否為特斯拉出行加盟主</div>
                 <div className="font-medium">{profile?.teslaFranchisee || '-'}</div>
               </div>
-              <div className="p-4 rounded-lg bg-card-bg border border-border">
-                <div className="text-sm text-text-light">團隊負責事項</div>
+              <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+                <div className="text-sm text-[#666]">團隊負責事項</div>
                 <div className="font-medium">{profile?.teamResponsibilities || '-'}</div>
               </div>
-              <div className="p-4 rounded-lg bg-card-bg border border-border">
-                <div className="text-sm text-text-light">課程志工</div>
+              <div className="p-4 rounded-lg bg-white border border-[#E0E0E0]">
+                <div className="text-sm text-[#666]">課程志工</div>
                 <div className="font-medium">
                   {(() => {
                     try {
@@ -449,7 +449,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setMode('edit')}
-            className="w-full py-3 rounded-lg bg-primary text-white font-medium mt-4"
+            className="btn btn-primary btn-block mt-4"
           >
             ✏️ 編輯資料
           </button>

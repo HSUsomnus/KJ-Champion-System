@@ -54,38 +54,28 @@ export default function MembersPage() {
   return (
     <div>
       <PageHeader title="👥 成員列表" onRefresh={handleRefresh} />
-      
-      {/* 邀請新夥伴按鈕 */}
+
       <div className="mb-4">
-        <button
-          onClick={handleInvite}
-          className="w-full py-3 rounded-lg bg-primary text-white font-medium"
-        >
+        <button type="button" onClick={handleInvite} className="btn btn-primary btn-block">
           ➕ 邀請新夥伴
         </button>
       </div>
       {loading ? (
-        <p className="text-text-light">載入中...</p>
+        <p className="text-[#666]">載入中...</p>
       ) : members.length === 0 ? (
-        <p className="text-text-light text-center py-8">暫無成員資料</p>
+        <p className="text-[#666] text-center py-10">暫無成員資料</p>
       ) : (
-        <div className="space-y-2">
-          {            members.map((m) => (
-            <Link
-              key={m.lineId}
-              to={`/member/${m.lineId}`}
-              className="flex items-center gap-4 p-3 rounded-lg bg-card-bg border border-border no-underline text-text-main hover:shadow-md transition-shadow"
-            >
-              {m.pictureUrl && (
-                <img
-                  src={m.pictureUrl}
-                  alt=""
-                  className="w-12 h-12 rounded-full object-cover"
-                />
+        <div className="space-y-3">
+          {members.map((m) => (
+            <Link key={m.lineId} to={`/member/${m.lineId}`} className="member-card flex items-center gap-4">
+              {m.pictureUrl ? (
+                <img src={m.pictureUrl} alt="" className="w-12 h-12 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-[#E0E0E0] flex items-center justify-center text-[#666] shrink-0">👤</div>
               )}
-              <div>
-                <div className="font-medium">{m.name || m.displayName || '未填姓名'}</div>
-                <div className="text-sm text-text-light">{m.starLevel || '白星'}</div>
+              <div className="min-w-0">
+                <div className="font-semibold text-[#333]">{m.name || m.displayName || '未填姓名'}</div>
+                <div className="text-sm text-[#666]">{m.starLevel || '白星'}</div>
               </div>
             </Link>
           ))}

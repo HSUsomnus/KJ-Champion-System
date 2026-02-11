@@ -94,51 +94,67 @@ export default function CalendarPage() {
     <div>
       <PageHeader title="📅 行事曆" onRefresh={handleRefresh} />
 
-      {/* 月曆 */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
+      {/* 月曆卡片：與舊版 .calendar 一致 */}
+      <div className="card mb-4">
+        <div className="flex justify-between items-center mb-4">
           <button
             type="button"
             onClick={prevMonth}
-            className="p-2 text-xl text-text-light hover:text-primary"
+            className="p-2 text-xl text-[#666] hover:text-[#06C755] transition-colors border-0 bg-transparent cursor-pointer"
           >
             ‹
           </button>
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-[15px] font-semibold text-[#333] m-0">
             {year}年{month}月
           </h2>
           <button
             type="button"
             onClick={nextMonth}
-            className="p-2 text-xl text-text-light hover:text-primary"
+            className="p-2 text-xl text-[#666] hover:text-[#06C755] transition-colors border-0 bg-transparent cursor-pointer"
           >
             ›
           </button>
         </div>
-        <div className="grid grid-cols-7 gap-1 text-center text-sm">
+        <div className="grid grid-cols-7 gap-0.5 text-center">
           {['日', '一', '二', '三', '四', '五', '六'].map((w) => (
-            <div key={w} className="text-text-light font-medium py-1">
+            <div key={w} className="text-[10px] font-semibold text-[#666] py-0.5">
               {w}
             </div>
           ))}
           {days.map((d, i) => {
             if (!d) return <div key={`empty-${i}`} />;
-            const count = getEventsForDay(d).length;
+            const dayEvents = getEventsForDay(d);
+            const count = dayEvents.length;
             const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const isSel = dateStr === selectedStr;
             const isToday = dateStr === formatYMD(new Date());
+            const typeClass = dayEvents[0]?.type ? `event-type-${dayEvents[0].type}` : '';
             return (
               <button
                 key={d}
                 type="button"
                 onClick={() => setSelectedDate(new Date(year, month - 1, d))}
-                className={`p-1 rounded-lg ${
-                  isSel ? 'bg-primary text-white' : isToday ? 'ring-2 ring-primary' : ''
-                }`}
+                className={`min-h-0 aspect-square flex flex-col items-center justify-center rounded text-[11px] transition-all ${
+                  isSel
+                    ? 'bg-transparent text-[#06C755] border-2 border-[#06C755] font-semibold'
+                    : isToday
+                    ? 'bg-transparent text-[#333] border border-[#E0E0E0] font-semibold'
+                    : 'border border-transparent hover:bg-[#F5F5F5] text-[#333]'
+                } ${count > 0 ? 'relative' : ''}`}
               >
                 {d}
                 {count > 0 && (
-                  <span className="block text-[10px] opacity-80">{count}</span>
+                  <span
+                    className={`absolute bottom-0.5 w-1 h-1 rounded-full ${
+                      typeClass === 'event-type-學員上課'
+                        ? 'bg-[#F57F17]'
+                        : typeClass === 'event-type-活動'
+                        ? 'bg-[#C62828]'
+                        : typeClass === 'event-type-諮詢簽約'
+                        ? 'bg-[#2E7D32]'
+                        : 'bg-[#06C755]'
+                    }`}
+                  />
                 )}
               </button>
             );
@@ -146,39 +162,47 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* 今日行程標題 + 新增按鈕 */}
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-semibold">
+      {/* 今日行程標題 + 新增按鈕：與舊版 .today-section-header / .btn-add-inline 一致 */}
+      <div className="flex items-center justify-between gap-3 mt-4 mb-2 min-h-9">
+        <h2 className="text-[17px] font-semibold text-[#333] m-0 leading-tight">
           {isSelectedToday ? '今日行程' : `${selectedStr} 行程`}
         </h2>
         <Link
           to={addEventUrl}
-          className="px-3 py-2 rounded-lg bg-primary text-white text-sm no-underline"
+          className="btn btn-primary !py-1.5 !px-3.5 text-sm !min-h-0 inline-flex"
         >
           ➕ 新增行程
         </Link>
       </div>
 
-      {/* 行程字卡 */}
+      {/* 行程字卡：與舊版 .event-card 一致 */}
       <div className="min-h-[120px]">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-text-light">載入中...</p>
+          <div className="flex justify-center items-center py-10 text-[#666]">
+            載入中...
           </div>
         ) : todayEvents.length === 0 ? (
-          <div className="text-center py-8 text-text-light">暫無行程</div>
+          <div className="text-center py-10 text-[#666]">暫無行程</div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {todayEvents.map((ev) => (
               <Link
                 key={ev.id}
                 to={`/event/${ev.id}`}
-                className="block p-3 rounded-lg bg-card-bg border border-border shadow-sm no-underline text-text-main hover:shadow-md transition-shadow"
+                className="event-card"
               >
-                <div className="font-medium">{ev.title || '無標題'}</div>
-                <div className="text-sm text-text-light mt-1">
-                  {ev.allDay ? '全天' : (ev.start || '').slice(11, 16)}
-                  {ev.type && ` · ${ev.type}`}
+                <div className="event-card-header">
+                  <span className="event-title">{ev.title || '無標題'}</span>
+                  {ev.type && (
+                    <span className={`event-type-badge ${ev.type}`}>{ev.type}</span>
+                  )}
+                </div>
+                <div className="event-info-item">
+                  <span>📅</span>
+                  <span>
+                    {ev.allDay ? '全天' : (ev.start || '').slice(11, 16)}
+                    {ev.type && ` · ${ev.type}`}
+                  </span>
                 </div>
               </Link>
             ))}

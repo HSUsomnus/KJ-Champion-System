@@ -135,25 +135,23 @@ export default function AddEventPage() {
 
       <div className="card">
         <form onSubmit={handleSubmit}>
-          {/* 標題 */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">標題 *</label>
+          <div className="form-group">
+            <label className="form-label">標題 *</label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="form-input"
               placeholder={TITLE_HINTS[form.type]}
               value={form.title}
               onChange={(e) => handleChange('title', e.target.value)}
               required
             />
-            <p className="text-xs text-gray-500 mt-1">{TITLE_HINTS[form.type]}</p>
+            <p className="form-hint">{TITLE_HINTS[form.type]}</p>
           </div>
 
-          {/* 類型 */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">類型 *</label>
+          <div className="form-group">
+            <label className="form-label">類型 *</label>
             <select
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="form-select"
               value={form.type}
               onChange={(e) => handleChange('type', e.target.value)}
               required
@@ -164,163 +162,100 @@ export default function AddEventPage() {
             </select>
           </div>
 
-          {/* 整日活動切換 */}
-          <div className="mb-4">
-            <label className="flex items-center">
+          <div className="form-group">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                className="mr-2"
+                className="w-4 h-4"
                 checked={form.allDay}
                 onChange={(e) => handleChange('allDay', e.target.checked)}
                 disabled={form.type === '學員上課'}
               />
-              <span className="text-sm">整日活動</span>
+              <span className="form-label !mb-0">整日活動</span>
               {form.type === '學員上課' && (
-                <span className="ml-2 text-xs text-gray-500">（學員上課固定為整日）</span>
+                <span className="form-hint !mt-0">（學員上課固定為整日）</span>
               )}
             </label>
           </div>
 
-          {/* 開始日期 */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">開始日期 *</label>
+          <div className="form-group">
+            <label className="form-label">開始日期 *</label>
             <input
               type="date"
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="form-input"
               value={form.startDate}
               onChange={(e) => handleChange('startDate', e.target.value)}
               required
             />
             <div className="flex gap-2 mt-2">
-              <button
-                type="button"
-                className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200"
-                onClick={() => setQuickDate('startDate', 0)}
-              >
-                今天
-              </button>
-              <button
-                type="button"
-                className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200"
-                onClick={() => setQuickDate('startDate', 1)}
-              >
-                明天
-              </button>
+              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('startDate', 0)}>今天</button>
+              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('startDate', 1)}>明天</button>
             </div>
           </div>
 
-          {/* 結束日期 */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              結束日期
-            </label>
+          <div className="form-group">
+            <label className="form-label">結束日期</label>
             <input
               type="date"
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="form-input"
               placeholder="同一天可不填"
               value={form.endDate}
               onChange={(e) => handleChange('endDate', e.target.value)}
             />
             <div className="flex gap-2 mt-2">
-              <button
-                type="button"
-                className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200"
-                onClick={() => setQuickDate('endDate', 0)}
-              >
-                今天
-              </button>
-              <button
-                type="button"
-                className="px-3 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200"
-                onClick={() => setQuickDate('endDate', 1)}
-              >
-                明天
-              </button>
+              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('endDate', 0)}>今天</button>
+              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('endDate', 1)}>明天</button>
             </div>
           </div>
 
-          {/* 時間（非整日時顯示） */}
           {!form.allDay && (
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-4 form-group">
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  開始時間 *
-                </label>
+                <label className="form-label">開始時間 *</label>
                 <input
                   type="time"
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="form-input"
                   value={form.startTime}
                   onChange={(e) => handleChange('startTime', e.target.value)}
                   required
                 />
                 <div className="flex flex-wrap gap-1 mt-2">
                   {['09:00', '10:00', '14:00', '19:00', '20:00'].map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
-                      onClick={() => setQuickTime('startTime', t)}
-                    >
-                      {t}
-                    </button>
+                    <button key={t} type="button" className="btn btn-secondary !py-1 !px-2 text-xs" onClick={() => setQuickTime('startTime', t)}>{t}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  結束時間 *
-                </label>
+                <label className="form-label">結束時間 *</label>
                 <input
                   type="time"
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="form-input"
                   value={form.endTime}
                   onChange={(e) => handleChange('endTime', e.target.value)}
                   required
                 />
                 <div className="flex flex-wrap gap-1 mt-2">
                   {['10:00', '11:00', '15:00', '20:00', '21:00'].map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200"
-                      onClick={() => setQuickTime('endTime', t)}
-                    >
-                      {t}
-                    </button>
+                    <button key={t} type="button" className="btn btn-secondary !py-1 !px-2 text-xs" onClick={() => setQuickTime('endTime', t)}>{t}</button>
                   ))}
                 </div>
               </div>
             </div>
           )}
 
-          {/* 備註 */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">備註</label>
+          <div className="form-group">
+            <label className="form-label">備註</label>
             <textarea
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="form-textarea"
               rows="3"
               value={form.description}
               onChange={(e) => handleChange('description', e.target.value)}
             />
           </div>
 
-          {/* 操作按鈕 */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="flex-1 px-4 py-2 border border-border rounded-lg text-text-main hover:bg-gray-50"
-              onClick={() => navigate('/')}
-              disabled={loading}
-            >
-              取消
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? '儲存中...' : '儲存'}
-            </button>
+          <div className="flex gap-3 mt-6 event-actions">
+            <button type="button" className="btn btn-secondary flex-1" onClick={() => navigate('/')} disabled={loading}>取消</button>
+            <button type="submit" className="btn btn-primary flex-1" disabled={loading}>{loading ? '儲存中...' : '儲存'}</button>
           </div>
         </form>
       </div>
