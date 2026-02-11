@@ -159,7 +159,7 @@ function updateStarDisplay(starLevel) {
 }
 
 /**
- * 檢查是否有權限查看財力（上級或開發者）
+ * 檢查是否有權限查看財力（上級、負責人或開發者）
  */
 async function checkFinancialViewPermission() {
   if (!currentUserId || !memberLineId) {
@@ -170,8 +170,8 @@ async function checkFinancialViewPermission() {
     const response = await fetch(`/api/financial/check-permission?editorId=${encodeURIComponent(currentUserId)}&targetUserId=${encodeURIComponent(memberLineId)}`);
     const data = await response.json();
 
-    if (data.success && data.data.canEdit) {
-      // 有權限，顯示按鈕
+    if (data.success && data.data.canView) {
+      // 有查看權限，顯示按鈕
       const btn = document.getElementById('view-financial-btn');
       if (btn) {
         btn.classList.remove('hidden');

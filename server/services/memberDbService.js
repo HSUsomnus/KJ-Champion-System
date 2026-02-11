@@ -35,6 +35,7 @@ const rowToMember = (row) => ({
   birthday: row.birthday || '',
   displayName: row.display_name || '',
   invitedBy: row.invited_by || null, // 邀請人（上級）的 LINE ID
+  role: row.role || 'member', // 成員角色：member, manager, admin
 });
 
 /**

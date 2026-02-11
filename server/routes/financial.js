@@ -201,7 +201,7 @@ router.delete('/:id', async (req, res) => {
 
 /**
  * POST /api/financial/:id/comment
- * 更新財力文件評語（僅上級和開發者可操作）
+ * 更新財力文件評語（僅負責人和開發者可操作）
  */
 router.post('/:id/comment', async (req, res) => {
   try {
@@ -215,14 +215,18 @@ router.post('/:id/comment', async (req, res) => {
       });
     }
 
-    // 檢查權限：是否為上級或開發者
+    // 檢查權限：是否為開發者
     const isAdmin = process.env.ADMIN_LINE_USER_IDS?.split(',').includes(editorId);
-    const isSuperior = await memberDbService.isSuperior(editorId, userId);
+    
+    // 檢查是否為負責人
+    const editorMember = await memberDbService.getMemberByLineId(editorId);
+    const isManager = editorMember && editorMember.role === 'manager';
 
-    if (!isAdmin && !isSuperior) {
+    // 只有開發者和負責人可以編輯評語
+    if (!isAdmin && !isManager) {
       return res.status(403).json({
         success: false,
-        message: '您沒有權限編輯此評語',
+        message: '只有負責人和開發者可以編輯評語',
       });
     }
 
@@ -269,7 +273,9 @@ router.post('/:id/comment', async (req, res) => {
 
 /**
  * GET /api/financial/check-permission
- * 檢查使用者是否有權限編輯評語
+ * 檢查使用者的權限
+ * - canView: 可以查看財力（上級、負責人、開發者）
+ * - canEdit: 可以編輯評語（只有負責人和開發者）
  */
 router.get('/check-permission', async (req, res) => {
   try {
@@ -287,12 +293,24 @@ router.get('/check-permission', async (req, res) => {
     
     // 檢查是否為上級
     const isSuperior = await memberDbService.isSuperior(editorId, targetUserId);
+    
+    // 檢查是否為負責人
+    const editorMember = await memberDbService.getMemberByLineId(editorId);
+    const isManager = editorMember && editorMember.role === 'manager';
+
+    // 查看權限：上級、負責人、開發者都可以查看
+    const canView = isAdmin || isManager || isSuperior;
+    
+    // 編輯評語權限：只有負責人和開發者可以編輯評語
+    const canEdit = isAdmin || isManager;
 
     res.json({
       success: true,
       data: {
-        canEdit: isAdmin || isSuperior,
+        canView,
+        canEdit,
         isAdmin,
+        isManager,
         isSuperior,
       },
     });

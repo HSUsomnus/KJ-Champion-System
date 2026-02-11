@@ -5,6 +5,7 @@
 let userId = '';
 let selectedFile = null;
 let currentEditorId = ''; // 當前編輯者 ID（用於檢查權限）
+let canViewFinancial = false; // 是否有權限查看財力
 let canEditComments = false; // 是否有權限編輯評語
 
 /**
@@ -59,18 +60,38 @@ async function init() {
 }
 
 /**
- * 檢查是否有權限編輯評語
+ * 檢查權限
+ * - canView: 可以查看財力（上級、負責人、開發者）
+ * - canEdit: 可以編輯評語（只有負責人和開發者）
  */
 async function checkEditPermission() {
   try {
     const response = await fetch(`/api/financial/check-permission?editorId=${encodeURIComponent(currentEditorId)}&targetUserId=${encodeURIComponent(userId)}`);
     const data = await response.json();
     if (data.success) {
+      canViewFinancial = data.data.canView;
       canEditComments = data.data.canEdit;
-      console.log(`權限檢查: ${canEditComments ? '可編輯' : '僅可查看'}`);
+      
+      let permissionMsg = '';
+      if (data.data.isAdmin) {
+        permissionMsg = '開發者權限';
+      } else if (data.data.isManager) {
+        permissionMsg = '負責人權限';
+      } else if (data.data.isSuperior) {
+        permissionMsg = '上級權限（僅可查看）';
+      }
+      
+      console.log(`權限檢查: ${permissionMsg} - 可查看: ${canViewFinancial}, 可編輯評語: ${canEditComments}`);
+      
+      // 如果沒有查看權限，拒絕存取
+      if (!canViewFinancial) {
+        alert('❌ 您沒有權限查看此頁面');
+        window.history.back();
+      }
     }
   } catch (error) {
     console.error('檢查權限錯誤:', error);
+    canViewFinancial = false;
     canEditComments = false;
   }
 }
@@ -161,7 +182,7 @@ function renderCommentSection(doc) {
   const commentTime = doc.comment_updated_at ? formatDate(doc.comment_updated_at) : '';
   
   if (canEditComments) {
-    // 有權限編輯
+    // 有權限編輯評語（負責人、開發者）
     return `
       <div style="margin-top: 8px; padding: 8px; background: var(--bg-color); border-radius: 4px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -180,8 +201,8 @@ function renderCommentSection(doc) {
         `}
       </div>
     `;
-  } else {
-    // 僅可查看
+  } else if (canViewFinancial) {
+    // 有查看權限但不能編輯（上級）
     if (!hasComment) {
       return ''; // 沒有評語就不顯示
     }
@@ -194,6 +215,9 @@ function renderCommentSection(doc) {
         </p>
       </div>
     `;
+  } else {
+    // 沒有權限
+    return '';
   }
 }
 
