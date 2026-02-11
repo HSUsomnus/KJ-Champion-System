@@ -95,7 +95,7 @@ router.get('/avatar/:lineId', optionalLineUser, async (req, res) => {
 router.get('/:lineId', optionalLineUser, async (req, res) => {
   try {
     const { lineId } = req.params;
-    const member = await sheetService.getMemberByLineId(lineId);
+    const member = await memberDbService.getMemberByLineId(lineId);
 
     if (!member) {
       return res.status(404).json({
