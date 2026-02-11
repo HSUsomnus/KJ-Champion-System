@@ -12,9 +12,11 @@
 <body>
   <div class="container page-management">
     <!-- 頁面標題 -->
-    <div class="page-header-with-back">
-      <button type="button" class="btn-back" onclick="history.back()">←</button>
-      <h1 class="page-title-center">⚙️ 管理中心</h1>
+    <div class="page-header-row">
+      <button type="button" class="btn-refresh-cache" onclick="if(window.cacheService){window.cacheService.clearCache();}location.reload();" title="清除快取並重新整理" aria-label="清除快取並重新整理">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+      <h1 class="text-center page-title">⚙️ 管理中心</h1>
     </div>
 
     <!-- 載入動畫 -->
@@ -33,7 +35,7 @@
         <p style="color: var(--text-light); margin-bottom: 24px;">
           您沒有權限訪問此頁面
         </p>
-        <button class="btn btn-primary" onclick="history.back()">返回</button>
+        <button class="btn btn-primary" onclick="window.location.href='/members.html'">返回成員列表</button>
       </div>
     </div>
 
