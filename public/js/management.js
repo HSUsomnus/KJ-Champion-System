@@ -58,8 +58,8 @@ async function checkPermissions() {
       // 財力分頁權限：負責人 + 開發者
       userPermissions.canViewFinancial = userPermissions.isAdmin || userPermissions.isManager;
       
-      // 權限分頁：僅開發者
-      userPermissions.canEditPermission = userPermissions.isAdmin;
+      // 權限分頁：負責人 + 開發者
+      userPermissions.canEditPermission = userPermissions.isAdmin || userPermissions.isManager;
 
       // 根據權限顯示內容
       if (!userPermissions.canViewData) {
@@ -67,7 +67,7 @@ async function checkPermissions() {
         return;
       }
 
-      // 如果是開發者，顯示權限分頁按鈕
+      // 如果是負責人或開發者，顯示權限分頁按鈕
       if (userPermissions.canEditPermission) {
         const permTabBtn = document.getElementById('tab-btn-permission');
         if (permTabBtn) permTabBtn.style.display = '';
