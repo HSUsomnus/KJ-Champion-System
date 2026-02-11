@@ -70,11 +70,11 @@ export default function MembersPage() {
         <p className="text-text-light text-center py-8">暫無成員資料</p>
       ) : (
         <div className="space-y-2">
-          {members.map((m) => (
+          {            members.map((m) => (
             <Link
               key={m.lineId}
               to={`/member/${m.lineId}`}
-              className="flex items-center gap-4 p-3 rounded-lg bg-card-bg border border-border no-underline text-text-main"
+              className="flex items-center gap-4 p-3 rounded-lg bg-card-bg border border-border no-underline text-text-main hover:shadow-md transition-shadow"
             >
               {m.pictureUrl && (
                 <img

@@ -9,6 +9,7 @@ import EntryGate from './pages/EntryGate';
 import CalendarPage from './pages/CalendarPage';
 import ListPage from './pages/ListPage';
 import MembersPage from './pages/MembersPage';
+import MemberDetailPage from './pages/MemberDetailPage';
 import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
@@ -30,7 +31,7 @@ export default function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="add-event" element={<div className="p-4">新增行程（待實作）</div>} />
           <Route path="event/:id" element={<div className="p-4">行程詳情（待實作）</div>} />
-          <Route path="member/:id" element={<div className="p-4">成員詳情（待實作）</div>} />
+          <Route path="member/:lineId" element={<MemberDetailPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

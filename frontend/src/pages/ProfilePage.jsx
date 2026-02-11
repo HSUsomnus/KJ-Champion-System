@@ -29,6 +29,12 @@ export default function ProfilePage() {
     teamResponsibilities: '',
     volunteerRecords: '',
   });
+  const [volunteerRecords, setVolunteerRecords] = useState([]);
+  const [showVolunteerForm, setShowVolunteerForm] = useState(false);
+  const [newVolunteer, setNewVolunteer] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    option: '金流',
+  });
 
   useEffect(() => {
     if (!userId) {
@@ -41,6 +47,15 @@ export default function ProfilePage() {
         if (data?.isRegistered) {
           return getProfile(userId).then((p) => {
             setProfile(p);
+            // 解析課程志工記錄
+            let volunteerList = [];
+            try {
+              volunteerList = JSON.parse(p.volunteerRecords || '[]');
+              if (!Array.isArray(volunteerList)) volunteerList = [];
+            } catch {
+              volunteerList = [];
+            }
+            setVolunteerRecords(volunteerList);
             setForm({
               name: p.name || '',
               email: p.email || '',
@@ -72,14 +87,23 @@ export default function ProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const submitData = { ...form, volunteerRecords: JSON.stringify(volunteerRecords) };
+      
       if (mode === 'register') {
-        const registerData = { ...form };
-        if (liffProfile?.pictureUrl) registerData.pictureUrl = liffProfile.pictureUrl;
-        await registerProfile(userId, registerData);
+        if (liffProfile?.pictureUrl) submitData.pictureUrl = liffProfile.pictureUrl;
+        await registerProfile(userId, submitData);
         await showAlert('註冊成功！');
         setMode('view');
         const p = await getProfile(userId);
         setProfile(p);
+        let volunteerList = [];
+        try {
+          volunteerList = JSON.parse(p.volunteerRecords || '[]');
+          if (!Array.isArray(volunteerList)) volunteerList = [];
+        } catch {
+          volunteerList = [];
+        }
+        setVolunteerRecords(volunteerList);
         setForm({
           name: p.name || '',
           email: p.email || '',
@@ -93,11 +117,19 @@ export default function ProfilePage() {
           volunteerRecords: p.volunteerRecords || '',
         });
       } else {
-        await updateProfile(userId, form);
+        await updateProfile(userId, submitData);
         await showAlert('更新成功！');
         setMode('view');
         const p = await getProfile(userId);
         setProfile(p);
+        let volunteerList = [];
+        try {
+          volunteerList = JSON.parse(p.volunteerRecords || '[]');
+          if (!Array.isArray(volunteerList)) volunteerList = [];
+        } catch {
+          volunteerList = [];
+        }
+        setVolunteerRecords(volunteerList);
       }
     } catch (err) {
       showAlert(err.message || '操作失敗');
@@ -176,10 +208,9 @@ export default function ProfilePage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-text-light mb-1">生日（月/日）</label>
+            <label className="block text-sm text-text-light mb-1">生日</label>
             <input
-              type="text"
-              placeholder="MM/DD 或 M/D"
+              type="date"
               value={form.birthday}
               onChange={(e) => setForm((f) => ({ ...f, birthday: e.target.value }))}
               className="w-full px-3 py-2 rounded-lg border border-border"
@@ -257,16 +288,86 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* 課程志工 - 簡化顯示 */}
+            {/* 課程志工 */}
             <div className="mb-4">
-              <label className="block text-sm text-text-light mb-1">課程志工</label>
-              <textarea
-                value={form.volunteerRecords}
-                onChange={(e) => setForm((f) => ({ ...f, volunteerRecords: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg border border-border"
-                placeholder="例如：2024/01/15 金流"
-                rows={3}
-              />
+              <label className="block text-sm text-text-light mb-2">課程志工</label>
+              {/* 已有的記錄列表 */}
+              <div className="mb-2 space-y-2">
+                {volunteerRecords.length === 0 ? (
+                  <p className="text-sm text-text-light">尚無記錄，可點「新增記錄」</p>
+                ) : (
+                  volunteerRecords.map((record, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 border border-border rounded">
+                      <span className="text-sm">{record.date} {record.option}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newList = volunteerRecords.filter((_, i) => i !== index);
+                          setVolunteerRecords(newList);
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-red-100 text-red-600 hover:bg-red-200"
+                      >
+                        刪除
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              {/* 新增按鈕 */}
+              <button
+                type="button"
+                onClick={() => setShowVolunteerForm(!showVolunteerForm)}
+                className="px-4 py-2 rounded-lg bg-card-bg border border-border text-sm"
+              >
+                ➕ 新增記錄
+              </button>
+              {/* 新增表單 */}
+              {showVolunteerForm && (
+                <div className="mt-3 p-3 bg-bg-page rounded-lg border border-border">
+                  <div className="mb-3">
+                    <label className="block text-sm text-text-light mb-1">日期</label>
+                    <input
+                      type="date"
+                      value={newVolunteer.date}
+                      onChange={(e) => setNewVolunteer((v) => ({ ...v, date: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border border-border"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm text-text-light mb-1">選項</label>
+                    <select
+                      value={newVolunteer.option}
+                      onChange={(e) => setNewVolunteer((v) => ({ ...v, option: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border border-border"
+                    >
+                      <option value="金流">金流</option>
+                      <option value="藍圖">藍圖</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newVolunteer.date) {
+                          setVolunteerRecords([...volunteerRecords, newVolunteer]);
+                          setNewVolunteer({ date: new Date().toISOString().slice(0, 10), option: '金流' });
+                          setShowVolunteerForm(false);
+                        }
+                      }}
+                      className="flex-1 py-2 rounded-lg bg-primary text-white"
+                    >
+                      確定
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowVolunteerForm(false)}
+                      className="flex-1 py-2 rounded-lg bg-card-bg border border-border"
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -293,7 +394,19 @@ export default function ProfilePage() {
           </div>
           <div className="p-4 rounded-lg bg-card-bg border border-border">
             <div className="text-sm text-text-light">生日</div>
-            <div className="font-medium">{profile?.birthday || '-'}</div>
+            <div className="font-medium">
+              {profile?.birthday
+                ? (() => {
+                    // 從 YYYY-MM-DD 或 MM/DD 格式提取月/日
+                    const bd = profile.birthday;
+                    if (bd.includes('-')) {
+                      const parts = bd.split('-');
+                      if (parts.length === 3) return `${parts[1]}/${parts[2]}`;
+                    }
+                    return bd;
+                  })()
+                : '-'}
+            </div>
           </div>
           <div className="p-4 rounded-lg bg-card-bg border border-border">
             <div className="text-sm text-text-light">星等</div>
@@ -318,7 +431,17 @@ export default function ProfilePage() {
               </div>
               <div className="p-4 rounded-lg bg-card-bg border border-border">
                 <div className="text-sm text-text-light">課程志工</div>
-                <div className="font-medium whitespace-pre-wrap">{profile?.volunteerRecords || '-'}</div>
+                <div className="font-medium">
+                  {(() => {
+                    try {
+                      const list = JSON.parse(profile?.volunteerRecords || '[]');
+                      if (!Array.isArray(list) || list.length === 0) return '無';
+                      return list.map(r => `${r.date} ${r.option}`).join('、');
+                    } catch {
+                      return profile?.volunteerRecords || '無';
+                    }
+                  })()}
+                </div>
               </div>
             </div>
           </div>
