@@ -8,6 +8,7 @@
     "dev": "nodemon server/server.js",
     "test": "jest",
     "build": "cd frontend && npm ci && npm run build",
+    "postinstall": "cd frontend && npm ci && npm run build || echo 'Frontend build skipped'",
     "seed:members": "node scripts/seed-members.js",
     "migrate:members": "node scripts/migrate-sheet-to-supabase.js",
     "sync:calendar": "node scripts/sync-calendar-to-supabase.js",
