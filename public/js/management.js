@@ -4,12 +4,15 @@
 
 let currentUserId = null;
 let currentTab = 'data'; // 當前分頁
+let isPermissionEditMode = false; // 權限編輯模式
+let permissionMembersData = []; // 權限分頁的成員數據
 let userPermissions = {
   isAdmin: false,
   isManager: false,
-  isGuanLiZhe: false, // 管理者角色（如果有的話）
+  isGuanLiZhe: false,
   canViewData: false, // 可查看數據（負責人、開發者、管理者）
   canViewFinancial: false, // 可查看財力（負責人、開發者）
+  canEditPermission: false, // 可編輯權限（僅開發者）
 };
 
 /**
@@ -54,11 +57,20 @@ async function checkPermissions() {
       
       // 財力分頁權限：負責人 + 開發者
       userPermissions.canViewFinancial = userPermissions.isAdmin || userPermissions.isManager;
+      
+      // 權限分頁：僅開發者
+      userPermissions.canEditPermission = userPermissions.isAdmin;
 
       // 根據權限顯示內容
       if (!userPermissions.canViewData) {
         showNoPermission();
         return;
+      }
+
+      // 如果是開發者，顯示權限分頁按鈕
+      if (userPermissions.canEditPermission) {
+        const permTabBtn = document.getElementById('tab-btn-permission');
+        if (permTabBtn) permTabBtn.style.display = '';
       }
 
       // 載入數據
@@ -93,6 +105,10 @@ async function switchTab(tabName) {
     alert('🚫 無權限訪問');
     return;
   }
+  if (tabName === 'permission' && !userPermissions.canEditPermission) {
+    alert('🚫 無權限訪問');
+    return;
+  }
 
   // 更新分頁狀態
   currentTab = tabName;
@@ -124,6 +140,8 @@ async function loadCurrentTab() {
     await loadDataTab();
   } else if (currentTab === 'financial') {
     await loadFinancialTab();
+  } else if (currentTab === 'permission') {
+    await loadPermissionTab();
   }
 }
 
@@ -331,6 +349,168 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+/**
+ * 載入權限分頁
+ */
+async function loadPermissionTab() {
+  const container = document.getElementById('permission-list');
+  if (!container) return;
+
+  container.innerHTML = '<div class="loading" style="padding: 24px; text-align: center;">載入中...</div>';
+
+  try {
+    const response = await fetch('/api/members');
+    const data = await response.json();
+
+    if (data.success) {
+      permissionMembersData = data.data;
+      renderPermissionList(permissionMembersData);
+    } else {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div>❌</div>
+          <p>載入失敗</p>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('載入權限分頁錯誤:', error);
+    container.innerHTML = `
+      <div class="empty-state">
+        <div>❌</div>
+        <p>載入失敗，請稍後再試</p>
+      </div>
+    `;
+  }
+}
+
+/**
+ * 渲染權限列表
+ */
+function renderPermissionList(members) {
+  const container = document.getElementById('permission-list');
+  if (!members || members.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div>📭</div><p>暫無成員</p></div>';
+    return;
+  }
+
+  container.innerHTML = members.map(member => {
+    const role = member.role || '一般人';
+    let roleClass = 'member';
+    if (role === '開發者') roleClass = 'admin';
+    else if (role === '負責人') roleClass = 'manager';
+    else if (role === '管理者') roleClass = 'manager';
+
+    // 權限顯示或下拉選單
+    let roleHtml = '';
+    if (isPermissionEditMode) {
+      roleHtml = `
+        <select class="role-select" data-line-id="${escapeHtml(member.lineId)}" style="font-size: 13px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <option value="一般人" ${role === '一般人' ? 'selected' : ''}>一般人</option>
+          <option value="管理者" ${role === '管理者' ? 'selected' : ''}>管理者</option>
+          <option value="負責人" ${role === '負責人' ? 'selected' : ''}>負責人</option>
+          <option value="開發者" ${role === '開發者' ? 'selected' : ''}>開發者</option>
+        </select>
+      `;
+    } else {
+      roleHtml = `<span class="member-role-badge ${roleClass}">${role}</span>`;
+    }
+
+    return `
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+        <img src="${member.pictureUrl || 'https://via.placeholder.com/40?text=👤'}" 
+             alt="${escapeHtml(member.name)}" 
+             style="width: 40px; height: 40px; border-radius: 50%;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-weight: 600; font-size: 14px;">${escapeHtml(member.displayName || member.name || '未設定')}</div>
+          ${member.name && member.name !== member.displayName ? `<div style="font-size: 12px; color: var(--text-light);">${escapeHtml(member.name)}</div>` : ''}
+        </div>
+        ${roleHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * 切換權限編輯模式
+ */
+function togglePermissionEditMode() {
+  const btn = document.getElementById('permission-edit-btn');
+  
+  if (isPermissionEditMode) {
+    // 儲存
+    savePermissions();
+  } else {
+    // 進入編輯模式
+    isPermissionEditMode = true;
+    if (btn) {
+      btn.textContent = '💾 儲存權限';
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-secondary');
+      btn.style.background = '#e74c3c';
+      btn.style.color = 'white';
+    }
+    renderPermissionList(permissionMembersData);
+  }
+}
+
+/**
+ * 儲存權限變更
+ */
+async function savePermissions() {
+  // 收集所有下拉選單的值
+  const selects = document.querySelectorAll('.role-select');
+  const updates = [];
+  
+  selects.forEach(select => {
+    const lineId = select.getAttribute('data-line-id');
+    const newRole = select.value;
+    updates.push({ lineId, role: newRole });
+  });
+
+  if (updates.length === 0) return;
+
+  try {
+    const response = await fetch('/api/members/update-roles', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        editorId: currentUserId,
+        updates: updates,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert('✅ 權限更新成功');
+      
+      // 更新本地數據
+      updates.forEach(update => {
+        const member = permissionMembersData.find(m => m.lineId === update.lineId);
+        if (member) member.role = update.role;
+      });
+      
+      // 退出編輯模式
+      isPermissionEditMode = false;
+      const btn = document.getElementById('permission-edit-btn');
+      if (btn) {
+        btn.textContent = '⚙️ 編輯權限';
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-primary');
+        btn.style.background = '';
+        btn.style.color = '';
+      }
+      renderPermissionList(permissionMembersData);
+    } else {
+      alert('❌ 更新失敗：' + (data.message || '未知錯誤'));
+    }
+  } catch (error) {
+    console.error('儲存權限錯誤:', error);
+    alert('❌ 儲存失敗：' + error.message);
+  }
 }
 
 // 頁面載入時初始化

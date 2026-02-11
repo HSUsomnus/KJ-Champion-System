@@ -47,6 +47,9 @@
         <button class="tab-btn" data-tab="financial" onclick="switchTab('financial')">
           💰 財力
         </button>
+        <button class="tab-btn" data-tab="permission" onclick="switchTab('permission')" id="tab-btn-permission" style="display: none;">
+          🔑 權限
+        </button>
       </div>
 
       <!-- 數據分頁 -->
@@ -62,6 +65,19 @@
         <div class="card">
           <h2 class="card-title">💰 成員財力總覽</h2>
           <div id="financial-list"></div>
+        </div>
+      </div>
+
+      <!-- 權限分頁 -->
+      <div id="tab-permission" class="tab-content hidden">
+        <div class="card">
+          <h2 class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+            🔑 權限管理
+            <button type="button" id="permission-edit-btn" class="btn btn-sm btn-primary" onclick="togglePermissionEditMode()">
+              ⚙️ 編輯權限
+            </button>
+          </h2>
+          <div id="permission-list"></div>
         </div>
       </div>
     </div>

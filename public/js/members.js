@@ -3,10 +3,8 @@
  * 負責顯示所有成員並處理邀請功能
  */
 
-let isRoleEditMode = false; // 是否在權限編輯模式
 let currentUserId = null; // 當前用戶 ID
 let membersData = []; // 成員數據
-let isAdmin = false; // 是否為開發者
 
 /**
  * 初始化成員列表頁面
@@ -26,7 +24,7 @@ async function initMembers() {
 }
 
 /**
- * 檢查是否為開發者或負責人
+ * 檢查是否有管理權限（顯示管理按鈕）
  */
 async function checkAdminPermission() {
   currentUserId = window.LIFF ? window.LIFF.getUserId() : null;
@@ -39,19 +37,10 @@ async function checkAdminPermission() {
     
     if (data.success) {
       const member = data.data;
-      isAdmin = member.role === '開發者';
-      const isManager = member.role === '負責人';
+      const role = member.role || '一般人';
       
-      // 如果是開發者，顯示權限設定按鈕
-      if (isAdmin) {
-        const roleEditBtn = document.getElementById('role-edit-btn');
-        if (roleEditBtn) {
-          roleEditBtn.classList.remove('hidden');
-        }
-      }
-      
-      // 如果是開發者或負責人，顯示管理按鈕
-      if (isAdmin || isManager) {
+      // 開發者、負責人、管理者可看到管理按鈕
+      if (role === '開發者' || role === '負責人' || role === '管理者') {
         const managementBtn = document.getElementById('management-btn');
         if (managementBtn) {
           managementBtn.classList.remove('hidden');
@@ -141,30 +130,6 @@ function renderMembers(members, currentUserId) {
     const displayName = (member.displayName && String(member.displayName).trim()) ? member.displayName : (member.name || '未設定');
     const realName = member.name && String(member.name).trim() ? member.name : '';
     
-    // 權限標籤和選單（只有開發者可見）
-    let roleHtml = '';
-    if (isAdmin) {
-      const role = member.role || '一般人';
-      if (isRoleEditMode) {
-        // 編輯模式：顯示下拉選單
-        roleHtml = `
-          <select class="role-select" data-line-id="${escapeHtml(member.lineId)}" onclick="event.stopPropagation()">
-            <option value="一般人" ${role === '一般人' ? 'selected' : ''}>一般人</option>
-            <option value="管理者" ${role === '管理者' ? 'selected' : ''}>管理者</option>
-            <option value="負責人" ${role === '負責人' ? 'selected' : ''}>負責人</option>
-            <option value="開發者" ${role === '開發者' ? 'selected' : ''}>開發者</option>
-          </select>
-        `;
-      } else {
-        // 查看模式：顯示權限標籤
-        let roleClass = 'member';
-        if (role === '開發者') roleClass = 'admin';
-        else if (role === '負責人') roleClass = 'manager';
-        else if (role === '管理者') roleClass = 'manager'; // 管理者使用相同樣式
-        roleHtml = `<span class="member-role-badge ${roleClass}">${role}</span>`;
-      }
-    }
-    
     return `
     <div class="member-card" data-line-id="${escapeHtml(member.lineId)}" data-is-self="${isSelf ? '1' : '0'}" onclick="handleMemberCardClick(this)">
       <img src="${avatarUrl}" alt="${escapeHtml(displayName)}" class="member-avatar" 
@@ -172,7 +137,6 @@ function renderMembers(members, currentUserId) {
       <div class="member-info">
         <div class="member-name">
           ${escapeHtml(displayName)}
-          ${roleHtml}
         </div>
         ${realName && realName !== displayName ? `<div class="member-real-name">${escapeHtml(realName)}</div>` : ''}
         <span class="member-star ${escapeHtml(member.starLevel || '白星')}">
@@ -273,93 +237,6 @@ function escapeHtml(text) {
 window.inviteMember = inviteMember;
 window.viewMemberDetail = viewMemberDetail;
 window.handleMemberCardClick = handleMemberCardClick;
-
-/**
- * 切換權限編輯模式
- */
-function toggleRoleEditMode() {
-  if (isRoleEditMode) {
-    // 儲存模式 → 查看模式
-    saveRoles();
-  } else {
-    // 查看模式 → 編輯模式
-    isRoleEditMode = true;
-    const btn = document.getElementById('role-edit-btn');
-    if (btn) {
-      btn.textContent = '💾 權限儲存';
-      btn.classList.add('save-mode');
-    }
-    renderMembers(membersData, currentUserId);
-  }
-}
-
-/**
- * 儲存權限變更
- */
-async function saveRoles() {
-  if (!isAdmin) {
-    alert('❌ 只有開發者可以修改權限');
-    return;
-  }
-
-  // 收集所有下拉選單的變更
-  const selects = document.querySelectorAll('.role-select');
-  const updates = [];
-  
-  selects.forEach(select => {
-    const lineId = select.getAttribute('data-line-id');
-    const newRole = select.value;
-    updates.push({ lineId, role: newRole });
-  });
-
-  if (updates.length === 0) {
-    alert('❌ 沒有需要更新的權限');
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/members/update-roles', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        editorId: currentUserId,
-        updates: updates,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      alert(`✅ 權限更新成功！`);
-      
-      // 更新本地數據
-      updates.forEach(update => {
-        const member = membersData.find(m => m.lineId === update.lineId);
-        if (member) {
-          member.role = update.role;
-        }
-      });
-      
-      // 退出編輯模式
-      isRoleEditMode = false;
-      const btn = document.getElementById('role-edit-btn');
-      if (btn) {
-        btn.textContent = '⚙️ 權限設定';
-        btn.classList.remove('save-mode');
-      }
-      
-      // 重新渲染
-      renderMembers(membersData, currentUserId);
-    } else {
-      alert('❌ 更新失敗：' + (data.message || '未知錯誤'));
-    }
-  } catch (error) {
-    console.error('儲存權限錯誤:', error);
-    alert('❌ 儲存失敗：' + error.message);
-  }
-}
 
 // 頁面載入時初始化
 if (document.readyState === 'loading') {
