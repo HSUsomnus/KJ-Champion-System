@@ -30,8 +30,11 @@ export function LiffProvider({ children }) {
 
     async function init() {
       try {
+        console.log('🔧 LIFF 初始化開始...');
+        
         // 開發模式：使用模擬 LINE ID
         if (isDevMode()) {
+          console.log('🛠️ 開發模式：使用模擬 LINE ID');
           const mockUserId = 'U11111111111111111111111111111111';
           const mockProfile = {
             userId: mockUserId,
@@ -45,29 +48,48 @@ export function LiffProvider({ children }) {
           return;
         }
 
+        // 等待 LIFF SDK 載入（最多等 5 秒）
+        let retries = 0;
+        while (!window.liff && retries < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          retries++;
+        }
+
+        if (!window.liff) {
+          console.error('❌ LIFF SDK 未載入');
+          if (!cancelled) {
+            setState({ ready: true, userId: null, profile: null, error: 'LIFF SDK 未載入' });
+          }
+          return;
+        }
+
+        console.log('✅ LIFF SDK 已載入');
+
         // 從後端取得 LIFF ID
         const res = await fetch('/api/line/liff-id');
         const data = await res.json();
         if (!data.success) throw new Error('無法取得 LIFF ID');
 
         const liffId = data.data.liffId;
-        const liff = window.liff;
+        console.log('✅ 已取得 LIFF ID:', liffId);
 
-        if (!liff) throw new Error('LIFF SDK 未載入');
+        await window.liff.init({ liffId });
+        console.log('✅ LIFF 初始化成功');
 
-        await liff.init({ liffId });
-
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
+        if (window.liff.isLoggedIn()) {
+          const profile = await window.liff.getProfile();
+          console.log('✅ 已登入，User ID:', profile.userId);
           if (!cancelled) {
             setState({ ready: true, userId: profile.userId, profile, error: null });
           }
         } else {
+          console.log('⚠️ 尚未登入');
           if (!cancelled) {
             setState({ ready: true, userId: null, profile: null, error: null });
           }
         }
       } catch (err) {
+        console.error('❌ LIFF 初始化失敗:', err);
         if (!cancelled) {
           setState({ ready: true, userId: null, profile: null, error: err.message });
         }
@@ -84,6 +106,23 @@ export function LiffProvider({ children }) {
       window.liff.login();
     }
   };
+
+  // 在 LIFF 未準備好時顯示載入畫面
+  if (!state.ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-page">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-pulse">📅</div>
+          <p className="text-text-light">初始化中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果有錯誤，顯示錯誤訊息但仍然渲染 children（允許降級使用）
+  if (state.error) {
+    console.warn('⚠️ LIFF 初始化有錯誤，但允許繼續:', state.error);
+  }
 
   return (
     <LiffContext.Provider value={{ ...state, login }}>
