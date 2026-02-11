@@ -387,7 +387,7 @@ async function loadPermissionTab() {
 }
 
 /**
- * 渲染權限列表（使用成員卡片樣式）
+ * 渲染權限列表（跟數據分頁一樣的卡片樣式，但顯示權限資訊）
  */
 function renderPermissionList(members) {
   const container = document.getElementById('permission-list');
@@ -396,14 +396,8 @@ function renderPermissionList(members) {
     return;
   }
 
-  const placeholderUrl = 'https://via.placeholder.com/60?text=👤';
-
   container.innerHTML = members.map(member => {
     const role = member.role || '一般人';
-    const hasAvatar = member.pictureUrl && String(member.pictureUrl).trim();
-    const avatarUrl = hasAvatar ? `/api/members/avatar/${encodeURIComponent(member.lineId)}` : placeholderUrl;
-    const displayName = (member.displayName && String(member.displayName).trim()) ? member.displayName : (member.name || '未設定');
-    const realName = member.name && String(member.name).trim() ? member.name : '';
 
     // 編輯模式：下拉選單（負責人、管理者、一般人）
     // 顯示模式：權限標籤
@@ -421,17 +415,17 @@ function renderPermissionList(members) {
     }
 
     return `
-      <div class="member-card" style="cursor: default;">
-        <img src="${avatarUrl}" alt="${escapeHtml(displayName)}" class="member-avatar"
-             onerror="this.src='${placeholderUrl.replace(/'/g, "\\'")}'">
-        <div class="member-info">
-          <div class="member-name">${escapeHtml(displayName)}</div>
-          ${realName && realName !== displayName ? `<div class="member-real-name">${escapeHtml(realName)}</div>` : ''}
-          <span class="member-star ${escapeHtml(member.starLevel || '白星')}">
-            ${escapeHtml(member.starLevel || '白星')}
-          </span>
+      <div class="data-item" style="padding: 16px; border-bottom: 1px solid var(--border-color);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="${member.pictureUrl || 'https://via.placeholder.com/50?text=👤'}" 
+               alt="${escapeHtml(member.name)}" 
+               style="width: 50px; height: 50px; border-radius: 50%;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 16px;">${escapeHtml(member.displayName || member.name || '未設定')}</div>
+            <div style="font-size: 12px; color: var(--text-light);">${escapeHtml(member.name || '未設定')}</div>
+          </div>
+          ${roleHtml}
         </div>
-        ${roleHtml}
       </div>
     `;
   }).join('');
