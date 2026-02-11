@@ -31,13 +31,17 @@ export default function CalendarPage() {
     const startDate = formatYMD(new Date(year, month - 1, 1));
     const endDate = formatYMD(lastDay);
 
-    Promise.all([
-      getEvents(startDate, endDate),
-      getTodayEvents(formatYMD(selectedDate)),
-    ])
-      .then(([events, today]) => {
+    getEvents(startDate, endDate)
+      .then((events) => {
         setMonthEvents(events);
-        setTodayEvents(today);
+        // 從月行程中過濾出當日行程（包含跨日）
+        const selectedStr = formatYMD(selectedDate);
+        const todayEventsFiltered = events.filter((e) => {
+          const start = (e.start || '').split('T')[0];
+          const end = (e.end || '').split('T')[0];
+          return selectedStr >= start && selectedStr <= end;
+        });
+        setTodayEvents(todayEventsFiltered);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -48,13 +52,16 @@ export default function CalendarPage() {
     const lastDay = new Date(year, month, 0);
     const startDate = formatYMD(new Date(year, month - 1, 1));
     const endDate = formatYMD(lastDay);
-    Promise.all([
-      getEvents(startDate, endDate),
-      getTodayEvents(formatYMD(selectedDate)),
-    ])
-      .then(([events, today]) => {
+    getEvents(startDate, endDate)
+      .then((events) => {
         setMonthEvents(events);
-        setTodayEvents(today);
+        const selectedStr = formatYMD(selectedDate);
+        const todayEventsFiltered = events.filter((e) => {
+          const start = (e.start || '').split('T')[0];
+          const end = (e.end || '').split('T')[0];
+          return selectedStr >= start && selectedStr <= end;
+        });
+        setTodayEvents(todayEventsFiltered);
       })
       .finally(() => {
         setLoading(false);
@@ -126,11 +133,35 @@ export default function CalendarPage() {
           {days.map((d, i) => {
             if (!d) return <div key={`empty-${i}`} />;
             const dayEvents = getEventsForDay(d);
-            const count = dayEvents.length;
             const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const isSel = dateStr === selectedStr;
             const isToday = dateStr === formatYMD(new Date());
-            const typeClass = dayEvents[0]?.type ? `event-type-${dayEvents[0].type}` : '';
+            
+            // 收集當日所有行程類型（去重）並按順序排列，最多顯示 4 個
+            const typeOrder = ['學員上課', '活動', '諮詢簽約', '個人行程'];
+            const uniqueTypes = [...new Set(dayEvents.map(e => e.type || '其他'))];
+            const sortedTypes = uniqueTypes
+              .sort((a, b) => {
+                const aIdx = typeOrder.indexOf(a);
+                const bIdx = typeOrder.indexOf(b);
+                if (aIdx === -1 && bIdx === -1) return 0;
+                if (aIdx === -1) return 1;
+                if (bIdx === -1) return -1;
+                return aIdx - bIdx;
+              })
+              .slice(0, 4);
+            
+            // 類型對應顏色
+            const getTypeColor = (type) => {
+              switch (type) {
+                case '學員上課': return 'bg-[#F57F17]';
+                case '活動': return 'bg-[#C62828]';
+                case '諮詢簽約': return 'bg-[#2E7D32]';
+                case '個人行程': return 'bg-[#1976D2]'; // 藍色
+                default: return 'bg-[#999]';
+              }
+            };
+            
             return (
               <button
                 key={d}
@@ -142,21 +173,18 @@ export default function CalendarPage() {
                     : isToday
                     ? 'bg-transparent text-[#333] border border-[#E0E0E0] font-semibold'
                     : 'border border-transparent hover:bg-[#F5F5F5] text-[#333]'
-                } ${count > 0 ? 'relative' : ''}`}
+                } ${sortedTypes.length > 0 ? 'relative' : ''}`}
               >
                 {d}
-                {count > 0 && (
-                  <span
-                    className={`absolute bottom-0.5 w-1 h-1 rounded-full ${
-                      typeClass === 'event-type-學員上課'
-                        ? 'bg-[#F57F17]'
-                        : typeClass === 'event-type-活動'
-                        ? 'bg-[#C62828]'
-                        : typeClass === 'event-type-諮詢簽約'
-                        ? 'bg-[#2E7D32]'
-                        : 'bg-[#06C755]'
-                    }`}
-                  />
+                {sortedTypes.length > 0 && (
+                  <div className="absolute bottom-0.5 flex gap-0.5">
+                    {sortedTypes.map((type, idx) => (
+                      <span
+                        key={idx}
+                        className={`w-1 h-1 rounded-full ${getTypeColor(type)}`}
+                      />
+                    ))}
+                  </div>
                 )}
               </button>
             );

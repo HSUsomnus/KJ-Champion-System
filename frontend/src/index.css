@@ -146,4 +146,22 @@
   .member-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
+
+  /* 日期快捷按鈕（今天/明天） */
+  .btn-date-shortcut {
+    @apply py-2 px-3 text-sm rounded-lg border border-[#E0E0E0] bg-white text-[#333] cursor-pointer whitespace-nowrap;
+  }
+  .btn-date-shortcut:active {
+    @apply bg-[#E0E0E0];
+  }
+
+  /* 時間快捷按鈕（09:00, 10:00 等） */
+  .time-chip {
+    @apply inline-block py-1.5 px-3 text-xs rounded-full border border-[#06C755] cursor-pointer whitespace-nowrap;
+    background: rgba(6, 199, 85, 0.08);
+    color: #06C755;
+  }
+  .time-chip:active {
+    @apply bg-[#06C755] text-white;
+  }
 }

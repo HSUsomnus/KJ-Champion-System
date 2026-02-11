@@ -15,7 +15,16 @@ export default function MembersPage() {
 
   useEffect(() => {
     getMembers()
-      .then(setMembers)
+      .then((data) => {
+        // 星等排序：紫星 > 紅星 > 橙星 > 綠星 > 白星
+        const starOrder = { '紫星': 1, '紅星': 2, '橙星': 3, '綠星': 4, '白星': 5 };
+        const sorted = data.sort((a, b) => {
+          const aLevel = starOrder[a.starLevel] || 999;
+          const bLevel = starOrder[b.starLevel] || 999;
+          return aLevel - bLevel;
+        });
+        setMembers(sorted);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -48,7 +57,15 @@ export default function MembersPage() {
   const handleRefresh = () => {
     setLoading(true);
     getMembers()
-      .then(setMembers)
+      .then((data) => {
+        const starOrder = { '紫星': 1, '紅星': 2, '橙星': 3, '綠星': 4, '白星': 5 };
+        const sorted = data.sort((a, b) => {
+          const aLevel = starOrder[a.starLevel] || 999;
+          const bLevel = starOrder[b.starLevel] || 999;
+          return aLevel - bLevel;
+        });
+        setMembers(sorted);
+      })
       .finally(() => setLoading(false));
   };
 

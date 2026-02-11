@@ -337,16 +337,16 @@ export default function EventDetailPage() {
               <label className="form-label">開始日期 *</label>
               <input type="date" className="form-input" value={form.startDate} onChange={(e) => handleChange('startDate', e.target.value)} required />
               <div className="flex gap-2 mt-2">
-                <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('startDate', 0)}>今天</button>
-                <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('startDate', 1)}>明天</button>
+                <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('startDate', 0)}>今天</button>
+                <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('startDate', 1)}>明天</button>
               </div>
             </div>
             <div className="form-group">
               <label className="form-label">結束日期</label>
               <input type="date" className="form-input" placeholder="同一天可不填" value={form.endDate} onChange={(e) => handleChange('endDate', e.target.value)} />
               <div className="flex gap-2 mt-2">
-                <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('endDate', 0)}>今天</button>
-                <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('endDate', 1)}>明天</button>
+                <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('endDate', 0)}>今天</button>
+                <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('endDate', 1)}>明天</button>
               </div>
             </div>
             {!form.allDay && (
@@ -354,18 +354,18 @@ export default function EventDetailPage() {
                 <div>
                   <label className="form-label">開始時間 *</label>
                   <input type="time" className="form-input" value={form.startTime} onChange={(e) => handleChange('startTime', e.target.value)} required />
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     {['09:00', '10:00', '14:00', '19:00', '20:00'].map((t) => (
-                      <button key={t} type="button" className="btn btn-secondary !py-1 !px-2 text-xs" onClick={() => setQuickTime('startTime', t)}>{t}</button>
+                      <button key={t} type="button" className="time-chip" onClick={() => setQuickTime('startTime', t)}>{t}</button>
                     ))}
                   </div>
                 </div>
                 <div>
                   <label className="form-label">結束時間 *</label>
                   <input type="time" className="form-input" value={form.endTime} onChange={(e) => handleChange('endTime', e.target.value)} required />
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     {['10:00', '11:00', '15:00', '20:00', '21:00'].map((t) => (
-                      <button key={t} type="button" className="btn btn-secondary !py-1 !px-2 text-xs" onClick={() => setQuickTime('endTime', t)}>{t}</button>
+                      <button key={t} type="button" className="time-chip" onClick={() => setQuickTime('endTime', t)}>{t}</button>
                     ))}
                   </div>
                 </div>

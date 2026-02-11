@@ -188,8 +188,8 @@ export default function AddEventPage() {
               required
             />
             <div className="flex gap-2 mt-2">
-              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('startDate', 0)}>今天</button>
-              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('startDate', 1)}>明天</button>
+              <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('startDate', 0)}>今天</button>
+              <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('startDate', 1)}>明天</button>
             </div>
           </div>
 
@@ -203,8 +203,8 @@ export default function AddEventPage() {
               onChange={(e) => handleChange('endDate', e.target.value)}
             />
             <div className="flex gap-2 mt-2">
-              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('endDate', 0)}>今天</button>
-              <button type="button" className="btn btn-secondary !py-1.5 !px-3 text-sm" onClick={() => setQuickDate('endDate', 1)}>明天</button>
+              <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('endDate', 0)}>今天</button>
+              <button type="button" className="btn-date-shortcut" onClick={() => setQuickDate('endDate', 1)}>明天</button>
             </div>
           </div>
 
@@ -219,9 +219,9 @@ export default function AddEventPage() {
                   onChange={(e) => handleChange('startTime', e.target.value)}
                   required
                 />
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   {['09:00', '10:00', '14:00', '19:00', '20:00'].map((t) => (
-                    <button key={t} type="button" className="btn btn-secondary !py-1 !px-2 text-xs" onClick={() => setQuickTime('startTime', t)}>{t}</button>
+                    <button key={t} type="button" className="time-chip" onClick={() => setQuickTime('startTime', t)}>{t}</button>
                   ))}
                 </div>
               </div>
@@ -234,9 +234,9 @@ export default function AddEventPage() {
                   onChange={(e) => handleChange('endTime', e.target.value)}
                   required
                 />
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   {['10:00', '11:00', '15:00', '20:00', '21:00'].map((t) => (
-                    <button key={t} type="button" className="btn btn-secondary !py-1 !px-2 text-xs" onClick={() => setQuickTime('endTime', t)}>{t}</button>
+                    <button key={t} type="button" className="time-chip" onClick={() => setQuickTime('endTime', t)}>{t}</button>
                   ))}
                 </div>
               </div>
