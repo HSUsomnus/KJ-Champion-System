@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import { useLiff } from '../context/LiffContext';
-import { getEvents, getTodayEvents } from '../services/api';
+import { getEvents } from '../services/api';
 
 // 將 Date 轉成 YYYY-MM-DD
 function formatYMD(d) {
