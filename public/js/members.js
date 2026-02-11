@@ -150,13 +150,17 @@ function renderMembers(members, currentUserId) {
         roleHtml = `
           <select class="role-select" data-line-id="${escapeHtml(member.lineId)}" onclick="event.stopPropagation()">
             <option value="一般人" ${role === '一般人' ? 'selected' : ''}>一般人</option>
+            <option value="管理者" ${role === '管理者' ? 'selected' : ''}>管理者</option>
             <option value="負責人" ${role === '負責人' ? 'selected' : ''}>負責人</option>
             <option value="開發者" ${role === '開發者' ? 'selected' : ''}>開發者</option>
           </select>
         `;
       } else {
         // 查看模式：顯示權限標籤
-        const roleClass = role === '一般人' ? 'member' : (role === '負責人' ? 'manager' : 'admin');
+        let roleClass = 'member';
+        if (role === '開發者') roleClass = 'admin';
+        else if (role === '負責人') roleClass = 'manager';
+        else if (role === '管理者') roleClass = 'manager'; // 管理者使用相同樣式
         roleHtml = `<span class="member-role-badge ${roleClass}">${role}</span>`;
       }
     }

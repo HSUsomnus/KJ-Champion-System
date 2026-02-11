@@ -248,7 +248,7 @@ const getSuperior = async (lineId) => {
 const updateMemberRole = async (lineId, role) => {
   try {
     // 驗證 role 值
-    const validRoles = ['一般人', '負責人', '開發者'];
+    const validRoles = ['一般人', '管理者', '負責人', '開發者'];
     if (!validRoles.includes(role)) {
       throw new Error(`無效的角色值: ${role}`);
     }

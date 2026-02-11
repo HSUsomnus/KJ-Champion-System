@@ -300,6 +300,7 @@ function viewMemberFinancial(lineId, memberName) {
 function getRoleClass(role) {
   if (role === '開發者') return 'admin';
   if (role === '負責人') return 'manager';
+  if (role === '管理者') return 'manager'; // 管理者使用與負責人相同的樣式
   return 'member';
 }
 
