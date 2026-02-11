@@ -17,9 +17,11 @@ export default function ListPage() {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('全部');
 
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
+  const tabs = ['全部', '學員上課', '活動', '諮詢簽約'];
   const startDate = formatYMD(new Date(year, month - 1, 1));
   const lastDay = new Date(year, month, 0);
   const endDate = formatYMD(lastDay);
@@ -34,40 +36,81 @@ export default function ListPage() {
   const prevMonth = () => setDate(new Date(year, month - 2));
   const nextMonth = () => setDate(new Date(year, month));
 
+  const handleRefresh = () => {
+    setLoading(true);
+    getEvents(startDate, endDate)
+      .then(setEvents)
+      .finally(() => setLoading(false));
+  };
+
+  // 過濾行程
+  const filteredEvents = activeTab === '全部' 
+    ? events 
+    : events.filter(e => e.type === activeTab);
+
   return (
     <div>
-      <PageHeader title="📋 列表" />
-      <div className="flex items-center justify-between mb-4">
+      <PageHeader title="📋 行程列表" onRefresh={handleRefresh} />
+      
+      {/* 月份切換 */}
+      <div className="flex items-center justify-between mb-4 bg-card-bg rounded-lg p-3 border border-border">
         <button
           type="button"
           onClick={prevMonth}
-          className="p-2 text-text-light hover:text-primary"
+          className="p-2 text-text-light hover:text-primary transition-colors"
+          aria-label="上一個月"
         >
-          ‹
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
         </button>
-        <span className="font-semibold">
+        <span className="font-semibold text-lg">
           {year}年{month}月
         </span>
         <button
           type="button"
           onClick={nextMonth}
-          className="p-2 text-text-light hover:text-primary"
+          className="p-2 text-text-light hover:text-primary transition-colors"
+          aria-label="下一個月"
         >
-          ›
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
         </button>
       </div>
+
+      {/* 分頁切換 */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+              activeTab === tab
+                ? 'bg-primary text-white'
+                : 'bg-card-bg text-text-main border border-border'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* 行程列表 */}
       {loading ? (
-        <p className="text-text-light">載入中...</p>
+        <div className="flex justify-center py-12">
+          <p className="text-text-light">載入中...</p>
+        </div>
       ) : (
         <div className="space-y-2">
-          {events.length === 0 ? (
-            <p className="text-text-light text-center py-8">本月暫無行程</p>
+          {filteredEvents.length === 0 ? (
+            <p className="text-text-light text-center py-8">本月暫無{activeTab === '全部' ? '' : activeTab}行程</p>
           ) : (
-            events.map((ev) => (
+            filteredEvents.map((ev) => (
               <Link
                 key={ev.id}
                 to={`/event/${ev.id}`}
-                className="block p-3 rounded-lg bg-card-bg border border-border no-underline text-text-main"
+                className="block p-3 rounded-lg bg-card-bg border border-border no-underline text-text-main hover:shadow-md transition-shadow"
               >
                 <div className="font-medium">{ev.title || '無標題'}</div>
                 <div className="text-sm text-text-light">

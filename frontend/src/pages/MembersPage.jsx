@@ -19,9 +19,51 @@ export default function MembersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleInvite = async () => {
+    try {
+      // 取得邀請訊息
+      const res = await fetch('/api/line/invite-message?minimal=1');
+      const data = await res.json();
+      if (!data.success) throw new Error('取得邀請訊息失敗');
+
+      // 使用 LIFF 分享
+      if (window.liff && window.liff.isInClient()) {
+        await window.liff.shareTargetPicker([
+          {
+            type: 'flex',
+            altText: data.data.message,
+            contents: data.data.flexMessage,
+          },
+        ]);
+      } else {
+        alert('請在 LINE 應用程式中使用此功能');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.message || '邀請失敗');
+    }
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    getMembers()
+      .then(setMembers)
+      .finally(() => setLoading(false));
+  };
+
   return (
     <div>
-      <PageHeader title="👥 成員" />
+      <PageHeader title="👥 成員列表" onRefresh={handleRefresh} />
+      
+      {/* 邀請新夥伴按鈕 */}
+      <div className="mb-4">
+        <button
+          onClick={handleInvite}
+          className="w-full py-3 rounded-lg bg-primary text-white font-medium"
+        >
+          ➕ 邀請新夥伴
+        </button>
+      </div>
       {loading ? (
         <p className="text-text-light">載入中...</p>
       ) : members.length === 0 ? (

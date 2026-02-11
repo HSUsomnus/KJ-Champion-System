@@ -10,6 +10,7 @@ import { checkMember, getProfile, updateProfile, registerProfile } from '../serv
 import { useAlert } from '../components/AppAlert';
 
 const STAR_OPTIONS = ['白星', '綠星', '橙星', '紅星', '紫星'];
+const COURSE_OPTIONS = ['正式金流課', '財富藍圖課', '財富實踐旅程', '夢想清單專班', '群星計畫'];
 
 export default function ProfilePage() {
   const { userId, profile: liffProfile } = useLiff();
@@ -24,6 +25,9 @@ export default function ProfilePage() {
     starLevel: '白星',
     courseRecord: '',
     displayName: '',
+    teslaFranchisee: '',
+    teamResponsibilities: '',
+    volunteerRecords: '',
   });
 
   useEffect(() => {
@@ -45,6 +49,9 @@ export default function ProfilePage() {
               starLevel: p.starLevel || '白星',
               courseRecord: p.courseRecord || '',
               displayName: p.displayName || '',
+              teslaFranchisee: p.teslaFranchisee || '',
+              teamResponsibilities: p.teamResponsibilities || '',
+              volunteerRecords: p.volunteerRecords || '',
             });
             setMode('view');
           });
@@ -81,6 +88,9 @@ export default function ProfilePage() {
           starLevel: p.starLevel || '白星',
           courseRecord: p.courseRecord || '',
           displayName: p.displayName || '',
+          teslaFranchisee: p.teslaFranchisee || '',
+          teamResponsibilities: p.teamResponsibilities || '',
+          volunteerRecords: p.volunteerRecords || '',
         });
       } else {
         await updateProfile(userId, form);
@@ -116,9 +126,11 @@ export default function ProfilePage() {
   const isRegister = mode === 'register';
   const isEditing = mode === 'edit';
 
+  const handleRefresh = () => window.location.reload();
+
   return (
     <div>
-      <PageHeader title={isRegister ? '註冊' : '👤 個人資料'} />
+      <PageHeader title={isRegister ? '註冊' : '👤 個人資料'} onRefresh={!isRegister ? handleRefresh : null} />
 
       {liffProfile?.pictureUrl && (
         <div className="flex flex-col items-center mb-6">
@@ -187,6 +199,77 @@ export default function ProfilePage() {
               ))}
             </select>
           </div>
+
+          {/* 進階資訊區塊 */}
+          <div className="pt-4 mt-4 border-t border-border">
+            <h3 className="font-semibold mb-3">📋 進階資訊{isRegister ? '（選填）' : ''}</h3>
+
+            {/* 課程紀錄 */}
+            <div className="mb-4">
+              <label className="block text-sm text-text-light mb-2">課程紀錄</label>
+              <div className="space-y-2">
+                {COURSE_OPTIONS.map((course) => {
+                  const courses = form.courseRecord.split(',').map(c => c.trim()).filter(Boolean);
+                  const isChecked = courses.includes(course);
+                  return (
+                    <label key={course} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const newCourses = e.target.checked
+                            ? [...courses, course]
+                            : courses.filter(c => c !== course);
+                          setForm((f) => ({ ...f, courseRecord: newCourses.join(', ') }));
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">{course}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 特斯拉加盟主 */}
+            <div className="mb-4">
+              <label className="block text-sm text-text-light mb-1">是否為特斯拉出行加盟主</label>
+              <select
+                value={form.teslaFranchisee}
+                onChange={(e) => setForm((f) => ({ ...f, teslaFranchisee: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg border border-border"
+              >
+                <option value="">未填</option>
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </div>
+
+            {/* 團隊負責事項 */}
+            <div className="mb-4">
+              <label className="block text-sm text-text-light mb-1">團隊負責事項</label>
+              <input
+                type="text"
+                value={form.teamResponsibilities}
+                onChange={(e) => setForm((f) => ({ ...f, teamResponsibilities: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg border border-border"
+                placeholder="請輸入負責事項"
+              />
+            </div>
+
+            {/* 課程志工 - 簡化顯示 */}
+            <div className="mb-4">
+              <label className="block text-sm text-text-light mb-1">課程志工</label>
+              <textarea
+                value={form.volunteerRecords}
+                onChange={(e) => setForm((f) => ({ ...f, volunteerRecords: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg border border-border"
+                placeholder="例如：2024/01/15 金流"
+                rows={3}
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
             className="w-full py-3 rounded-lg bg-primary text-white font-medium"
@@ -216,12 +299,36 @@ export default function ProfilePage() {
             <div className="text-sm text-text-light">星等</div>
             <div className="font-medium">{profile?.starLevel || '白星'}</div>
           </div>
+
+          {/* 進階資訊顯示 */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <h3 className="font-semibold mb-3">📋 進階資訊</h3>
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg bg-card-bg border border-border">
+                <div className="text-sm text-text-light">課程紀錄</div>
+                <div className="font-medium">{profile?.courseRecord || '-'}</div>
+              </div>
+              <div className="p-4 rounded-lg bg-card-bg border border-border">
+                <div className="text-sm text-text-light">是否為特斯拉出行加盟主</div>
+                <div className="font-medium">{profile?.teslaFranchisee || '-'}</div>
+              </div>
+              <div className="p-4 rounded-lg bg-card-bg border border-border">
+                <div className="text-sm text-text-light">團隊負責事項</div>
+                <div className="font-medium">{profile?.teamResponsibilities || '-'}</div>
+              </div>
+              <div className="p-4 rounded-lg bg-card-bg border border-border">
+                <div className="text-sm text-text-light">課程志工</div>
+                <div className="font-medium whitespace-pre-wrap">{profile?.volunteerRecords || '-'}</div>
+              </div>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => setMode('edit')}
-            className="w-full py-3 rounded-lg bg-primary text-white font-medium"
+            className="w-full py-3 rounded-lg bg-primary text-white font-medium mt-4"
           >
-            編輯個人資料
+            ✏️ 編輯資料
           </button>
         </div>
       )}
