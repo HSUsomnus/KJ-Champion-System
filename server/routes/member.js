@@ -220,8 +220,10 @@ router.put('/update-roles', async (req, res) => {
       });
     }
 
-    // 檢查是否為開發者
-    const isAdmin = process.env.ADMIN_LINE_USER_IDS?.split(',').includes(editorId);
+    // 檢查是否為開發者（從資料庫讀取）
+    const editor = await memberDbService.getMemberByLineId(editorId);
+    const isAdmin = editor && editor.role === 'admin';
+    
     if (!isAdmin) {
       return res.status(403).json({
         success: false,

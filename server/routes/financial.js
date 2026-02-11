@@ -215,12 +215,18 @@ router.post('/:id/comment', async (req, res) => {
       });
     }
 
-    // 檢查權限：是否為開發者
-    const isAdmin = process.env.ADMIN_LINE_USER_IDS?.split(',').includes(editorId);
-    
-    // 檢查是否為負責人
+    // 檢查編輯者權限（從資料庫讀取）
     const editorMember = await memberDbService.getMemberByLineId(editorId);
-    const isManager = editorMember && editorMember.role === 'manager';
+    
+    if (!editorMember) {
+      return res.status(403).json({
+        success: false,
+        message: '找不到編輯者資料',
+      });
+    }
+    
+    const isAdmin = editorMember.role === 'admin';
+    const isManager = editorMember.role === 'manager';
 
     // 只有開發者和負責人可以編輯評語
     if (!isAdmin && !isManager) {
