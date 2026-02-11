@@ -47,6 +47,13 @@ function formatEventDateTime(event) {
   return `${sd} ${st} ~ ${ed} ${et}`;
 }
 
+// 依行程類型顯示不同的標題提示詞
+const TITLE_HINTS = {
+  '學員上課': '名字+金流課/藍圖課，ex:小陞金流課',
+  '活動': '時間(選)+名稱+(財商/加盟)(選)，ex:13台北組聚(財商)、醫美茶會',
+  '諮詢簽約': '時間+名字+保單諮詢/財物諮詢/保單簽約/天耀簽約，ex:13小陞財務諮詢'
+};
+
 export default function EventDetailPage() {
   const { userId } = useLiff();
   const { id } = useParams();
@@ -96,7 +103,25 @@ export default function EventDetailPage() {
 
   // 更新表單欄位
   const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const newForm = { ...prev, [field]: value };
+      
+      // 特殊處理：選擇「學員上課」時，自動勾選整日且鎖住
+      if (field === 'type') {
+        if (value === '學員上課') {
+          newForm.allDay = true;
+          newForm.startTime = '00:00';
+          newForm.endTime = '23:59';
+        } else if (prev.type === '學員上課') {
+          // 從「學員上課」切換到其他類型時，解除整日鎖定
+          newForm.allDay = false;
+          newForm.startTime = '09:00';
+          newForm.endTime = '10:00';
+        }
+      }
+      
+      return newForm;
+    });
   };
 
   // 設定日期快捷鈕
@@ -322,10 +347,12 @@ export default function EventDetailPage() {
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder={TITLE_HINTS[form.type]}
                 value={form.title}
                 onChange={(e) => handleChange('title', e.target.value)}
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">{TITLE_HINTS[form.type]}</p>
             </div>
 
             {/* 類型 */}
@@ -351,8 +378,12 @@ export default function EventDetailPage() {
                   className="mr-2"
                   checked={form.allDay}
                   onChange={(e) => handleChange('allDay', e.target.checked)}
+                  disabled={form.type === '學員上課'}
                 />
                 <span className="text-sm">整日活動</span>
+                {form.type === '學員上課' && (
+                  <span className="ml-2 text-xs text-gray-500">（學員上課固定為整日）</span>
+                )}
               </label>
             </div>
 
@@ -387,11 +418,12 @@ export default function EventDetailPage() {
             {/* 結束日期 */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                結束日期（可選）
+                結束日期
               </label>
               <input
                 type="date"
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="同一天可不填"
                 value={form.endDate}
                 onChange={(e) => handleChange('endDate', e.target.value)}
               />
