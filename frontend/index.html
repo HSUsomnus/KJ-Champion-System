@@ -16,20 +16,47 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- 初始載入提示（React 載入前顯示） -->
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #F5F5F5;">
+        <div style="text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+          <p style="color: #666; font-size: 14px;">載入中...</p>
+        </div>
+      </div>
+    </div>
     <!-- 網址帶 ?eruda=1 時載入 Eruda，方便手機 LINE 瀏覽器看 Console -->
     <script>
       (function () {
-        var p = new URLSearchParams(window.location.search);
-        if (p.get('eruda') === '1') {
-          var s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/eruda';
-          s.onload = function () {
-            eruda.init();
-          };
-          document.body.appendChild(s);
+        try {
+          var p = new URLSearchParams(window.location.search);
+          if (p.get('eruda') === '1') {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            s.onload = function () {
+              if (window.eruda) {
+                eruda.init();
+                console.log('✅ Eruda 已載入');
+              }
+            };
+            s.onerror = function() {
+              console.error('❌ Eruda 載入失敗');
+            };
+            document.body.appendChild(s);
+          }
+        } catch (e) {
+          console.error('Eruda loader error:', e);
         }
       })();
+      
+      // 檢測 React 是否成功掛載（3秒後檢查）
+      setTimeout(function() {
+        var root = document.getElementById('root');
+        if (root && root.innerHTML.indexOf('載入中') !== -1) {
+          console.error('❌ React 可能未成功載入');
+          console.log('Root innerHTML:', root.innerHTML.substring(0, 200));
+        }
+      }, 3000);
     </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
