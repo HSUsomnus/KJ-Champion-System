@@ -184,29 +184,17 @@ function renderDataList(members) {
         <span class="member-role-badge ${getRoleClass(member.role)}">${member.role || '一般人'}</span>
       </div>
       <div style="font-size: 13px; line-height: 1.6;">
-        <div style="display: grid; grid-template-columns: 80px 1fr; gap: 8px;">
-          <span style="color: var(--text-light);">📧 Email:</span>
-          <span>${escapeHtml(member.email) || '-'}</span>
-          
-          <span style="color: var(--text-light);">📱 電話:</span>
-          <span>${escapeHtml(member.phone) || '-'}</span>
-          
-          <span style="color: var(--text-light);">🎂 生日:</span>
-          <span>${escapeHtml(member.birthday) || '-'}</span>
-          
-          <span style="color: var(--text-light);">⭐ 星等:</span>
-          <span class="member-star ${escapeHtml(member.starLevel || '白星')}">${escapeHtml(member.starLevel || '白星')}</span>
-          
-          <span style="color: var(--text-light);">🚗 特斯拉:</span>
-          <span>${escapeHtml(member.teslaFranchisee) || '-'}</span>
-          
-          <span style="color: var(--text-light);">👥 團隊:</span>
-          <span>${escapeHtml(member.teamResponsibilities) || '-'}</span>
-          
-          <span style="color: var(--text-light);">📚 課程:</span>
+        <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px;">
+          <span style="color: var(--text-light);">📚 課程紀錄:</span>
           <span>${escapeHtml(member.courseRecord) || '-'}</span>
           
-          <span style="color: var(--text-light);">🤝 志工:</span>
+          <span style="color: var(--text-light);">🚗 特斯拉加盟主:</span>
+          <span>${escapeHtml(member.teslaFranchisee) || '-'}</span>
+          
+          <span style="color: var(--text-light);">👥 團隊負責事項:</span>
+          <span>${escapeHtml(member.teamResponsibilities) || '-'}</span>
+          
+          <span style="color: var(--text-light);">🤝 課程志工:</span>
           <span>${escapeHtml(member.volunteerRecords) || '-'}</span>
         </div>
       </div>
