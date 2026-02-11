@@ -152,9 +152,11 @@ const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
 
 /**
  * 檢查並同步該成員的生日行程：
- * 1. 若 Calendar 上沒有該成員生日行程，建立新的
- * 2. 若有但日期不符，更新為新日期
- * 3. 同步到資料庫
+ * 1. 掃描並刪除重複的生日行程（保留正確 ID 的那個）
+ * 2. 確保標題包含 "🎂" emoji
+ * 3. 若 Calendar 上沒有該成員生日行程，建立新的
+ * 4. 若有但日期不符，更新為新日期
+ * 5. 同步到資料庫
  * @param {Object} member - 成員物件（至少含 lineId, name、birthday）
  * @returns {Promise<number>} 被建立或更新的行程數量
  */
@@ -164,21 +166,66 @@ const syncMemberBirthdayEvents = async (member) => {
   if (!name || !parsed) return 0;
 
   const { month, day } = parsed;
-  const title = `${name}生日`;
+  const correctTitle = `🎂 ${name}生日`;
   const currentYear = new Date().getFullYear();
   
-  // 檢查今年與明年的生日行程（確保至少有未來一年的）
   const yearsToCheck = [currentYear, currentYear + 1];
   const eventDbService = require('./eventDbService');
   
   let totalSynced = 0;
 
+  // Step 1: 掃描並清理重複的生日行程
+  try {
+    const calendar = await getCalendarClient();
+    const calendarId = getGroupCalendarId();
+    
+    // 掃描前後兩年的行程，找出所有可能是該成員生日的行程
+    const scanStartYear = currentYear - 1;
+    const scanEndYear = currentYear + 2;
+    const timeMin = `${scanStartYear}-01-01T00:00:00+08:00`;
+    const timeMax = `${scanEndYear}-12-31T23:59:59+08:00`;
+    
+    const allEvents = await getGroupEvents(timeMin, timeMax);
+    
+    // 找出所有標題包含該成員名字且包含「生日」的行程
+    const possibleBirthdayEvents = allEvents.filter(ev => {
+      const title = (ev.title || '').trim();
+      return title.includes(name) && title.includes('生日');
+    });
+    
+    // 按年份分組
+    for (const year of yearsToCheck) {
+      const correctId = `birthday_${member.lineId}_${year}`;
+      const eventsForYear = possibleBirthdayEvents.filter(ev => {
+        const startStr = (ev.start || '').slice(0, 4);
+        return parseInt(startStr, 10) === year;
+      });
+      
+      // 保留正確 ID 的，刪除其他重複的
+      for (const ev of eventsForYear) {
+        if (ev.id !== correctId) {
+          try {
+            await calendar.events.delete({
+              calendarId: calendarId,
+              eventId: ev.id,
+            });
+            console.log(`  🗑️ 刪除重複生日行程: ${ev.title} (ID: ${ev.id})`);
+          } catch (delErr) {
+            console.warn(`  ⚠️ 刪除重複行程失敗 (${ev.id}):`, delErr.message);
+          }
+        }
+      }
+    }
+  } catch (scanError) {
+    console.warn('⚠️ 掃描重複生日行程時發生錯誤:', scanError.message);
+  }
+
+  // Step 2: 同步正確的生日行程
   for (const year of yearsToCheck) {
     const birthdayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const birthdayId = `birthday_${member.lineId}_${year}`;
     
     try {
-      // 1. 檢查 Calendar 是否已有此生日行程
       const calendar = await getCalendarClient();
       const calendarId = getGroupCalendarId();
       
@@ -195,15 +242,17 @@ const syncMemberBirthdayEvents = async (member) => {
       }
 
       if (existingEvent) {
-        // 已存在，檢查日期是否正確
+        // 已存在，檢查日期和標題是否正確
         const existingDate = existingEvent.start?.date;
-        if (existingDate !== birthdayDate) {
-          // 日期不符，更新
+        const existingTitle = existingEvent.summary || '';
+        const needsUpdate = existingDate !== birthdayDate || existingTitle !== correctTitle;
+        
+        if (needsUpdate) {
           await calendar.events.update({
             calendarId: calendarId,
             eventId: birthdayId,
             requestBody: {
-              summary: title,
+              summary: correctTitle,
               start: { date: birthdayDate },
               end: { date: birthdayDate },
               description: '',
@@ -213,6 +262,7 @@ const syncMemberBirthdayEvents = async (member) => {
               },
             },
           });
+          console.log(`  ✏️ 更新生日行程: ${correctTitle} (${birthdayDate})`);
           totalSynced++;
         }
       } else {
@@ -221,7 +271,7 @@ const syncMemberBirthdayEvents = async (member) => {
           calendarId: calendarId,
           requestBody: {
             id: birthdayId,
-            summary: title,
+            summary: correctTitle,
             start: { date: birthdayDate },
             end: { date: birthdayDate },
             description: '',
@@ -231,13 +281,14 @@ const syncMemberBirthdayEvents = async (member) => {
             },
           },
         });
+        console.log(`  ➕ 建立生日行程: ${correctTitle} (${birthdayDate})`);
         totalSynced++;
       }
 
-      // 2. 同步到資料庫
+      // 同步到資料庫
       await eventDbService.upsertEvents([{
         id: birthdayId,
-        title: title,
+        title: correctTitle,
         description: '',
         start: `${birthdayDate}T00:00:00+08:00`,
         end: `${birthdayDate}T23:59:59+08:00`,
