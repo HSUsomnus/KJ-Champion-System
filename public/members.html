@@ -14,11 +14,16 @@
   <script src="/js/eruda-loader.js"></script>
   <div class="container page-members">
     <div class="members-page-fixed">
-      <div class="page-header-row">
+      <div class="page-header-row" style="position: relative;">
         <button type="button" class="btn-refresh-cache" onclick="if(window.cacheService){window.cacheService.clearCache();}location.reload();" title="清除快取並重新整理" aria-label="清除快取並重新整理">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
         <h1 class="text-center page-title">👥 成員列表</h1>
+        
+        <!-- 權限設定按鈕（僅開發者可見） -->
+        <button type="button" id="role-edit-btn" class="btn-role-edit hidden" onclick="toggleRoleEditMode()">
+          ⚙️ 權限設定
+        </button>
       </div>
     </div>
     <!-- 僅此區可捲動：成員字卡 -->

@@ -205,4 +205,55 @@ router.post('/check-permission', optionalLineUser, async (req, res) => {
   }
 });
 
+/**
+ * PUT /api/members/update-roles
+ * 批量更新成員權限（僅開發者可用）
+ */
+router.put('/update-roles', async (req, res) => {
+  try {
+    const { editorId, updates } = req.body;
+
+    if (!editorId || !updates || !Array.isArray(updates)) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數',
+      });
+    }
+
+    // 檢查是否為開發者
+    const isAdmin = process.env.ADMIN_LINE_USER_IDS?.split(',').includes(editorId);
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: '只有開發者可以修改權限',
+      });
+    }
+
+    // 批量更新權限
+    const results = [];
+    for (const update of updates) {
+      try {
+        await memberDbService.updateMemberRole(update.lineId, update.role);
+        results.push({ lineId: update.lineId, success: true });
+      } catch (error) {
+        results.push({ lineId: update.lineId, success: false, error: error.message });
+      }
+    }
+
+    console.log(`✅ 權限批量更新完成: ${results.filter(r => r.success).length}/${updates.length} 成功`);
+
+    res.json({
+      success: true,
+      data: results,
+      message: '權限更新完成',
+    });
+  } catch (error) {
+    console.error('❌ 批量更新權限錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '批量更新權限失敗',
+    });
+  }
+});
+
 module.exports = router;

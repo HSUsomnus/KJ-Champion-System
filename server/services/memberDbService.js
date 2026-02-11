@@ -239,12 +239,46 @@ const getSuperior = async (lineId) => {
   }
 };
 
+/**
+ * 更新成員角色
+ * @param {string} lineId - LINE User ID
+ * @param {string} role - 新角色（member, manager, admin）
+ * @returns {Promise<Object>} 更新後的成員物件
+ */
+const updateMemberRole = async (lineId, role) => {
+  try {
+    // 驗證 role 值
+    const validRoles = ['member', 'manager', 'admin'];
+    if (!validRoles.includes(role)) {
+      throw new Error(`無效的角色值: ${role}`);
+    }
+
+    const result = await db.query(`
+      UPDATE members
+      SET role = $1, updated_at = NOW()
+      WHERE line_id = $2
+      RETURNING *
+    `, [role, lineId]);
+
+    if (result.rows.length === 0) {
+      throw new Error('找不到該成員');
+    }
+
+    console.log(`✅ 更新成員角色: ${lineId} -> ${role}`);
+    return rowToMember(result.rows[0]);
+  } catch (error) {
+    console.error('❌ 更新成員角色失敗:', error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllMembers,
   getMemberByLineId,
   isMemberRegistered,
   createMember,
   updateMember,
+  updateMemberRole,
   getSubordinates,
   isSuperior,
   getSuperior,
