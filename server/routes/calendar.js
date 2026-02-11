@@ -66,7 +66,14 @@ router.get('/events', optionalLineUser, async (req, res) => {
     }
 
     // 直接從資料庫讀取行程
-    const events = await eventDbService.getEventsByRange(timeMin, timeMax);
+    let events = [];
+    try {
+      events = await eventDbService.getEventsByRange(timeMin, timeMax);
+    } catch (dbError) {
+      console.error('❌ 從資料庫讀取行程失敗:', dbError.message);
+      // 即使資料庫讀取失敗，也回傳空陣列，避免前端卡住
+      events = [];
+    }
 
     res.json({
       success: true,
@@ -74,9 +81,11 @@ router.get('/events', optionalLineUser, async (req, res) => {
     });
   } catch (error) {
     console.error('取得行程列表錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || '取得行程列表失敗',
+    // 即使發生錯誤，也回傳空陣列而不是 500 錯誤
+    res.json({
+      success: true,
+      data: [],
+      warning: '部分功能異常，但系統仍可使用',
     });
   }
 });
@@ -101,7 +110,13 @@ router.get('/today', optionalLineUser, async (req, res) => {
     }
 
     // 直接從資料庫讀取行程
-    const events = await eventDbService.getEventsByRange(timeMin, timeMax);
+    let events = [];
+    try {
+      events = await eventDbService.getEventsByRange(timeMin, timeMax);
+    } catch (dbError) {
+      console.error('❌ 從資料庫讀取行程失敗:', dbError.message);
+      events = [];
+    }
 
     res.json({
       success: true,
@@ -109,9 +124,10 @@ router.get('/today', optionalLineUser, async (req, res) => {
     });
   } catch (error) {
     console.error('取得當日行程錯誤:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || '取得當日行程失敗',
+    res.json({
+      success: true,
+      data: [],
+      warning: '部分功能異常，但系統仍可使用',
     });
   }
 });
