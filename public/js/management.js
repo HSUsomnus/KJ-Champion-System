@@ -387,7 +387,7 @@ async function loadPermissionTab() {
 }
 
 /**
- * 渲染權限列表
+ * 渲染權限列表（使用成員卡片樣式）
  */
 function renderPermissionList(members) {
   const container = document.getElementById('permission-list');
@@ -396,36 +396,40 @@ function renderPermissionList(members) {
     return;
   }
 
+  const placeholderUrl = 'https://via.placeholder.com/60?text=👤';
+
   container.innerHTML = members.map(member => {
     const role = member.role || '一般人';
-    let roleClass = 'member';
-    if (role === '開發者') roleClass = 'admin';
-    else if (role === '負責人') roleClass = 'manager';
-    else if (role === '管理者') roleClass = 'manager';
+    const hasAvatar = member.pictureUrl && String(member.pictureUrl).trim();
+    const avatarUrl = hasAvatar ? `/api/members/avatar/${encodeURIComponent(member.lineId)}` : placeholderUrl;
+    const displayName = (member.displayName && String(member.displayName).trim()) ? member.displayName : (member.name || '未設定');
+    const realName = member.name && String(member.name).trim() ? member.name : '';
 
-    // 權限顯示或下拉選單
+    // 編輯模式：下拉選單（負責人、管理者、一般人）
+    // 顯示模式：權限標籤
     let roleHtml = '';
     if (isPermissionEditMode) {
       roleHtml = `
-        <select class="role-select" data-line-id="${escapeHtml(member.lineId)}" style="font-size: 13px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+        <select class="role-select" data-line-id="${escapeHtml(member.lineId)}">
           <option value="一般人" ${role === '一般人' ? 'selected' : ''}>一般人</option>
           <option value="管理者" ${role === '管理者' ? 'selected' : ''}>管理者</option>
           <option value="負責人" ${role === '負責人' ? 'selected' : ''}>負責人</option>
-          <option value="開發者" ${role === '開發者' ? 'selected' : ''}>開發者</option>
         </select>
       `;
     } else {
-      roleHtml = `<span class="member-role-badge ${roleClass}">${role}</span>`;
+      roleHtml = `<span class="member-role-badge ${getRoleClass(role)}">${role}</span>`;
     }
 
     return `
-      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
-        <img src="${member.pictureUrl || 'https://via.placeholder.com/40?text=👤'}" 
-             alt="${escapeHtml(member.name)}" 
-             style="width: 40px; height: 40px; border-radius: 50%;">
-        <div style="flex: 1; min-width: 0;">
-          <div style="font-weight: 600; font-size: 14px;">${escapeHtml(member.displayName || member.name || '未設定')}</div>
-          ${member.name && member.name !== member.displayName ? `<div style="font-size: 12px; color: var(--text-light);">${escapeHtml(member.name)}</div>` : ''}
+      <div class="member-card" style="cursor: default;">
+        <img src="${avatarUrl}" alt="${escapeHtml(displayName)}" class="member-avatar"
+             onerror="this.src='${placeholderUrl.replace(/'/g, "\\'")}'">
+        <div class="member-info">
+          <div class="member-name">${escapeHtml(displayName)}</div>
+          ${realName && realName !== displayName ? `<div class="member-real-name">${escapeHtml(realName)}</div>` : ''}
+          <span class="member-star ${escapeHtml(member.starLevel || '白星')}">
+            ${escapeHtml(member.starLevel || '白星')}
+          </span>
         </div>
         ${roleHtml}
       </div>

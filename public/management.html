@@ -70,15 +70,13 @@
 
       <!-- 權限分頁 -->
       <div id="tab-permission" class="tab-content hidden">
-        <div class="card">
-          <h2 class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-            🔑 權限管理
-            <button type="button" id="permission-edit-btn" class="btn btn-sm btn-primary" onclick="togglePermissionEditMode()">
-              ⚙️ 編輯權限
-            </button>
-          </h2>
-          <div id="permission-list"></div>
+        <!-- 編輯 / 儲存按鈕 -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+          <button type="button" id="permission-edit-btn" class="btn btn-sm btn-primary" onclick="togglePermissionEditMode()">
+            ⚙️ 編輯權限
+          </button>
         </div>
+        <div id="permission-list"></div>
       </div>
     </div>
   </div>
