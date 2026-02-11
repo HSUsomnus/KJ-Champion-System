@@ -181,21 +181,23 @@ function renderDataList(members) {
           <div style="font-weight: 600; font-size: 16px;">${escapeHtml(member.displayName || member.name || '未設定')}</div>
           <div style="font-size: 12px; color: var(--text-light);">${escapeHtml(member.name || '未設定')}</div>
         </div>
-        <span class="member-role-badge ${getRoleClass(member.role)}">${member.role || '一般人'}</span>
       </div>
-      <div style="font-size: 13px; line-height: 1.6;">
-        <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px;">
-          <span style="color: var(--text-light);">📚 課程紀錄:</span>
+      <div style="font-size: 13px; line-height: 1.8;">
+        <div style="margin-bottom: 6px;">
+          <span style="color: var(--text-light); white-space: nowrap;">📚 課程紀錄：</span>
           <span>${escapeHtml(member.courseRecord) || '-'}</span>
-          
-          <span style="color: var(--text-light);">🚗 特斯拉加盟主:</span>
+        </div>
+        <div style="margin-bottom: 6px;">
+          <span style="color: var(--text-light); white-space: nowrap;">🚗 特斯拉加盟主：</span>
           <span>${escapeHtml(member.teslaFranchisee) || '-'}</span>
-          
-          <span style="color: var(--text-light);">👥 團隊負責事項:</span>
+        </div>
+        <div style="margin-bottom: 6px;">
+          <span style="color: var(--text-light); white-space: nowrap;">👥 團隊負責事項：</span>
           <span>${escapeHtml(member.teamResponsibilities) || '-'}</span>
-          
-          <span style="color: var(--text-light);">🤝 課程志工:</span>
-          <span>${escapeHtml(member.volunteerRecords) || '-'}</span>
+        </div>
+        <div>
+          <span style="color: var(--text-light); white-space: nowrap;">🤝 課程志工：</span>
+          <span>${formatVolunteerRecords(member.volunteerRecords)}</span>
         </div>
       </div>
     </div>
@@ -279,6 +281,36 @@ function viewMemberFinancial(lineId, memberName) {
   // 跳轉到財力上傳頁面（以管理員身份查看）
   const targetUrl = `/financial-upload.html?userId=${encodeURIComponent(lineId)}&editorId=${encodeURIComponent(currentUserId)}&viewOnly=1`;
   window.location.href = targetUrl;
+}
+
+/**
+ * 格式化課程志工紀錄
+ * 把 JSON 格式轉成好看的文字
+ */
+function formatVolunteerRecords(records) {
+  if (!records) return '-';
+  
+  try {
+    // 嘗試解析 JSON
+    let parsed = records;
+    if (typeof records === 'string') {
+      parsed = JSON.parse(records);
+    }
+    
+    // 如果是陣列，格式化每一筆
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map(item => {
+        const date = item.date || '';
+        const option = item.option || '';
+        return `${date} ${option}`;
+      }).join('、');
+    }
+    
+    return escapeHtml(String(records)) || '-';
+  } catch (e) {
+    // 不是 JSON，直接顯示原文
+    return escapeHtml(String(records)) || '-';
+  }
 }
 
 /**
