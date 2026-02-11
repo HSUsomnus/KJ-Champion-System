@@ -434,15 +434,13 @@ h3 {
   align-items: center;
   justify-content: center;
 }
-.page-calendar .calendar .calendar-day.has-events::after {
-  width: 3px;
-  height: 3px;
+/* 小螢幕點點樣式 */
+.page-calendar .calendar .calendar-day .event-dots {
   bottom: 1px;
+  gap: 1px;
 }
-.page-calendar .calendar .calendar-day.has-event-span::after {
-  bottom: 1px;
-  left: 2px;
-  right: 2px;
+.page-calendar .calendar .calendar-day .event-dot {
+  width: 3px;
   height: 3px;
 }
 
@@ -806,51 +804,24 @@ h3 {
   position: relative;
 }
 
-.calendar-day.has-events::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  width: 4px;
-  height: 4px;
-  background-color: var(--primary-color);
-  border-radius: 50%;
-}
-
-/* 根據行程類型顯示不同顏色的小點點 */
-.calendar-day.has-events.event-type-學員上課::after {
-  background-color: #F57F17; /* 黃色 */
-}
-
-.calendar-day.has-events.event-type-活動::after {
-  background-color: #C62828; /* 紅色 */
-}
-
-.calendar-day.has-events.event-type-諮詢簽約::after {
-  background-color: #2E7D32; /* 綠色 */
-}
-
-/* 跨日行程：顯示顏色長條（取代小點點） */
-.calendar-day.has-event-span {
-  position: relative;
-}
-.calendar-day.has-event-span::after {
-  content: '';
+/* 多個顏色點點容器：水平排列，置底 */
+.calendar-day .event-dots {
   position: absolute;
   bottom: 2px;
-  left: 4px;
-  right: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 單個顏色點點：小圓點 */
+.calendar-day .event-dot {
+  width: 4px;
   height: 4px;
-  border-radius: 2px;
-  background-color: var(--primary-color);
-}
-.calendar-day.has-event-span.event-type-學員上課::after {
-  background-color: #F57F17;
-}
-.calendar-day.has-event-span.event-type-活動::after {
-  background-color: #C62828;
-}
-.calendar-day.has-event-span.event-type-諮詢簽約::after {
-  background-color: #2E7D32;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 /* 選取日期：僅顏色框框，不實心填色；且同一時間只有一個選取 */

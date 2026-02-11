@@ -235,46 +235,53 @@ function renderCalendar(year, month, events) {
     // 取得當地日期字串 YYYY-MM-DD（供比對用）
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    // 當天「有開始」的行程（小點點用）
+    // 當天所有行程（包含跨日行程）：dateStr 在行程的 start 和 end 之間
     const dayEvents = events.filter(event => {
-      const d = new Date(event.start);
-      const eventStartStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return eventStartStr === dateStr;
-    });
-
-    // 當天被「跨日行程」涵蓋的行程（全日 end 為隔日不包含；一般為結束日包含）
-    const spanEvents = events.filter(event => {
       const startD = new Date(event.start);
-      const endD = event.end ? new Date(event.end) : null;
+      const endD = event.end ? new Date(event.end) : startD;
       const startStr = `${startD.getFullYear()}-${String(startD.getMonth() + 1).padStart(2, '0')}-${String(startD.getDate()).padStart(2, '0')}`;
-      if (!endD) return false;
       const endStr = `${endD.getFullYear()}-${String(endD.getMonth() + 1).padStart(2, '0')}-${String(endD.getDate()).padStart(2, '0')}`;
-      const isMultiDay = startStr < endStr;
-      if (!isMultiDay) return false;
-      const inSpan = event.allDay || event.all_day
-        ? dateStr >= startStr && dateStr < endStr
-        : dateStr >= startStr && dateStr <= endStr;
-      return inSpan;
+      // 日期在行程區間內（含頭尾）
+      return dateStr >= startStr && dateStr <= endStr;
     });
 
-    const hasSpan = spanEvents.length > 0;
-    const hasDot = dayEvents.length > 0 && !hasSpan;
+    // 收集當日所有獨特的行程類型
+    const eventTypes = [...new Set(dayEvents.map(e => e.type || '活動'))];
+    
+    // 類型優先級排序（學員上課 > 活動 > 諮詢簽約 > 個人行程）
+    const typeOrder = ['學員上課', '活動', '諮詢簽約', '個人行程'];
+    const sortedTypes = eventTypes.sort((a, b) => {
+      const aIdx = typeOrder.indexOf(a);
+      const bIdx = typeOrder.indexOf(b);
+      if (aIdx === -1 && bIdx === -1) return 0;
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    }).slice(0, 4); // 最多 4 個點點
 
-    if (hasSpan) {
-      dayElement.classList.add('has-event-span');
-      const eventType = spanEvents[0].type || '活動';
-      dayElement.classList.remove('event-type-學員上課', 'event-type-活動', 'event-type-諮詢簽約');
-      if (eventType === '學員上課') dayElement.classList.add('event-type-學員上課');
-      else if (eventType === '活動') dayElement.classList.add('event-type-活動');
-      else if (eventType === '諮詢簽約') dayElement.classList.add('event-type-諮詢簽約');
-    }
-    if (hasDot) {
+    // 如果有行程，顯示多個顏色點點
+    if (sortedTypes.length > 0) {
       dayElement.classList.add('has-events');
-      const eventType = dayEvents[0].type || '活動';
-      dayElement.classList.remove('event-type-學員上課', 'event-type-活動', 'event-type-諮詢簽約');
-      if (eventType === '學員上課') dayElement.classList.add('event-type-學員上課');
-      else if (eventType === '活動') dayElement.classList.add('event-type-活動');
-      else if (eventType === '諮詢簽約') dayElement.classList.add('event-type-諮詢簽約');
+      
+      // 創建點點容器
+      const dotsContainer = document.createElement('div');
+      dotsContainer.className = 'event-dots';
+      
+      sortedTypes.forEach(type => {
+        const dot = document.createElement('span');
+        dot.className = 'event-dot';
+        
+        // 設定顏色
+        if (type === '學員上課') dot.style.backgroundColor = '#F57F17'; // 橙色
+        else if (type === '活動') dot.style.backgroundColor = '#C62828'; // 紅色
+        else if (type === '諮詢簽約') dot.style.backgroundColor = '#2E7D32'; // 綠色
+        else if (type === '個人行程') dot.style.backgroundColor = '#1976D2'; // 藍色
+        else dot.style.backgroundColor = '#999'; // 其他
+        
+        dotsContainer.appendChild(dot);
+      });
+      
+      dayElement.appendChild(dotsContainer);
     }
 
     // 點擊事件
