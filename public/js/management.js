@@ -408,6 +408,7 @@ function renderPermissionList(members) {
           <option value="一般人" ${role === '一般人' ? 'selected' : ''}>一般人</option>
           <option value="管理者" ${role === '管理者' ? 'selected' : ''}>管理者</option>
           <option value="負責人" ${role === '負責人' ? 'selected' : ''}>負責人</option>
+          <option value="開發者" ${role === '開發者' ? 'selected' : ''}>開發者</option>
         </select>
       `;
     } else {
