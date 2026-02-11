@@ -8,6 +8,7 @@ import EventDetailPage from './pages/EventDetailPage'
 import ListPage from './pages/ListPage'
 import ProfilePage from './pages/ProfilePage'
 import RoleManagementPage from './pages/RoleManagementPage'
+import DebugPage from './pages/DebugPage'
 
 /** LIFF 未登入時顯示的登入區塊 */
 function LoginOverlay() {
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="add-event" element={<AddEventPage />} />
             <Route path="event/:id" element={<EventDetailPage />} />
             <Route path="admin/roles" element={<RoleManagementPage />} />
+            <Route path="debug" element={<DebugPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
