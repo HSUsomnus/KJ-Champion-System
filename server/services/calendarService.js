@@ -17,6 +17,10 @@ const getGroupEvents = async (timeMin, timeMax) => {
   try {
     const calendar = await getCalendarClient();
     const calendarId = getGroupCalendarId();
+    
+    if (!calendar || !calendarId) {
+      throw new Error('Google Calendar 未設定');
+    }
 
     // 呼叫 Google Calendar API 取得事件列表
     const response = await calendar.events.list({
@@ -103,6 +107,14 @@ const parseBirthdayMonthDay = (birthdayStr) => {
  * @returns {Promise<number>} 本次新建立的生日行程數量
  */
 const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
+  // 檢查 Google Calendar 是否可用
+  const calendar = await getCalendarClient();
+  const calendarId = getGroupCalendarId();
+  if (!calendar || !calendarId) {
+    console.warn('⚠️  Google Calendar 未設定，跳過生日行程檢查');
+    return 0;
+  }
+
   const startDate = String(timeMin).trim().slice(0, 10);
   const endDate = String(timeMax).trim().slice(0, 10);
   const startYear = parseInt(startDate.slice(0, 4), 10);
@@ -158,6 +170,14 @@ const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
  * @returns {Promise<number>} 被更新的行程數量
  */
 const syncMemberBirthdayEvents = async (member) => {
+  // 檢查 Google Calendar 是否可用
+  const calendar = await getCalendarClient();
+  const calendarId = getGroupCalendarId();
+  if (!calendar || !calendarId) {
+    console.warn('⚠️  Google Calendar 未設定，跳過生日行程同步');
+    return 0;
+  }
+
   const name = (member.name || '').trim();
   const parsed = parseBirthdayMonthDay(member.birthday);
   if (!name || !parsed) return 0;
@@ -209,6 +229,10 @@ const createGroupEvent = async (eventData) => {
   try {
     const calendar = await getCalendarClient();
     const calendarId = getGroupCalendarId();
+    
+    if (!calendar || !calendarId) {
+      throw new Error('Google Calendar 未設定，無法新增行程');
+    }
 
     const isAllDay = !!eventData.allDay;
     let startPayload;
@@ -285,6 +309,10 @@ const updateGroupEvent = async (eventId, eventData) => {
   try {
     const calendar = await getCalendarClient();
     const calendarId = getGroupCalendarId();
+    
+    if (!calendar || !calendarId) {
+      throw new Error('Google Calendar 未設定，無法更新行程');
+    }
 
     const patch = {};
 
@@ -367,6 +395,10 @@ const deleteGroupEvent = async (eventId) => {
   try {
     const calendar = await getCalendarClient();
     const calendarId = getGroupCalendarId();
+    
+    if (!calendar || !calendarId) {
+      throw new Error('Google Calendar 未設定，無法刪除行程');
+    }
 
     await calendar.events.delete({
       calendarId: calendarId,
@@ -395,6 +427,11 @@ const deleteGroupEvent = async (eventId) => {
 const getGroupEventById = async (eventId) => {
   const calendar = await getCalendarClient();
   const calendarId = getGroupCalendarId();
+  
+  if (!calendar || !calendarId) {
+    throw new Error('Google Calendar 未設定');
+  }
+  
   const response = await calendar.events.get({
     calendarId: calendarId,
     eventId: eventId,

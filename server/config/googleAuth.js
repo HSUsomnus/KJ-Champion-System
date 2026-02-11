@@ -16,7 +16,8 @@ const getServiceAccountAuth = () => {
     const projectId = process.env.GOOGLE_PROJECT_ID;
 
     if (!serviceAccountEmail || !privateKey || !projectId) {
-      throw new Error('缺少必要的 Google API 環境變數設定');
+      console.warn('⚠️  Google API 環境變數未設定，將無法使用 Calendar/Sheets 功能');
+      return null;
     }
 
     // 私鑰格式整理：Cloud Run / 環境變數常把換行存成 \n 或 \r\n，需還原成單一換行
@@ -43,19 +44,26 @@ const getServiceAccountAuth = () => {
     return auth;
   } catch (error) {
     console.error('❌ Google Service Account 認證失敗:', error.message);
-    throw error;
+    console.warn('⚠️  將無法使用 Google Calendar/Sheets 功能');
+    return null;
   }
 };
 
 // 取得已認證的 Calendar API 客戶端
 const getCalendarClient = async () => {
   const auth = getServiceAccountAuth();
+  if (!auth) {
+    return null;
+  }
   return google.calendar({ version: 'v3', auth });
 };
 
 // 取得已認證的 Sheets API 客戶端
 const getSheetsClient = async () => {
   const auth = getServiceAccountAuth();
+  if (!auth) {
+    return null;
+  }
   return google.sheets({ version: 'v4', auth });
 };
 
@@ -63,7 +71,8 @@ const getSheetsClient = async () => {
 const getGroupCalendarId = () => {
   const calendarId = process.env.GROUP_CALENDAR_ID;
   if (!calendarId) {
-    throw new Error('缺少 GROUP_CALENDAR_ID 環境變數');
+    console.warn('⚠️  缺少 GROUP_CALENDAR_ID 環境變數');
+    return null;
   }
   return calendarId;
 };
