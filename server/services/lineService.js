@@ -23,11 +23,17 @@ const generateShareMessage = (event) => {
     month: 'long',
     day: 'numeric',
     weekday: 'long',
+    timeZone: 'Asia/Taipei',
   });
   const isAllDay = !!event.allDay || /^\d{4}-\d{2}-\d{2}$/.test(String(event.start || '').trim());
   const parts = ['📅 ' + (event.title || '行程'), '', '日期：' + dateStr];
   if (!isAllDay) {
-    const timeStr = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+    const timeStr = date.toLocaleTimeString('zh-TW', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'Asia/Taipei',
+      hour12: false
+    });
     parts.push('時間：' + timeStr);
   }
   if (event.type && String(event.type).trim()) parts.push('類型：' + event.type.trim());
@@ -55,6 +61,7 @@ const generateShareFlexMessage = (event) => {
     month: 'long',
     day: 'numeric',
     weekday: 'long',
+    timeZone: 'Asia/Taipei',
   });
   const isAllDay = !!event.allDay || /^\d{4}-\d{2}-\d{2}$/.test(String(event.start || '').trim());
 
@@ -66,7 +73,12 @@ const generateShareFlexMessage = (event) => {
     { type: 'text', text: '📅 ' + dateStr, size: 'sm', color: '#666666', wrap: true, align: 'start' },
   ];
   if (!isAllDay) {
-    const timeStr = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+    const timeStr = date.toLocaleTimeString('zh-TW', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'Asia/Taipei',
+      hour12: false
+    });
     bodyContents.push({ type: 'text', text: '🕐 ' + timeStr, size: 'sm', color: '#666666', wrap: true, align: 'start', margin: 'sm' });
   }
   const desc = event.description && String(event.description).trim() ? event.description.trim() : '';
