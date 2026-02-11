@@ -123,20 +123,22 @@ function renderDocuments(documents) {
     return `
       <div class="document-item" style="padding: 12px; border-bottom: 1px solid var(--border-color);">
         <!-- 文件資訊和操作按鈕 -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 8px;">
+          <!-- 左側：文件資訊 -->
           <div style="flex: 1; min-width: 0;">
-            <p style="margin: 0 0 4px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <p style="margin: 0 0 4px; font-weight: 600; word-wrap: break-word;">
               📄 ${escapeHtml(doc.original_filename)}
             </p>
             <p style="margin: 0; font-size: 12px; color: var(--text-light);">
               ${formatFileSize(doc.file_size)} · ${formatDate(doc.uploaded_at)}
             </p>
           </div>
-          <div style="display: flex; gap: 8px; margin-left: 12px;">
-            <button class="btn btn-sm btn-secondary" onclick="previewDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')">
+          <!-- 右側：操作按鈕（上下排列） -->
+          <div style="display: flex; flex-direction: column; gap: 6px; min-width: 80px;">
+            <button class="btn btn-sm btn-secondary" onclick="previewDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')" style="width: 100%; padding: 6px 12px; font-size: 13px;">
               👁️ 瀏覽
             </button>
-            <button class="btn btn-sm btn-primary" onclick="downloadDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')">
+            <button class="btn btn-sm btn-primary" onclick="downloadDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')" style="width: 100%; padding: 6px 12px; font-size: 13px;">
               ⬇️ 下載
             </button>
           </div>
