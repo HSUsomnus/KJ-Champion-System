@@ -90,7 +90,7 @@ function showNoPermission() {
 async function switchTab(tabName) {
   // 檢查權限
   if (tabName === 'financial' && !userPermissions.canViewFinancial) {
-    alert('🚫 無權限訪問\n\n只有負責人和開發者可以查看財力分頁');
+    alert('🚫 無權限訪問');
     return;
   }
 
@@ -227,7 +227,6 @@ async function loadFinancialTab() {
       <div class="empty-state">
         <div>🚫</div>
         <p>無權限訪問</p>
-        <p style="font-size: 12px; color: var(--text-light);">只有負責人和開發者可以查看財力分頁</p>
       </div>
     `;
     return;
