@@ -74,6 +74,26 @@ function renderMemberDetail(member) {
   document.getElementById('view-email').textContent = member.email || '未設定';
   document.getElementById('view-phone').textContent = member.phone || '未設定';
   document.getElementById('view-starLevel').textContent = member.starLevel || '白星';
+  
+  // 生日顯示（只顯示月/日）
+  const birthdayEl = document.getElementById('view-birthday');
+  if (birthdayEl) {
+    let displayBirthday = '未設定';
+    if (member.birthday) {
+      const bd = String(member.birthday).trim();
+      if (bd.includes('-')) {
+        const parts = bd.split('-');
+        if (parts.length === 3) {
+          displayBirthday = `${parts[1]}/${parts[2]}`;
+        } else {
+          displayBirthday = bd;
+        }
+      } else {
+        displayBirthday = bd;
+      }
+    }
+    birthdayEl.textContent = displayBirthday;
+  }
 
   // 進階資訊：課程紀錄
   const courseRecord = member.courseRecord || '';
