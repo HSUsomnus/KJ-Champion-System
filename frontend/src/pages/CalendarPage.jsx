@@ -18,10 +18,16 @@ function formatYMD(d) {
 // 將 ISO 時間字符串轉成 HH:MM 格式（正確處理時區）
 function formatTime(isoString) {
   if (!isoString) return '';
-  const date = new Date(isoString);
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${hours}:${minutes}`;
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '';
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  } catch (e) {
+    console.error('formatTime error:', e);
+    return '';
+  }
 }
 
 export default function CalendarPage() {
