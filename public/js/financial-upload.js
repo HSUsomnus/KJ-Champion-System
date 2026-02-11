@@ -54,50 +54,6 @@ function loginWithLine() {
 }
 
 /**
- * 驗證使用者 ID
- */
-async function verifyUserId() {
-  const inputUserId = document.getElementById('auth-user-id').value.trim();
-  
-  if (!inputUserId) {
-    alert('請輸入 LINE User ID');
-    return;
-  }
-
-  try {
-    // 驗證該 User ID 是否存在於系統中
-    const response = await fetch(`/api/members/check?userId=${encodeURIComponent(inputUserId)}`);
-    const data = await response.json();
-
-    if (data.success && data.data.isRegistered) {
-      // 驗證成功，設定 userId 並載入內容
-      userId = inputUserId;
-      
-      // 更新 URL（不重新整理頁面）
-      const newUrl = new URL(window.location);
-      newUrl.searchParams.set('userId', userId);
-      window.history.pushState({}, '', newUrl);
-      
-      // 隱藏驗證表單，顯示載入動畫
-      document.getElementById('auth-form').classList.add('hidden');
-      document.getElementById('loading').classList.remove('hidden');
-      
-      // 載入文件
-      await loadDocuments();
-      
-      // 顯示主要內容
-      document.getElementById('loading').classList.add('hidden');
-      document.getElementById('main-content').classList.remove('hidden');
-    } else {
-      alert('❌ 此 User ID 不存在或尚未註冊，請確認後再試');
-    }
-  } catch (error) {
-    console.error('驗證錯誤:', error);
-    alert('❌ 驗證失敗：' + error.message);
-  }
-}
-
-/**
  * 載入文件列表
  */
 async function loadDocuments() {
