@@ -45,6 +45,7 @@ async function init() {
     // 隱藏載入動畫，顯示主要內容
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('main-content').classList.remove('hidden');
+    document.getElementById('upload-section').classList.remove('hidden');
   } catch (error) {
     console.error('載入失敗:', error);
     document.getElementById('loading').innerHTML = `
