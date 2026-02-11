@@ -694,10 +694,25 @@ async function inviteMemberFromProfile() {
   }
 }
 
+/**
+ * 前往財力上傳頁面
+ */
+function goToFinancialUpload() {
+  const userId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
+  if (!userId) {
+    if (window.showAppAlert) window.showAppAlert('無法取得使用者 ID');
+    else alert('無法取得使用者 ID');
+    return;
+  }
+  // 前往財力上傳頁面（非 LIFF，純網頁）
+  window.location.href = `/financial-upload.html?userId=${encodeURIComponent(userId)}`;
+}
+
 // 匯出函數供全域使用
 window.enableEditMode = enableEditMode;
 window.cancelEditMode = cancelEditMode;
 window.inviteMemberFromProfile = inviteMemberFromProfile;
+window.goToFinancialUpload = goToFinancialUpload;
 
 // 頁面載入時初始化
 if (document.readyState === 'loading') {

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="財力上傳管理">
+  <title>財力上傳</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- SheetJS 用於讀取 Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <!-- JSZip 用於壓縮 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <div class="container page-financial-upload">
+    <!-- 頁面標題 -->
+    <div class="page-header-with-back">
+      <button type="button" class="btn-back" onclick="history.back()">←</button>
+      <h1 class="page-title-center">📊 財力上傳</h1>
+    </div>
+
+    <!-- 載入動畫 -->
+    <div id="loading" class="loading data-loading">
+      <div class="data-loading-inner">
+        <img src="/images/logo.png" alt="康九" class="data-loading-logo">
+        <p class="data-loading-text">載入中...</p>
+      </div>
+    </div>
+
+    <!-- 主要內容 -->
+    <div id="main-content" class="hidden">
+      <!-- 歷史記錄 -->
+      <div class="card">
+        <h2 class="card-title">📁 歷史上傳記錄</h2>
+        <div id="documents-list"></div>
+      </div>
+
+      <!-- 上傳新文件 -->
+      <div class="card" style="margin-top: 16px;">
+        <h2 class="card-title">📤 上傳新財力文件</h2>
+        <p style="color: var(--text-light); font-size: 14px; margin-bottom: 12px;">
+          支援格式：Excel (.xlsx, .xls)
+        </p>
+        <input type="file" id="file-input" accept=".xlsx,.xls" style="display: none;">
+        <button type="button" class="btn btn-primary btn-block" onclick="selectFile()">
+          選擇檔案
+        </button>
+        <div id="file-info" class="hidden" style="margin-top: 12px; padding: 12px; background: var(--bg-color); border-radius: 8px;">
+          <p style="margin: 0 0 8px; font-size: 14px;">📄 <span id="selected-filename"></span></p>
+          <p style="margin: 0; font-size: 14px; color: var(--text-light);">大小: <span id="selected-filesize"></span></p>
+        </div>
+        <button type="button" id="upload-btn" class="btn btn-success btn-block hidden" onclick="uploadFile()" style="margin-top: 12px;">
+          開始上傳
+        </button>
+      </div>
+    </div>
+
+    <!-- 瀏覽視窗（模態框） -->
+    <div id="preview-modal" class="modal hidden">
+      <div class="modal-content" style="max-width: 90%; max-height: 90vh; overflow: auto;">
+        <div class="modal-header">
+          <h2 id="preview-title">文件預覽</h2>
+          <button class="modal-close" onclick="closePreview()">✕</button>
+        </div>
+        <div id="preview-content" style="padding: 16px; overflow: auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/financial-upload.js"></script>
+</body>
+</html>
