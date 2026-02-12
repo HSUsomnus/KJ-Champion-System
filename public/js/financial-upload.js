@@ -316,7 +316,7 @@ async function uploadFile() {
 }
 
 /**
- * 預覽文件
+ * 預覽文件（開新頁面，支援手機縮放）
  */
 async function previewDocument(id, filename) {
   try {
@@ -328,47 +328,121 @@ async function previewDocument(id, filename) {
     const jsonText = await zip.file('data.json').async('string');
     const sheetData = JSON.parse(jsonText);
 
-    // 顯示預覽
-    const previewContent = document.getElementById('preview-content');
-    previewContent.innerHTML = '';
-
+    // 組合所有工作表的 HTML 表格
+    let tablesHtml = '';
     Object.keys(sheetData).forEach(sheetName => {
-      const sheetDiv = document.createElement('div');
-      sheetDiv.style.marginBottom = '24px';
+      // 工作表標題
+      tablesHtml += `<h3 style="margin: 24px 0 12px; font-size: 16px; font-weight: 600;">${escapeHtml(sheetName)}</h3>`;
       
-      const title = document.createElement('h3');
-      title.textContent = sheetName;
-      title.style.marginBottom = '12px';
-      sheetDiv.appendChild(title);
-
-      const table = document.createElement('table');
-      table.style.width = '100%';
-      table.style.borderCollapse = 'collapse';
-      table.style.fontSize = '14px';
-
+      // 表格
+      tablesHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">';
       sheetData[sheetName].forEach((row, i) => {
-        const tr = document.createElement('tr');
+        tablesHtml += '<tr>';
         row.forEach(cell => {
-          const td = document.createElement(i === 0 ? 'th' : 'td');
-          td.textContent = cell || '';
-          td.style.border = '1px solid var(--border-color)';
-          td.style.padding = '8px';
-          td.style.textAlign = 'left';
-          if (i === 0) {
-            td.style.backgroundColor = 'var(--bg-color)';
-            td.style.fontWeight = '600';
-          }
-          tr.appendChild(td);
+          const tag = i === 0 ? 'th' : 'td';
+          const bgStyle = i === 0 ? 'background-color: #f0f0f0; font-weight: 600;' : '';
+          tablesHtml += `<${tag} style="border: 1px solid #ddd; padding: 6px 8px; text-align: left; white-space: nowrap; ${bgStyle}">${escapeHtml(String(cell || ''))}</${tag}>`;
         });
-        table.appendChild(tr);
+        tablesHtml += '</tr>';
       });
-
-      sheetDiv.appendChild(table);
-      previewContent.appendChild(sheetDiv);
+      tablesHtml += '</table>';
     });
 
-    document.getElementById('preview-title').textContent = filename;
-    document.getElementById('preview-modal').classList.remove('hidden');
+    // 開新視窗寫入完整的 HTML 頁面（支援手機縮放）
+    const previewWindow = window.open('', '_blank');
+    if (!previewWindow) {
+      alert('⚠️ 請允許此網站的彈出視窗');
+      return;
+    }
+
+    previewWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="zh-TW">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes">
+        <title>📊 ${escapeHtml(filename)}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fff;
+            color: #333;
+            padding: 16px;
+            -webkit-text-size-adjust: 100%;
+          }
+          .header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 12px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            margin-right: 12px;
+          }
+          .btn-close {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+          }
+          .hint {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 16px;
+          }
+          .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          table {
+            border-collapse: collapse;
+            font-size: 13px;
+            white-space: nowrap;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: left;
+          }
+          th {
+            background: #f0f0f0;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>📊 ${escapeHtml(filename)}</h1>
+          <button class="btn-close" onclick="window.close()">✕ 關閉</button>
+        </div>
+        <p class="hint">👆 可用雙指縮放查看</p>
+        <div class="table-wrapper">
+          ${tablesHtml}
+        </div>
+      </body>
+      </html>
+    `);
+    previewWindow.document.close();
   } catch (error) {
     console.error('預覽錯誤:', error);
     alert('❌ 預覽失敗：' + error.message);
@@ -396,13 +470,6 @@ async function downloadDocument(id, filename) {
     console.error('下載錯誤:', error);
     alert('❌ 下載失敗：' + error.message);
   }
-}
-
-/**
- * 關閉預覽
- */
-function closePreview() {
-  document.getElementById('preview-modal').classList.add('hidden');
 }
 
 /**
