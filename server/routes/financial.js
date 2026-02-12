@@ -231,6 +231,40 @@ router.get('/download/:id', async (req, res) => {
 });
 
 /**
+ * GET /api/financial/view-as-sheet/:id
+ * 導向該筆上傳試算表的唯讀 Google Sheet 網頁；若尚無 sheet_view_url 則先上傳至 Drive 並寫入再導向
+ */
+router.get('/view-as-sheet/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ success: false, message: '缺少 userId 參數' });
+
+    const result = await db.query(
+      'SELECT compressed_data, original_filename, mime_type, sheet_view_url FROM financial_documents WHERE id = $1 AND line_id = $2',
+      [id, userId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: '找不到該文件' });
+
+    const doc = result.rows[0];
+    if (doc.sheet_view_url) return res.redirect(302, doc.sheet_view_url);
+
+    const url = await uploadToDriveAsSheet(
+      doc.compressed_data,
+      doc.original_filename,
+      doc.mime_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    if (!url) return res.status(500).json({ success: false, message: '無法轉成 Google Sheet，請稍後再試或使用下載' });
+
+    await db.query('UPDATE financial_documents SET sheet_view_url = $1 WHERE id = $2', [url, id]);
+    return res.redirect(302, url);
+  } catch (error) {
+    console.error('❌ view-as-sheet 錯誤:', error);
+    res.status(500).json({ success: false, message: error.message || '開啟失敗' });
+  }
+});
+
+/**
  * DELETE /api/financial/:id
  * 刪除財力文件
  */
