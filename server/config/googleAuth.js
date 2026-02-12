@@ -22,7 +22,8 @@ const getServiceAccountAuth = () => {
           scopes: [
             'https://www.googleapis.com/auth/calendar',
             'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive.file', // 上傳財力試算表並轉成 Google Sheet 唯讀連結
+            'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/drive', // 轉成 Google Sheet 並設「知道連結可檢視」需此範圍
           ],
           projectId: credentials.project_id,
         });
@@ -62,6 +63,7 @@ const getServiceAccountAuth = () => {
         'https://www.googleapis.com/auth/calendar',
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive.file',
+        'https://www.googleapis.com/auth/drive',
       ],
       projectId: projectId,
     });

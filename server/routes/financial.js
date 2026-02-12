@@ -28,9 +28,13 @@ const upload = multer({
  */
 async function uploadToDriveAsSheet(buffer, filename, mimeType) {
   const drive = await getDriveClient();
-  if (!drive) return null;
+  if (!drive) {
+    console.warn('⚠️  Google Drive 客戶端未初始化');
+    return null;
+  }
   const sourceMime = mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   try {
+    // 使用 Buffer 作為 body（googleapis 支援），避免 stream 導致轉檔失敗
     const { data: file } = await drive.files.create({
       resource: {
         name: filename,
@@ -38,7 +42,7 @@ async function uploadToDriveAsSheet(buffer, filename, mimeType) {
       },
       media: {
         mimeType: sourceMime,
-        body: Readable.from(buffer),
+        body: Buffer.isBuffer(buffer) ? buffer : Readable.from(buffer),
       },
       fields: 'id',
     });
@@ -49,7 +53,8 @@ async function uploadToDriveAsSheet(buffer, filename, mimeType) {
     });
     return `https://docs.google.com/spreadsheets/d/${file.id}/view`;
   } catch (err) {
-    console.warn('⚠️  上傳至 Google Drive 轉試算表失敗:', err.message);
+    const detail = err.response?.data?.error?.message || err.message;
+    console.error('⚠️  上傳至 Google Drive 轉試算表失敗:', detail, err.response?.data?.error || '');
     return null;
   }
 }
@@ -254,7 +259,11 @@ router.get('/view-as-sheet/:id', async (req, res) => {
       doc.original_filename,
       doc.mime_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     );
-    if (!url) return res.status(500).json({ success: false, message: '無法轉成 Google Sheet，請稍後再試或使用下載' });
+    if (!url) {
+      // 轉檔失敗時導向 APP 內預覽頁，使用者仍可查看內容
+      const previewUrl = `${req.protocol}://${req.get('host')}/financial-preview.html?docId=${id}&userId=${encodeURIComponent(userId)}&filename=${encodeURIComponent(doc.original_filename || '試算表')}`;
+      return res.redirect(302, previewUrl);
+    }
 
     await db.query('UPDATE financial_documents SET sheet_view_url = $1 WHERE id = $2', [url, id]);
     return res.redirect(302, url);
