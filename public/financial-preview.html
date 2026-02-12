@@ -88,44 +88,84 @@
       text-align: center;
     }
 
-    /* 表格內容區 */
+    /* 表格內容區：類 Excel / Google Sheet 版面 */
     .content {
-      padding: 8px 16px 24px;
+      padding: 8px 0 24px;
+      overflow: auto;
     }
     .sheet-title {
-      margin: 20px 0 10px;
+      margin: 20px 16px 10px;
       font-size: 15px;
       font-weight: 600;
       color: #555;
     }
     .table-wrapper {
-      overflow-x: auto;
+      overflow: auto;
       -webkit-overflow-scrolling: touch;
       margin-bottom: 16px;
     }
-    table {
+    .sheet-table {
       border-collapse: collapse;
       font-size: 13px;
-      min-width: 100%;
+      table-layout: fixed;
+      min-width: max-content;
     }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px 10px;
-      text-align: left;
+    .sheet-table th,
+    .sheet-table td {
+      border: 1px solid #dadce0;
+      padding: 4px 8px;
+      min-width: 72px;
+      max-width: 240px;
+      height: 24px;
+      line-height: 20px;
       word-break: break-word;
       overflow-wrap: break-word;
-      min-width: 50px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    th {
-      background: #f5f5f5;
+    /* 左上角空白格 */
+    .sheet-table .corner {
+      background: #f8f9fa;
+      min-width: 36px;
+      max-width: 36px;
+      position: sticky;
+      left: 0;
+      z-index: 12;
+      border-right: 2px solid #dadce0;
+    }
+    /* 欄位名 A B C ...（第一列）*/
+    .sheet-table .col-header {
+      background: #f8f9fa;
       font-weight: 600;
+      font-size: 11px;
+      color: #5f6368;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 11;
     }
-    tr:nth-child(even) {
+    /* 列號 1 2 3 ...（第一欄）*/
+    .sheet-table .row-header {
+      background: #f8f9fa;
+      font-weight: 600;
+      font-size: 11px;
+      color: #5f6368;
+      text-align: center;
+      min-width: 36px;
+      max-width: 36px;
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      border-right: 2px solid #dadce0;
+    }
+    .sheet-table tbody td.cell {
+      background: #fff;
+    }
+    .sheet-table tbody tr:nth-child(even) td.cell {
       background: #fafafa;
     }
-    /* 數字、日期靠右對齊，較符合試算表習慣 */
-    td.num {
+    .sheet-table td.num {
       text-align: right;
+      font-variant-numeric: tabular-nums;
     }
   </style>
 </head>
@@ -174,8 +214,75 @@
       return div.innerHTML;
     }
 
+    /** 欄位索引轉 Excel 欄位名：0->A, 1->B, ..., 26->AA */
+    function colToLetter(c) {
+      let s = '';
+      for (;;) {
+        s = String.fromCharCode((c % 26) + 65) + s;
+        c = Math.floor(c / 26) - 1;
+        if (c < 0) break;
+      }
+      return s;
+    }
+
     /**
-     * 載入並顯示試算表
+     * 取得儲存格是否在合併範圍內；若為合併起點則回傳 { rowspan, colspan }，若被合併覆蓋則回傳 { skip: true }
+     */
+    function getMergeInfo(merges, r, c) {
+      if (!merges || !merges.length) return null;
+      for (let i = 0; i < merges.length; i++) {
+        const m = merges[i];
+        const sr = m.s.r, sc = m.s.c, er = m.e.r, ec = m.e.c;
+        if (r >= sr && r <= er && c >= sc && c <= ec) {
+          if (r === sr && c === sc)
+            return { rowspan: er - sr + 1, colspan: ec - sc + 1 };
+          return { skip: true };
+        }
+      }
+      return null;
+    }
+
+    /**
+     * 單一工作表的資料轉成類 Excel / Google Sheet 的 HTML 表格（含欄位 A B C、列號、合併儲存格）
+     */
+    function sheetToTableHtml(sheetName, sheet) {
+      const merges = sheet['!merges'] || [];
+      let sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      if (!sheetData.length) return `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3><p class="hint">（空白工作表）</p>`;
+
+      const maxCols = Math.max(...sheetData.map(row => (row && row.length) || 0));
+      const normalized = sheetData.map(row => {
+        const arr = Array.isArray(row) ? [...row] : [];
+        while (arr.length < maxCols) arr.push('');
+        return arr;
+      });
+
+      let html = `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3><div class="table-wrapper"><table class="sheet-table"><thead><tr>`;
+      html += '<th class="corner"></th>';
+      for (let j = 0; j < maxCols; j++) html += `<th class="col-header">${colToLetter(j)}</th>`;
+      html += '</tr></thead><tbody>';
+
+      for (let i = 0; i < normalized.length; i++) {
+        html += '<tr>';
+        html += `<td class="row-header">${i + 1}</td>`;
+        for (let j = 0; j < maxCols; j++) {
+          const merge = getMergeInfo(merges, i, j);
+          if (merge && merge.skip) continue;
+
+          const cell = normalized[i][j];
+          const text = cell != null ? String(cell).trim() : '';
+          const isNum = /^-?[\d,.%]+$/.test(text);
+          let attrs = merge && merge.rowspan ? ` rowspan="${merge.rowspan}" colspan="${merge.colspan}"` : '';
+          html += `<td class="cell${isNum ? ' num' : ''}"${attrs}>${escapeHtml(text)}</td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+      return html;
+    }
+
+    /**
+     * 載入並顯示試算表（類 Excel / Google Sheet 環境）
      */
     async function loadPreview() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -183,7 +290,6 @@
       const userId = urlParams.get('userId');
       const filename = urlParams.get('filename') || '試算表';
 
-      // 設定標題
       document.getElementById('preview-title').textContent = '📊 ' + filename;
       document.title = '📊 ' + filename;
 
@@ -193,63 +299,22 @@
       }
 
       try {
-        // 下載該筆上傳的檔案並顯示試算表預覽
         const response = await fetch(`/api/financial/download/${docId}?userId=${encodeURIComponent(userId)}`);
-        
-        if (!response.ok) {
-          throw new Error('下載失敗（' + response.status + '）');
-        }
+        if (!response.ok) throw new Error('下載失敗（' + response.status + '）');
 
-        // 用 SheetJS 讀取原始 Excel 檔案（保留格式，空儲存格用空字串）
         const arrayBuffer = await response.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
 
         const tablesContainer = document.getElementById('tables');
         let html = '';
-
-        workbook.SheetNames.forEach(sheetName => {
-          const sheet = workbook.Sheets[sheetName];
-          if (!sheet) return;
-          // header: 1 得到二維陣列；defval 讓空儲存格為 ''，避免 undefined
-          let sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
-
-          if (!sheetData.length) {
-            html += `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3><p class="hint">（空白工作表）</p>`;
-            return;
-          }
-
-          // 統一每列欄數：以該工作表最大欄數為準，不足的補空字串，避免表格錯位
-          const maxCols = Math.max(...sheetData.map(row => (row && row.length) || 0));
-          const normalized = sheetData.map(row => {
-            const arr = Array.isArray(row) ? [...row] : [];
-            while (arr.length < maxCols) arr.push('');
-            return arr;
-          });
-
-          html += `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3>`;
-          html += '<div class="table-wrapper"><table>';
-
-          normalized.forEach((row, i) => {
-            html += '<tr>';
-            row.forEach((cell, j) => {
-              const tag = i === 0 ? 'th' : 'td';
-              const text = cell != null ? String(cell).trim() : '';
-              const isNum = i > 0 && /^-?[\d,.%]+$/.test(text);
-              const cellClass = isNum ? ' class="num"' : '';
-              html += `<${tag}${cellClass}>${escapeHtml(text)}</${tag}>`;
-            });
-            html += '</tr>';
-          });
-
-          html += '</table></div>';
+        workbook.SheetNames.forEach(name => {
+          const sheet = workbook.Sheets[name];
+          if (sheet) html += sheetToTableHtml(name, sheet);
         });
 
         tablesContainer.innerHTML = html;
-
-        // 顯示內容，隱藏載入
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
-
       } catch (error) {
         console.error('預覽錯誤:', error);
         showError('載入失敗：' + error.message);
