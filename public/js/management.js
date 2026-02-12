@@ -61,19 +61,13 @@ async function checkPermissions() {
       // 權限分頁：負責人 + 開發者
       userPermissions.canEditPermission = userPermissions.isAdmin || userPermissions.isManager;
 
-      // 根據權限顯示內容
-      if (!userPermissions.canViewData) {
-        showNoPermission();
-        return;
-      }
-
       // 如果是負責人或開發者，顯示權限分頁按鈕
       if (userPermissions.canEditPermission) {
         const permTabBtn = document.getElementById('tab-btn-permission');
         if (permTabBtn) permTabBtn.style.display = '';
       }
 
-      // 載入數據
+      // 載入數據（所有人都能進入管理中心）
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('main-content').classList.remove('hidden');
       
