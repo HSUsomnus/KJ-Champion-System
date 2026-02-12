@@ -158,13 +158,16 @@ function renderDocuments(documents) {
               ${formatFileSize(doc.file_size)} · ${formatDate(doc.uploaded_at)}
             </p>
           </div>
-          <!-- 右側：操作按鈕；瀏覽＝開啟該筆上傳的試算表預覽頁 -->
+          <!-- 右側：操作按鈕；瀏覽、下載、刪除 -->
           <div style="display: flex; flex-direction: column; gap: 6px; min-width: 80px;">
             <button class="btn btn-sm btn-secondary" data-doc-id="${doc.id}" data-doc-filename="${escapeHtml(doc.original_filename).replace(/"/g, '&quot;')}" onclick="previewDocument(parseInt(this.dataset.docId,10), this.dataset.docFilename)" style="width: 100%; padding: 6px 12px; font-size: 13px;">
               👁️ 瀏覽
             </button>
             <button class="btn btn-sm btn-primary" onclick="downloadDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')" style="width: 100%; padding: 6px 12px; font-size: 13px;">
               ⬇️ 下載
+            </button>
+            <button class="btn btn-sm btn-delete-doc" data-doc-id="${doc.id}" data-doc-filename="${escapeHtml(doc.original_filename).replace(/"/g, '&quot;')}" onclick="confirmDeleteDocument(this)" style="width: 100%; padding: 6px 12px; font-size: 13px; background: #e74c3c; color: #fff;">
+              🗑️ 刪除
             </button>
           </div>
         </div>
@@ -244,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
         
         if (!isAllowed) {
-          alert('⚠️ 只支援試算表檔案格式（.xlsx, .xls, .csv, .ods, .xlsm）');
+          (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('⚠️ 只支援試算表檔案格式（.xlsx, .xls, .csv, .ods, .xlsm）');
           fileInput.value = '';
           return;
         }
@@ -266,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function uploadFile() {
   if (!selectedFile) {
-    alert('請先選擇檔案');
+    (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('請先選擇檔案');
     return;
   }
 
@@ -291,7 +294,7 @@ async function uploadFile() {
     const data = await response.json();
 
     if (data.success) {
-      alert('✅ 上傳成功！');
+      (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('✅ 上傳成功！');
       // 重置表單
       selectedFile = null;
       document.getElementById('file-input').value = '';
@@ -300,11 +303,11 @@ async function uploadFile() {
       // 重新載入列表
       await loadDocuments();
     } else {
-      alert('❌ 上傳失敗：' + (data.message || '未知錯誤'));
+      (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('❌ 上傳失敗：' + (data.message || '未知錯誤'));
     }
   } catch (error) {
     console.error('上傳錯誤:', error);
-    alert('❌ 上傳失敗：' + error.message);
+    (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('❌ 上傳失敗：' + error.message);
   } finally {
     uploadBtn.disabled = false;
     uploadBtn.textContent = '開始上傳';
@@ -326,8 +329,41 @@ function previewDocument(id, filename) {
  * 下載文件（直接導航到下載 URL，LIFF 也能用）
  */
 function downloadDocument(id, filename) {
-  // 直接用網址觸發下載（後端已設定 Content-Disposition: attachment）
   window.location.href = `/api/financial/download/${id}?userId=${encodeURIComponent(userId)}`;
+}
+
+/**
+ * 再次確認後刪除試算表（使用統一彈窗）
+ */
+async function confirmDeleteDocument(btn) {
+  const docId = parseInt(btn.dataset.docId, 10);
+  const filename = btn.dataset.docFilename || '此檔案';
+  const confirmFn = window.showAppConfirm || ((msg, opts) => Promise.resolve(confirm(msg)));
+  const confirmed = await confirmFn('⚠️ 確定要刪除「' + filename + '」嗎？\n\n刪除後無法復原。', { yesText: '確定刪除', noText: '取消' });
+  if (confirmed) {
+    await deleteDocument(docId);
+  }
+}
+
+/**
+ * 呼叫 API 刪除財力文件
+ */
+async function deleteDocument(docId) {
+  try {
+    const response = await fetch(`/api/financial/${docId}?userId=${encodeURIComponent(userId)}`, { method: 'DELETE' });
+    const data = await response.json();
+    const alertFn = window.showAppAlert || (msg => { alert(msg); return Promise.resolve(); });
+    if (data.success) {
+      await alertFn('✅ 已刪除');
+      await loadDocuments();
+    } else {
+      await alertFn('❌ 刪除失敗：' + (data.message || '未知錯誤'));
+    }
+  } catch (error) {
+    console.error('刪除錯誤:', error);
+    const alertFn = window.showAppAlert || (msg => { alert(msg); return Promise.resolve(); });
+    await alertFn('❌ 刪除失敗：' + error.message);
+  }
 }
 
 /**
@@ -442,11 +478,11 @@ async function saveFinancialAmount(amount) {
     if (data.success) {
       console.log('✅ 財力金額已更新:', amount || '無');
     } else {
-      alert('❌ 更新失敗：' + (data.message || '未知錯誤'));
+      (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('❌ 更新失敗：' + (data.message || '未知錯誤'));
     }
   } catch (error) {
     console.error('儲存財力金額錯誤:', error);
-    alert('❌ 儲存失敗：' + error.message);
+    (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('❌ 儲存失敗：' + error.message);
   }
 }
 
@@ -470,14 +506,13 @@ async function saveComment(docId, comment) {
     const data = await response.json();
 
     if (data.success) {
-      alert('✅ 評語已儲存');
-      // 重新載入文件列表
+      (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('✅ 評語已儲存');
       await loadDocuments();
     } else {
-      alert('❌ 儲存失敗：' + (data.message || '未知錯誤'));
+      (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('❌ 儲存失敗：' + (data.message || '未知錯誤'));
     }
   } catch (error) {
     console.error('儲存評語錯誤:', error);
-    alert('❌ 儲存失敗：' + error.message);
+    (window.showAppAlert || (m => { alert(m); return Promise.resolve(); }))('❌ 儲存失敗：' + error.message);
   }
 }
