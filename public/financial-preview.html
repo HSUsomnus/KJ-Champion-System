@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes">
+  <title>📊 試算表預覽</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <!-- JSZip 用於解壓縮 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fff;
+      color: #333;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* 頂部固定標題列 */
+    .header {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-right: 12px;
+    }
+    .btn-back {
+      background: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* 提示文字 */
+    .hint {
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      padding: 12px 16px 4px;
+    }
+
+    /* 載入動畫 */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #999;
+    }
+    .loading-container .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #eee;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 錯誤狀態 */
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #e74c3c;
+      padding: 24px;
+      text-align: center;
+    }
+
+    /* 表格內容區 */
+    .content {
+      padding: 8px 16px 24px;
+    }
+    .sheet-title {
+      margin: 20px 0 10px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #555;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 16px;
+    }
+    table {
+      border-collapse: collapse;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      background: #f5f5f5;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 標題列 -->
+  <div class="header">
+    <h1 id="preview-title">📊 載入中...</h1>
+    <button class="btn-back" onclick="goBack()">← 返回</button>
+  </div>
+
+  <!-- 載入動畫 -->
+  <div id="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>載入試算表中...</p>
+  </div>
+
+  <!-- 錯誤狀態 -->
+  <div id="error" class="error-container" style="display: none;">
+    <div style="font-size: 48px; margin-bottom: 12px;">❌</div>
+    <p id="error-msg">載入失敗</p>
+    <button class="btn-back" onclick="goBack()" style="margin-top: 16px;">← 返回</button>
+  </div>
+
+  <!-- 表格內容 -->
+  <div id="content" class="content" style="display: none;">
+    <p class="hint">👆 可用雙指縮放查看</p>
+    <div id="tables"></div>
+  </div>
+
+  <script>
+    /**
+     * 返回上一頁
+     */
+    function goBack() {
+      window.history.back();
+    }
+
+    /**
+     * HTML 轉義
+     */
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    /**
+     * 載入並顯示試算表
+     */
+    async function loadPreview() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const docId = urlParams.get('docId');
+      const userId = urlParams.get('userId');
+      const filename = urlParams.get('filename') || '試算表';
+
+      // 設定標題
+      document.getElementById('preview-title').textContent = '📊 ' + filename;
+      document.title = '📊 ' + filename;
+
+      if (!docId || !userId) {
+        showError('缺少必要參數');
+        return;
+      }
+
+      try {
+        // 下載文件
+        const response = await fetch(`/api/financial/download/${docId}?userId=${encodeURIComponent(userId)}`);
+        
+        if (!response.ok) {
+          throw new Error('下載失敗（' + response.status + '）');
+        }
+
+        const blob = await response.blob();
+
+        // 解壓縮
+        const zip = await JSZip.loadAsync(blob);
+        const jsonText = await zip.file('data.json').async('string');
+        const sheetData = JSON.parse(jsonText);
+
+        // 組合表格 HTML
+        const tablesContainer = document.getElementById('tables');
+        let html = '';
+
+        Object.keys(sheetData).forEach(sheetName => {
+          html += `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3>`;
+          html += '<div class="table-wrapper"><table>';
+
+          sheetData[sheetName].forEach((row, i) => {
+            html += '<tr>';
+            row.forEach(cell => {
+              const tag = i === 0 ? 'th' : 'td';
+              html += `<${tag}>${escapeHtml(String(cell || ''))}</${tag}>`;
+            });
+            html += '</tr>';
+          });
+
+          html += '</table></div>';
+        });
+
+        tablesContainer.innerHTML = html;
+
+        // 顯示內容，隱藏載入
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+
+      } catch (error) {
+        console.error('預覽錯誤:', error);
+        showError('載入失敗：' + error.message);
+      }
+    }
+
+    /**
+     * 顯示錯誤
+     */
+    function showError(msg) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-msg').textContent = msg;
+      document.getElementById('error').style.display = 'flex';
+    }
+
+    // 頁面載入後執行
+    loadPreview();
+  </script>
+</body>
+</html>

@@ -316,137 +316,14 @@ async function uploadFile() {
 }
 
 /**
- * 預覽文件（開新頁面，支援手機縮放）
+ * 預覽文件（導航到獨立預覽頁面，支援 LIFF 和手機縮放）
  */
-async function previewDocument(id, filename) {
-  try {
-    const response = await fetch(`/api/financial/download/${id}?userId=${encodeURIComponent(userId)}`);
-    const blob = await response.blob();
-    
-    // 解壓縮
-    const zip = await JSZip.loadAsync(blob);
-    const jsonText = await zip.file('data.json').async('string');
-    const sheetData = JSON.parse(jsonText);
-
-    // 組合所有工作表的 HTML 表格
-    let tablesHtml = '';
-    Object.keys(sheetData).forEach(sheetName => {
-      // 工作表標題
-      tablesHtml += `<h3 style="margin: 24px 0 12px; font-size: 16px; font-weight: 600;">${escapeHtml(sheetName)}</h3>`;
-      
-      // 表格
-      tablesHtml += '<table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">';
-      sheetData[sheetName].forEach((row, i) => {
-        tablesHtml += '<tr>';
-        row.forEach(cell => {
-          const tag = i === 0 ? 'th' : 'td';
-          const bgStyle = i === 0 ? 'background-color: #f0f0f0; font-weight: 600;' : '';
-          tablesHtml += `<${tag} style="border: 1px solid #ddd; padding: 6px 8px; text-align: left; white-space: nowrap; ${bgStyle}">${escapeHtml(String(cell || ''))}</${tag}>`;
-        });
-        tablesHtml += '</tr>';
-      });
-      tablesHtml += '</table>';
-    });
-
-    // 開新視窗寫入完整的 HTML 頁面（支援手機縮放）
-    const previewWindow = window.open('', '_blank');
-    if (!previewWindow) {
-      alert('⚠️ 請允許此網站的彈出視窗');
-      return;
-    }
-
-    previewWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="zh-TW">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes">
-        <title>📊 ${escapeHtml(filename)}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #fff;
-            color: #333;
-            padding: 16px;
-            -webkit-text-size-adjust: 100%;
-          }
-          .header {
-            position: sticky;
-            top: 0;
-            background: #fff;
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 12px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-          }
-          .header h1 {
-            font-size: 16px;
-            font-weight: 600;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            flex: 1;
-            margin-right: 12px;
-          }
-          .btn-close {
-            background: #e74c3c;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            white-space: nowrap;
-          }
-          .hint {
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            margin-bottom: 16px;
-          }
-          .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-          }
-          table {
-            border-collapse: collapse;
-            font-size: 13px;
-            white-space: nowrap;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 6px 8px;
-            text-align: left;
-          }
-          th {
-            background: #f0f0f0;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>📊 ${escapeHtml(filename)}</h1>
-          <button class="btn-close" onclick="window.close()">✕ 關閉</button>
-        </div>
-        <p class="hint">👆 可用雙指縮放查看</p>
-        <div class="table-wrapper">
-          ${tablesHtml}
-        </div>
-      </body>
-      </html>
-    `);
-    previewWindow.document.close();
-  } catch (error) {
-    console.error('預覽錯誤:', error);
-    alert('❌ 預覽失敗：' + error.message);
-  }
+function previewDocument(id, filename) {
+  // 組合預覽頁面的 URL
+  const previewUrl = `/financial-preview.html?docId=${id}&userId=${encodeURIComponent(userId)}&filename=${encodeURIComponent(filename)}`;
+  
+  // 直接導航到預覽頁面（LIFF 和一般瀏覽器都能用）
+  window.location.href = previewUrl;
 }
 
 /**

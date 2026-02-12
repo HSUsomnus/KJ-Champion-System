@@ -209,7 +209,8 @@ const generateInviteMessage = () => {
 
 /** Google Calendar App 商店連結（第一步按鈕導向用） */
 const GOOGLE_CALENDAR_ANDROID = 'https://play.google.com/store/apps/details?id=com.google.android.calendar';
-const GOOGLE_CALENDAR_IOS = 'https://apps.apple.com/app/google-calendar/id905677184';
+// ✅ 正確的 Google Calendar App Store ID 是 909319292
+const GOOGLE_CALENDAR_IOS = 'https://apps.apple.com/app/google-calendar-get-organized/id909319292';
 
 /** 由日曆 ID 組出「加入事業部行事曆」連結（日曆 ID 來自 env GROUP_CALENDAR_ID，不寫死在程式碼） */
 const buildCalendarAddUrl = (calendarId) =>

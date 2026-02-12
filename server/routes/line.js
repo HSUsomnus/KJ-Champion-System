@@ -360,7 +360,8 @@ router.get('/app-download', (req, res) => {
   const isAndroid = /android/.test(ua);
   const isIOS = /iphone|ipad|ipod/.test(ua);
   const androidUrl = 'https://play.google.com/store/apps/details?id=com.google.android.calendar';
-  const iosUrl = 'https://apps.apple.com/app/google-calendar/id905677184';
+  // ✅ 正確的 Google Calendar App Store ID 是 909319292
+  const iosUrl = 'https://apps.apple.com/app/google-calendar-get-organized/id909319292';
   if (isAndroid) return res.redirect(302, androidUrl);
   if (isIOS) return res.redirect(302, iosUrl);
   res.redirect(302, androidUrl);
