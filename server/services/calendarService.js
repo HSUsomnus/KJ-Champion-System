@@ -568,9 +568,12 @@ const batchUpdateEventColors = async () => {
   for (const event of allEvents) {
     // 從 extendedProperties 取得行程類型與是否為生日行程
     const eventType = event.extendedProperties?.private?.type || '';
-    const isBirthday = event.extendedProperties?.private?.isBirthday === '1';
+    const hasBirthdayFlag = event.extendedProperties?.private?.isBirthday === '1';
     const expectedColorId = getGoogleColorId(eventType);
     const title = event.summary || '';
+
+    // 判斷是不是生日行程：有 isBirthday 標記，或標題以「生日」結尾（相容手動建立的）
+    const isBirthday = hasBirthdayFlag || (title.endsWith('生日') && !title.startsWith('🎂'));
 
     // 判斷這筆行程需不需要更新
     const needColorUpdate = expectedColorId && event.colorId !== expectedColorId;

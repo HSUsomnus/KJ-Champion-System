@@ -238,6 +238,17 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
+        // 檢查是否為試算表格式
+        const allowedExtensions = ['.xlsx', '.xls', '.csv', '.ods', '.xlsm'];
+        const fileName = file.name.toLowerCase();
+        const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+        
+        if (!isAllowed) {
+          alert('⚠️ 只支援試算表檔案格式（.xlsx, .xls, .csv, .ods, .xlsm）');
+          fileInput.value = '';
+          return;
+        }
+
         selectedFile = file;
         document.getElementById('selected-filename').textContent = file.name;
         document.getElementById('selected-filesize').textContent = formatFileSize(file.size);
