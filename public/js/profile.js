@@ -708,9 +708,12 @@ function goToFinancialUpload() {
     ? `${baseUrl}/financial-upload.html?userId=${encodeURIComponent(userId)}`
     : `${baseUrl}/financial-upload.html`;
   
-  // 直接跳轉到財力上傳頁面
-  // 該頁面會自動進行 LINE Login，並在外部瀏覽器完成驗證
-  window.location.href = targetUrl;
+  // 如果在 LIFF 裡面，用外部瀏覽器開啟（跳出 LINE 的內建瀏覽器）
+  if (window.LIFF && window.LIFF.openURL) {
+    window.LIFF.openURL(targetUrl, true);
+  } else {
+    window.location.href = targetUrl;
+  }
 }
 
 // 匯出函數供全域使用
