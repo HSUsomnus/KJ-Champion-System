@@ -327,26 +327,11 @@ function previewDocument(id, filename) {
 }
 
 /**
- * 下載文件
+ * 下載文件（直接導航到下載 URL，LIFF 也能用）
  */
-async function downloadDocument(id, filename) {
-  try {
-    const response = await fetch(`/api/financial/download/${id}?userId=${encodeURIComponent(userId)}`);
-    const blob = await response.blob();
-    
-    // 創建下載連結
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('下載錯誤:', error);
-    alert('❌ 下載失敗：' + error.message);
-  }
+function downloadDocument(id, filename) {
+  // 直接用網址觸發下載（後端已設定 Content-Disposition: attachment）
+  window.location.href = `/api/financial/download/${id}?userId=${encodeURIComponent(userId)}`;
 }
 
 /**

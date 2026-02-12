@@ -8,6 +8,28 @@ const memberDbService = require('./memberDbService');
 const eventDbService = require('./eventDbService');
 
 /**
+ * 行程類型 → Google Calendar colorId 對照表
+ * Google Calendar 有 11 種內建顏色（數字 1~11）
+ * 這裡讓顏色盡量跟 LIFF 前端的分類顏色一致
+ *   學員上課 → 5（Banana 香蕉黃）
+ *   活動     → 11（Tomato 番茄紅）
+ *   諮詢簽約 → 10（Basil 羅勒綠）
+ */
+const EVENT_TYPE_COLOR_MAP = {
+  '學員上課': '5',   // 黃色 — 對應 LIFF 的 #FBC02D
+  '活動': '11',      // 紅色 — 對應 LIFF 的 #E53935
+  '諮詢簽約': '10',  // 綠色 — 對應 LIFF 的 #4CAF50
+};
+
+/**
+ * 根據行程類型取得 Google Calendar colorId
+ * 如果找不到對應的類型，就回傳 undefined（使用日曆預設顏色）
+ * @param {string} type - 行程類型
+ * @returns {string|undefined} Google Calendar colorId
+ */
+const getGoogleColorId = (type) => EVENT_TYPE_COLOR_MAP[type] || undefined;
+
+/**
  * 取得指定日期範圍的團體行程
  * @param {string} timeMin - 開始時間 (ISO 8601 格式)
  * @param {string} timeMax - 結束時間 (ISO 8601 格式)
@@ -254,12 +276,17 @@ const createGroupEvent = async (eventData) => {
       extendedPrivate.isBirthday = '1';
     }
 
+    // 根據行程類型取得對應的 Google Calendar 顏色
+    const colorId = getGoogleColorId(eventData.type);
+
     const event = {
       summary: eventData.title,
       description: eventData.description || '',
       location: eventData.location || '',
       start: startPayload,
       end: endPayload,
+      // 設定行程顏色，讓 Google Calendar 也能用顏色區分類型
+      ...(colorId ? { colorId } : {}),
       extendedProperties: {
         private: extendedPrivate,
       },
@@ -348,6 +375,11 @@ const updateGroupEvent = async (eventId, eventData) => {
           type: eventData.type,
         },
       };
+      // 行程類型改了，顏色也要跟著更新
+      const colorId = getGoogleColorId(eventData.type);
+      if (colorId) {
+        patch.colorId = colorId;
+      }
     }
 
     const response = await calendar.events.patch({
