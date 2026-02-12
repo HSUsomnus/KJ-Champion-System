@@ -264,28 +264,13 @@ async function uploadFile() {
   uploadBtn.textContent = '上傳中...';
 
   try {
-    // 讀取 Excel 檔案
-    const arrayBuffer = await selectedFile.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer);
-    
-    // 轉換為 JSON
-    const sheetData = {};
-    workbook.SheetNames.forEach(sheetName => {
-      sheetData[sheetName] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
-    });
-
-    // 壓縮資料
-    const zip = new JSZip();
-    zip.file('data.json', JSON.stringify(sheetData));
-    const compressed = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 } });
-
-    // 上傳到伺服器
+    // 直接上傳原始檔案（不壓縮、不轉換，保留原始格式）
     const formData = new FormData();
-    formData.append('file', compressed);
+    formData.append('file', selectedFile);
     formData.append('userId', userId);
     formData.append('originalFilename', selectedFile.name);
     formData.append('originalSize', selectedFile.size);
-    formData.append('mimeType', selectedFile.type);
+    formData.append('mimeType', selectedFile.type || 'application/octet-stream');
 
     const response = await fetch('/api/financial/upload', {
       method: 'POST',

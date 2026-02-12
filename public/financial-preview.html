@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes">
   <title>📊 試算表預覽</title>
   <link rel="icon" type="image/png" href="/images/logo.png">
-  <!-- JSZip 用於解壓縮 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- SheetJS 用於讀取 Excel 原始檔案 -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -187,33 +187,33 @@
       }
 
       try {
-        // 下載文件
+        // 下載原始檔案
         const response = await fetch(`/api/financial/download/${docId}?userId=${encodeURIComponent(userId)}`);
         
         if (!response.ok) {
           throw new Error('下載失敗（' + response.status + '）');
         }
 
-        const blob = await response.blob();
-
-        // 解壓縮
-        const zip = await JSZip.loadAsync(blob);
-        const jsonText = await zip.file('data.json').async('string');
-        const sheetData = JSON.parse(jsonText);
+        // 用 SheetJS 讀取原始 Excel 檔案
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer);
 
         // 組合表格 HTML
         const tablesContainer = document.getElementById('tables');
         let html = '';
 
-        Object.keys(sheetData).forEach(sheetName => {
+        workbook.SheetNames.forEach(sheetName => {
+          // 將工作表轉成二維陣列
+          const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
           html += `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3>`;
           html += '<div class="table-wrapper"><table>';
 
-          sheetData[sheetName].forEach((row, i) => {
+          sheetData.forEach((row, i) => {
             html += '<tr>';
             row.forEach(cell => {
               const tag = i === 0 ? 'th' : 'td';
-              html += `<${tag}>${escapeHtml(String(cell || ''))}</${tag}>`;
+              html += `<${tag}>${escapeHtml(String(cell != null ? cell : ''))}</${tag}>`;
             });
             html += '</tr>';
           });

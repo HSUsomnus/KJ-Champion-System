@@ -111,7 +111,7 @@ router.get('/list', async (req, res) => {
 
 /**
  * GET /api/financial/download/:id
- * 下載財力文件（壓縮格式）
+ * 下載財力文件（原始格式）
  */
 router.get('/download/:id', async (req, res) => {
   try {
@@ -140,11 +140,12 @@ router.get('/download/:id', async (req, res) => {
 
     const doc = result.rows[0];
 
-    // 設定回應標頭
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.original_filename)}.zip"`);
+    // 設定回應標頭（用原始檔案的 MIME 類型和檔名）
+    const mimeType = doc.mime_type || 'application/octet-stream';
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.original_filename)}"`);
     
-    // 傳送壓縮檔案
+    // 傳送檔案
     res.send(doc.compressed_data);
   } catch (error) {
     console.error('❌ 下載財力文件錯誤:', error);

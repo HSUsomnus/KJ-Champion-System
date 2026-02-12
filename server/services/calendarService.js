@@ -152,7 +152,11 @@ const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
   let created = 0;
   for (const member of withBirthday) {
     const { month, day } = parseBirthdayMonthDay(member.birthday);
-    const title = `${member.name.trim()}生日`;
+    // 🎂 生日行程標題加上蛋糕 Emoji，增加辨識度
+    const nameStr = member.name.trim();
+    const title = `🎂 ${nameStr}生日`;
+    // 舊格式（沒有 Emoji）也要能認出來，避免重複建立
+    const oldTitle = `${nameStr}生日`;
 
     for (let y = startYear; y <= endYear; y++) {
       const d = new Date(y, month - 1, day);
@@ -166,7 +170,8 @@ const ensureBirthdayEventsInRange = async (timeMin, timeMax) => {
       const nextStr = `${nextD.getFullYear()}-${String(nextD.getMonth() + 1).padStart(2, '0')}-${String(nextD.getDate()).padStart(2, '0')}`;
       const dayMax = `${nextStr}T00:00:00+08:00`;
       const existing = await getGroupEvents(dayMin, dayMax);
-      const hasBirthday = existing.some(ev => ev.title === title);
+      // 新舊格式都要比對，避免重複建立
+      const hasBirthday = existing.some(ev => ev.title === title || ev.title === oldTitle);
       if (hasBirthday) continue;
 
       await createGroupEvent({
@@ -205,13 +210,17 @@ const syncMemberBirthdayEvents = async (member) => {
   if (!name || !parsed) return 0;
 
   const { month, day } = parsed;
-  const title = `${name}生日`;
+  // 🎂 生日行程標題加上蛋糕 Emoji
+  const title = `🎂 ${name}生日`;
+  // 舊格式（沒有 Emoji）也要能找到，才能把舊行程一起管理
+  const oldTitle = `${name}生日`;
   const year = new Date().getFullYear();
   const timeMin = `${year - 1}-01-01T00:00:00+08:00`;
   const timeMax = `${year + 1}-12-31T23:59:59+08:00`;
 
   const events = await getGroupEvents(timeMin, timeMax);
-  const myBirthdayEvents = events.filter(ev => ev.title === title);
+  // 新舊格式都撈出來，統一管理
+  const myBirthdayEvents = events.filter(ev => ev.title === title || ev.title === oldTitle);
 
   let updated = 0;
   for (const ev of myBirthdayEvents) {
@@ -508,6 +517,114 @@ const getGroupEventsByMonth = async (year, month, type = null) => {
   return events;
 };
 
+/**
+ * 批次更新所有舊行程的 Google Calendar 顏色 + 生日行程標題加 🎂
+ * 掃描過去 2 年到未來 2 年的所有行程：
+ *   1. 根據行程類型補上正確的 colorId
+ *   2. 如果是生日行程且標題還沒有 🎂，自動加上
+ * @returns {Promise<{ total: number, colorUpdated: number, titleUpdated: number, skipped: number, errors: number }>} 統計結果
+ */
+const batchUpdateEventColors = async () => {
+  const calendar = await getCalendarClient();
+  const calendarId = getGroupCalendarId();
+
+  if (!calendar || !calendarId) {
+    throw new Error('Google Calendar 未設定，無法批次更新');
+  }
+
+  // 掃描範圍：過去 2 年 ～ 未來 2 年
+  const now = new Date();
+  const timeMin = `${now.getFullYear() - 2}-01-01T00:00:00+08:00`;
+  const timeMax = `${now.getFullYear() + 2}-12-31T23:59:59+08:00`;
+
+  console.log(`🔍 開始掃描行程（${timeMin.slice(0, 10)} ～ ${timeMax.slice(0, 10)}）...`);
+
+  // 用 Google API 直接撈（含 colorId），因為 getGroupEvents 不回傳 colorId
+  let allEvents = [];
+  let pageToken = undefined;
+
+  // 用分頁把所有行程撈出來
+  do {
+    const response = await calendar.events.list({
+      calendarId,
+      timeMin,
+      timeMax,
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 250,
+      pageToken,
+    });
+    allEvents = allEvents.concat(response.data.items || []);
+    pageToken = response.data.nextPageToken;
+  } while (pageToken);
+
+  console.log(`📋 共找到 ${allEvents.length} 筆行程`);
+
+  let colorUpdated = 0;
+  let titleUpdated = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  for (const event of allEvents) {
+    // 從 extendedProperties 取得行程類型與是否為生日行程
+    const eventType = event.extendedProperties?.private?.type || '';
+    const isBirthday = event.extendedProperties?.private?.isBirthday === '1';
+    const expectedColorId = getGoogleColorId(eventType);
+    const title = event.summary || '';
+
+    // 判斷這筆行程需不需要更新
+    const needColorUpdate = expectedColorId && event.colorId !== expectedColorId;
+    // 生日行程標題如果還沒有 🎂 開頭，就需要加上
+    const needTitleUpdate = isBirthday && title && !title.startsWith('🎂');
+
+    // 都不需要更新就跳過
+    if (!needColorUpdate && !needTitleUpdate) {
+      skipped += 1;
+      continue;
+    }
+
+    try {
+      // 組合要更新的欄位
+      const patch = {};
+      const changes = [];
+
+      if (needColorUpdate) {
+        patch.colorId = expectedColorId;
+        changes.push(`顏色 → ${expectedColorId}`);
+      }
+      if (needTitleUpdate) {
+        patch.summary = `🎂 ${title}`;
+        changes.push(`標題 → 🎂 ${title}`);
+      }
+
+      await calendar.events.patch({
+        calendarId,
+        eventId: event.id,
+        resource: patch,
+      });
+
+      console.log(`  ✅ "${title}" — ${changes.join('、')}`);
+      if (needColorUpdate) colorUpdated += 1;
+      if (needTitleUpdate) titleUpdated += 1;
+
+      // 每次更新後暫停 200 毫秒，避免打太快觸發 Google API 限流
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (err) {
+      console.error(`  ❌ "${title}" 更新失敗:`, err.message);
+      errors += 1;
+    }
+  }
+
+  const result = { total: allEvents.length, colorUpdated, titleUpdated, skipped, errors };
+  console.log(`\n🎉 批次更新完成！`);
+  console.log(`   行程總數：${result.total}`);
+  console.log(`   顏色更新：${result.colorUpdated} 筆`);
+  console.log(`   標題加 🎂：${result.titleUpdated} 筆`);
+  console.log(`   已跳過：  ${result.skipped} 筆`);
+  console.log(`   失敗：    ${result.errors} 筆`);
+  return result;
+};
+
 module.exports = {
   getGroupEvents,
   getTodayGroupEvents,
@@ -518,4 +635,5 @@ module.exports = {
   getGroupEventsByMonth,
   ensureBirthdayEventsInRange,
   syncMemberBirthdayEvents,
+  batchUpdateEventColors,
 };
