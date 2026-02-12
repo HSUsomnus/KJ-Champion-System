@@ -278,16 +278,17 @@ function renderFinancialList(members) {
   }
 
   container.innerHTML = members.map(member => `
-    <div class="member-card" onclick="viewMemberFinancial('${escapeHtml(member.lineId)}', '${escapeHtml(member.displayName || member.name || '未設定')}')">
-      <img src="${member.pictureUrl || 'https://via.placeholder.com/60?text=👤'}" 
-           alt="${escapeHtml(member.name)}" 
-           class="member-avatar">
-      <div class="member-info">
-        <div class="member-name">${escapeHtml(member.displayName || member.name || '未設定')}</div>
-        ${member.name && member.name !== member.displayName ? `<div class="member-real-name">${escapeHtml(member.name)}</div>` : ''}
-        <span class="member-role-badge ${getRoleClass(member.role)}">${member.role || '一般人'}</span>
+    <div class="data-item" style="padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="viewMemberFinancial('${escapeHtml(member.lineId)}', '${escapeHtml(member.displayName || member.name || '未設定')}')">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="${member.pictureUrl || 'https://via.placeholder.com/50?text=👤'}" 
+             alt="${escapeHtml(member.name)}" 
+             style="width: 50px; height: 50px; border-radius: 50%;">
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-weight: 600; font-size: 16px;">${escapeHtml(member.displayName || member.name || '未設定')}</div>
+          <div style="font-size: 12px; color: var(--text-light);">${escapeHtml(member.name || '未設定')}</div>
+        </div>
+        <span style="font-size: 18px; color: var(--text-light);">&gt;</span>
       </div>
-      <span class="member-card-arrow" aria-hidden="true">&gt;</span>
     </div>
   `).join('');
 }
