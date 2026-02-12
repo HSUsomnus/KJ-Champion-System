@@ -158,11 +158,12 @@ function renderDocuments(documents) {
               ${formatFileSize(doc.file_size)} · ${formatDate(doc.uploaded_at)}
             </p>
           </div>
-          <!-- 右側：操作按鈕；瀏覽、下載、刪除 -->
+          <!-- 右側：操作按鈕；有 Google Sheet 唯讀連結則開該網頁，否則開 APP 內預覽 -->
           <div style="display: flex; flex-direction: column; gap: 6px; min-width: 80px;">
-            <button class="btn btn-sm btn-secondary" data-doc-id="${doc.id}" data-doc-filename="${escapeHtml(doc.original_filename).replace(/"/g, '&quot;')}" onclick="previewDocument(parseInt(this.dataset.docId,10), this.dataset.docFilename)" style="width: 100%; padding: 6px 12px; font-size: 13px;">
-              👁️ 瀏覽
-            </button>
+            ${doc.sheet_view_url
+              ? `<a href="${escapeHtml(doc.sheet_view_url)}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary" style="width: 100%; padding: 6px 12px; font-size: 13px; text-align: center; text-decoration: none; box-sizing: border-box;">👁️ 瀏覽</a>`
+              : `<button class="btn btn-sm btn-secondary" data-doc-id="${doc.id}" data-doc-filename="${escapeHtml(doc.original_filename).replace(/"/g, '&quot;')}" onclick="previewDocument(parseInt(this.dataset.docId,10), this.dataset.docFilename)" style="width: 100%; padding: 6px 12px; font-size: 13px;">👁️ 瀏覽</button>`
+            }
             <button class="btn btn-sm btn-primary" onclick="downloadDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')" style="width: 100%; padding: 6px 12px; font-size: 13px;">
               ⬇️ 下載
             </button>

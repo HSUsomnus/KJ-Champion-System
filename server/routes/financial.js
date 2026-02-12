@@ -5,8 +5,10 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const { Readable } = require('stream');
 const db = require('../config/db');
 const memberDbService = require('../services/memberDbService');
+const { getDriveClient } = require('../config/googleAuth');
 
 // 設定 multer 用於檔案上傳（記憶體儲存）
 const storage = multer.memoryStorage();
@@ -18,8 +20,43 @@ const upload = multer({
 });
 
 /**
+ * 將上傳的試算表檔案轉成 Google Sheet 並取得唯讀檢視連結
+ * @param {Buffer} buffer - 檔案內容
+ * @param {string} filename - 檔名
+ * @param {string} mimeType - 原始 MIME（如 xlsx、csv）
+ * @returns {Promise<string|null>} 唯讀檢視 URL，失敗回傳 null
+ */
+async function uploadToDriveAsSheet(buffer, filename, mimeType) {
+  const drive = await getDriveClient();
+  if (!drive) return null;
+  const sourceMime = mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  try {
+    const { data: file } = await drive.files.create({
+      resource: {
+        name: filename,
+        mimeType: 'application/vnd.google-apps.spreadsheet',
+      },
+      media: {
+        mimeType: sourceMime,
+        body: Readable.from(buffer),
+      },
+      fields: 'id',
+    });
+    if (!file.id) return null;
+    await drive.permissions.create({
+      fileId: file.id,
+      requestBody: { type: 'anyone', role: 'reader' },
+    });
+    return `https://docs.google.com/spreadsheets/d/${file.id}/view`;
+  } catch (err) {
+    console.warn('⚠️  上傳至 Google Drive 轉試算表失敗:', err.message);
+    return null;
+  }
+}
+
+/**
  * POST /api/financial/upload
- * 上傳財力文件（已壓縮）
+ * 上傳財力文件；同時轉成 Google Sheet 並存唯讀連結，供「瀏覽」按鈕開啟
  */
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
@@ -51,11 +88,28 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       }),
     ]);
 
-    console.log(`✅ 財力文件上傳成功: ${originalFilename} (用戶: ${userId})`);
+    const docId = result.rows[0].id;
+    let sheetViewUrl = null;
+    sheetViewUrl = await uploadToDriveAsSheet(
+      compressedFile.buffer,
+      originalFilename,
+      mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    if (sheetViewUrl) {
+      await db.query(
+        'UPDATE financial_documents SET sheet_view_url = $1 WHERE id = $2',
+        [sheetViewUrl, docId]
+      );
+    }
+
+    const row = result.rows[0];
+    if (sheetViewUrl) row.sheet_view_url = sheetViewUrl;
+
+    console.log(`✅ 財力文件上傳成功: ${originalFilename} (用戶: ${userId})${sheetViewUrl ? '，已產生 Google Sheet 唯讀連結' : ''}`);
 
     res.json({
       success: true,
-      data: result.rows[0],
+      data: row,
       message: '上傳成功',
     });
   } catch (error) {
@@ -101,11 +155,12 @@ router.get('/list', async (req, res) => {
       });
     }
 
-    // 查詢文件列表，並 JOIN members 表取得評語作者姓名
+    // 查詢文件列表（含 Google Sheet 唯讀連結、評語）
     const result = await db.query(`
       SELECT 
         fd.id, fd.original_filename, fd.file_size, fd.mime_type, 
         fd.uploaded_at, fd.updated_at, fd.metadata,
+        fd.sheet_view_url,
         fd.comment, fd.comment_author, fd.comment_updated_at,
         m.name as comment_author_name
       FROM financial_documents fd

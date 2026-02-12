@@ -22,6 +22,7 @@ const getServiceAccountAuth = () => {
           scopes: [
             'https://www.googleapis.com/auth/calendar',
             'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive.file', // 上傳財力試算表並轉成 Google Sheet 唯讀連結
           ],
           projectId: credentials.project_id,
         });
@@ -60,6 +61,7 @@ const getServiceAccountAuth = () => {
       scopes: [
         'https://www.googleapis.com/auth/calendar',
         'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive.file',
       ],
       projectId: projectId,
     });
@@ -91,6 +93,15 @@ const getSheetsClient = async () => {
   return google.sheets({ version: 'v4', auth });
 };
 
+// 取得已認證的 Drive API 客戶端（用於上傳試算表並轉成唯讀 Google Sheet）
+const getDriveClient = async () => {
+  const auth = getServiceAccountAuth();
+  if (!auth) {
+    return null;
+  }
+  return google.drive({ version: 'v3', auth });
+};
+
 // 取得團體日曆 ID
 const getGroupCalendarId = () => {
   const calendarId = process.env.GROUP_CALENDAR_ID;
@@ -117,6 +128,7 @@ module.exports = {
   getServiceAccountAuth,
   getCalendarClient,
   getSheetsClient,
+  getDriveClient,
   getGroupCalendarId,
   getSheetConfig,
 };
