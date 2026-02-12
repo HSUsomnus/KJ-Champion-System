@@ -91,12 +91,6 @@ async function checkEditPermission() {
       }
       
       console.log(`權限檢查: ${permissionMsg} - 可查看: ${canViewFinancial}, 可編輯評語: ${canEditComments}`);
-      
-      // 如果沒有查看權限，拒絕存取
-      if (!canViewFinancial) {
-        alert('❌ 您沒有權限查看此頁面');
-        window.history.back();
-      }
     }
   } catch (error) {
     console.error('檢查權限錯誤:', error);
