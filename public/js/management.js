@@ -271,20 +271,29 @@ function renderFinancialList(members) {
     return;
   }
 
-  container.innerHTML = members.map(member => `
-    <div class="data-item" style="padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="viewMemberFinancial('${escapeHtml(member.lineId)}', '${escapeHtml(member.displayName || member.name || '未設定')}')">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <img src="${member.pictureUrl || 'https://via.placeholder.com/50?text=👤'}" 
-             alt="${escapeHtml(member.name)}" 
-             style="width: 50px; height: 50px; border-radius: 50%;">
-        <div style="flex: 1; min-width: 0;">
-          <div style="font-weight: 600; font-size: 16px;">${escapeHtml(member.displayName || member.name || '未設定')}</div>
-          <div style="font-size: 12px; color: var(--text-light);">${escapeHtml(member.name || '未設定')}</div>
+  container.innerHTML = members.map(member => {
+    // 財力金額顯示（有值就顯示，沒有就顯示灰色「無資料」）
+    const amount = member.financialAmount || '';
+    const amountHtml = amount
+      ? `<span style="font-size: 13px; font-weight: 600; color: #e67e22; background: #fef5e7; padding: 2px 8px; border-radius: 12px; white-space: nowrap;">${escapeHtml(amount)}</span>`
+      : `<span style="font-size: 13px; color: #999; white-space: nowrap;">無資料</span>`;
+
+    return `
+      <div class="data-item" style="padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="viewMemberFinancial('${escapeHtml(member.lineId)}', '${escapeHtml(member.displayName || member.name || '未設定')}')">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="${member.pictureUrl || 'https://via.placeholder.com/50?text=👤'}" 
+               alt="${escapeHtml(member.name)}" 
+               style="width: 50px; height: 50px; border-radius: 50%;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 16px;">${escapeHtml(member.displayName || member.name || '未設定')}</div>
+            <div style="font-size: 12px; color: var(--text-light);">${escapeHtml(member.name || '未設定')}</div>
+          </div>
+          ${amountHtml}
+          <span style="font-size: 18px; color: var(--text-light);">&gt;</span>
         </div>
-        <span style="font-size: 18px; color: var(--text-light);">&gt;</span>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 /**

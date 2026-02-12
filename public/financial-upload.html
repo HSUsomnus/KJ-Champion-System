@@ -52,6 +52,114 @@
 
     <!-- 主要內容 -->
     <div id="main-content" class="hidden" style="padding-bottom: 180px;">
+      <!-- 財力金額顯示/編輯區域 -->
+      <div class="card" style="margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-weight: 600; font-size: 15px;">💰 財力金額</span>
+          <!-- 唯讀模式：顯示文字 -->
+          <span id="financial-amount-display" style="font-size: 15px; color: #999; padding: 6px 12px; background: var(--bg-color); border-radius: 8px; min-width: 80px; text-align: center;">無資料</span>
+          <!-- 編輯模式：下拉選單（預設隱藏） -->
+          <select id="financial-amount-select" class="hidden" style="font-size: 15px; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-color); min-width: 120px;">
+            <option value="">無</option>
+            <option value="500萬">500萬</option>
+            <option value="600萬">600萬</option>
+            <option value="700萬">700萬</option>
+            <option value="800萬">800萬</option>
+            <option value="900萬">900萬</option>
+            <option value="1000萬">1000萬</option>
+            <option value="1100萬">1100萬</option>
+            <option value="1200萬">1200萬</option>
+            <option value="1300萬">1300萬</option>
+            <option value="1400萬">1400萬</option>
+            <option value="1500萬">1500萬</option>
+            <option value="1600萬">1600萬</option>
+            <option value="1700萬">1700萬</option>
+            <option value="1800萬">1800萬</option>
+            <option value="1900萬">1900萬</option>
+            <option value="2000萬">2000萬</option>
+            <option value="2100萬">2100萬</option>
+            <option value="2200萬">2200萬</option>
+            <option value="2300萬">2300萬</option>
+            <option value="2400萬">2400萬</option>
+            <option value="2500萬">2500萬</option>
+            <option value="2600萬">2600萬</option>
+            <option value="2700萬">2700萬</option>
+            <option value="2800萬">2800萬</option>
+            <option value="2900萬">2900萬</option>
+            <option value="3000萬">3000萬</option>
+            <option value="3100萬">3100萬</option>
+            <option value="3200萬">3200萬</option>
+            <option value="3300萬">3300萬</option>
+            <option value="3400萬">3400萬</option>
+            <option value="3500萬">3500萬</option>
+            <option value="3600萬">3600萬</option>
+            <option value="3700萬">3700萬</option>
+            <option value="3800萬">3800萬</option>
+            <option value="3900萬">3900萬</option>
+            <option value="4000萬">4000萬</option>
+            <option value="4100萬">4100萬</option>
+            <option value="4200萬">4200萬</option>
+            <option value="4300萬">4300萬</option>
+            <option value="4400萬">4400萬</option>
+            <option value="4500萬">4500萬</option>
+            <option value="4600萬">4600萬</option>
+            <option value="4700萬">4700萬</option>
+            <option value="4800萬">4800萬</option>
+            <option value="4900萬">4900萬</option>
+            <option value="5000萬">5000萬</option>
+            <option value="5100萬">5100萬</option>
+            <option value="5200萬">5200萬</option>
+            <option value="5300萬">5300萬</option>
+            <option value="5400萬">5400萬</option>
+            <option value="5500萬">5500萬</option>
+            <option value="5600萬">5600萬</option>
+            <option value="5700萬">5700萬</option>
+            <option value="5800萬">5800萬</option>
+            <option value="5900萬">5900萬</option>
+            <option value="6000萬">6000萬</option>
+            <option value="6100萬">6100萬</option>
+            <option value="6200萬">6200萬</option>
+            <option value="6300萬">6300萬</option>
+            <option value="6400萬">6400萬</option>
+            <option value="6500萬">6500萬</option>
+            <option value="6600萬">6600萬</option>
+            <option value="6700萬">6700萬</option>
+            <option value="6800萬">6800萬</option>
+            <option value="6900萬">6900萬</option>
+            <option value="7000萬">7000萬</option>
+            <option value="7100萬">7100萬</option>
+            <option value="7200萬">7200萬</option>
+            <option value="7300萬">7300萬</option>
+            <option value="7400萬">7400萬</option>
+            <option value="7500萬">7500萬</option>
+            <option value="7600萬">7600萬</option>
+            <option value="7700萬">7700萬</option>
+            <option value="7800萬">7800萬</option>
+            <option value="7900萬">7900萬</option>
+            <option value="8000萬">8000萬</option>
+            <option value="8100萬">8100萬</option>
+            <option value="8200萬">8200萬</option>
+            <option value="8300萬">8300萬</option>
+            <option value="8400萬">8400萬</option>
+            <option value="8500萬">8500萬</option>
+            <option value="8600萬">8600萬</option>
+            <option value="8700萬">8700萬</option>
+            <option value="8800萬">8800萬</option>
+            <option value="8900萬">8900萬</option>
+            <option value="9000萬">9000萬</option>
+            <option value="9100萬">9100萬</option>
+            <option value="9200萬">9200萬</option>
+            <option value="9300萬">9300萬</option>
+            <option value="9400萬">9400萬</option>
+            <option value="9500萬">9500萬</option>
+            <option value="9600萬">9600萬</option>
+            <option value="9700萬">9700萬</option>
+            <option value="9800萬">9800萬</option>
+            <option value="9900萬">9900萬</option>
+          </select>
+        </div>
+      </div>
+
       <!-- 歷史記錄 -->
       <div class="card">
         <h2 class="card-title">📁 歷史上傳記錄</h2>

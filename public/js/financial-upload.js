@@ -45,6 +45,9 @@ async function init() {
     // 載入文件列表
     await loadDocuments();
     
+    // 載入財力金額
+    await loadFinancialAmount();
+    
     // 隱藏載入動畫，顯示主要內容
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('main-content').classList.remove('hidden');
@@ -451,6 +454,81 @@ function editComment(docId, currentComment, author, time) {
   
   // 儲存評語
   saveComment(docId, newComment.trim());
+}
+
+/**
+ * 載入該用戶的財力金額
+ * - 從管理中心進入（viewOnly）：顯示下拉選單可編輯
+ * - 從個人資料進入：只顯示文字（唯讀）
+ */
+async function loadFinancialAmount() {
+  try {
+    // 取得該用戶的成員資料（包含 financialAmount）
+    const response = await fetch(`/api/members/${encodeURIComponent(userId)}`);
+    const data = await response.json();
+
+    if (data.success) {
+      const amount = data.data.financialAmount || '';
+      const displayEl = document.getElementById('financial-amount-display');
+      const selectEl = document.getElementById('financial-amount-select');
+
+      if (isViewOnly && canEditComments) {
+        // 從管理中心進入 + 有編輯權限（負責人/開發者）→ 顯示下拉選單可編輯
+        if (displayEl) displayEl.classList.add('hidden');
+        if (selectEl) {
+          selectEl.classList.remove('hidden');
+          selectEl.value = amount;
+
+          // 選擇改變時自動儲存
+          selectEl.addEventListener('change', async () => {
+            await saveFinancialAmount(selectEl.value);
+          });
+        }
+      } else {
+        // 個人資料進入 或 無編輯權限 → 只顯示文字
+        if (displayEl) {
+          if (amount) {
+            displayEl.textContent = amount;
+            displayEl.style.color = 'var(--text-color)';
+            displayEl.style.fontWeight = '600';
+          } else {
+            displayEl.textContent = '無資料';
+            displayEl.style.color = '#999';
+            displayEl.style.fontWeight = 'normal';
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('載入財力金額錯誤:', error);
+  }
+}
+
+/**
+ * 儲存財力金額到資料庫
+ */
+async function saveFinancialAmount(amount) {
+  try {
+    const response = await fetch('/api/members/update-financial-amount', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        editorId: currentEditorId,
+        targetLineId: userId,
+        amount: amount,
+      }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      console.log('✅ 財力金額已更新:', amount || '無');
+    } else {
+      alert('❌ 更新失敗：' + (data.message || '未知錯誤'));
+    }
+  } catch (error) {
+    console.error('儲存財力金額錯誤:', error);
+    alert('❌ 儲存失敗：' + error.message);
+  }
 }
 
 /**

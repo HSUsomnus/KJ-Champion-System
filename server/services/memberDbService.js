@@ -36,6 +36,7 @@ const rowToMember = (row) => ({
   displayName: row.display_name || '',
   invitedBy: row.invited_by || null, // 邀請人（上級）的 LINE ID
   role: row.role || '一般人', // 成員角色：一般人, 負責人, 開發者
+  financialAmount: row.financial_amount || '', // 財力金額（無、500萬～9900萬）
 });
 
 /**
@@ -272,6 +273,33 @@ const updateMemberRole = async (lineId, role) => {
   }
 };
 
+/**
+ * 更新成員財力金額
+ * @param {string} lineId - LINE User ID
+ * @param {string} amount - 財力金額（空字串、無、500萬～9900萬）
+ * @returns {Promise<Object>} 更新後的成員物件
+ */
+const updateFinancialAmount = async (lineId, amount) => {
+  try {
+    const result = await db.query(`
+      UPDATE members
+      SET financial_amount = $1, updated_at = NOW()
+      WHERE line_id = $2
+      RETURNING *
+    `, [amount, lineId]);
+
+    if (result.rows.length === 0) {
+      throw new Error('找不到該成員');
+    }
+
+    console.log(`✅ 更新成員財力金額: ${lineId} -> ${amount}`);
+    return rowToMember(result.rows[0]);
+  } catch (error) {
+    console.error('❌ 更新成員財力金額失敗:', error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllMembers,
   getMemberByLineId,
@@ -279,6 +307,7 @@ module.exports = {
   createMember,
   updateMember,
   updateMemberRole,
+  updateFinancialAmount,
   getSubordinates,
   isSuperior,
   getSuperior,

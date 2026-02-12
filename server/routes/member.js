@@ -206,6 +206,49 @@ router.post('/check-permission', optionalLineUser, async (req, res) => {
 });
 
 /**
+ * PUT /api/members/update-financial-amount
+ * 更新成員財力金額（負責人 + 開發者可用）
+ */
+router.put('/update-financial-amount', async (req, res) => {
+  try {
+    const { editorId, targetLineId, amount } = req.body;
+
+    if (!editorId || !targetLineId) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少必要參數',
+      });
+    }
+
+    // 檢查編輯者權限（只有負責人和開發者可以編輯）
+    const editor = await memberDbService.getMemberByLineId(editorId);
+    const canEdit = editor && (editor.role === '開發者' || editor.role === '負責人');
+
+    if (!canEdit) {
+      return res.status(403).json({
+        success: false,
+        message: '無權限修改財力金額',
+      });
+    }
+
+    // 更新財力金額
+    const updatedMember = await memberDbService.updateFinancialAmount(targetLineId, amount || '');
+
+    res.json({
+      success: true,
+      data: updatedMember,
+      message: '財力金額更新成功',
+    });
+  } catch (error) {
+    console.error('❌ 更新財力金額錯誤:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '更新財力金額失敗',
+    });
+  }
+});
+
+/**
  * PUT /api/members/update-roles
  * 批量更新成員權限（僅開發者可用）
  */

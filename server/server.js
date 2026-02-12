@@ -9,6 +9,9 @@ const fs = require('fs');
 const cors = require('cors');
 require('dotenv').config();
 
+// 引入資料庫
+const db = require('./config/db');
+
 // 引入路由
 const calendarRoutes = require('./routes/calendar');
 const memberRoutes = require('./routes/member');
@@ -114,6 +117,20 @@ app.use((err, req, res, next) => {
     message: err.message || '伺服器發生錯誤',
   });
 });
+
+// 自動執行資料庫 migration（安全的 IF NOT EXISTS）
+(async () => {
+  try {
+    // 新增 financial_amount 欄位（如果不存在的話）
+    await db.query(`
+      ALTER TABLE members
+      ADD COLUMN IF NOT EXISTS financial_amount VARCHAR(50) DEFAULT ''
+    `);
+    console.log('✅ 資料庫 migration 完成（financial_amount）');
+  } catch (error) {
+    console.error('⚠️ 資料庫 migration 錯誤（非致命）:', error.message);
+  }
+})();
 
 // 匯出 app 供 Vercel Serverless 使用
 module.exports = app;
