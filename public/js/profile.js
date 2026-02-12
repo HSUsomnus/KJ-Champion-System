@@ -696,24 +696,27 @@ async function inviteMemberFromProfile() {
 
 /**
  * 前往財力上傳頁面
- * 由於 LIFF 的 external browser 限制，改為直接跳轉到該頁面
- * 該頁面會自動要求 LINE Login 並在外部瀏覽器完成驗證
+ * 有 userId 時帶入參數以維持登入狀態；在 LIFF 內盡量用外部瀏覽器開啟，失敗則改為同頁導向
  */
 function goToFinancialUpload() {
-  const userId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
-  
-  // 財力上傳頁面 URL
+  const userId = (window.LIFF && typeof window.LIFF.getUserId === 'function')
+    ? window.LIFF.getUserId()
+    : (userProfile && userProfile.lineId) ? userProfile.lineId : '';
+
   const baseUrl = window.location.origin;
-  const targetUrl = userId 
+  const targetUrl = userId
     ? `${baseUrl}/financial-upload.html?userId=${encodeURIComponent(userId)}`
     : `${baseUrl}/financial-upload.html`;
-  
-  // 如果在 LIFF 裡面，用外部瀏覽器開啟（跳出 LINE 的內建瀏覽器）
-  if (window.LIFF && window.LIFF.openURL) {
-    window.LIFF.openURL(targetUrl, true);
-  } else {
-    window.location.href = targetUrl;
+
+  try {
+    if (window.LIFF && typeof window.LIFF.openURL === 'function') {
+      window.LIFF.openURL(targetUrl, true);
+      return;
+    }
+  } catch (e) {
+    console.warn('LIFF openURL 失敗，改為直接導向:', e && e.message);
   }
+  window.location.href = targetUrl;
 }
 
 // 匯出函數供全域使用
