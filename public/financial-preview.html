@@ -48,18 +48,6 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    .btn-sheet {
-      background: #0F9D58;
-      color: #fff;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 12px;
-      text-decoration: none;
-      white-space: nowrap;
-      margin-right: 8px;
-    }
-    .btn-sheet:hover { color: #fff; opacity: 0.9; }
-
     /* 提示文字 */
     .hint {
       text-align: center;
@@ -146,7 +134,6 @@
   <!-- 標題列 -->
   <div class="header">
     <h1 id="preview-title">📊 載入中...</h1>
-    <a id="btn-sheet-link" href="#" target="_blank" rel="noopener" class="btn-sheet" style="display: none;">📋 在 Google 試算表查看</a>
     <button class="btn-back" onclick="goBack()">← 返回</button>
   </div>
 
@@ -205,20 +192,8 @@
         return;
       }
 
-      // 非同步取得「在 Google 試算表查看」連結（有的話顯示按鈕）
-      fetch('/api/financial/sheet-view-url')
-        .then(r => r.json())
-        .then(data => {
-          if (data.success && data.url) {
-            const a = document.getElementById('btn-sheet-link');
-            a.href = data.url;
-            a.style.display = '';
-          }
-        })
-        .catch(() => {});
-
       try {
-        // 下載原始檔案
+        // 下載該筆上傳的檔案並顯示試算表預覽
         const response = await fetch(`/api/financial/download/${docId}?userId=${encodeURIComponent(userId)}`);
         
         if (!response.ok) {

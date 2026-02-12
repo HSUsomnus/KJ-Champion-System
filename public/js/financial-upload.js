@@ -42,9 +42,6 @@ async function init() {
     // 檢查權限
     await checkEditPermission();
     
-    // 先取得 Google 試算表連結（供「瀏覽」按鈕使用）
-    await loadSheetViewLink();
-    
     // 載入文件列表
     await loadDocuments();
     
@@ -99,42 +96,6 @@ async function checkEditPermission() {
     console.error('檢查權限錯誤:', error);
     canViewFinancial = false;
     canEditComments = false;
-  }
-}
-
-/** 若有設定，點「瀏覽」時改為開啟此 Google 試算表連結（由 loadSheetViewLink 設定） */
-let sheetViewUrl = null;
-
-/**
- * 若有設定 Google 試算表檢視連結，顯示「在 Google 試算表查看」按鈕，並供「瀏覽」使用
- * 試算表設為「知道連結的任何人可檢視」時，使用者不需登入 Google
- */
-async function loadSheetViewLink() {
-  try {
-    const response = await fetch('/api/financial/sheet-view-url');
-    const data = await response.json();
-    if (data.success && data.url) {
-      sheetViewUrl = data.url;
-      const wrap = document.getElementById('sheet-view-link-wrap');
-      const link = document.getElementById('sheet-view-link');
-      if (wrap && link) {
-        link.href = data.url;
-        wrap.classList.remove('hidden');
-      }
-    }
-  } catch (e) {
-    // 無連結或 API 失敗時不顯示，靜默略過
-  }
-}
-
-/**
- * 點「瀏覽」時：有 Google 試算表連結就開試算表，否則開 APP 內預覽
- */
-function handleBrowseClick(docId, filename) {
-  if (sheetViewUrl) {
-    window.open(sheetViewUrl, '_blank', 'noopener,noreferrer');
-  } else {
-    previewDocument(docId, filename);
   }
 }
 
@@ -197,9 +158,9 @@ function renderDocuments(documents) {
               ${formatFileSize(doc.file_size)} · ${formatDate(doc.uploaded_at)}
             </p>
           </div>
-          <!-- 右側：操作按鈕（上下排列）；瀏覽：有試算表連結就開 Google 試算表，否則開 APP 內預覽 -->
+          <!-- 右側：操作按鈕；瀏覽＝開啟該筆上傳的試算表預覽頁 -->
           <div style="display: flex; flex-direction: column; gap: 6px; min-width: 80px;">
-            <button class="btn btn-sm btn-secondary" data-doc-id="${doc.id}" data-doc-filename="${escapeHtml(doc.original_filename).replace(/"/g, '&quot;')}" onclick="handleBrowseClick(parseInt(this.dataset.docId,10), this.dataset.docFilename)" style="width: 100%; padding: 6px 12px; font-size: 13px;">
+            <button class="btn btn-sm btn-secondary" data-doc-id="${doc.id}" data-doc-filename="${escapeHtml(doc.original_filename).replace(/"/g, '&quot;')}" onclick="previewDocument(parseInt(this.dataset.docId,10), this.dataset.docFilename)" style="width: 100%; padding: 6px 12px; font-size: 13px;">
               👁️ 瀏覽
             </button>
             <button class="btn btn-sm btn-primary" onclick="downloadDocument(${doc.id}, '${escapeHtml(doc.original_filename)}')" style="width: 100%; padding: 6px 12px; font-size: 13px;">
