@@ -297,12 +297,15 @@ function renderFinancialList(members) {
 }
 
 /**
- * 查看成員財力
+ * 查看成員財力（在 LIFF 內會用外部瀏覽器開啟）
  */
 function viewMemberFinancial(lineId, memberName) {
-  // 跳轉到財力上傳頁面（以管理員身份查看）
-  const targetUrl = `/financial-upload.html?userId=${encodeURIComponent(lineId)}&editorId=${encodeURIComponent(currentUserId)}&viewOnly=1`;
-  window.location.href = targetUrl;
+  const targetUrl = `${window.location.origin}/financial-upload.html?userId=${encodeURIComponent(lineId)}&editorId=${encodeURIComponent(currentUserId)}&viewOnly=1`;
+  if (window.LIFF && window.LIFF.openURL) {
+    window.LIFF.openURL(targetUrl, true);
+  } else {
+    window.location.href = targetUrl;
+  }
 }
 
 /**

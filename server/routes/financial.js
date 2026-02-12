@@ -68,6 +68,25 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 /**
+ * GET /api/financial/sheet-view-url
+ * 取得「在 Google 試算表查看」的連結（選填）
+ * 若設定 GOOGLE_SHEET_VIEW_URL 則回傳該網址；否則用 MEMBER_SHEET_ID 組出唯讀檢視連結
+ * 試算表需設為「知道連結的任何人可檢視」則使用者不需登入 Google
+ */
+router.get('/sheet-view-url', (req, res) => {
+  const customUrl = process.env.GOOGLE_SHEET_VIEW_URL || process.env.FINANCIAL_SHEET_VIEW_URL;
+  if (customUrl && customUrl.trim()) {
+    return res.json({ success: true, url: customUrl.trim() });
+  }
+  const sheetId = process.env.MEMBER_SHEET_ID;
+  if (sheetId) {
+    const viewUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/view`;
+    return res.json({ success: true, url: viewUrl });
+  }
+  res.json({ success: true, url: null });
+});
+
+/**
  * GET /api/financial/list
  * 取得使用者的財力文件列表（包含評語）
  */

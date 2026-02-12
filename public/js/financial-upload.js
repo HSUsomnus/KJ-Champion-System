@@ -52,6 +52,9 @@ async function init() {
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('main-content').classList.remove('hidden');
     
+    // 若有設定 Google 試算表檢視連結，顯示「在 Google 試算表查看」按鈕
+    loadSheetViewLink();
+    
     // 如果不是唯讀模式，顯示上傳區域
     if (!isViewOnly) {
       document.getElementById('upload-section').classList.remove('hidden');
@@ -96,6 +99,27 @@ async function checkEditPermission() {
     console.error('檢查權限錯誤:', error);
     canViewFinancial = false;
     canEditComments = false;
+  }
+}
+
+/**
+ * 若有設定 Google 試算表檢視連結，顯示「在 Google 試算表查看」按鈕
+ * 試算表設為「知道連結的任何人可檢視」時，使用者不需登入 Google
+ */
+async function loadSheetViewLink() {
+  try {
+    const response = await fetch('/api/financial/sheet-view-url');
+    const data = await response.json();
+    if (data.success && data.url) {
+      const wrap = document.getElementById('sheet-view-link-wrap');
+      const link = document.getElementById('sheet-view-link');
+      if (wrap && link) {
+        link.href = data.url;
+        wrap.classList.remove('hidden');
+      }
+    }
+  } catch (e) {
+    // 無連結或 API 失敗時不顯示，靜默略過
   }
 }
 

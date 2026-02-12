@@ -48,6 +48,17 @@
       cursor: pointer;
       white-space: nowrap;
     }
+    .btn-sheet {
+      background: #0F9D58;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-decoration: none;
+      white-space: nowrap;
+      margin-right: 8px;
+    }
+    .btn-sheet:hover { color: #fff; opacity: 0.9; }
 
     /* 提示文字 */
     .hint {
@@ -107,12 +118,15 @@
     table {
       border-collapse: collapse;
       font-size: 13px;
-      white-space: nowrap;
+      min-width: 100%;
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 6px 8px;
+      padding: 8px 10px;
       text-align: left;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      min-width: 50px;
     }
     th {
       background: #f5f5f5;
@@ -121,6 +135,10 @@
     tr:nth-child(even) {
       background: #fafafa;
     }
+    /* 數字、日期靠右對齊，較符合試算表習慣 */
+    td.num {
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -128,6 +146,7 @@
   <!-- 標題列 -->
   <div class="header">
     <h1 id="preview-title">📊 載入中...</h1>
+    <a id="btn-sheet-link" href="#" target="_blank" rel="noopener" class="btn-sheet" style="display: none;">📋 在 Google 試算表查看</a>
     <button class="btn-back" onclick="goBack()">← 返回</button>
   </div>
 
@@ -186,6 +205,18 @@
         return;
       }
 
+      // 非同步取得「在 Google 試算表查看」連結（有的話顯示按鈕）
+      fetch('/api/financial/sheet-view-url')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.url) {
+            const a = document.getElementById('btn-sheet-link');
+            a.href = data.url;
+            a.style.display = '';
+          }
+        })
+        .catch(() => {});
+
       try {
         // 下載原始檔案
         const response = await fetch(`/api/financial/download/${docId}?userId=${encodeURIComponent(userId)}`);
@@ -194,26 +225,43 @@
           throw new Error('下載失敗（' + response.status + '）');
         }
 
-        // 用 SheetJS 讀取原始 Excel 檔案
+        // 用 SheetJS 讀取原始 Excel 檔案（保留格式，空儲存格用空字串）
         const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer);
+        const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
 
-        // 組合表格 HTML
         const tablesContainer = document.getElementById('tables');
         let html = '';
 
         workbook.SheetNames.forEach(sheetName => {
-          // 將工作表轉成二維陣列
-          const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+          const sheet = workbook.Sheets[sheetName];
+          if (!sheet) return;
+          // header: 1 得到二維陣列；defval 讓空儲存格為 ''，避免 undefined
+          let sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+
+          if (!sheetData.length) {
+            html += `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3><p class="hint">（空白工作表）</p>`;
+            return;
+          }
+
+          // 統一每列欄數：以該工作表最大欄數為準，不足的補空字串，避免表格錯位
+          const maxCols = Math.max(...sheetData.map(row => (row && row.length) || 0));
+          const normalized = sheetData.map(row => {
+            const arr = Array.isArray(row) ? [...row] : [];
+            while (arr.length < maxCols) arr.push('');
+            return arr;
+          });
 
           html += `<h3 class="sheet-title">${escapeHtml(sheetName)}</h3>`;
           html += '<div class="table-wrapper"><table>';
 
-          sheetData.forEach((row, i) => {
+          normalized.forEach((row, i) => {
             html += '<tr>';
-            row.forEach(cell => {
+            row.forEach((cell, j) => {
               const tag = i === 0 ? 'th' : 'td';
-              html += `<${tag}>${escapeHtml(String(cell != null ? cell : ''))}</${tag}>`;
+              const text = cell != null ? String(cell).trim() : '';
+              const isNum = i > 0 && /^-?[\d,.%]+$/.test(text);
+              const cellClass = isNum ? ' class="num"' : '';
+              html += `<${tag}${cellClass}>${escapeHtml(text)}</${tag}>`;
             });
             html += '</tr>';
           });
