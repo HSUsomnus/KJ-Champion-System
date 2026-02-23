@@ -195,7 +195,7 @@ const getEventsByMonth = async (year, month, type = null) => {
     
     let query = `
       SELECT * FROM events
-      WHERE start_at >= $1 AND end_at <= $2
+      WHERE start_at >= $1 AND start_at <= $2
     `;
     const params = [timeMin, timeMax];
     
