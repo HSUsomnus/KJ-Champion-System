@@ -64,7 +64,7 @@
       return;
     }
 
-    if (!liff.isAvailable('shareTargetPicker')) {
+    if (typeof liff.isApiAvailable === 'function' && !liff.isApiAvailable('shareTargetPicker')) {
       showMsg('<h2>不支援分享</h2><p>此環境無法使用 shareTargetPicker。請使用最新版 LINE App。</p>');
       return;
     }
