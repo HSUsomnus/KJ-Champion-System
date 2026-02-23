@@ -11,7 +11,7 @@ let userPermissions = {
   isManager: false,
   isGuanLiZhe: false,
   canViewData: false, // 可查看數據（負責人、開發者、管理者）
-  canViewFinancial: false, // 可查看財力（負責人、開發者）
+  canViewFinancial: false, // 可查看財力（負責人、開發者、管理者）
   canEditPermission: false, // 可編輯權限（僅開發者）
 };
 
@@ -55,8 +55,8 @@ async function checkPermissions() {
       // 數據分頁權限：負責人 + 開發者 + 管理者
       userPermissions.canViewData = userPermissions.isAdmin || userPermissions.isManager || userPermissions.isGuanLiZhe;
       
-      // 財力分頁權限：負責人 + 開發者
-      userPermissions.canViewFinancial = userPermissions.isAdmin || userPermissions.isManager;
+      // 財力分頁權限：負責人 + 開發者 + 管理者
+      userPermissions.canViewFinancial = userPermissions.isAdmin || userPermissions.isManager || userPermissions.isGuanLiZhe;
       
       // 權限分頁：負責人 + 開發者
       userPermissions.canEditPermission = userPermissions.isAdmin || userPermissions.isManager;

@@ -86,6 +86,8 @@ async function checkEditPermission() {
         permissionMsg = '開發者權限';
       } else if (data.data.isManager) {
         permissionMsg = '負責人權限';
+      } else if (data.data.isGuanLiZhe) {
+        permissionMsg = '管理者權限（僅可查看）';
       } else if (data.data.isSuperior) {
         permissionMsg = '上級權限（僅可查看）';
       }

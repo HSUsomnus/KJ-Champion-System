@@ -398,7 +398,7 @@ router.post('/:id/comment', async (req, res) => {
 /**
  * GET /api/financial/check-permission
  * 檢查使用者的權限
- * - canView: 可以查看財力（上級、負責人、開發者）
+ * - canView: 可以查看財力（上級、負責人、開發者、管理者）
  * - canEdit: 可以編輯評語（只有負責人和開發者）
  */
 router.get('/check-permission', async (req, res) => {
@@ -417,12 +417,13 @@ router.get('/check-permission', async (req, res) => {
     
     const isAdmin = editorMember && editorMember.role === '開發者';
     const isManager = editorMember && editorMember.role === '負責人';
+    const isGuanLiZhe = editorMember && editorMember.role === '管理者';
     
     // 檢查是否為上級
     const isSuperior = await memberDbService.isSuperior(editorId, targetUserId);
 
-    // 查看權限：上級、負責人、開發者都可以查看
-    const canView = isAdmin || isManager || isSuperior;
+    // 查看權限：上級、負責人、開發者、管理者都可以查看
+    const canView = isAdmin || isManager || isGuanLiZhe || isSuperior;
     
     // 編輯評語權限：只有負責人和開發者可以編輯評語
     const canEdit = isAdmin || isManager;
@@ -434,6 +435,7 @@ router.get('/check-permission', async (req, res) => {
         canEdit,
         isAdmin,
         isManager,
+        isGuanLiZhe,
         isSuperior,
       },
     });
