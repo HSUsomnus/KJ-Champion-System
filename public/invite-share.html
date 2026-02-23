@@ -47,7 +47,20 @@
     await liff.init({ liffId: liffId });
 
     if (!liff.isInClient()) {
-      showMsg('<h2>請在 LINE 中開啟</h2><p>此頁面需在 LINE App 內開啟才能分享邀請字卡。請從主站的「邀請」按鈕重新進入。</p>');
+      var invitedBy = getInvitedBy();
+      var liffUrl = 'https://liff.line.me/' + liffId + (invitedBy ? '?invitedBy=' + encodeURIComponent(invitedBy) : '');
+      // 嘗試一次自動導向 LIFF URL，部分裝置會觸發「以 LINE 開啟」
+      if (!sessionStorage.getItem('liff_redirect_tried')) {
+        sessionStorage.setItem('liff_redirect_tried', '1');
+        window.location.replace(liffUrl);
+        return;
+      }
+      showMsg(
+        '<h2>請在 LINE 中開啟</h2>' +
+        '<p>此頁面需在 LINE App 內才能分享邀請字卡。</p>' +
+        '<p style="margin-top:16px;"><a href="' + liffUrl + '" class="btn" style="display:inline-block;padding:12px 24px;background:#06C755;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">點此在 LINE 中開啟</a></p>' +
+        '<p style="margin-top:12px;font-size:12px;color:#999;">點擊上方按鈕會嘗試開啟 LINE App</p>'
+      );
       return;
     }
 
