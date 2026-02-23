@@ -93,8 +93,8 @@ npm install pg uuid
 | `GOOGLE_PRIVATE_KEY` | Google Service Account 私鑰 | `-----BEGIN PRIVATE KEY-----\n...` |
 | `GOOGLE_PROJECT_ID` | Google Cloud 專案 ID | `line-liff-calendar` |
 | `GROUP_CALENDAR_ID` | 團體日曆 ID | `xxx@group.calendar.google.com` |
-| `LIFF_ID` | LINE LIFF ID | `2008916605-xxx` |
-| `LINE_CHANNEL_ID` | LINE Channel ID | `2008916605` |
+| `LIFF_ID` | LINE LIFF ID | `YOUR_LIFF_ID`（例：1234567890-xxx） |
+| `LINE_CHANNEL_ID` | LINE Channel ID | `YOUR_CHANNEL_ID`（從 LINE Developers 取得） |
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret | `xxx` |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE Channel Access Token | `xxx` |
 | `APP_URL` | Vercel 部署後的網址 | `https://your-project.vercel.app` |
