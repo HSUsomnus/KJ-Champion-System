@@ -640,52 +640,18 @@ async function registerUser() {
 
 /**
  * 從個人資料頁面邀請新成員
+ * 透過 LINE URL Scheme 分享邀請連結
  */
 async function inviteMemberFromProfile() {
   try {
-    const baseUrl = window.location.origin;
-    const useMinimal = /[?&]minimal=1/.test(location.search);
-    // 取得當前用戶的 LINE ID 作為邀請人
     const inviterLineId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
-    
-    const url = `/api/line/invite-message?baseUrl=${encodeURIComponent(baseUrl)}${useMinimal ? '&minimal=1' : ''}${inviterLineId ? '&inviterLineId=' + encodeURIComponent(inviterLineId) : ''}`;
-    const res = await fetch(url);
-    
-    const text = await res.text();
-    let data;
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch (e) {
-      console.error('[邀請] 回傳非 JSON', res.status, text.slice(0, 200));
-      const nonJsonErr = res.status + ' ' + (res.statusText || '') + '\n' + (text.slice(0, 200) || '無內容');
-      if (window.showAppAlert) await window.showAppAlert(nonJsonErr);
-      else alert(nonJsonErr);
-      return;
-    }
+    const baseUrl = window.location.origin;
 
-    if (!data.success || !data.data || !data.data.flexMessage) {
-      const apiErr = (data && data.message) ? data.message : (res.status + ' ' + (res.statusText || '') + (data ? '\n' + JSON.stringify(data).slice(0, 300) : ''));
-      console.error('[邀請] API 失敗', res.status, data);
-      if (window.showAppAlert) await window.showAppAlert(apiErr || String(res.status));
-      else alert(apiErr || String(res.status));
-      return;
-    }
+    // 組合邀請連結
+    const inviteUrl = baseUrl + '/profile.html' + (inviterLineId ? '?invitedBy=' + encodeURIComponent(inviterLineId) : '');
+    const shareText = '📋 邀請你加入我們！\n\n請點擊下方連結完成註冊：\n' + inviteUrl;
 
-    const flexBubble = data.data.flexMessage;
-    const messages = [{ type: 'flex', altText: '邀請加入我們：請完成以下步驟', contents: flexBubble }];
-
-    if (!window.liff || !window.liff.isLoggedIn()) {
-      if (window.showAppAlert) await window.showAppAlert('請先登入 LINE');
-      else alert('請先登入 LINE');
-      return;
-    }
-
-    const result = await window.liff.shareTargetPicker(messages);
-    if (result) {
-      console.log('[邀請] shareTargetPicker 成功', result);
-    } else {
-      console.log('[邀請] shareTargetPicker 使用者取消');
-    }
+    await window.LIFF.shareMessage(shareText);
   } catch (error) {
     console.error('[邀請] 錯誤:', error);
     const errMsg = (error && error.message) ? error.message : String(error || '');
@@ -696,26 +662,16 @@ async function inviteMemberFromProfile() {
 
 /**
  * 前往財力上傳頁面
- * 有 userId 時帶入參數以維持登入狀態；在 LIFF 內盡量用外部瀏覽器開啟，失敗則改為同頁導向
  */
 function goToFinancialUpload() {
   const userId = (window.LIFF && typeof window.LIFF.getUserId === 'function')
     ? window.LIFF.getUserId()
     : (userProfile && userProfile.lineId) ? userProfile.lineId : '';
 
-  const baseUrl = window.location.origin;
   const targetUrl = userId
-    ? `${baseUrl}/financial-upload.html?userId=${encodeURIComponent(userId)}`
-    : `${baseUrl}/financial-upload.html`;
+    ? `/financial-upload.html?userId=${encodeURIComponent(userId)}`
+    : '/financial-upload.html';
 
-  try {
-    if (window.LIFF && typeof window.LIFF.openURL === 'function') {
-      window.LIFF.openURL(targetUrl, true);
-      return;
-    }
-  } catch (e) {
-    console.warn('LIFF openURL 失敗，改為直接導向:', e && e.message);
-  }
   window.location.href = targetUrl;
 }
 

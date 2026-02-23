@@ -301,11 +301,7 @@ function renderFinancialList(members) {
  */
 function viewMemberFinancial(lineId, memberName) {
   const targetUrl = `${window.location.origin}/financial-upload.html?userId=${encodeURIComponent(lineId)}&editorId=${encodeURIComponent(currentUserId)}&viewOnly=1`;
-  if (window.LIFF && window.LIFF.openURL) {
-    window.LIFF.openURL(targetUrl, true);
-  } else {
-    window.location.href = targetUrl;
-  }
+  window.open(targetUrl, '_blank');
 }
 
 /**

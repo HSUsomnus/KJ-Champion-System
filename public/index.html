@@ -7,8 +7,6 @@
   <title>行事曆</title>
   <link rel="icon" type="image/png" href="/images/logo.png">
   <link rel="stylesheet" href="/css/style.css">
-  <!-- LINE LIFF SDK -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
   <!-- 網址帶 ?eruda=1 時載入 Eruda，方便手機 LINE 瀏覽器看 Console -->
@@ -124,6 +122,7 @@
         this.disabled = true;
         this.textContent = '導向登入中…';
         if (window.LIFF && window.LIFF.login) window.LIFF.login();
+        else triggerLogin();
       });
     })();
   </script>

@@ -25,14 +25,14 @@
 - **要**依照使用者給出的「依據哪個項目」與「什麼跟什麼之間的關係」來對齊。
 - 使用者會明確指定：依據 **[哪個頁面／項目]** 的 **[什麼]** 跟 **[什麼]** 的關係。
 
-# 執行模式（開發／內測／正式部署）
+# 執行模式（開發／正式部署）
 - **不要自動判斷**：執行模式一律由使用者手動設定關鍵字，禁止依 hostname、網址或環境自動判斷。
 - **唯一設定位置**：`public/js/liff.js` 最上方的 `APP_RUN_MODE`。
-- **三種關鍵字**：
-  - `'development'` = **開發模式**（模擬 LINE，本機測試）
-  - `'internal'` = **內測模式**（真實 LIFF，本機跑伺服 + ngrok 測試）
-  - `'production'` = **正式部署**（真實 LIFF，正式網域）
+- **兩種關鍵字**：
+  - `'development'` = **開發模式**（模擬 LINE ID，本機測試）
+  - `'production'` = **正式模式**（LINE Login OAuth + LINE URL Scheme，不依賴 LIFF）
 - 切換情境時只改 `APP_RUN_MODE` 這一個關鍵字即可。
+- 注意：已移除 LIFF SDK 依賴，登入改用 LINE Login（OAuth），分享改用 LINE URL Scheme。
 
 # 錯誤訊息與除錯
 - **要顯示實際錯誤**：catch 到錯誤時，alert／showAppAlert 只顯示**實際錯誤內容**（例如 `err.code`、`err.message` 或 API 回傳的 message），方便使用者對照文件 debug。
@@ -42,9 +42,10 @@
 # 後端變更與伺服器
 - **改後端要提醒重啟**：只要修改了 `server/` 目錄下的程式碼（例如 routes、services），回覆時必須明確提醒使用者：**需重啟本機伺服器，變更才會生效**。不要假設使用者會自己重啟。
 
-# LIFF／邀請字卡實機測試
-- **從 LIFF 網址進入**：在 LINE App 內測試時，必須用 `https://liff.line.me/{LIFF_ID}/頁面` 開啟，不要直接開 ngrok 網址；否則 LIFF 未在正確情境下運行，分享／權限可能異常。
-- **權限變更後重開**：若在 LINE Developers Console 改了 LIFF 權限（例如補上 `chat_message.write`），需關閉 LIFF 再重新從 liff 連結進入才會生效。
+# 登入與分享測試
+- **登入方式**：所有頁面使用 LINE Login（OAuth），不依賴 LIFF。使用者點「使用 LINE 登入」→ 導向 `/api/auth/line-login` → LINE 授權 → 回調帶 userId。
+- **分享方式**：手機上用 LINE URL Scheme（`https://line.me/R/share?text=...`）開啟 LINE 的分享畫面；電腦上 fallback 到 Web Share API 或複製到剪貼簿。
+- **不需在 LINE App 內開啟**：所有頁面都可在一般瀏覽器（Chrome、Safari 等）使用，可在手機桌面加捷徑。
 
 # 需求與方案變更（必守）
 - **未經詢問不得改動**：若發現使用者的需求或方案在實作上有困難、或依文件/經驗判斷可能達不到預期效果，**不得自行改用其他做法**。

@@ -1,24 +1,22 @@
 /**
- * LINE LIFF 初始化與工具函數
- * 負責初始化 LIFF SDK 並提供常用的 LINE 功能
+ * 身份驗證與 LINE 功能模組（不依賴 LIFF SDK）
+ * 使用 LINE Login (OAuth) 登入 + LINE URL Scheme 分享
+ * 提供與原本相同的 window.LIFF 介面，讓其他頁面無需修改
  */
 
-// ========== 執行模式（請手動設定，不要自動判斷） ==========
-// 請依目前情境改為以下其一：
-//   'development' = 開發模式（模擬 LINE，本機測試）
-//   'internal'    = 內測模式（真實 LIFF，本機跑伺服 + ngrok 測試）
-//   'production'  = 正式部署（真實 LIFF，正式網域）
-var APP_RUN_MODE = 'internal';
+// ========== 執行模式（請手動設定） ==========
+// 'development' = 開發模式（模擬 LINE，本機測試）
+// 'production'  = 正式模式（LINE Login OAuth + LINE URL Scheme）
+var APP_RUN_MODE = 'production';
 // ==========
 
-// LIFF 初始化狀態
+// 登入狀態
 let liffInitialized = false;
 let liffUserId = null;
 let liffProfile = null;
 
 /**
  * 檢查網址是否帶有 dev 參數（?dev=1 或 ?dev=0）
- * 本機測試時可透過 URL ?dev=1 / ?dev=0 切換模式
  */
 function getDevParamFromUrl() {
   try {
@@ -31,26 +29,27 @@ function getDevParamFromUrl() {
 }
 
 /**
- * 取得執行模式（URL 參數 ?dev=1 / ?dev=0 可覆蓋 APP_RUN_MODE）
+ * 取得執行模式（URL 參數可覆蓋 APP_RUN_MODE）
  */
 function getRunMode() {
   var urlOverride = getDevParamFromUrl();
   if (urlOverride) return urlOverride;
   var m = (typeof APP_RUN_MODE === 'string' && APP_RUN_MODE) || 'production';
-  if (m !== 'development' && m !== 'internal' && m !== 'production') return 'production';
+  // 相容舊的 'internal' 模式，視為 'production'
+  if (m === 'internal') return 'production';
+  if (m !== 'development' && m !== 'production') return 'production';
   return m;
 }
 
 /**
- * 是否為開發模式（URL ?dev=1 或 APP_RUN_MODE === 'development' 時為 true）
+ * 是否為開發模式
  */
 function isDevMode() {
   return getRunMode() === 'development';
 }
 
 /**
- * 每次用戶進入系統時呼叫：將目前 LINE 頭像與資料庫比對，有更新則同步到 Google Sheet
- * 不阻塞畫面，背景執行即可
+ * 進入系統時：將 LINE 頭像與資料庫比對，有更新則同步
  */
 function syncAvatarOnEntry(userId, pictureUrl) {
   if (!userId) return;
@@ -66,14 +65,14 @@ function syncAvatarOnEntry(userId, pictureUrl) {
 }
 
 /**
- * 初始化 LINE LIFF
- * @returns {Promise<void>}
+ * 初始化登入狀態（取代原本的 LIFF 初始化）
+ * 流程：URL 參數 → localStorage → 未登入
  */
 async function initLIFF() {
   try {
-    // 開發模式：跳過 LINE 登入，使用固定模擬 LINE ID，可測試成員/個人資料等（僅分享等需真實 LINE 的功能不可測）
+    // === 開發模式：使用模擬 LINE ID ===
     if (isDevMode()) {
-      liffUserId = 'U11111111111111111111111111111111'; // 33 字元固定模擬 LINE User ID
+      liffUserId = 'U11111111111111111111111111111111';
       liffProfile = {
         userId: liffUserId,
         displayName: '開發測試員',
@@ -81,83 +80,99 @@ async function initLIFF() {
         statusMessage: ''
       };
       liffInitialized = true;
-      console.log('🛠️ 開發模式：已使用模擬 LINE ID，可測試成員與個人資料');
-      // 延遲觸發，讓其他腳本有時間註冊 liffReady 監聽
+      console.log('🛠️ 開發模式：已使用模擬 LINE ID');
       setTimeout(function () {
-        window.dispatchEvent(new CustomEvent('liffReady', { 
-          detail: { userId: liffUserId, profile: liffProfile } 
+        window.dispatchEvent(new CustomEvent('liffReady', {
+          detail: { userId: liffUserId, profile: liffProfile }
         }));
       }, 0);
-
-      // 開發模式：進入頁（index）的檢查與導向由 index 的 entryGate 處理（登入動畫後再檢查）
-      // 非進入頁（例如直接開 list.html）若未註冊仍可操作，不在此強制導向
       return;
     }
 
-    // 從後端取得 LIFF ID
-    const response = await fetch('/api/line/liff-id');
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error('無法取得 LIFF ID');
-    }
+    // === 正式模式：從 URL 參數或 localStorage 取得 userId ===
+    var params = new URLSearchParams(window.location.search);
+    var urlUserId = params.get('userId');
+    var isAuth = params.get('auth') === '1';
 
-    const liffId = data.data.liffId;
+    if (urlUserId) {
+      // 從 OAuth 回調拿到 userId，存到 localStorage
+      liffUserId = urlUserId;
+      localStorage.setItem('lineUserId', urlUserId);
 
-    // 初始化 LIFF SDK
-    await liff.init({ liffId: liffId });
+      // 也儲存 LINE 暱稱與頭像（由 OAuth 回調帶回）
+      var urlDisplayName = params.get('displayName');
+      var urlPictureUrl = params.get('pictureUrl');
+      if (urlDisplayName) localStorage.setItem('lineDisplayName', urlDisplayName);
+      if (urlPictureUrl) localStorage.setItem('linePictureUrl', urlPictureUrl);
 
-    // 取得使用者資訊
-    if (liff.isLoggedIn()) {
-      const profile = await liff.getProfile();
-      liffUserId = profile.userId;
-      liffProfile = profile;
-      // 每次進入系統：檢查用戶是否換 LINE 頭像，有更新則同步到 Google Sheet
-      if (!isDevMode() && liffUserId) {
-        syncAvatarOnEntry(liffUserId, (profile.pictureUrl || '').trim());
+      liffProfile = {
+        userId: liffUserId,
+        displayName: urlDisplayName || '',
+        pictureUrl: urlPictureUrl || '',
+        statusMessage: ''
+      };
+
+      // 清除 URL 中的登入參數（保留其他參數如 date、id 等）
+      if (isAuth) {
+        var cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('userId');
+        cleanUrl.searchParams.delete('auth');
+        cleanUrl.searchParams.delete('displayName');
+        cleanUrl.searchParams.delete('pictureUrl');
+        history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
       }
-      console.log('✅ LIFF 初始化成功');
-      console.log('使用者 ID:', liffUserId);
     } else {
-      // 未登入：不自動跳轉，改顯示「使用 LINE 登入」按鈕，讓使用者手動觸發登入（方便測試與整合）
-      console.log('⚠️ 尚未使用 LINE 登入，請點選登入按鈕');
+      // 沒有 URL 參數，從 localStorage 讀取
+      liffUserId = localStorage.getItem('lineUserId');
+      if (liffUserId) {
+        liffProfile = {
+          userId: liffUserId,
+          displayName: localStorage.getItem('lineDisplayName') || '',
+          pictureUrl: localStorage.getItem('linePictureUrl') || '',
+          statusMessage: ''
+        };
+      }
     }
 
+    // 標記初始化完成
     liffInitialized = true;
-    
-    // 觸發自訂事件，通知其他模組 LIFF 已準備好
-    window.dispatchEvent(new CustomEvent('liffReady', { 
-      detail: { userId: liffUserId, profile: liffProfile } 
+
+    if (liffUserId) {
+      console.log('✅ 登入成功，使用者 ID:', liffUserId);
+      // 同步 LINE 頭像
+      if (liffProfile && liffProfile.pictureUrl) {
+        syncAvatarOnEntry(liffUserId, liffProfile.pictureUrl);
+      }
+    } else {
+      console.log('⚠️ 尚未登入');
+    }
+
+    // 觸發 liffReady 事件（與原本相同，讓其他頁面可以接收）
+    window.dispatchEvent(new CustomEvent('liffReady', {
+      detail: { userId: liffUserId, profile: liffProfile }
     }));
 
-    // 進入頁（index）的流程由 index 的 entryGate 腳本處理：登入動畫 → 檢查成員 → 登入頁/註冊頁/主頁
+    // 首頁的流程由 index 的 entryGate 處理
     var path = (window.location.pathname || '').toLowerCase();
     var isEntryPage = path === '/' || path.endsWith('/index.html');
-    if (isEntryPage) {
-      // 不在此處顯示 overlay、也不在此處做註冊檢查，交給 index 的 entryGate
-      return;
-    }
+    if (isEntryPage) return;
 
-    // 非進入頁：未登入時顯示「使用 LINE 登入」overlay
-    if (!liffUserId && typeof liff !== 'undefined') {
+    // 非首頁：未登入時顯示登入按鈕
+    if (!liffUserId) {
       showLoginOverlay();
     }
 
-    // 非進入頁、已登入：若目前為 profile 以外需要登入的頁，可在此做其他檢查（進入頁已由 index 處理）
-
   } catch (error) {
-    console.error('❌ LIFF 初始化失敗:', error);
-    // 即使 LIFF 初始化失敗，也允許應用程式繼續運行（用於開發測試）
+    console.error('❌ 初始化失敗:', error);
     liffInitialized = false;
-    window.dispatchEvent(new CustomEvent('liffReady', { 
-      detail: { userId: null, profile: null } 
+    window.dispatchEvent(new CustomEvent('liffReady', {
+      detail: { userId: null, profile: null }
     }));
   }
 }
 
 /**
  * 取得 LINE User ID
- * @returns {string|null}
  */
 function getUserId() {
   return liffUserId;
@@ -165,107 +180,111 @@ function getUserId() {
 
 /**
  * 取得 LINE 使用者資料
- * @returns {Object|null}
  */
 function getProfile() {
   return liffProfile;
 }
 
 /**
- * 分享訊息到 LINE 好友或群組
- * @param {string} message - 要分享的訊息文字
- * @returns {Promise<void>}
+ * 分享訊息到 LINE（使用 LINE URL Scheme，不需要 LIFF）
+ * 手機：開啟 LINE 的「分享給…」畫面，可選好友／群組
+ * 電腦：嘗試 Web Share API，失敗則複製到剪貼簿
  */
 async function shareMessage(message) {
   try {
-    if (!liffInitialized || !liff.isInClient()) {
-      // 如果不在 LINE 環境中，使用 Web Share API
-      if (navigator.share) {
-        await navigator.share({
-          title: '分享行程',
-          text: message,
-        });
-        return;
-      } else {
-        // 複製到剪貼簿
-        await navigator.clipboard.writeText(message);
-        if (window.showAppAlert) await window.showAppAlert('訊息已複製到剪貼簿！');
-        else alert('訊息已複製到剪貼簿！');
-        return;
-      }
+    var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // 手機：用 LINE URL Scheme 開啟 LINE 的分享畫面
+      var lineShareUrl = 'https://line.me/R/share?text=' + encodeURIComponent(message);
+      window.location.href = lineShareUrl;
+      return;
     }
 
-    // 使用 LINE LIFF 的分享功能
-    await liff.shareTargetPicker([
-      {
-        type: 'text',
-        text: message,
-      },
-    ]);
+    // 電腦：嘗試 Web Share API
+    if (navigator.share) {
+      await navigator.share({ title: '分享', text: message });
+      return;
+    }
+
+    // 最後手段：複製到剪貼簿
+    await navigator.clipboard.writeText(message);
+    if (window.showAppAlert) await window.showAppAlert('📋 訊息已複製到剪貼簿！');
+    else alert('📋 訊息已複製到剪貼簿！');
   } catch (error) {
-    console.error('❌ 分享失敗:', error);
-    
-    // 如果分享失敗，嘗試複製到剪貼簿
+    console.error('分享失敗:', error);
     try {
       await navigator.clipboard.writeText(message);
-      if (window.showAppAlert) await window.showAppAlert('分享功能無法使用，訊息已複製到剪貼簿！');
-      else alert('分享功能無法使用，訊息已複製到剪貼簿！');
+      if (window.showAppAlert) await window.showAppAlert('📋 訊息已複製到剪貼簿！');
+      else alert('📋 訊息已複製到剪貼簿！');
     } catch (clipboardError) {
-      if (window.showAppAlert) await window.showAppAlert('無法分享訊息，請手動複製：\n\n' + message);
-      else alert('無法分享訊息，請手動複製：\n\n' + message);
+      if (window.showAppAlert) await window.showAppAlert('請手動複製：\n\n' + message);
+      else alert('請手動複製：\n\n' + message);
     }
   }
 }
 
 /**
- * 開啟外部連結
- * @param {string} url - 要開啟的網址
- * @param {boolean} external - 是否在外部瀏覽器開啟
+ * 分享多則訊息到 LINE（取代原本的 liff.shareTargetPicker）
+ * 從訊息陣列中取出文字內容，用 LINE URL Scheme 分享
  */
-function openURL(url, external = false) {
-  if (liffInitialized && liff.isInClient()) {
-    if (external) {
-      liff.openWindow({ url: url, external: true });
-    } else {
-      liff.openWindow({ url: url, external: false });
-    }
-  } else {
-    window.open(url, '_blank');
+async function shareTargetPicker(messages) {
+  // 從訊息中取出可讀文字
+  var textParts = [];
+  for (var i = 0; i < messages.length; i++) {
+    var msg = messages[i];
+    if (msg.text) textParts.push(msg.text);
+    else if (msg.altText) textParts.push(msg.altText);
   }
+  var text = textParts.join('\n') || '分享內容';
+  return shareMessage(text);
 }
 
 /**
- * 關閉 LIFF 視窗（回到 LINE）
+ * 開啟外部連結（直接用 window.open，不需要 LIFF）
+ */
+function openURL(url, external) {
+  window.open(url, '_blank');
+}
+
+/**
+ * 關閉視窗
  */
 function closeWindow() {
-  if (liffInitialized && liff.isInClient()) {
-    liff.closeWindow();
-  } else {
-    // 如果不在 LINE 環境中，顯示提示（統一彈窗風格）
-    if (window.showAppConfirm) {
-      window.showAppConfirm('確定要離開嗎？', { yesText: '確定', noText: '取消' }).then(function (ok) {
-        if (ok) window.close();
-      });
-    } else if (confirm('確定要離開嗎？')) {
-      window.close();
-    }
+  if (window.showAppConfirm) {
+    window.showAppConfirm('確定要離開嗎？', { yesText: '確定', noText: '取消' }).then(function (ok) {
+      if (ok) window.close();
+    });
+  } else if (confirm('確定要離開嗎？')) {
+    window.close();
   }
 }
 
 /**
- * 觸發 LINE 登入（導向 LINE OAuth，登入後會回到目前頁面）
- * 僅在非開發模式且 LIFF 已載入時有效
+ * 觸發 LINE 登入（導向 LINE OAuth 授權頁）
  */
 function triggerLogin() {
   if (isDevMode()) return;
-  if (typeof liff !== 'undefined' && liff.login) {
-    liff.login();
-  }
+  // 把當前頁面網址當作登入後的返回目標
+  var returnUrl = window.location.pathname + window.location.search;
+  window.location.href = '/api/auth/line-login?returnUrl=' + encodeURIComponent(returnUrl);
+}
+
+/**
+ * 登出：清除 localStorage 並重新載入
+ */
+function logout() {
+  localStorage.removeItem('lineUserId');
+  localStorage.removeItem('lineDisplayName');
+  localStorage.removeItem('linePictureUrl');
+  liffUserId = null;
+  liffProfile = null;
+  liffInitialized = false;
+  window.location.reload();
 }
 
 /**
  * 顯示「使用 LINE 登入」全螢幕 overlay
- * 當非開發模式且未登入時，由 initLIFF 呼叫
  */
 function showLoginOverlay() {
   if (document.getElementById('liff-login-overlay')) return;
@@ -285,39 +304,14 @@ function showLoginOverlay() {
   document.body.appendChild(overlay);
 }
 
-// 頁面載入時自動初始化 LIFF
-// 開發模式：不需要等 LIFF SDK（讓本地測試不被 CDN 載入速度影響）
-if (isDevMode()) {
-  initLIFF();
-} else if (typeof liff !== 'undefined') {
-  initLIFF();
-} else {
-  console.error('❌ LIFF SDK 未載入，請確認已引入 liff.js');
-}
-
 /**
- * 分享多則訊息到 LINE（可含 Flex 字卡）
- * 供成員頁「邀請新夥伴」等使用，分享出去會是字卡樣式而非純文字
- * @param {Array<object>} messages - 訊息陣列，例如 [{ type: 'flex', altText: '...', contents: flexBubble }]
- * @returns {Promise<void>}
- */
-async function shareTargetPicker(messages) {
-  if (typeof liff !== 'undefined' && liff.shareTargetPicker) {
-    return liff.shareTargetPicker(messages);
-  }
-  return Promise.reject(new Error('shareTargetPicker 僅在 LINE App 內可用'));
-}
-
-/**
- * 取得「分享／轉發」的發送對象（供所有分享字卡、整月文字使用，不含邀請字卡）
- * 留空＝發送到與 Bot 的聊天室（自己）；輸入 33 字元＝轉發到指定 User ID 或 Group ID；取消＝不發送
- * @returns {Promise<{ cancelled: boolean, targetId: string|null }>}
+ * 取得「分享／轉發」的發送對象（後端 Push 用）
  */
 function getShareTarget() {
-  const msg = '發送到與 Bot 的聊天室（自己）請留空；\n轉發到指定好友或群組請輸入 User ID 或 Group ID（33 字元）';
-  const input = prompt(msg);
+  var msg = '發送到與 Bot 的聊天室（自己）請留空；\n轉發到指定好友或群組請輸入 User ID 或 Group ID（33 字元）';
+  var input = prompt(msg);
   if (input === null) return Promise.resolve({ cancelled: true, targetId: null });
-  const trimmed = String(input || '').trim();
+  var trimmed = String(input || '').trim();
   if (trimmed.length === 0) return Promise.resolve({ cancelled: false, targetId: null });
   if (trimmed.length !== 33) {
     alert('請輸入 33 字元的 User ID 或 Group ID');
@@ -326,7 +320,10 @@ function getShareTarget() {
   return Promise.resolve({ cancelled: false, targetId: trimmed });
 }
 
-// 匯出函數供其他模組使用（單一 switch：開發／內測／正式）
+// 頁面載入時自動初始化
+initLIFF();
+
+// === 匯出 window.LIFF 介面（與原本相同） ===
 window.LIFF = {
   init: initLIFF,
   getUserId: getUserId,
@@ -337,7 +334,20 @@ window.LIFF = {
   openURL: openURL,
   closeWindow: closeWindow,
   login: triggerLogin,
-  isInitialized: () => liffInitialized,
+  logout: logout,
+  isInitialized: function () { return liffInitialized; },
   getRunMode: getRunMode,
   isDevMode: isDevMode,
+};
+
+// === window.liff 相容層 ===
+// 讓原本直接呼叫 liff.shareTargetPicker() 等的程式碼仍能運作
+window.liff = {
+  shareTargetPicker: shareTargetPicker,
+  shareMessage: shareMessage,
+  isInClient: function () { return false; },
+  isLoggedIn: function () { return !!liffUserId; },
+  login: triggerLogin,
+  getProfile: function () { return Promise.resolve(liffProfile); },
+  init: function () { return Promise.resolve(); },
 };

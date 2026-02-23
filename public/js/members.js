@@ -154,51 +154,26 @@ function viewMemberDetail(lineId) {
 }
 
 /**
- * 邀請新成員：直接呼叫 liff.shareTargetPicker 分享 Flex 字卡
- * 失敗就顯示錯誤訊息，不 fallback 文字
+ * 邀請新成員：透過 LINE URL Scheme 分享邀請連結
+ * 使用者點擊後會開啟 LINE 的「分享給…」畫面，選擇好友或群組
  */
 async function inviteMember() {
   try {
-    const baseUrl = window.location.origin;
-    const useMinimal = /[?&]minimal=1/.test(location.search);
     // 取得當前用戶的 LINE ID 作為邀請人
     const inviterLineId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
-    
-    const url = `/api/line/invite-message?baseUrl=${encodeURIComponent(baseUrl)}${useMinimal ? '&minimal=1' : ''}${inviterLineId ? '&inviterLineId=' + encodeURIComponent(inviterLineId) : ''}`;
-    const res = await fetch(url);
-    
-    // 先取文字，避免回傳非 JSON（例如 HTML 錯誤頁）時 parse 炸掉
-    const text = await res.text();
-    let data;
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch (e) {
-      // 伺服器回傳的不是 JSON（例如 502 的 HTML），顯示狀態與內容前段
-      console.error('[邀請] 回傳非 JSON', res.status, text.slice(0, 200));
-      var nonJsonErr = res.status + ' ' + (res.statusText || '') + '\n' + (text.slice(0, 200) || '無內容');
-      if (window.showAppAlert) await window.showAppAlert(nonJsonErr);
-      else alert(nonJsonErr);
-      return;
-    }
+    const baseUrl = window.location.origin;
 
-    if (!data.success || !data.data || !data.data.flexMessage) {
-      // 只顯示後端回傳的 message 或狀態，不自己加「無法取得邀請字卡」等字
-      var apiErr = (data && data.message) ? data.message : (res.status + ' ' + (res.statusText || '') + (data ? '\n' + JSON.stringify(data).slice(0, 300) : ''));
-      console.error('[邀請] API 失敗', res.status, data);
-      if (window.showAppAlert) await window.showAppAlert(apiErr || String(res.status));
-      else alert(apiErr || String(res.status));
-      return;
-    }
+    // 組合邀請連結（指向註冊頁面）
+    const inviteUrl = baseUrl + '/profile.html' + (inviterLineId ? '?invitedBy=' + encodeURIComponent(inviterLineId) : '');
+    const shareText = '📋 邀請你加入我們！\n\n請點擊下方連結完成註冊：\n' + inviteUrl;
 
-    var flexBubble = data.data.flexMessage;
-    var messages = [{ type: 'flex', altText: '邀請加入我們：請完成以下步驟', contents: flexBubble }];
-
-    await liff.shareTargetPicker(messages);
+    // 用 LINE URL Scheme 分享（手機會開 LINE 選好友／群組）
+    await window.LIFF.shareMessage(shareText);
   } catch (err) {
-    var errMsg = (err && (err.code || err.message)) ? (err.code ? err.code + ': ' : '') + (err.message || '') : String(err);
-    console.error('[邀請] shareTargetPicker 失敗', errMsg, err);
-    if (window.showAppAlert) await window.showAppAlert(errMsg || '未知錯誤');
-    else alert(errMsg || '未知錯誤');
+    var errMsg = (err && err.message) ? err.message : String(err || '');
+    console.error('[邀請] 失敗', errMsg, err);
+    if (window.showAppAlert) await window.showAppAlert(errMsg || '邀請失敗');
+    else alert(errMsg || '邀請失敗');
   }
 }
 
