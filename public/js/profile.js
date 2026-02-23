@@ -660,6 +660,11 @@ async function inviteMemberFromProfile() {
     const data = await response.json();
 
     if (data.success) {
+      if (data.botChatUrl) {
+        // 有設定機器人聊天頁 URL：直接跳轉到 LINE，讓使用者立即轉傳給好友／群組
+        window.location.href = data.botChatUrl;
+        return;
+      }
       if (window.showAppAlert) await window.showAppAlert('✅ 邀請字卡已發到你的 LINE！\n\n請在 LINE 中找到小幫手傳的字卡，長按後點「轉傳」分享給朋友 😊');
       else alert('✅ 邀請字卡已發到你的 LINE！\n\n請在 LINE 中找到小幫手傳的字卡，長按後點「轉傳」分享給朋友 😊');
     } else {

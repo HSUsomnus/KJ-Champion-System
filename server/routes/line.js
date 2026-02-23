@@ -387,8 +387,11 @@ router.post('/push-invite', async (req, res) => {
       contents: flexMessage,
     }]);
 
+    // 機器人聊天頁 URL，前端收到後可跳轉讓使用者立即轉傳給好友／群組
+    const botChatUrl = process.env.LINE_BOT_CHAT_URL || process.env.LINE_ADD_FRIEND_URL || '';
+
     console.log(`✅ [push-invite] 邀請字卡已推送給 ${userId}`);
-    res.json({ success: true });
+    res.json({ success: true, botChatUrl });
   } catch (error) {
     console.error('[API] push-invite 錯誤:', error);
     const msg = error.response?.data?.message || error.message;

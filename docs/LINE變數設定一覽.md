@@ -86,8 +86,9 @@ LINE_CHANNEL_SECRET=abcdef1234567890abcdef1234567890
 # ========== LINE Bot（Messaging API，發送／接收訊息） ==========
 LINE_CHANNEL_ACCESS_TOKEN=你的長效 Token（從 Messaging API 分頁複製）
 
-# 選填：邀請字卡「加好友」按鈕
+# 選填：邀請字卡「加好友」按鈕；點邀請按鈕後跳轉到 LINE 機器人聊天頁（供轉傳）
 # LINE_ADD_FRIEND_URL=https://line.me/R/ti/p/@xxx
+# LINE_BOT_CHAT_URL=（未設則用 LINE_ADD_FRIEND_URL，兩者通常相同）
 ```
 
 ---
