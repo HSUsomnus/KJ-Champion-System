@@ -181,14 +181,16 @@ router.post('/push-share-month', async (req, res) => {
 
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
-    const startDate = new Date(yearNum, monthNum - 1, 1);
-    const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59);
+    // 明確指定台灣時區 +08:00，避免 Vercel（UTC）的 new Date() 造成邊界偏移
+    const lastDay = new Date(yearNum, monthNum, 0).getDate();
+    const timeMin = `${yearNum}-${String(monthNum).padStart(2, '0')}-01T00:00:00+08:00`;
+    const timeMax = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59+08:00`;
     const calendar = await require('../config/googleAuth').getCalendarClient();
     const calendarId = require('../config/googleAuth').getGroupCalendarId();
     const response = await calendar.events.list({
       calendarId: calendarId,
-      timeMin: startDate.toISOString(),
-      timeMax: endDate.toISOString(),
+      timeMin: timeMin,
+      timeMax: timeMax,
       singleEvents: true,
       orderBy: 'startTime',
     });
@@ -260,15 +262,17 @@ router.get('/share-month-message', optionalLineUser, async (req, res) => {
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
     const typeFilter = (type === '全部' || !type) ? null : type;
-    const startDate = new Date(yearNum, monthNum - 1, 1);
-    const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59);
+    // 明確指定台灣時區 +08:00，避免 Vercel（UTC）的 new Date() 造成邊界偏移
+    const lastDay = new Date(yearNum, monthNum, 0).getDate();
+    const timeMin = `${yearNum}-${String(monthNum).padStart(2, '0')}-01T00:00:00+08:00`;
+    const timeMax = `${yearNum}-${String(monthNum).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59:59+08:00`;
     const calendar = await require('../config/googleAuth').getCalendarClient();
     const calendarId = require('../config/googleAuth').getGroupCalendarId();
 
     const response = await calendar.events.list({
       calendarId: calendarId,
-      timeMin: startDate.toISOString(),
-      timeMax: endDate.toISOString(),
+      timeMin: timeMin,
+      timeMax: timeMax,
       singleEvents: true,
       orderBy: 'startTime',
     });
