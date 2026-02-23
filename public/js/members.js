@@ -154,8 +154,8 @@ function viewMemberDetail(lineId) {
 }
 
 /**
- * 邀請新成員：用 LINE Share URL 開啟「選好友／群組」分享頁
- * 機器人訊息不能長按轉傳，改以此方式讓使用者直接選人發送
+ * 邀請新成員：跳出 LIFF 頁面，用 shareTargetPicker 發送漂亮的 Flex 邀請字卡
+ * 僅限發送邀請字卡時使用 LIFF，主站其餘功能保持獨立網頁
  */
 async function inviteMember() {
   try {
@@ -166,15 +166,12 @@ async function inviteMember() {
       return;
     }
 
-    const baseUrl = window.location.origin;
-    const inviteUrl = baseUrl + '/profile.html' + (inviterLineId ? '?invitedBy=' + encodeURIComponent(inviterLineId) : '');
-    const shareText = '📋 邀請你加入我們！\n\n請點擊下方連結完成註冊：\n' + inviteUrl;
-
-    // LINE Share URL：會開啟「選擇好友／群組」畫面，選完即可發送
-    const lineShareUrl = 'https://line.me/R/share?text=' + encodeURIComponent(shareText);
-
-    // 手機通常會開 LINE App；電腦可能開 LINE 或網頁
-    window.location.href = lineShareUrl;
+    const res = await fetch('/api/line/invite-liff-url?invitedBy=' + encodeURIComponent(inviterLineId));
+    const data = await res.json();
+    if (!data.success || !data.url) {
+      throw new Error(data.message || '無法取得邀請連結');
+    }
+    window.location.href = data.url;
   } catch (err) {
     var errMsg = (err && err.message) ? err.message : String(err || '');
     console.error('[邀請] 失敗', errMsg, err);

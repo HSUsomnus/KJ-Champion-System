@@ -218,3 +218,28 @@ window.open(lineShareUrl, '_blank');  // 或 location.href = lineShareUrl
 - **openURL / closeWindow**：不再用 LIFF 時，改為一般連結或 `window.open` 即可。
 
 這樣整份應用都可以在**一般瀏覽器**使用，**不需要** LIFF（LINE 內建瀏覽器）；需要「傳到 LINE」的流程，全部由後端完成。
+
+---
+
+## 八、邀請字卡：僅限 LIFF 的專用頁面
+
+**現況**：主站已改為獨立網頁（LINE Login OAuth），不再依賴 LIFF。  
+**例外**：發送漂亮的 Flex 邀請字卡時，必須使用 `liff.shareTargetPicker()`，因此保留一個**專用的 LIFF 邀請頁**。
+
+### 8.1 流程說明
+
+| 步驟 | 說明 |
+|------|------|
+| 1 | 使用者在主站點「邀請」 |
+| 2 | 前端取得 `https://liff.line.me/{LIFF_ID}?invitedBy=xxx` 並跳轉 |
+| 3 | 在 LINE 內載入 LIFF 邀請頁（invite-share.html） |
+| 4 | 頁面呼叫 `shareTargetPicker`，使用者選好友／群組，發送 Flex 字卡 |
+
+### 8.2 設定：LIFF 端點必須指向 invite-share.html
+
+在 LINE Developers Console → 你的 Channel → LIFF 分頁：
+
+- 將該 LIFF 的 **Endpoint URL** 設為：`https://你的網址/invite-share.html`  
+  例如：`https://line-liff-calendar.vercel.app/invite-share.html`
+
+- 此 LIFF **僅用於**發送邀請字卡，主站其他頁面不受影響。

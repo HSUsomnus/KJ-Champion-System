@@ -314,6 +314,35 @@ router.get('/share-month-message', optionalLineUser, async (req, res) => {
 });
 
 /**
+ * GET /api/line/invite-liff-url
+ * 取得 LIFF 邀請頁網址（供前端點邀請時跳轉，僅用於發送漂亮 Flex 字卡）
+ * 查詢參數: invitedBy（邀請人 LINE ID）
+ */
+router.get('/invite-liff-url', (req, res) => {
+  try {
+    const liffId = process.env.LIFF_ID || '';
+    const invitedBy = req.query.invitedBy || '';
+    if (!liffId) {
+      return res.status(500).json({ success: false, message: '未設定 LIFF_ID' });
+    }
+    const qs = invitedBy ? '?invitedBy=' + encodeURIComponent(invitedBy) : '';
+    const url = `https://liff.line.me/${liffId}${qs}`;
+    res.json({ success: true, url });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * GET /api/line/liff-id
+ * 供 invite-share.html 取得 LIFF ID 以初始化 SDK（僅此用途）
+ */
+router.get('/liff-id', (req, res) => {
+  const liffId = process.env.LIFF_ID || '';
+  res.json({ success: !!liffId, liffId });
+});
+
+/**
  * GET /api/line/invite-message
  * 取得邀請訊息的內容（文案每次隨機擇一，康九冠軍事業部四則）
  * 查詢參數: baseUrl（選填）、minimal=1（極簡字卡）、inviterLineId（邀請人 LINE ID）

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>邀請分享</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .invite-share-box { padding: 24px; text-align: center; }
+    .invite-share-box h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    .invite-share-box p { margin: 0; color: #666; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="invite-container" class="invite-share-box">
+    <p>載入中...</p>
+  </div>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+(function() {
+  var container = document.getElementById('invite-container');
+
+  function showMsg(html) {
+    container.innerHTML = html;
+  }
+
+  function getInvitedBy() {
+    var m = /[?&]invitedBy=([^&]+)/.exec(window.location.search || '');
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  async function run() {
+    // 取得 LIFF ID
+    var cfgRes = await fetch('/api/line/liff-id');
+    var cfg = await cfgRes.json();
+    if (!cfg.success || !cfg.liffId) {
+      showMsg('<p>❌ 未設定 LIFF，請聯繫管理員</p>');
+      return;
+    }
+
+    await liff.init({ liffId: cfg.liffId });
+
+    if (!liff.isInClient()) {
+      showMsg('<h2>請在 LINE 中開啟</h2><p>此頁面需在 LINE App 內開啟才能分享邀請字卡。請從主站的「邀請」按鈕重新進入。</p>');
+      return;
+    }
+
+    if (!liff.isAvailable('shareTargetPicker')) {
+      showMsg('<h2>不支援分享</h2><p>此環境無法使用 shareTargetPicker。請使用最新版 LINE App。</p>');
+      return;
+    }
+
+    var invitedBy = getInvitedBy();
+    var baseUrl = window.location.origin;
+    var msgRes = await fetch('/api/line/invite-message?baseUrl=' + encodeURIComponent(baseUrl) + '&inviterLineId=' + encodeURIComponent(invitedBy));
+    var msgData = await msgRes.json();
+
+    if (!msgData.success || !msgData.data || !msgData.data.flexMessage) {
+      showMsg('<p>❌ 取得邀請字卡失敗：' + (msgData.message || '未知錯誤') + '</p>');
+      return;
+    }
+
+    var flexMsg = {
+      type: 'flex',
+      altText: '邀請你加入康九冠軍事業部！',
+      contents: msgData.data.flexMessage
+    };
+
+    try {
+      var result = await liff.shareTargetPicker([flexMsg]);
+      if (result) {
+        showMsg('<h2>✅ 已分享！</h2><p>邀請字卡已成功發送給好友</p>');
+        if (typeof liff.closeWindow === 'function') {
+          setTimeout(function() { liff.closeWindow(); }, 1500);
+        }
+      } else {
+        showMsg('<h2>已取消</h2><p>您未選擇分享對象</p>');
+      }
+    } catch (err) {
+      var errMsg = (err && err.message) ? err.message : String(err || '');
+      if (/cancel|cancelled|user/i.test(errMsg)) {
+        showMsg('<h2>已取消</h2><p>您未選擇分享對象</p>');
+      } else {
+        showMsg('<p>❌ 分享失敗：' + errMsg + '</p>');
+      }
+    }
+  }
+
+  run().catch(function(err) {
+    showMsg('<p>❌ 錯誤：' + (err && err.message ? err.message : String(err)) + '</p>');
+  });
+})();
+  </script>
+</body>
+</html>

@@ -640,7 +640,7 @@ async function registerUser() {
 
 /**
  * 從個人資料頁面邀請新成員
- * 用 LINE Share URL 開啟「選好友／群組」分享頁（機器人訊息不能長按轉傳）
+ * 跳出 LIFF 頁面，用 shareTargetPicker 發送漂亮的 Flex 邀請字卡
  */
 async function inviteMemberFromProfile() {
   try {
@@ -651,13 +651,12 @@ async function inviteMemberFromProfile() {
       return;
     }
 
-    const baseUrl = window.location.origin;
-    const inviteUrl = baseUrl + '/profile.html' + (inviterLineId ? '?invitedBy=' + encodeURIComponent(inviterLineId) : '');
-    const shareText = '📋 邀請你加入我們！\n\n請點擊下方連結完成註冊：\n' + inviteUrl;
-
-    const lineShareUrl = 'https://line.me/R/share?text=' + encodeURIComponent(shareText);
-
-    window.location.href = lineShareUrl;
+    const res = await fetch('/api/line/invite-liff-url?invitedBy=' + encodeURIComponent(inviterLineId));
+    const data = await res.json();
+    if (!data.success || !data.url) {
+      throw new Error(data.message || '無法取得邀請連結');
+    }
+    window.location.href = data.url;
   } catch (error) {
     console.error('[邀請] 錯誤:', error);
     const errMsg = (error && error.message) ? error.message : String(error || '');
