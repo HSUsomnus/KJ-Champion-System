@@ -257,11 +257,12 @@ const generateInviteFlexMessageMinimal = (liffId, inviterLineId = '') => {
 const generateInviteFlexMessage = (liffId, baseUrl, options = {}) => {
   const selectedTemplate = pickRandomInviteTemplate();
   const inviterLineId = options.inviterLineId || '';
-  // 步驟 3：一律使用 APP 網址（主站 line-liff-calendar.vercel.app），帶 invitedBy 則導向註冊頁
+  // 步驟 3：經 open-external 中繼頁，嘗試在手機/電腦預設瀏覽器開啟（非 LINE 內建瀏覽器）
   const appBaseUrl = (baseUrl || getAppUrl() || 'https://line-liff-calendar.vercel.app').replace(/\/$/, '');
-  const entryUrl = inviterLineId
-    ? `${appBaseUrl}/profile.html?invitedBy=${encodeURIComponent(inviterLineId)}`
-    : `${appBaseUrl}/`;
+  const targetPath = inviterLineId
+    ? `/profile.html?invitedBy=${encodeURIComponent(inviterLineId)}`
+    : '/';
+  const entryUrl = `${appBaseUrl}/open-external.html?to=${encodeURIComponent(appBaseUrl + targetPath)}`;
   const appDownloadUrl = appBaseUrl ? `${appBaseUrl}/api/line/app-download` : null;
   // 步驟 2：加入團體日曆連結（由 route 傳入 env GROUP_CALENDAR_ID；未傳則用 env）
   const calendarAddUrl = options.calendarAddUrl || buildCalendarAddUrl();
