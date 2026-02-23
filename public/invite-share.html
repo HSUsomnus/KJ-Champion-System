@@ -31,15 +31,20 @@
   }
 
   async function run() {
-    // 取得 LIFF ID
+    // 取得 LIFF ID（API 可能回傳 cfg.data.liffId 或 cfg.liffId）
     var cfgRes = await fetch('/api/line/liff-id');
+    if (!cfgRes.ok) {
+      showMsg('<p>❌ 取得設定失敗 (HTTP ' + cfgRes.status + ')，請稍後再試</p>');
+      return;
+    }
     var cfg = await cfgRes.json();
-    if (!cfg.success || !cfg.liffId) {
-      showMsg('<p>❌ 未設定 LIFF，請聯繫管理員</p>');
+    var liffId = (cfg.data && cfg.data.liffId) || cfg.liffId || '';
+    if (!liffId) {
+      showMsg('<p>❌ 未設定 LIFF，請聯繫管理員（Vercel 請確認 LIFF_ID 環境變數已設定並重新部署）</p>');
       return;
     }
 
-    await liff.init({ liffId: cfg.liffId });
+    await liff.init({ liffId: liffId });
 
     if (!liff.isInClient()) {
       showMsg('<h2>請在 LINE 中開啟</h2><p>此頁面需在 LINE App 內開啟才能分享邀請字卡。請從主站的「邀請」按鈕重新進入。</p>');

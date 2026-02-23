@@ -334,15 +334,6 @@ router.get('/invite-liff-url', (req, res) => {
 });
 
 /**
- * GET /api/line/liff-id
- * 供 invite-share.html 取得 LIFF ID 以初始化 SDK（僅此用途）
- */
-router.get('/liff-id', (req, res) => {
-  const liffId = process.env.LIFF_ID || '';
-  res.json({ success: !!liffId, liffId });
-});
-
-/**
  * GET /api/line/invite-message
  * 取得邀請訊息的內容（文案每次隨機擇一，康九冠軍事業部四則）
  * 查詢參數: baseUrl（選填）、minimal=1（極簡字卡）、inviterLineId（邀請人 LINE ID）
