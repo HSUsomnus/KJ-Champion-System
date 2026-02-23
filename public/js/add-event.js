@@ -305,12 +305,8 @@
         if (wantShare) {
           var msgRes = await fetch('/api/line/share-message/' + data.data.id);
           var msgData = await msgRes.json();
-          if (msgData.success && msgData.data && msgData.data.flexMessage) {
-            if (typeof liff !== 'undefined' && liff.shareTargetPicker) {
-              await liff.shareTargetPicker([{ type: 'flex', altText: msgData.data.message, contents: msgData.data.flexMessage }]);
-            } else if (window.LIFF && window.LIFF.shareMessage && msgData.data.message) {
-              await window.LIFF.shareMessage(msgData.data.message);
-            }
+          if (msgData.success && msgData.data && msgData.data.message && window.LIFF && window.LIFF.shareMessage) {
+            await window.LIFF.shareMessage(msgData.data.message);
           }
         }
         // 離開前儲存本頁狀態（多步上一頁、關閉瀏覽器才清）

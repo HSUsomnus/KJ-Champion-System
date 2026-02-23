@@ -428,30 +428,22 @@ function formatDateTime(dateTimeStr, allDay = false) {
 }
 
 /**
- * 分享行程（LIFF shareTargetPicker，字卡內有詳情按鈕）
+ * 分享行程（純文字分享，不依賴 LIFF）
  */
 async function shareEvent(eventId) {
   try {
     const response = await fetch(`/api/line/share-message/${eventId}`);
     const data = await response.json();
 
-    if (!data.success || !data.data) {
+    if (!data.success || !data.data || !data.data.message) {
       const errMsg = data.message || '無法取得分享內容';
       if (window.showAppAlert) await window.showAppAlert('❌ ' + errMsg);
       else alert('❌ ' + errMsg);
       return;
     }
 
-    const msgData = data.data;
-    if (typeof liff !== 'undefined' && liff.shareTargetPicker && msgData.flexMessage) {
-      const messages = [{
-        type: 'flex',
-        altText: msgData.message,
-        contents: msgData.flexMessage,
-      }];
-      await liff.shareTargetPicker(messages);
-    } else if (window.LIFF && window.LIFF.shareMessage) {
-      await window.LIFF.shareMessage(msgData.message);
+    if (window.LIFF && window.LIFF.shareMessage) {
+      await window.LIFF.shareMessage(data.data.message);
     } else {
       if (window.showAppAlert) await window.showAppAlert('分享功能僅在 LINE App 內可用');
       else alert('分享功能僅在 LINE App 內可用');

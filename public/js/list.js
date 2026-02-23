@@ -336,31 +336,20 @@ function renderEventsList(container, events, type) {
 }
 
 /**
- * 分享行程（單一行程用 Flex 字卡分享，非文字）
+ * 分享行程（純文字分享，不依賴 LIFF）
  */
 async function shareEvent(eventId) {
   try {
     const response = await fetch(`/api/line/share-message/${eventId}`);
     const data = await response.json();
 
-    if (!data.success || !data.data) {
+    if (!data.success || !data.data || !data.data.message) {
       if (window.showAppAlert) await window.showAppAlert('無法取得分享內容');
       else alert('無法取得分享內容');
       return;
     }
-    const msgData = data.data;
-    if (typeof liff !== 'undefined' && liff.shareTargetPicker && msgData.flexMessage) {
-      const messages = [{
-        type: 'flex',
-        altText: msgData.message,
-        contents: msgData.flexMessage,
-      }];
-      if (msgData.quickReply) {
-        messages[0].quickReply = msgData.quickReply;
-      }
-      await liff.shareTargetPicker(messages);
-    } else if (window.LIFF && window.LIFF.shareMessage) {
-      await window.LIFF.shareMessage(msgData.message);
+    if (window.LIFF && window.LIFF.shareMessage) {
+      await window.LIFF.shareMessage(data.data.message);
     } else {
       if (window.showAppAlert) await window.showAppAlert('無法取得分享內容');
       else alert('無法取得分享內容');
@@ -373,20 +362,18 @@ async function shareEvent(eventId) {
 }
 
 /**
- * 分享整月行程（LIFF shareTargetPicker，純文字）
+ * 分享整月行程（純文字分享，不依賴 LIFF）
  */
 async function shareMonthEvents(year, month, type) {
   try {
     const response = await fetch(`/api/line/share-month-message?year=${year}&month=${month}&type=${encodeURIComponent(type)}`);
     const data = await response.json();
 
-    if (data.success && window.LIFF && data.data.message) {
-      if (typeof liff !== 'undefined' && liff.shareTargetPicker) {
-        const messages = [{ type: 'text', text: data.data.message }];
-        await liff.shareTargetPicker(messages);
-      } else if (window.LIFF.shareMessage) {
-        await window.LIFF.shareMessage(data.data.message);
-      }
+    if (data.success && data.data && data.data.message && window.LIFF && window.LIFF.shareMessage) {
+      await window.LIFF.shareMessage(data.data.message);
+    } else if (data.success && data.data && data.data.message) {
+      if (window.showAppAlert) await window.showAppAlert('分享功能僅在 LINE App 內可用');
+      else alert('分享功能僅在 LINE App 內可用');
     } else {
       const errMsg = data.message || '無法取得分享內容';
       if (window.showAppAlert) await window.showAppAlert('❌ ' + errMsg);
