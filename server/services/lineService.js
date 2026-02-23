@@ -256,14 +256,21 @@ const generateInviteFlexMessageMinimal = (liffId, inviterLineId = '') => {
  */
 const generateInviteFlexMessage = (liffId, baseUrl, options = {}) => {
   const selectedTemplate = pickRandomInviteTemplate();
-  // 步驟 3：進入 LIFF，帶上邀請人 ID 參數
   const inviterLineId = options.inviterLineId || '';
-  const liffUrl = liffId 
-    ? (inviterLineId 
-        ? `https://liff.line.me/${liffId}?invitedBy=${encodeURIComponent(inviterLineId)}`
-        : `https://liff.line.me/${liffId}`)
-    : '';
-  const appDownloadUrl = baseUrl ? `${String(baseUrl).replace(/\/$/, '')}/api/line/app-download` : null;
+  // 步驟 3：優先使用 LIFF URL，若無 LIFF ID 則改用 APP 網址（個人頁 + invitedBy 參數）
+  const appBaseUrl = (baseUrl || getAppUrl() || '').replace(/\/$/, '');
+  let entryUrl;
+  if (liffId) {
+    entryUrl = inviterLineId
+      ? `https://liff.line.me/${liffId}?invitedBy=${encodeURIComponent(inviterLineId)}`
+      : `https://liff.line.me/${liffId}`;
+  } else {
+    const profileBase = `${appBaseUrl}/profile.html`;
+    entryUrl = inviterLineId
+      ? `${profileBase}?invitedBy=${encodeURIComponent(inviterLineId)}`
+      : `${appBaseUrl}/index.html`;
+  }
+  const appDownloadUrl = appBaseUrl ? `${appBaseUrl}/api/line/app-download` : null;
   // 步驟 2：加入團體日曆連結（由 route 傳入 env GROUP_CALENDAR_ID；未傳則用 env）
   const calendarAddUrl = options.calendarAddUrl || buildCalendarAddUrl();
   // 步驟 4：加小幫手為好友連結（僅用 route 傳入的 env LINE_ADD_FRIEND_URL，不寫死）
@@ -339,7 +346,7 @@ const generateInviteFlexMessage = (liffId, baseUrl, options = {}) => {
               action: {
                 type: 'uri',
                 label: '3️⃣ 進入行事曆/個人頁',
-                uri: liffUrl,
+                uri: entryUrl,
               },
               style: 'primary',
               height: 'sm',

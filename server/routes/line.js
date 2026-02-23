@@ -356,6 +356,47 @@ router.get('/invite-message', optionalLineUser, (req, res) => {
 });
 
 /**
+ * POST /api/line/push-invite
+ * 用 Bot 把美麗的 Flex 邀請字卡推送給邀請人自己
+ * 邀請人在 LINE 中收到字卡後，可長按轉傳給任意好友或群組
+ * Body: { userId, inviterLineId? }
+ */
+router.post('/push-invite', async (req, res) => {
+  try {
+    const { userId, inviterLineId } = req.body || {};
+    if (!userId || !isValidLineUserId(userId)) {
+      return res.status(400).json({ success: false, message: '請提供有效的 userId' });
+    }
+
+    const baseUrl = process.env.APP_URL || (req.protocol + '://' + req.get('host'));
+    const liffId = lineService.getLiffIdForClient();
+    const calendarAddUrl = process.env.GROUP_CALENDAR_ID
+      ? 'https://calendar.google.com/calendar/render?cid=' + encodeURIComponent(process.env.GROUP_CALENDAR_ID)
+      : undefined;
+    const lineAddFriendUrl = process.env.LINE_ADD_FRIEND_URL || undefined;
+
+    const flexMessage = lineService.generateInviteFlexMessage(liffId, baseUrl, {
+      calendarAddUrl,
+      lineAddFriendUrl,
+      inviterLineId: inviterLineId || userId,
+    });
+
+    await lineService.pushMessagesToUser(userId, [{
+      type: 'flex',
+      altText: '邀請你加入康九冠軍事業部！',
+      contents: flexMessage,
+    }]);
+
+    console.log(`✅ [push-invite] 邀請字卡已推送給 ${userId}`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[API] push-invite 錯誤:', error);
+    const msg = error.response?.data?.message || error.message;
+    res.status(500).json({ success: false, message: msg || '發送失敗' });
+  }
+});
+
+/**
  * GET /api/line/app-download
  * 依使用者裝置（安卓／蘋果）導向對應的 Google Calendar App 商店
  */

@@ -154,21 +154,32 @@ function viewMemberDetail(lineId) {
 }
 
 /**
- * 邀請新成員：透過 LINE URL Scheme 分享邀請連結
- * 使用者點擊後會開啟 LINE 的「分享給…」畫面，選擇好友或群組
+ * 邀請新成員：呼叫後端 Bot 把漂亮的 Flex 邀請字卡推送給自己
+ * 收到字卡後在 LINE 中長按，即可轉傳給任意好友或群組
  */
 async function inviteMember() {
   try {
-    // 取得當前用戶的 LINE ID 作為邀請人
     const inviterLineId = window.LIFF && window.LIFF.getUserId ? window.LIFF.getUserId() : '';
-    const baseUrl = window.location.origin;
+    if (!inviterLineId) {
+      if (window.showAppAlert) await window.showAppAlert('請先登入 LINE 再邀請');
+      else alert('請先登入 LINE 再邀請');
+      return;
+    }
 
-    // 組合邀請連結（指向註冊頁面）
-    const inviteUrl = baseUrl + '/profile.html' + (inviterLineId ? '?invitedBy=' + encodeURIComponent(inviterLineId) : '');
-    const shareText = '📋 邀請你加入我們！\n\n請點擊下方連結完成註冊：\n' + inviteUrl;
+    // 請求後端用 Bot 推送 Flex 邀請字卡給自己
+    const response = await fetch('/api/line/push-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: inviterLineId, inviterLineId }),
+    });
+    const data = await response.json();
 
-    // 用 LINE URL Scheme 分享（手機會開 LINE 選好友／群組）
-    await window.LIFF.shareMessage(shareText);
+    if (data.success) {
+      if (window.showAppAlert) await window.showAppAlert('✅ 邀請字卡已發到你的 LINE！\n\n請在 LINE 中找到小幫手傳的字卡，長按後點「轉傳」分享給朋友 😊');
+      else alert('✅ 邀請字卡已發到你的 LINE！\n\n請在 LINE 中找到小幫手傳的字卡，長按後點「轉傳」分享給朋友 😊');
+    } else {
+      throw new Error(data.message || '發送失敗');
+    }
   } catch (err) {
     var errMsg = (err && err.message) ? err.message : String(err || '');
     console.error('[邀請] 失敗', errMsg, err);

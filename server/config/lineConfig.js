@@ -5,13 +5,9 @@
 
 require('dotenv').config();
 
-// 取得 LINE LIFF ID
+// 取得 LINE LIFF ID（選填；未設定時回傳空字串，不拋錯）
 const getLiffId = () => {
-  const liffId = process.env.LIFF_ID;
-  if (!liffId) {
-    throw new Error('缺少 LIFF_ID 環境變數');
-  }
-  return liffId;
+  return process.env.LIFF_ID || '';
 };
 
 // 取得 LINE Channel ID
