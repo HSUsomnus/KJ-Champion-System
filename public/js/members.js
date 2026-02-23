@@ -154,8 +154,8 @@ function viewMemberDetail(lineId) {
 }
 
 /**
- * 邀請新成員：跳出 LIFF 頁面，用 shareTargetPicker 發送漂亮的 Flex 邀請字卡
- * 僅限發送邀請字卡時使用 LIFF，主站其餘功能保持獨立網頁
+ * 邀請新成員：Bot 推送含 LIFF 連結的訊息到使用者 LINE 聊天室
+ * 使用者從 LINE 內點擊連結，會在 LINE 開啟，即可用 shareTargetPicker 分享漂亮字卡
  */
 async function inviteMember() {
   try {
@@ -166,12 +166,24 @@ async function inviteMember() {
       return;
     }
 
-    const res = await fetch('/api/line/invite-liff-url?invitedBy=' + encodeURIComponent(inviterLineId));
+    const res = await fetch('/api/line/push-invite-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: inviterLineId }),
+    });
     const data = await res.json();
-    if (!data.success || !data.url) {
-      throw new Error(data.message || '無法取得邀請連結');
+    if (!data.success) {
+      throw new Error(data.message || '發送失敗');
     }
-    window.location.href = data.url;
+
+    if (data.botChatUrl) {
+      if (window.showAppAlert) await window.showAppAlert('✅ 已發送到你的 LINE！\n\n請到與小幫手的聊天室，點擊「開啟分享邀請字卡」按鈕，即可選擇好友或群組分享 😊');
+      else alert('✅ 已發送到你的 LINE！\n\n請到與小幫手的聊天室，點擊「開啟分享邀請字卡」按鈕，即可選擇好友或群組分享 😊');
+      window.location.href = data.botChatUrl;
+    } else {
+      if (window.showAppAlert) await window.showAppAlert('✅ 已發送到你的 LINE！\n\n請開啟 LINE，到與小幫手的聊天室，點擊按鈕即可分享邀請字卡 😊');
+      else alert('✅ 已發送到你的 LINE！\n\n請開啟 LINE，到與小幫手的聊天室，點擊按鈕即可分享邀請字卡 😊');
+    }
   } catch (err) {
     var errMsg = (err && err.message) ? err.message : String(err || '');
     console.error('[邀請] 失敗', errMsg, err);

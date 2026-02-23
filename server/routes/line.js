@@ -314,6 +314,67 @@ router.get('/share-month-message', optionalLineUser, async (req, res) => {
 });
 
 /**
+ * POST /api/line/push-invite-link
+ * 由 Bot 推送「含 LIFF 連結」的訊息給使用者
+ * 使用者從 LINE 聊天室點擊連結，會在 LINE 內開啟，即可用 shareTargetPicker 分享漂亮字卡
+ * Body: { userId }
+ */
+router.post('/push-invite-link', async (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    if (!userId || !isValidLineUserId(userId)) {
+      return res.status(400).json({ success: false, message: '請提供有效的 userId' });
+    }
+    const liffId = process.env.LIFF_ID || '';
+    if (!liffId) {
+      return res.status(500).json({ success: false, message: '未設定 LIFF_ID' });
+    }
+    const liffUrl = `https://liff.line.me/${liffId}?invitedBy=${encodeURIComponent(userId)}`;
+
+    const flexMessage = {
+      type: 'bubble',
+      hero: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [{ type: 'text', text: '📋 分享邀請字卡', size: 'xl', weight: 'bold', align: 'center' }],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          { type: 'text', text: '點擊下方按鈕，選擇好友或群組即可分享漂亮的邀請字卡', size: 'sm', color: '#666666', wrap: true, align: 'center' },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [{
+          type: 'button',
+          action: { type: 'uri', label: '開啟分享邀請字卡', uri: liffUrl },
+          style: 'primary',
+          color: '#06C755',
+        }],
+      },
+    };
+
+    await lineService.pushMessagesToUser(userId, [{
+      type: 'flex',
+      altText: '點擊按鈕分享邀請字卡',
+      contents: flexMessage,
+    }]);
+
+    const botChatUrl = process.env.LINE_BOT_CHAT_URL || process.env.LINE_ADD_FRIEND_URL || '';
+
+    console.log(`✅ [push-invite-link] LIFF 連結已推送給 ${userId}`);
+    res.json({ success: true, botChatUrl });
+  } catch (error) {
+    console.error('[API] push-invite-link 錯誤:', error);
+    const msg = error.response?.data?.message || error.message;
+    res.status(500).json({ success: false, message: msg || '發送失敗' });
+  }
+});
+
+/**
  * GET /api/line/invite-liff-url
  * 取得 LIFF 邀請頁網址（供前端點邀請時跳轉，僅用於發送漂亮 Flex 字卡）
  * 查詢參數: invitedBy（邀請人 LINE ID）
