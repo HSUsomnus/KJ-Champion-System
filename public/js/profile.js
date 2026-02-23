@@ -640,7 +640,7 @@ async function registerUser() {
 
 /**
  * 從個人資料頁面邀請新成員
- * 呼叫後端 Bot 把漂亮的 Flex 邀請字卡推送給自己，再從 LINE 轉傳給朋友
+ * 用 LINE Share URL 開啟「選好友／群組」分享頁（機器人訊息不能長按轉傳）
  */
 async function inviteMemberFromProfile() {
   try {
@@ -651,25 +651,13 @@ async function inviteMemberFromProfile() {
       return;
     }
 
-    // 請求後端用 Bot 推送 Flex 邀請字卡給自己
-    const response = await fetch('/api/line/push-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: inviterLineId, inviterLineId }),
-    });
-    const data = await response.json();
+    const baseUrl = window.location.origin;
+    const inviteUrl = baseUrl + '/profile.html' + (inviterLineId ? '?invitedBy=' + encodeURIComponent(inviterLineId) : '');
+    const shareText = '📋 邀請你加入我們！\n\n請點擊下方連結完成註冊：\n' + inviteUrl;
 
-    if (data.success) {
-      if (data.botChatUrl) {
-        // 有設定機器人聊天頁 URL：直接跳轉到 LINE，讓使用者立即轉傳給好友／群組
-        window.location.href = data.botChatUrl;
-        return;
-      }
-      if (window.showAppAlert) await window.showAppAlert('✅ 邀請字卡已發到你的 LINE！\n\n請在 LINE 中找到小幫手傳的字卡，長按後點「轉傳」分享給朋友 😊');
-      else alert('✅ 邀請字卡已發到你的 LINE！\n\n請在 LINE 中找到小幫手傳的字卡，長按後點「轉傳」分享給朋友 😊');
-    } else {
-      throw new Error(data.message || '發送失敗');
-    }
+    const lineShareUrl = 'https://line.me/R/share?text=' + encodeURIComponent(shareText);
+
+    window.location.href = lineShareUrl;
   } catch (error) {
     console.error('[邀請] 錯誤:', error);
     const errMsg = (error && error.message) ? error.message : String(error || '');
