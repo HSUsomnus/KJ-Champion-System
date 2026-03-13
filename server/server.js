@@ -57,6 +57,11 @@ if (process.env.NODE_ENV !== 'production') {
     next();
   });
 }
+// Service Worker 不快取（確保瀏覽器永遠取得最新版本）
+app.get('/sw.js', (req, res, next) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  next();
+});
 app.use(express.static(publicPath));
 
 // favicon：優先從當前 publicPath 取得 logo

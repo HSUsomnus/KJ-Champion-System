@@ -1,7 +1,7 @@
 {
-  "name": "line-liff-calendar",
+  "name": "kj-champion-partner",
   "version": "1.0.0",
-  "description": "LINE LIFF 行事曆系統 - 團體與個人行程管理",
+  "description": "康九冠軍夥伴系統 - 行事曆與成員管理",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
@@ -16,8 +16,8 @@
     "watch:renew": "node scripts/renew-calendar-watch.js"
   },
   "keywords": [
+    "kj",
     "line",
-    "liff",
     "calendar",
     "google-calendar",
     "google-sheets"

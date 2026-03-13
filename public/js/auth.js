@@ -1,7 +1,7 @@
 /**
  * 身份驗證與 LINE 功能模組（不依賴 LIFF SDK）
  * 使用 LINE Login (OAuth) 登入 + LINE URL Scheme 分享
- * 提供與原本相同的 window.LIFF 介面，讓其他頁面無需修改
+ * 提供 window.LIFF 介面，讓其他頁面無需修改
  */
 
 // ========== 執行模式（請手動設定） ==========
@@ -11,9 +11,9 @@ var APP_RUN_MODE = 'production';
 // ==========
 
 // 登入狀態
-let liffInitialized = false;
-let liffUserId = null;
-let liffProfile = null;
+let authInitialized = false;
+let currentUserId = null;
+let currentProfile = null;
 
 /**
  * 檢查網址是否帶有 dev 參數（?dev=1 或 ?dev=0）
@@ -65,25 +65,25 @@ function syncAvatarOnEntry(userId, pictureUrl) {
 }
 
 /**
- * 初始化登入狀態（取代原本的 LIFF 初始化）
+ * 初始化登入狀態
  * 流程：URL 參數 → localStorage → 未登入
  */
-async function initLIFF() {
+async function initAuth() {
   try {
     // === 開發模式：使用模擬 LINE ID ===
     if (isDevMode()) {
-      liffUserId = 'U11111111111111111111111111111111';
-      liffProfile = {
-        userId: liffUserId,
+      currentUserId = 'U11111111111111111111111111111111';
+      currentProfile = {
+        userId: currentUserId,
         displayName: '開發測試員',
         pictureUrl: 'https://via.placeholder.com/100',
         statusMessage: ''
       };
-      liffInitialized = true;
+      authInitialized = true;
       console.log('🛠️ 開發模式：已使用模擬 LINE ID');
       setTimeout(function () {
         window.dispatchEvent(new CustomEvent('liffReady', {
-          detail: { userId: liffUserId, profile: liffProfile }
+          detail: { userId: currentUserId, profile: currentProfile }
         }));
       }, 0);
       return;
@@ -96,7 +96,7 @@ async function initLIFF() {
 
     if (urlUserId) {
       // 從 OAuth 回調拿到 userId，存到 localStorage
-      liffUserId = urlUserId;
+      currentUserId = urlUserId;
       localStorage.setItem('lineUserId', urlUserId);
 
       // 也儲存 LINE 暱稱與頭像（由 OAuth 回調帶回）
@@ -105,8 +105,8 @@ async function initLIFF() {
       if (urlDisplayName) localStorage.setItem('lineDisplayName', urlDisplayName);
       if (urlPictureUrl) localStorage.setItem('linePictureUrl', urlPictureUrl);
 
-      liffProfile = {
-        userId: liffUserId,
+      currentProfile = {
+        userId: currentUserId,
         displayName: urlDisplayName || '',
         pictureUrl: urlPictureUrl || '',
         statusMessage: ''
@@ -123,10 +123,10 @@ async function initLIFF() {
       }
     } else {
       // 沒有 URL 參數，從 localStorage 讀取
-      liffUserId = localStorage.getItem('lineUserId');
-      if (liffUserId) {
-        liffProfile = {
-          userId: liffUserId,
+      currentUserId = localStorage.getItem('lineUserId');
+      if (currentUserId) {
+        currentProfile = {
+          userId: currentUserId,
           displayName: localStorage.getItem('lineDisplayName') || '',
           pictureUrl: localStorage.getItem('linePictureUrl') || '',
           statusMessage: ''
@@ -135,22 +135,25 @@ async function initLIFF() {
     }
 
     // 標記初始化完成
-    liffInitialized = true;
+    authInitialized = true;
 
-    if (liffUserId) {
-      console.log('✅ 登入成功，使用者 ID:', liffUserId);
+    if (currentUserId) {
+      console.log('✅ 登入成功，使用者 ID:', currentUserId);
       // 同步 LINE 頭像
-      if (liffProfile && liffProfile.pictureUrl) {
-        syncAvatarOnEntry(liffUserId, liffProfile.pictureUrl);
+      if (currentProfile && currentProfile.pictureUrl) {
+        syncAvatarOnEntry(currentUserId, currentProfile.pictureUrl);
       }
     } else {
       console.log('⚠️ 尚未登入');
     }
 
-    // 觸發 liffReady 事件（與原本相同，讓其他頁面可以接收）
-    window.dispatchEvent(new CustomEvent('liffReady', {
-      detail: { userId: liffUserId, profile: liffProfile }
-    }));
+    // 觸發 liffReady 事件（讓其他頁面可以接收）
+    // 用 setTimeout(0) 確保 HTML inline script 的 listener 已先註冊
+    setTimeout(function() {
+      window.dispatchEvent(new CustomEvent('liffReady', {
+        detail: { userId: currentUserId, profile: currentProfile }
+      }));
+    }, 0);
 
     // 首頁的流程由 index 的 entryGate 處理
     var path = (window.location.pathname || '').toLowerCase();
@@ -158,16 +161,18 @@ async function initLIFF() {
     if (isEntryPage) return;
 
     // 非首頁：未登入時顯示登入按鈕
-    if (!liffUserId) {
+    if (!currentUserId) {
       showLoginOverlay();
     }
 
   } catch (error) {
     console.error('❌ 初始化失敗:', error);
-    liffInitialized = false;
-    window.dispatchEvent(new CustomEvent('liffReady', {
-      detail: { userId: null, profile: null }
-    }));
+    authInitialized = false;
+    setTimeout(function() {
+      window.dispatchEvent(new CustomEvent('liffReady', {
+        detail: { userId: null, profile: null }
+      }));
+    }, 0);
   }
 }
 
@@ -175,14 +180,14 @@ async function initLIFF() {
  * 取得 LINE User ID
  */
 function getUserId() {
-  return liffUserId;
+  return currentUserId;
 }
 
 /**
  * 取得 LINE 使用者資料
  */
 function getProfile() {
-  return liffProfile;
+  return currentProfile;
 }
 
 /**
@@ -277,9 +282,9 @@ function logout() {
   localStorage.removeItem('lineUserId');
   localStorage.removeItem('lineDisplayName');
   localStorage.removeItem('linePictureUrl');
-  liffUserId = null;
-  liffProfile = null;
-  liffInitialized = false;
+  currentUserId = null;
+  currentProfile = null;
+  authInitialized = false;
   window.location.reload();
 }
 
@@ -321,11 +326,11 @@ function getShareTarget() {
 }
 
 // 頁面載入時自動初始化
-initLIFF();
+initAuth();
 
-// === 匯出 window.LIFF 介面（與原本相同） ===
+// === 匯出 window.LIFF 介面（保持不變，其他頁面無需修改）===
 window.LIFF = {
-  init: initLIFF,
+  init: initAuth,
   getUserId: getUserId,
   getProfile: getProfile,
   shareMessage: shareMessage,
@@ -335,19 +340,37 @@ window.LIFF = {
   closeWindow: closeWindow,
   login: triggerLogin,
   logout: logout,
-  isInitialized: function () { return liffInitialized; },
+  isInitialized: function () { return authInitialized; },
   getRunMode: getRunMode,
   isDevMode: isDevMode,
 };
 
-// === window.liff 相容層 ===
-// 讓原本直接呼叫 liff.shareTargetPicker() 等的程式碼仍能運作
+// === window.liff 相容層（讓舊呼叫仍能運作）===
 window.liff = {
   shareTargetPicker: shareTargetPicker,
   shareMessage: shareMessage,
   isInClient: function () { return false; },
-  isLoggedIn: function () { return !!liffUserId; },
+  isLoggedIn: function () { return !!currentUserId; },
   login: triggerLogin,
-  getProfile: function () { return Promise.resolve(liffProfile); },
+  getProfile: function () { return Promise.resolve(currentProfile); },
   init: function () { return Promise.resolve(); },
 };
+
+// === Service Worker 註冊 ===
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/sw.js')
+      .then(function (reg) { console.log('[SW] 已註冊:', reg.scope); })
+      .catch(function (err) { console.warn('[SW] 註冊失敗:', err); });
+  });
+}
+
+// === PWA 手機視窗尺寸（安裝在電腦時自動縮成手機比例）===
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  // 390 x 844 = iPhone 14 常用尺寸
+  window.resizeTo(390, 844);
+  window.moveTo(
+    Math.round((screen.width - 390) / 2),
+    Math.round((screen.height - 844) / 2)
+  );
+}
