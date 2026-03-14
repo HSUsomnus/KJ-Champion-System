@@ -97,13 +97,13 @@ async function initAuth() {
     if (urlUserId) {
       // 從 OAuth 回調拿到 userId，存到 localStorage
       currentUserId = urlUserId;
-      localStorage.setItem('lineUserId', urlUserId);
+      try { localStorage.setItem('lineUserId', urlUserId); } catch (e) { console.warn('[auth] localStorage 寫入失敗:', e); }
 
       // 也儲存 LINE 暱稱與頭像（由 OAuth 回調帶回）
       var urlDisplayName = params.get('displayName');
       var urlPictureUrl = params.get('pictureUrl');
-      if (urlDisplayName) localStorage.setItem('lineDisplayName', urlDisplayName);
-      if (urlPictureUrl) localStorage.setItem('linePictureUrl', urlPictureUrl);
+      try { if (urlDisplayName) localStorage.setItem('lineDisplayName', urlDisplayName); } catch (e) {}
+      try { if (urlPictureUrl) localStorage.setItem('linePictureUrl', urlPictureUrl); } catch (e) {}
 
       currentProfile = {
         userId: currentUserId,
@@ -114,12 +114,14 @@ async function initAuth() {
 
       // 清除 URL 中的登入參數（保留其他參數如 date、id 等）
       if (isAuth) {
-        var cleanUrl = new URL(window.location.href);
-        cleanUrl.searchParams.delete('userId');
-        cleanUrl.searchParams.delete('auth');
-        cleanUrl.searchParams.delete('displayName');
-        cleanUrl.searchParams.delete('pictureUrl');
-        history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+        try {
+          var cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete('userId');
+          cleanUrl.searchParams.delete('auth');
+          cleanUrl.searchParams.delete('displayName');
+          cleanUrl.searchParams.delete('pictureUrl');
+          history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+        } catch (e) { console.warn('[auth] history.replaceState 失敗:', e); }
       }
     } else {
       // 沒有 URL 參數，從 localStorage 讀取

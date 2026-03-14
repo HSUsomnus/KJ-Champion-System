@@ -115,7 +115,7 @@
               if (json.data.isRegistered) showMain();
               else {
                 if (window.__savePageState) window.__savePageState();
-                window.location.href = '/profile.html' + (window.location.search || '');
+                window.location.href = '/profile.html?userId=' + encodeURIComponent(userId) + '&auth=1';
               }
             } else {
               showMain();

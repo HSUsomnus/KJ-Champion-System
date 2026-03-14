@@ -9,14 +9,20 @@ let userProfile = null;
  * 初始化個人資料頁面
  */
 async function initProfile() {
-  // 等待 LIFF 準備好
-  window.addEventListener('liffReady', async () => {
+  // 防止 checkRegistration 被重複呼叫（isInitialized() 和 liffReady 可能都觸發）
+  var registrationChecked = false;
+  async function runCheck() {
+    if (registrationChecked) return;
+    registrationChecked = true;
     await checkRegistration();
-  });
+  }
+
+  // 等待 LIFF 準備好
+  window.addEventListener('liffReady', runCheck);
 
   // 如果 LIFF 已經準備好，直接檢查
   if (window.LIFF && window.LIFF.isInitialized()) {
-    await checkRegistration();
+    await runCheck();
   }
 
   // 設定表單提交事件

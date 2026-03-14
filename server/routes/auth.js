@@ -29,7 +29,7 @@ router.get('/line-login', (req, res) => {
     `response_type=code&` +
     `client_id=${LINE_CHANNEL_ID}&` +
     `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-    `state=${encodedState}&` +
+    `state=${encodeURIComponent(encodedState)}&` +
     `scope=profile%20openid`;
 
   res.redirect(authUrl);

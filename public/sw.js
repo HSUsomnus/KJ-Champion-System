@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kj-cache-v4';
+const CACHE_NAME = 'kj-cache-v5';
 
 const STATIC_ASSETS = [
   '/',

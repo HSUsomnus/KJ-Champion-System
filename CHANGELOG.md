@@ -6,7 +6,14 @@
 
 ---
 
-## [v1.5.0] - Unreleased
+## [v1.5.1] - 2026-03-14
+
+git tag: v1.5.1
+摘要：修復登入後 overlay 卡住問題（localStorage/history.replaceState 獨立 try-catch）、entryGate 導向 profile.html 帶 userId 參數、OAuth state URL 編碼修正、profile.js 防重入、SW 快取升至 v5
+
+---
+
+## [v1.5.0] - 2026-03-13
 
 git tag: v1.5.0
 摘要：PWA 支援（manifest + Service Worker）、liff.js 改名為 auth.js、登入 overlay 預設顯示修正（從隱藏改為預設顯示）、README 重寫、SW 快取升級至 v4
