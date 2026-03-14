@@ -102,8 +102,7 @@
         if (overlay) overlay.classList.remove('entry-overlay-hidden');
       }
 
-      window.addEventListener('liffReady', function(e) {
-        var userId = e.detail && e.detail.userId;
+      function handleUser(userId) {
         if (!userId) {
           showLogin();
           return;
@@ -122,7 +121,16 @@
             }
           })
           .catch(function() { showMain(); });
+      }
+
+      window.addEventListener('liffReady', function(e) {
+        handleUser(e.detail && e.detail.userId);
       });
+
+      // 補查：若 liffReady 在 listener 註冊前就已觸發（race condition），直接補跑
+      if (window.LIFF && window.LIFF.isInitialized()) {
+        handleUser(window.LIFF.getUserId());
+      }
 
       var btn = document.getElementById('entry-line-login-btn');
       if (btn) btn.addEventListener('click', function() {

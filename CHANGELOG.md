@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.3] - 2026-03-14
+
+git tag: v1.5.3
+摘要：修復 liffReady race condition 導致登入後卡在 overlay 問題，entryGate 加入補查機制、SW 快取升至 v6
+
+---
+
 ## [v1.5.2] - 2026-03-14
 
 git tag: v1.5.2
