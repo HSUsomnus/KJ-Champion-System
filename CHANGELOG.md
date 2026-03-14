@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.2] - 2026-03-14
+
+git tag: v1.5.2
+摘要：修復 Vercel 部署 manifest.json 404 問題，在 vercel.json 加入 includeFiles 確保 public/ 靜態資源被完整打包
+
+---
+
 ## [v1.5.1] - 2026-03-14
 
 git tag: v1.5.1
