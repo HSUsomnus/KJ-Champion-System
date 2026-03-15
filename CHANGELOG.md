@@ -6,6 +6,20 @@
 
 ---
 
+## [v1.5.1] - 2026-03-15
+
+git tag: v1.5.1
+摘要：新增行程分類「紫星行程聊聊」（紫色，Google Calendar Grape 色，含提示詞）
+
+---
+
+## [v1.5.0] - 2026-03-15
+
+git tag: v1.5.0
+摘要：整合 ngrok 本機開發工具、加入 concurrently 同步啟動腳本、重寫全部說明文件（README、QUICKSTART、DEPLOYMENT、ngrok 指南）
+
+---
+
 ## [v1.4.0] - 2026-03-10
 
 git tag: v1.4.0

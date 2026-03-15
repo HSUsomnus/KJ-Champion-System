@@ -1,242 +1,162 @@
-# 🚀 部署指南
+# 部署指南（Vercel）
 
-本文件說明如何將 LINE LIFF 行事曆系統部署到 Google Cloud Run。
+> 康九冠軍夥伴系統 v1.5.0
 
-## 📋 前置準備
+本系統前後端統一部署在 Vercel，後端以 Serverless Function 形式運行。
 
-### 1. Google Cloud Platform 設定
+---
 
-#### 1.1 建立專案
-```bash
-# 安裝 Google Cloud SDK（如果還沒安裝）
-# Windows: 下載並安裝 https://cloud.google.com/sdk/docs/install
+## 架構說明
 
-# 登入 Google Cloud
-gcloud auth login
-
-# 建立新專案（或使用現有專案）
-gcloud projects create your-project-id --name="LINE LIFF Calendar"
-
-# 設定專案
-gcloud config set project your-project-id
+```text
+Vercel
+├── api/index.js        ← Express app 包裝成 Serverless Function
+│   └── 處理所有 /api/* 請求
+└── public/             ← 靜態前端（HTML/CSS/JS）
+    └── 直接由 Vercel CDN 服務
 ```
 
-#### 1.2 啟用必要的 API
-```bash
-# 啟用 Cloud Run API
-gcloud services enable run.googleapis.com
+Cron Jobs（`vercel.json` 定義）：
 
-# 啟用 Cloud Build API
-gcloud services enable cloudbuild.googleapis.com
+| 任務 | 排程 | 說明 |
+|------|------|------|
+| `/api/cron/sync` | 每日 02:00 UTC | 同步 Google Calendar 到 Supabase |
+| `/api/cron/renew-watch` | 每日 00:00 UTC | 更新 Google Calendar Watch |
 
-# 啟用 Container Registry API
-gcloud services enable containerregistry.googleapis.com
+---
 
-# 啟用 Calendar API
-gcloud services enable calendar-json.googleapis.com
+## 前置準備
 
-# 啟用 Sheets API
-gcloud services enable sheets.googleapis.com
-```
-
-#### 1.3 建立 Service Account
-```bash
-# 建立 Service Account
-gcloud iam service-accounts create line-liff-calendar-sa \
-    --display-name="LINE LIFF Calendar Service Account"
-
-# 下載金鑰（會自動下載 JSON 檔案）
-gcloud iam service-accounts keys create service-account-key.json \
-    --iam-account=line-liff-calendar-sa@your-project-id.iam.gserviceaccount.com
-```
-
-#### 1.4 設定 Google Calendar
-1. 前往 [Google Calendar](https://calendar.google.com/)
-2. 建立新的共用日曆（或使用現有日曆）
-3. 將 Service Account Email 加入為編輯者：
-   - 日曆設定 → 共用對象 → 新增人員
-   - 輸入：`line-liff-calendar-sa@your-project-id.iam.gserviceaccount.com`
-   - 權限設為「可以變更活動」
-
-#### 1.5 設定 Google Sheets
-1. 建立新的 Google Sheets
-2. 在第一列建立標題列：`LINE ID`、`姓名`、`Email`、`電話`、`星等`、`課程紀錄`
-3. 將 Service Account Email 加入為編輯者：
-   - 共用 → 新增人員
-   - 輸入：`line-liff-calendar-sa@your-project-id.iam.gserviceaccount.com`
-   - 權限設為「編輯者」
-
-### 2. LINE Developers 設定
-
-#### 2.1 建立 LINE Channel
-1. 前往 [LINE Developers Console](https://developers.line.biz/)
-2. 建立新的 Provider（如果還沒有）
-3. 建立新的 Channel（選擇 Messaging API）
-4. 記錄 Channel ID 和 Channel Secret
-
-#### 2.2 建立 LIFF 應用程式
-1. 在 Channel 中選擇「LIFF」標籤
-2. 點擊「Add」建立新的 LIFF App
-3. 設定：
-   - **LIFF app name**: LINE 行事曆
-   - **Size**: Full
-   - **Endpoint URL**: `https://your-cloud-run-url.run.app`（部署後填入）
-   - **Scope**: profile, openid
-   - **Bot link feature**: On
-4. 記錄 LIFF ID
-
-## 🔧 環境變數設定
-
-### 本地開發
-1. 複製 `env.example` 為 `.env`
-2. 填入所有必要的環境變數：
-
-```env
-# Google API 設定（從 service-account-key.json 取得）
-GOOGLE_SERVICE_ACCOUNT_EMAIL=line-liff-calendar-sa@your-project-id.iam.gserviceaccount.com
-GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-GOOGLE_PROJECT_ID=your-project-id
-
-# Google Calendar 設定
-GROUP_CALENDAR_ID=your-group-calendar-id@group.calendar.google.com
-
-# Google Sheets 設定
-MEMBER_SHEET_ID=your-google-sheet-id
-MEMBER_SHEET_NAME=成員資料
-
-# LINE LIFF 設定
-LIFF_ID=your-liff-id
-LINE_CHANNEL_ID=your-channel-id
-LINE_CHANNEL_SECRET=your-channel-secret
-
-# 伺服器設定
-PORT=8080
-NODE_ENV=production
-```
-
-### Cloud Run 部署
-使用以下命令設定環境變數：
+### 1. Vercel 帳號與 CLI
 
 ```bash
-gcloud run services update line-liff-calendar \
-  --region=asia-east1 \
-  --set-env-vars="GOOGLE_SERVICE_ACCOUNT_EMAIL=line-liff-calendar-sa@your-project-id.iam.gserviceaccount.com,GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n,GOOGLE_PROJECT_ID=your-project-id,GROUP_CALENDAR_ID=your-group-calendar-id@group.calendar.google.com,MEMBER_SHEET_ID=your-google-sheet-id,MEMBER_SHEET_NAME=成員資料,LIFF_ID=your-liff-id,LINE_CHANNEL_ID=your-channel-id,LINE_CHANNEL_SECRET=your-channel-secret,NODE_ENV=production"
+npm install -g vercel
+vercel login
 ```
 
-**注意**：由於環境變數較多，建議使用 Secret Manager 管理敏感資訊。
+### 2. 必要的外部服務
 
-## 🐳 本地測試 Docker
+在部署前確認以下服務已設定完成：
+
+- **Supabase**：建立 Project，執行 `database/schema.sql` 初始化資料表
+- **Google Cloud**：建立 Service Account，啟用 Calendar API 與 Sheets API
+- **LINE Developers**：建立 LINE Login Channel + Messaging API Channel
+
+---
+
+## 步驟一：設定環境變數
+
+在 Vercel Dashboard → Project → Settings → Environment Variables 填入：
+
+| 變數名稱 | 說明 |
+|---------|------|
+| `LINE_CHANNEL_ID` | LINE Messaging API Channel ID |
+| `LINE_CHANNEL_SECRET` | LINE Messaging API Channel Secret |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token |
+| `LINE_LOGIN_CHANNEL_ID` | LINE Login Channel ID |
+| `LINE_LOGIN_CHANNEL_SECRET` | LINE Login Channel Secret |
+| `DATABASE_URL` | Supabase PostgreSQL 連線字串 |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Service Account Email |
+| `GOOGLE_PRIVATE_KEY` | Google Service Account 私鑰（含 `\n` 換行） |
+| `GROUP_CALENDAR_ID` | 團體 Google Calendar ID |
+| `MEMBER_SHEET_ID` | 成員 Google Sheets ID |
+| `APP_URL` | Vercel 部署網址（例如 `https://your-app.vercel.app`） |
+
+> `GOOGLE_PRIVATE_KEY` 格式：`"-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"`
+
+---
+
+## 步驟二：設定 LINE Developers Console
+
+部署完成後，取得 Vercel 部署網址，填入 LINE Developers Console：
+
+### LINE Login Channel
+
+- **Callback URL**：`https://你的vercel網址/api/auth/line-callback`
+
+### LINE Messaging API Channel（若使用 LINE BOT）
+
+- **Webhook URL**：`https://你的vercel網址/api/line/webhook`
+- 開啟 **Use webhook**
+
+---
+
+## 步驟三：部署
+
+### 自動部署（推薦）
+
+將 GitHub 儲存庫連結到 Vercel Project，推送到 `main` branch 即自動觸發部署：
 
 ```bash
-# 建置 Docker 映像檔
-docker build -t line-liff-calendar .
-
-# 執行容器（需要先設定環境變數）
-docker run -p 8080:8080 --env-file .env line-liff-calendar
-
-# 測試
-curl http://localhost:8080/health
+git push origin main
 ```
 
-## 🚀 部署到 Cloud Run
-
-### 方法一：使用 gcloud 命令（推薦）
+### 手動部署
 
 ```bash
-# 建置並推送映像檔
-gcloud builds submit --tag gcr.io/your-project-id/line-liff-calendar
+# 預覽部署
+vercel
 
-# 部署到 Cloud Run
-gcloud run deploy line-liff-calendar \
-  --image gcr.io/your-project-id/line-liff-calendar \
-  --platform managed \
-  --region asia-east1 \
-  --allow-unauthenticated \
-  --memory 512Mi \
-  --cpu 1 \
-  --min-instances 1 \
-  --max-instances 10 \
-  --set-env-vars="NODE_ENV=production"
+# 正式部署
+vercel --prod
 ```
 
-### 方法二：使用 Cloud Build（自動化）
+---
 
-1. 將 `cloudbuild.yaml` 推送到 Git 儲存庫
-2. 在 Google Cloud Console 中設定 Cloud Build 觸發器
-3. 每次推送程式碼時自動建置和部署
+## 步驟四：驗證部署
 
 ```bash
-# 手動觸發建置
-gcloud builds submit --config cloudbuild.yaml
+# 健康檢查
+curl https://你的vercel網址/health
+# 預期回傳：{"status":"ok","timestamp":"..."}
 ```
 
-## 🔗 更新 LIFF Endpoint URL
+在瀏覽器開啟 `https://你的vercel網址`，應該看到 LINE Login 頁面。
 
-部署完成後，取得 Cloud Run 的 URL：
+---
 
-```bash
-gcloud run services describe line-liff-calendar --region=asia-east1 --format='value(status.url)'
+## vercel.json 說明
+
+```json
+{
+  "builds": [
+    { "src": "api/index.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.js" },
+    { "src": "/(.*)", "dest": "/api/index.js" }
+  ],
+  "crons": [
+    { "path": "/api/cron/sync", "schedule": "0 2 * * *" },
+    { "path": "/api/cron/renew-watch", "schedule": "0 0 * * *" }
+  ]
+}
 ```
 
-然後更新 LINE Developers Console 中的 LIFF Endpoint URL。
+所有請求都經過 `api/index.js`（包含靜態檔案），Express 的 `express.static('public')` 負責服務前端靜態檔案。
 
-## ✅ 驗證部署
+---
 
-1. **健康檢查**
-   ```bash
-   curl https://your-cloud-run-url.run.app/health
-   ```
-   應該回傳：`{"status":"ok","timestamp":"..."}`
+## 常見問題
 
-2. **測試 API**
-   ```bash
-   curl https://your-cloud-run-url.run.app/api/line/liff-id
-   ```
+### 部署後 API 回傳 500
 
-3. **在 LINE 中測試**
-   - 在 LINE 中開啟 LIFF 應用程式
-   - 測試各個功能是否正常運作
+- 檢查 Vercel Dashboard → Functions → Logs
+- 確認所有環境變數已正確填入
+- 確認 `GOOGLE_PRIVATE_KEY` 換行符號格式正確
 
-## 📊 監控與日誌
+### LINE Login 回調失敗
 
-### 查看日誌
-```bash
-gcloud run services logs read line-liff-calendar --region=asia-east1
-```
+- 確認 `APP_URL` 設為 Vercel 網址（不含結尾斜線）
+- 確認 LINE Developers Console 的 Callback URL 已更新
 
-### 監控指標
-在 Google Cloud Console 中查看：
-- Cloud Run → line-liff-calendar → 指標
-- 監控 CPU、記憶體、請求數等
+### Cron Job 沒有執行
 
-## 🔒 安全性建議
+- Vercel Cron 需要 Pro 方案或 Hobby 方案（有限制）
+- 可在 Dashboard → Cron Jobs 查看執行紀錄
 
-1. **使用 Secret Manager** 儲存敏感資訊（私鑰、Channel Secret 等）
-2. **啟用 HTTPS**（Cloud Run 預設啟用）
-3. **設定 CORS** 限制允許的來源
-4. **實作 Rate Limiting**（已包含在程式碼中）
-5. **定期更新依賴套件**
+---
 
-## 🐛 常見問題
+## 本機開發
 
-### 問題：部署後無法連線
-- 檢查環境變數是否正確設定
-- 確認 Service Account 權限
-- 查看 Cloud Run 日誌
-
-### 問題：Google API 認證失敗
-- 確認 Service Account Email 和 Private Key 正確
-- 確認 Service Account 有權限存取 Calendar 和 Sheets
-
-### 問題：LIFF 無法開啟
-- 確認 LIFF Endpoint URL 正確
-- 確認 Channel ID 和 Channel Secret 正確
-- 檢查瀏覽器主控台錯誤訊息
-
-## 📞 支援
-
-如有問題，請查看：
-- [Google Cloud Run 文件](https://cloud.google.com/run/docs)
-- [LINE LIFF 文件](https://developers.line.biz/en/docs/liff/)
-- [Google Calendar API 文件](https://developers.google.com/calendar)
-- [Google Sheets API 文件](https://developers.google.com/sheets/api)
+請參考 [docs/QUICKSTART.md](./QUICKSTART.md)，使用 ngrok 進行本機測試。

@@ -1,0 +1,21 @@
+version: "3"
+
+# ngrok 設定檔 — 康九冠軍夥伴系統本機開發用
+# 使用前需先設定 NGROK_AUTHTOKEN 環境變數（或執行 ngrok config add-authtoken 你的token）
+# 取得 token：https://dashboard.ngrok.com/get-started/your-authtoken
+
+agent:
+  authtoken_from_env: true  # 從 NGROK_AUTHTOKEN 環境變數讀取
+
+tunnels:
+  app:
+    proto: http
+    addr: 8080
+    # inspect: true  # 開啟流量檢視介面（http://localhost:4040）
+    # 若有付費方案，可固定子網域：
+    # domain: your-fixed-domain.ngrok-free.app
+
+# 使用方式：
+#   基本（指定此設定檔）: ngrok start --config ngrok.yml app
+#   快捷（package.json 腳本）: npm run ngrok
+#   同時啟動伺服器+ngrok:   npm run dev:ngrok

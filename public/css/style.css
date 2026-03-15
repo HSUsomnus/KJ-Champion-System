@@ -663,6 +663,12 @@ h3 {
   border: 1px solid #4CAF50;
 }
 
+.event-type.紫星行程聊聊 {
+  background-color: #F3E5F5;
+  color: #7B1FA2;
+  border: 1px solid #AB47BC;
+}
+
 .event-info {
   display: flex;
   flex-direction: column;

@@ -9,6 +9,7 @@ const eventsByType = {
   '學員上課': {},
   '活動': {},
   '諮詢簽約': {},
+  '紫星行程聊聊': {},
 };
 
 // 當前顯示的月份
@@ -17,7 +18,7 @@ let currentYear = new Date().getFullYear();
 
 // 當前顯示的分頁索引（0 = 全部，預設最先顯示）
 let currentTabIndex = 0;
-const tabTypes = ['全部', '學員上課', '活動', '諮詢簽約'];
+const tabTypes = ['全部', '學員上課', '活動', '諮詢簽約', '紫星行程聊聊'];
 
 /**
  * 初始化列表頁面
@@ -33,6 +34,7 @@ async function initList() {
       eventsByType['學員上課'] = {};
       eventsByType['活動'] = {};
       eventsByType['諮詢簽約'] = {};
+      eventsByType['紫星行程聊聊'] = {};
       loadEventsForType(tabTypes[currentTabIndex]);
     }
   });

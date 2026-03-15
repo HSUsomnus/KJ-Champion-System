@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "nodemon server/server.js",
+    "ngrok": "ngrok http 8080",
+    "dev:ngrok": "concurrently \"npm run dev\" \"npm run ngrok\"",
     "test": "jest",
-    "build": "cd frontend && npm ci && npm run build",
-    "postinstall": "cd frontend && npm ci && npm run build || echo 'Frontend build skipped'",
     "seed:members": "node scripts/seed-members.js",
     "migrate:members": "node scripts/migrate-sheet-to-supabase.js",
     "sync:calendar": "node scripts/sync-calendar-to-supabase.js",
@@ -36,6 +36,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2"
   },

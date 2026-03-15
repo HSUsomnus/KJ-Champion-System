@@ -196,7 +196,7 @@ router.post('/events', verifyLineUser, async (req, res) => {
     }
 
     // 驗證行程類型
-    const validTypes = ['學員上課', '活動', '諮詢簽約'];
+    const validTypes = ['學員上課', '活動', '諮詢簽約', '紫星行程聊聊'];
     const eventType = type && validTypes.includes(type) ? type : '活動';
 
     const event = await calendarService.createGroupEvent({
@@ -249,7 +249,7 @@ router.put('/events/:eventId', verifyLineUser, async (req, res) => {
 
     let eventType = type;
     if (type) {
-      const validTypes = ['學員上課', '活動', '諮詢簽約'];
+      const validTypes = ['學員上課', '活動', '諮詢簽約', '紫星行程聊聊'];
       if (!validTypes.includes(type)) {
         eventType = '活動';
       }

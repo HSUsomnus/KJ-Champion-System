@@ -1,124 +1,155 @@
-# ⚡ 快速開始指南
+# 快速開始指南
 
-歡迎使用 LINE LIFF 行事曆系統！這份指南會帶你快速上手。
+> 康九冠軍夥伴系統 v1.5.0
 
-## 🎯 5 分鐘快速設定
+---
 
-### 步驟 1：安裝依賴
+## 前置需求
+
+- Node.js 18+
+- ngrok CLI（用於測試 LINE Login 與 Webhook）
+- LINE Developers 帳號（測試真實登入時需要）
+- Supabase 帳號 + Google Cloud 服務帳號（詳見環境變數說明）
+
+---
+
+## 步驟一：安裝依賴
+
 ```bash
 npm install
 ```
 
-### 步驟 2：設定環境變數
-1. 複製 `env.example` 為 `.env`
-2. 填入必要的設定值（參考下方說明）
+這會安裝所有依賴，包含 `concurrently`（同時啟動伺服器與 ngrok 用）。
 
-### 步驟 3：啟動開發伺服器
+---
+
+## 步驟二：設定環境變數
+
+```bash
+cp .env.example .env
+```
+
+至少填入以下變數才能啟動：
+
+```env
+# LINE Login（OAuth 登入必填）
+LINE_LOGIN_CHANNEL_ID=你的Channel_ID
+LINE_LOGIN_CHANNEL_SECRET=你的Channel_Secret
+
+# Supabase（成員資料庫必填）
+DATABASE_URL=postgresql://postgres:密碼@主機:5432/postgres
+
+# Google Calendar（行事曆必填）
+GOOGLE_SERVICE_ACCOUNT_EMAIL=你的service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GROUP_CALENDAR_ID=你的calendar_id@group.calendar.google.com
+
+# 應用程式網址（LINE OAuth 回調必填）
+APP_URL=http://localhost:8080
+```
+
+完整環境變數說明：[README.md 的環境變數章節](../README.md#環境變數)
+
+---
+
+## 步驟三：啟動伺服器
+
+### 模式 A：本機測試（不需真實 LINE 帳號）
+
 ```bash
 npm run dev
 ```
 
-### 步驟 4：測試
-開啟瀏覽器訪問 `http://localhost:8080`
+開啟瀏覽器：`http://localhost:8080?dev=1`
 
-## 📝 環境變數快速設定
+`?dev=1` 會自動模擬 LINE 登入，無需真實帳號，適合快速開發測試。
 
-### Google API 設定（必須）
+---
 
-1. **建立 Google Cloud 專案**
-   - 前往 https://console.cloud.google.com/
-   - 建立新專案
-   - 啟用 Calendar API 和 Sheets API
+### 模式 B：測試真實 LINE Login / LINE BOT（需要 ngrok）
 
-2. **建立 Service Account**
-   ```bash
-   # 使用 gcloud CLI（或透過網頁介面）
-   gcloud iam service-accounts create line-liff-calendar-sa
-   gcloud iam service-accounts keys create service-account-key.json \
-     --iam-account=line-liff-calendar-sa@PROJECT-ID.iam.gserviceaccount.com
-   ```
-
-3. **取得設定值**
-   - 開啟 `service-account-key.json`
-   - `client_email` → `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-   - `private_key` → `GOOGLE_PRIVATE_KEY`（注意換行符號 `\n`）
-   - `project_id` → `GOOGLE_PROJECT_ID`
-
-4. **設定共用日曆**
-   - 建立 Google Calendar
-   - 將 Service Account Email 加入為編輯者
-   - 取得 Calendar ID（在日曆設定的「整合日曆」中）
-
-5. **設定 Google Sheets**
-   - 建立新的 Google Sheets
-   - 第一列：`LINE ID`、`姓名`、`Email`、`電話`、`星等`、`課程紀錄`
-   - 將 Service Account Email 加入為編輯者
-   - 從網址取得 Sheet ID
-
-### LINE LIFF 設定（必須）
-
-1. **建立 LINE Channel**
-   - 前往 https://developers.line.biz/
-   - 建立 Provider 和 Channel（Messaging API）
-   - 記錄 Channel ID 和 Channel Secret
-
-2. **建立 LIFF App**
-   - 在 Channel 中選擇「LIFF」標籤
-   - 點擊「Add」建立新的 LIFF App
-   - 設定 Endpoint URL（本地開發可用 ngrok）
-   - 記錄 LIFF ID
-
-## 🧪 本地測試 LINE LIFF
-
-由於 LIFF 需要在 LINE 環境中運行，建議使用 ngrok：
+#### 1. 安裝並設定 ngrok
 
 ```bash
-# 1. 安裝 ngrok
-# 下載：https://ngrok.com/
+# 方法 A：全域安裝 ngrok CLI
+npm install -g ngrok
 
-# 2. 啟動 ngrok
-ngrok http 8080
+# 方法 B：從官網下載 https://ngrok.com/download
 
-# 3. 複製 HTTPS URL（例如：https://abc123.ngrok.io）
-
-# 4. 在 LINE Developers Console 更新 LIFF Endpoint URL
-
-# 5. 在 LINE 中開啟 LIFF App 測試
+# 設定 Auth Token（免費帳號即可）
+ngrok config add-authtoken 你的TOKEN
+# 取得 Token：https://dashboard.ngrok.com/get-started/your-authtoken
 ```
 
-## 📚 完整文件
+#### 2. 同時啟動伺服器 + ngrok
 
-- **開發環境設定**：參考 docs/SETUP.md
-- **部署指南**：參考 docs/DEPLOYMENT.md
-- **專案架構**：參考 docs/PROJECT_PLAN.md
+```bash
+npm run dev:ngrok
+```
 
-## 🆘 遇到問題？
+終端機會顯示類似：
 
-### 常見錯誤
+```text
+Forwarding  https://abc123.ngrok-free.app -> http://localhost:8080
+```
 
-1. **`GOOGLE_PRIVATE_KEY` 格式錯誤**
-   - 確保私鑰包含換行符號 `\n`
-   - 範例：`"-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"`
+#### 3. 更新 LINE Developers Console
 
-2. **Google API 權限錯誤**
-   - 確認 Service Account 有權限存取 Calendar 和 Sheets
-   - 確認已將 Service Account Email 加入共用資源
+複製 ngrok HTTPS URL，填入 LINE Developers Console：
 
-3. **LIFF 無法開啟**
-   - 確認 LIFF Endpoint URL 正確
-   - 確認在 LINE 環境中開啟（或使用 ngrok）
+- **LINE Login Channel** → Callback URL：
+  `https://你的ngrok網址/api/auth/line-callback`
 
-### 需要幫助？
+- **LINE Messaging API Channel** → Webhook URL（若需測試 BOT）：
+  `https://你的ngrok網址/api/line/webhook`
 
-- 查看 docs/SETUP.md 了解詳細設定步驟
-- 查看 docs/DEPLOYMENT.md 了解部署流程
-- 檢查終端機和瀏覽器主控台的錯誤訊息
+#### 4. 更新 .env 的 APP_URL
 
-## 🚀 下一步
+```env
+APP_URL=https://你的ngrok網址
+```
 
-設定完成後，你可以：
-1. 測試各個功能（行事曆、個人資料、成員列表）
-2. 開始開發新功能
-3. 部署到 Google Cloud Run
+> 注意：免費版 ngrok 每次重啟會換 URL，需重複以上步驟 3 和 4。
 
-祝開發順利！🎉
+---
+
+## 測試確認清單
+
+| 測試項目 | 方法 | 說明 |
+|---------|------|------|
+| 畫面能載入 | 瀏覽器開 `localhost:8080?dev=1` | 看到月曆主頁 |
+| 模擬登入 | URL 帶 `?dev=1` | 自動填入測試 LINE ID |
+| 真實登入 | ngrok URL + LINE App | 走完 LINE OAuth 流程 |
+| 未登入狀態 | 清除 localStorage 的 `lineUserId` | 應導向登入頁 |
+| API 健康 | GET `http://localhost:8080/health` | 回傳 `{"status":"ok"}` |
+
+---
+
+## 常見問題
+
+### Q：Google Private Key 格式錯誤
+
+確保換行符號用 `\n` 表示，完整格式：
+
+```env
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"
+```
+
+### Q：LINE Login 失敗，回調出錯
+
+- 確認 `APP_URL` 與 ngrok URL 一致
+- 確認 LINE Developers Console 的 Callback URL 已更新
+- 確認 `LINE_LOGIN_CHANNEL_ID` 和 `LINE_LOGIN_CHANNEL_SECRET` 填的是 **LINE Login Channel**，不是 Messaging API Channel
+
+### Q：資料庫連線失敗
+
+- 確認 `DATABASE_URL` 格式正確
+- 確認 Supabase Project 已建立，且 `database/schema.sql` 已執行
+
+---
+
+## 下一步
+
+- 部署到 Vercel：[docs/DEPLOYMENT.md](./DEPLOYMENT.md)
+- ngrok 詳細用法：[docs/ngrok測試LINE功能步驟.md](./ngrok測試LINE功能步驟.md)
+- 完整專案說明：[README.md](../README.md)

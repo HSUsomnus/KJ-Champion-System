@@ -249,8 +249,8 @@ function renderCalendar(year, month, events) {
     // 收集當日所有獨特的行程類型
     const eventTypes = [...new Set(dayEvents.map(e => e.type || '活動'))];
     
-    // 類型優先級排序（學員上課 > 活動 > 諮詢簽約 > 個人行程）
-    const typeOrder = ['學員上課', '活動', '諮詢簽約', '個人行程'];
+    // 類型優先級排序（學員上課 > 活動 > 諮詢簽約 > 紫星行程聊聊 > 個人行程）
+    const typeOrder = ['學員上課', '活動', '諮詢簽約', '紫星行程聊聊', '個人行程'];
     const sortedTypes = eventTypes.sort((a, b) => {
       const aIdx = typeOrder.indexOf(a);
       const bIdx = typeOrder.indexOf(b);
@@ -276,6 +276,7 @@ function renderCalendar(year, month, events) {
         if (type === '學員上課') dot.style.backgroundColor = '#F57F17'; // 橙色
         else if (type === '活動') dot.style.backgroundColor = '#C62828'; // 紅色
         else if (type === '諮詢簽約') dot.style.backgroundColor = '#2E7D32'; // 綠色
+        else if (type === '紫星行程聊聊') dot.style.backgroundColor = '#7B1FA2'; // 紫色
         else if (type === '個人行程') dot.style.backgroundColor = '#1976D2'; // 藍色
         else dot.style.backgroundColor = '#999'; // 其他
         

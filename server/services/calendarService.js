@@ -11,14 +11,16 @@ const eventDbService = require('./eventDbService');
  * 行程類型 → Google Calendar colorId 對照表
  * Google Calendar 有 11 種內建顏色（數字 1~11）
  * 這裡讓顏色盡量跟 LIFF 前端的分類顏色一致
- *   學員上課 → 5（Banana 香蕉黃）
- *   活動     → 11（Tomato 番茄紅）
- *   諮詢簽約 → 10（Basil 羅勒綠）
+ *   學員上課   → 5（Banana 香蕉黃）
+ *   活動       → 11（Tomato 番茄紅）
+ *   諮詢簽約   → 10（Basil 羅勒綠）
+ *   紫星行程聊聊 → 3（Grape 葡萄紫）
  */
 const EVENT_TYPE_COLOR_MAP = {
-  '學員上課': '5',   // 黃色 — 對應 LIFF 的 #FBC02D
-  '活動': '11',      // 紅色 — 對應 LIFF 的 #E53935
-  '諮詢簽約': '10',  // 綠色 — 對應 LIFF 的 #4CAF50
+  '學員上課': '5',      // 黃色 — 對應 LIFF 的 #FBC02D
+  '活動': '11',         // 紅色 — 對應 LIFF 的 #E53935
+  '諮詢簽約': '10',     // 綠色 — 對應 LIFF 的 #4CAF50
+  '紫星行程聊聊': '3',  // 紫色 — 對應 LIFF 的 #7B1FA2
 };
 
 /**
