@@ -1,63 +1,119 @@
-# 📅 LINE LIFF 行事曆系統
+# 康九冠軍夥伴系統
 
-一個專為團體設計的 LINE LIFF 應用程式，整合 Google Calendar 和 Google Sheets，提供完整的行程管理與成員管理功能。
+> 目前版本：v1.4.0
 
-## ✨ 主要功能
+專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar、Google Sheets 與 Supabase。
 
-- 📆 **團體行事曆管理**: 讀寫共用 Google Calendar
-- 👤 **個人行事曆**: 管理個人 Google Calendar
-- 📋 **行程分類**: 學員上課、活動、諮詢簽約
-- 👥 **成員管理**: 透過 Google Sheets 管理成員資料
-- 🔗 **分享功能**: 一鍵分享行程給 LINE 好友或群組
-- 📱 **手機優先**: 專為手機畫面優化的響應式設計
+---
 
-## 🚀 快速開始
+## 技術架構
 
-### 1. 安裝依賴套件
+| 層級 | 技術 |
+| ---- | ---- |
+| 前端 | 純 HTML + 原生 JS + CSS（`public/`） |
+| 後端 | Node.js + Express.js（`server/`） |
+| 身份驗證 | LINE Login OAuth（不依賴 LIFF SDK） |
+| 資料庫 | Supabase（成員）、Google Calendar API、Google Sheets API |
+| 部署（後端） | Google Cloud Run |
+| 部署（前端） | Vercel |
+
+---
+
+## 主要功能
+
+- **月曆視圖**：團體行事曆，依類型（學員上課／活動／諮詢簽約）標色
+- **行程管理**：新增、編輯、刪除行程（限 admin/manager）
+- **成員管理**：成員列表、詳情、角色管理
+- **個人資料**：同步 LINE 頭像、查看個人資訊
+- **財務功能**：上傳與預覽財務報表（限 manager）
+- **邀請分享**：產生邀請字卡並透過 LINE 分享
+
+---
+
+## 專案結構
+
+```text
+Line_Liff/
+├── public/                 # 前端（正式版）
+│   ├── index.html          # 月曆主頁
+│   ├── list.html           # 行程列表
+│   ├── add-event.html      # 新增行程
+│   ├── event-detail.html   # 行程詳情
+│   ├── members.html        # 成員列表
+│   ├── member-detail.html  # 成員詳情
+│   ├── profile.html        # 個人資料
+│   ├── management.html     # 管理後台
+│   ├── financial-upload.html
+│   ├── financial-preview.html
+│   ├── invite-share.html   # 邀請字卡
+│   ├── open-external.html  # 外部連結中介
+│   ├── js/
+│   │   ├── liff.js         # 核心：LINE Login + window.LIFF 介面
+│   │   ├── calendar.js
+│   │   ├── add-event.js
+│   │   └── ...
+│   └── css/style.css
+├── server/                 # 後端
+│   ├── server.js           # Express 主入口
+│   ├── routes/
+│   │   ├── auth.js         # LINE OAuth 回調
+│   │   ├── calendar.js     # 行事曆 CRUD
+│   │   ├── member.js       # 成員管理
+│   │   ├── profile.js      # 個人資料
+│   │   ├── line.js         # LINE BOT
+│   │   └── financial.js    # 財務（限 manager）
+│   └── services/
+├── CLAUDE.md               # AI 助理規則（等同 .cursorrules）
+├── CHANGELOG.md            # 版本索引
+├── .claude/context/        # 各版本詳細上下文
+├── Dockerfile              # Cloud Run 部署
+└── package.json
+```
+
+---
+
+## 本機開發
+
+### 安裝依賴
 
 ```bash
 npm install
 ```
 
-### 2. 設定環境變數
-
-複製 `.env.example` 並重新命名為 `.env`，填入你的設定值：
+### 設定環境變數
 
 ```bash
 cp .env.example .env
+# 填入 LINE_CHANNEL_ID、LINE_CHANNEL_SECRET、SUPABASE_URL 等
 ```
 
-### 3. 設定 Google API
-
-1. 前往 [Google Cloud Console](https://console.cloud.google.com/)
-2. 建立專案並啟用 Calendar API 和 Sheets API
-3. 建立 Service Account 並下載 JSON 金鑰檔
-4. 將 Service Account Email 加入共用日曆和 Google Sheets 的編輯者
-
-### 4. 設定 LINE LIFF
-
-1. 前往 [LINE Developers Console](https://developers.line.biz/)
-2. 建立 LIFF 應用程式
-3. 取得 LIFF ID 並填入 `.env`
-
-### 5. 本地開發
+### 啟動開發伺服器
 
 ```bash
-npm run dev
+node server/server.js
 ```
 
-伺服器會在 `http://localhost:8080` 啟動
+伺服器在 `http://localhost:8080` 啟動。
 
-### 6. 部署到 Google Cloud Run
+### 測試（模擬登入，不需真實 LINE 帳號）
+
+```text
+http://localhost:8080?dev=1
+```
+
+### 測試未登入狀態
+
+清除瀏覽器 localStorage 中的 `lineUserId` 再重整。
+
+---
+
+## 部署
+
+### 後端（Google Cloud Run）
 
 ```bash
-# 建置 Docker 映像檔
 docker build -t gcr.io/YOUR_PROJECT_ID/line-liff-calendar .
-
-# 推送到 Google Container Registry
 docker push gcr.io/YOUR_PROJECT_ID/line-liff-calendar
-
-# 部署到 Cloud Run
 gcloud run deploy line-liff-calendar \
   --image gcr.io/YOUR_PROJECT_ID/line-liff-calendar \
   --platform managed \
@@ -65,31 +121,22 @@ gcloud run deploy line-liff-calendar \
   --allow-unauthenticated
 ```
 
-## 📁 專案結構
+### 前端（Vercel）
 
-```
-Line_Liff/
-├── server/          # 後端伺服器
-├── public/          # 前端靜態檔案
-├── .env.example     # 環境變數範例
-├── Dockerfile       # Cloud Run 部署用
-└── package.json     # 專案設定檔
-```
+Vercel 直接 serve `public/` 目錄，推送 main branch 自動部署。
 
-## 🔧 技術棧
+---
 
-- **後端**: Node.js + Express.js
-- **前端**: HTML/CSS/JavaScript + LINE LIFF SDK
-- **資料庫**: Google Calendar + Google Sheets
-- **部署**: Google Cloud Run
+## 角色權限
 
-## 📝 開發注意事項
+| 角色 | 可存取功能 |
+| ---- | --------- |
+| member | 月曆、列表、行程詳情、個人資料 |
+| admin | 以上 + 新增/編輯/刪除行程、成員管理、管理後台 |
+| manager | 以上 + 財務上傳與預覽 |
 
-- 所有程式碼註解使用繁體中文
-- 手機畫面優先設計
-- 確保 API 響應時間 < 500ms
-- 實作適當的錯誤處理與使用者提示
+---
 
-## 📄 授權
+## 版本記錄
 
-ISC License
+詳見 [CHANGELOG.md](./CHANGELOG.md)。各版本完整上下文：`.claude/context/`。

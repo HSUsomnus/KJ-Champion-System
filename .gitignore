@@ -23,6 +23,11 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
+# Claude Code 本機設定（不推送）
+.claude/settings.local.json
+.claude/commands/
+.claude/skills/
+
 # 日誌檔案
 logs/
 *.log
