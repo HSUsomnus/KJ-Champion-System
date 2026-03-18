@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.2] - 2026-03-18
+
+git tag: v1.5.2
+摘要：新增 Supabase 雙寫備份服務（dualWriteService），主庫 Zeabur 寫入同時 fire-and-forget 備份至 Supabase，修正 SSL 連線設定
+
+---
+
 ## [v1.5.1] - 2026-03-15
 
 git tag: v1.5.1

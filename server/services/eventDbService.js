@@ -4,6 +4,7 @@
  */
 
 const db = require('../config/db');
+const { dualWrite, backupQuery, backupGetClient } = require('./dualWriteService');
 
 /**
  * 將資料庫 row 轉換成行程物件
@@ -70,15 +71,11 @@ const getEventById = async (eventId) => {
  * @param {Array} events - 從 Google Calendar 取得的行程陣列
  * @returns {Promise<number>} 受影響的行程數量
  */
-const upsertEvents = async (events) => {
-  if (events.length === 0) return 0;
-  
-  const client = await db.getClient();
-  
+const _upsertEventsToPool = async (getClientFn, events) => {
+  const client = await getClientFn();
   try {
     await client.query('BEGIN');
     let count = 0;
-    
     for (const event of events) {
       await client.query(`
         INSERT INTO events (
@@ -101,7 +98,7 @@ const upsertEvents = async (events) => {
         event.id,
         event.title,
         event.description || '',
-        event.start,  // ISO string -> TIMESTAMPTZ
+        event.start,
         event.end,
         event.allDay || false,
         event.location || '',
@@ -111,15 +108,26 @@ const upsertEvents = async (events) => {
       ]);
       count++;
     }
-    
     await client.query('COMMIT');
     return count;
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('❌ Upsert 行程失敗:', error.message);
     throw error;
   } finally {
     client.release();
+  }
+};
+
+const upsertEvents = async (events) => {
+  if (events.length === 0) return 0;
+  try {
+    return await dualWrite(
+      () => _upsertEventsToPool(db.getClient, events),
+      () => _upsertEventsToPool(backupGetClient, events)
+    );
+  } catch (error) {
+    console.error('❌ Upsert 行程失敗:', error.message);
+    throw error;
   }
 };
 
@@ -132,27 +140,29 @@ const upsertEvents = async (events) => {
  */
 const deleteEventsNotIn = async (googleEventIds, timeMin, timeMax) => {
   try {
-    if (googleEventIds.length === 0) {
-      // 如果 Google 沒有任何行程，刪除該範圍內所有非生日行程
-      const result = await db.query(`
+    const runDelete = (queryFn) => {
+      if (googleEventIds.length === 0) {
+        return queryFn(`
+          DELETE FROM events
+          WHERE start_at >= $1 AND start_at <= $2
+          AND is_birthday_event = FALSE
+          RETURNING id
+        `, [timeMin, timeMax]);
+      }
+      const placeholders = googleEventIds.map((_, i) => `$${i + 3}`).join(',');
+      return queryFn(`
         DELETE FROM events
         WHERE start_at >= $1 AND start_at <= $2
+        AND id NOT IN (${placeholders})
         AND is_birthday_event = FALSE
         RETURNING id
-      `, [timeMin, timeMax]);
-      return result.rowCount;
-    }
-    
-    // 刪除不在 Google 列表中的行程
-    const placeholders = googleEventIds.map((_, i) => `$${i + 3}`).join(',');
-    const result = await db.query(`
-      DELETE FROM events
-      WHERE start_at >= $1 AND start_at <= $2
-      AND id NOT IN (${placeholders})
-      AND is_birthday_event = FALSE
-      RETURNING id
-    `, [timeMin, timeMax, ...googleEventIds]);
-    
+      `, [timeMin, timeMax, ...googleEventIds]);
+    };
+
+    const result = await dualWrite(
+      () => runDelete(db.query.bind(db)),
+      () => runDelete(backupQuery)
+    );
     return result.rowCount;
   } catch (error) {
     console.error('❌ 刪除過期行程失敗:', error.message);
@@ -167,9 +177,9 @@ const deleteEventsNotIn = async (googleEventIds, timeMin, timeMax) => {
  */
 const deleteEventById = async (eventId) => {
   try {
-    const result = await db.query(
-      `DELETE FROM events WHERE id = $1 RETURNING id`,
-      [eventId]
+    const result = await dualWrite(
+      () => db.query(`DELETE FROM events WHERE id = $1 RETURNING id`, [eventId]),
+      () => backupQuery(`DELETE FROM events WHERE id = $1 RETURNING id`, [eventId])
     );
     return result.rowCount > 0;
   } catch (error) {
