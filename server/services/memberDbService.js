@@ -4,6 +4,7 @@
  */
 
 const db = require('../config/db');
+const { dualWrite, backupQuery } = require('./dualWriteService');
 
 /**
  * 將電話號碼統一轉成字串並回傳給前端
@@ -97,14 +98,15 @@ const isMemberRegistered = async (lineId) => {
  */
 const createMember = async (memberData) => {
   try {
-    const result = await db.query(`
+    const sql = `
       INSERT INTO members (
         line_id, name, email, phone, star_level, course_record,
         picture_url, tesla_franchisee, team_responsibilities,
         volunteer_records, birthday, display_name, invited_by
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
-    `, [
+    `;
+    const params = [
       memberData.lineId || '',
       memberData.name || '',
       memberData.email || '',
@@ -117,9 +119,12 @@ const createMember = async (memberData) => {
       memberData.volunteerRecords || '',
       memberData.birthday || '',
       memberData.displayName || '',
-      memberData.invitedBy || null, // 邀請人的 LINE ID
-    ]);
-
+      memberData.invitedBy || null,
+    ];
+    const result = await dualWrite(
+      () => db.query(sql, params),
+      () => backupQuery(sql, params)
+    );
     console.log(`✅ 新增成員: ${memberData.name} (邀請人: ${memberData.invitedBy || '無'})`);
     return rowToMember(result.rows[0]);
   } catch (error) {
@@ -145,9 +150,9 @@ const updateMember = async (lineId, memberData) => {
     // 準備更新的資料（只更新有傳入的欄位）
     const phoneVal = memberData.phone !== undefined ? memberData.phone : member.phone;
     
-    const result = await db.query(`
+    const sql = `
       UPDATE members
-      SET 
+      SET
         name = $1,
         email = $2,
         phone = $3,
@@ -163,7 +168,8 @@ const updateMember = async (lineId, memberData) => {
         updated_at = NOW()
       WHERE line_id = $13
       RETURNING *
-    `, [
+    `;
+    const params = [
       memberData.name !== undefined ? memberData.name : member.name,
       memberData.email !== undefined ? memberData.email : member.email,
       phoneToText(phoneVal),
@@ -177,8 +183,11 @@ const updateMember = async (lineId, memberData) => {
       memberData.displayName !== undefined ? memberData.displayName : member.displayName,
       memberData.invitedBy !== undefined ? memberData.invitedBy : member.invitedBy,
       lineId,
-    ]);
-
+    ];
+    const result = await dualWrite(
+      () => db.query(sql, params),
+      () => backupQuery(sql, params)
+    );
     return rowToMember(result.rows[0]);
   } catch (error) {
     console.error('❌ 更新成員資料失敗:', error.message);
@@ -254,12 +263,12 @@ const updateMemberRole = async (lineId, role) => {
       throw new Error(`無效的角色值: ${role}`);
     }
 
-    const result = await db.query(`
-      UPDATE members
-      SET role = $1, updated_at = NOW()
-      WHERE line_id = $2
-      RETURNING *
-    `, [role, lineId]);
+    const sql = `UPDATE members SET role = $1, updated_at = NOW() WHERE line_id = $2 RETURNING *`;
+    const params = [role, lineId];
+    const result = await dualWrite(
+      () => db.query(sql, params),
+      () => backupQuery(sql, params)
+    );
 
     if (result.rows.length === 0) {
       throw new Error('找不到該成員');
@@ -281,12 +290,12 @@ const updateMemberRole = async (lineId, role) => {
  */
 const updateFinancialAmount = async (lineId, amount) => {
   try {
-    const result = await db.query(`
-      UPDATE members
-      SET financial_amount = $1, updated_at = NOW()
-      WHERE line_id = $2
-      RETURNING *
-    `, [amount, lineId]);
+    const sql = `UPDATE members SET financial_amount = $1, updated_at = NOW() WHERE line_id = $2 RETURNING *`;
+    const params = [amount, lineId];
+    const result = await dualWrite(
+      () => db.query(sql, params),
+      () => backupQuery(sql, params)
+    );
 
     if (result.rows.length === 0) {
       throw new Error('找不到該成員');

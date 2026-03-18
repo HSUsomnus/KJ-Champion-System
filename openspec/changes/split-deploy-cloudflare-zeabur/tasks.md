@@ -6,7 +6,7 @@
 - [x] 1.2 在專案根目錄建立 `zbpack.json`，設定 `nodejs_version: "18"` 與 `start_command: "node server/server.js"`
 - [x] 1.3 更新 `env.example`：`APP_URL` 改為 Zeabur 格式、`FRONTEND_URL` 改為 Cloudflare Pages 格式、新增 `DATABASE_URL`（Zeabur PostgreSQL）說明
 - [x] 1.4 在 `.gitignore` 加入 `!zbpack.json` 例外（因現有 `*.json` 規則會擋住）
-- [ ] 1.5 commit 並 push `staging` 分支到 GitHub
+- [x] 1.5 commit 並 push `staging` 分支到 GitHub
 
 ## 2. Zeabur 資料庫建立與資料同步（優先跑完再動後端）
 
@@ -14,36 +14,69 @@
 
 ### 2a. 建立 Zeabur PostgreSQL
 
-- [ ] 2a.1 在 Zeabur 建立新專案，命名 `kj-champion-staging`
-- [ ] 2a.2 在該專案內新增 **PostgreSQL 服務**（staging 專用，與 Supabase 正式庫隔離）
-- [ ] 2a.3 記錄 Zeabur PostgreSQL 連線資訊（host、port、user、password、database name）
-- [ ] 2a.4 確認可從本機連線至 Zeabur PostgreSQL（用 `psql` 或 TablePlus 測試）
+- [x] 2a.1 在 Zeabur 建立新專案，命名 `kj-champion-staging`
+- [x] 2a.2 在該專案內新增 **PostgreSQL 服務**（staging 專用，與 Supabase 正式庫隔離）
+- [x] 2a.3 記錄 Zeabur PostgreSQL 連線資訊（host、port、user、password、database name）
+- [x] 2a.4 確認可從本機連線至 Zeabur PostgreSQL（用 `psql` 或 TablePlus 測試）
 
 ### 2b. 從 Supabase 單向同步資料到 Zeabur（只做一次）
 
 > Supabase → Zeabur，單向複製，staging 測試完畢後資料以 Zeabur 為主
 
-- [ ] 2b.1 從 Supabase 匯出 schema（`pg_dump --schema-only`）：所有 table、index、constraint、enum
-- [ ] 2b.2 將 schema SQL 匯入 Zeabur PostgreSQL，確認所有 table 建立成功
-- [ ] 2b.3 從 Supabase 匯出正式資料（`pg_dump --data-only`，排除 auth、storage 等系統表）
-- [ ] 2b.4 將資料 SQL 匯入 Zeabur PostgreSQL
-- [ ] 2b.5 核對資料筆數：對每張主要 table 比較 Supabase vs Zeabur 的 `COUNT(*)`，確認一致
+- [x] 2b.1 從 Supabase 匯出 schema（`pg_dump --schema-only`）：所有 table、index、constraint、enum
+- [x] 2b.2 將 schema SQL 匯入 Zeabur PostgreSQL，確認所有 table 建立成功
+- [x] 2b.3 從 Supabase 匯出正式資料（`pg_dump --data-only`，排除 auth、storage 等系統表）
+- [x] 2b.4 將資料 SQL 匯入 Zeabur PostgreSQL
+- [x] 2b.5 核對資料筆數：對每張主要 table 比較 Supabase vs Zeabur 的 `COUNT(*)`，確認一致
 
 ### 2c. 驗證 Zeabur 資料庫正確性（通過後才切換後端）
 
-- [ ] 2c.1 檢查所有 table 的 row count 與 Supabase 相符
-- [ ] 2c.2 抽查至少 3 筆 event 記錄，確認欄位值與 Supabase 一致
-- [ ] 2c.3 確認 foreign key、index 等 constraint 均有效（無 orphan 資料）
-- [ ] 2c.4 ✅ **通過後，才進行步驟 2d**
+- [x] 2c.1 檢查所有 table 的 row count 與 Supabase 相符
+- [x] 2c.2 抽查至少 3 筆 event 記錄，確認欄位值與 Supabase 一致
+- [x] 2c.3 確認 foreign key、index 等 constraint 均有效（無 orphan 資料）
+- [x] 2c.4 ✅ **通過後，才進行步驟 2d**
 
-### 2d. 後端部署並切換至 Zeabur DB
+### 2d. 正式後端（Vercel）切換至 Zeabur DB — 真人驗證
 
-- [ ] 2d.1 在 Zeabur 同一專案內新增 **Node.js 服務**，連接 GitHub repo，**指定監聽 `staging` 分支**
-- [ ] 2d.2 設定後端環境變數：`DATABASE_URL`（Zeabur 內網 PostgreSQL URL）、`LINE_*`、`GOOGLE_*`、`LIFF_ID`、`NODE_ENV=production`
-- [ ] 2d.3 部署後確認後端啟動成功，**記錄 Zeabur 分配的網域**（e.g. `https://kj-champion.zeabur.app`）
-- [ ] 2d.4 在 LINE Developer Console → LINE Login Channel → Callback URL 加入 `https://<zeabur-backend>/api/auth/callback`
-- [ ] 2d.5 用現有 `public/` 前端（`?dev=1`）驗證 staging 後端：API 回應正常、DB CRUD 讀寫 Zeabur PostgreSQL
-- [ ] 2d.6 確認 LINE Login OAuth 完整流程可走通（登入 → 回調 → 取得使用者資訊）
+> 資料庫先換，後端平台暫時不動。讓真實使用者在熟悉的正式環境驗證 Zeabur DB 是否穩定。
+
+- [x] 2d.1 在 Vercel 控制台（正式後端），將 `DATABASE_URL` 環境變數從 Supabase 連線字串改為 **Zeabur PostgreSQL 外網連線字串**（`postgresql://root:<pw>@43.163.196.8:30756/zeabur`）
+- [x] 2d.2 在 Vercel 重新部署（Redeploy）正式後端，確認啟動成功、無連線錯誤
+- [x] 2d.3 在正式環境執行基本 API 冒煙測試：`/api/members`、`/api/calendar/events` 回傳正確資料
+- [x] 2d.4 **真人測試**：讓實際使用者在正式 APP 操作 1–2 天，確認新增行程、成員、LINE Login 均正常
+- [x] 2d.5 觀察期間同步監控 Zeabur PostgreSQL 連線數、查詢延遲，確認無異常
+- [x] 2d.6 ⚠️ **Supabase 此時仍保留，不停用**；若 Zeabur DB 異常，將 `DATABASE_URL` 切回 Supabase 即可立即回退
+- [x] ✅ **真人驗證通過後，才進行 2e（雙寫實作）**
+
+### 2e. 實作 Supabase 雙寫備份（只寫不讀）
+
+> 切換至 Zeabur DB 後，所有寫入同時複製到 Supabase 作為 live 熱備份。讀取只從 Zeabur，Supabase 僅接收寫入備份。
+
+- [x] 2e.1 在 `server/services/` 新增 `dualWriteService.js`：
+  - 實作 `dualWrite(primaryFn, backupFn)` — 主庫失敗直接拋錯，備份庫失敗 `console.warn` 後靜默（fire-and-forget）
+  - 讀取 `DUAL_WRITE_ENABLED` 環境變數，若為 `false` 則直接執行 `primaryFn` 不觸發備份
+  - ⚠️ **注意**：程式碼應 commit 至 `main` 分支（正式 Vercel 監聽 `main`），非 `staging`
+- [x] 2e.2 在 `server/services/` 中涉及寫入的 service（`memberDbService`、`eventDbService`）將 DB 寫入改用 `dualWrite()` 包裝
+- [x] 2e.3 在 `env.example` 新增雙寫相關說明：`DUAL_WRITE_ENABLED=true`、`SUPABASE_BACKUP_URL=<supabase-direct-url>`
+- [x] 2e.4 在 Vercel 控制台新增環境變數：`DUAL_WRITE_ENABLED=true`、`SUPABASE_BACKUP_URL`（Supabase Direct 連線字串）
+- [x] 2e.5 Redeploy 正式後端：v1.5.2 已推送 `main`，Vercel 自動重新部署（含 SSL 修正）
+  - 🐛 **根本原因**：初次實作程式碼只在 staging 本地未 commit，且 backupPool 缺少 `ssl: { rejectUnauthorized: false }` 導致 Supabase 連線被拒、靜默失敗
+  - ✅ **修正**：補上 SSL 設定，程式碼正確 commit 至 `main`（v1.5.2）
+- [ ] 2e.6 手動執行一筆寫入（新增測試行程），確認 Zeabur 與 Supabase 兩邊都有收到該筆資料
+  - ⏳ 等待 Vercel 部署 v1.5.2 完成後執行
+- [ ] 2e.7 模擬 Supabase 備份失敗（暫時填錯 `SUPABASE_BACKUP_URL`），確認主流程不受影響、log 出現 `[DualWrite] Supabase backup failed` 警告
+- [ ] ✅ 雙寫驗證通過後，才進行 2f
+
+### 2f. Zeabur 後端部署（staging）
+
+> DB 已驗證、雙寫已上線，後端平台才有意義搬移。
+
+- [ ] 2f.1 在 Zeabur 同一專案內新增 **Node.js 服務**，連接 GitHub repo，**指定監聽 `staging` 分支**
+- [ ] 2f.2 設定後端環境變數：`DATABASE_URL`（Zeabur **內網** PostgreSQL URL）、`DUAL_WRITE_ENABLED=true`、`SUPABASE_BACKUP_URL`、`LINE_*`、`GOOGLE_*`、`LIFF_ID`、`NODE_ENV=production`
+- [ ] 2f.3 部署後確認後端啟動成功，**記錄 Zeabur 分配的網域**（e.g. `https://kj-champion.zeabur.app`）
+- [ ] 2f.4 在 LINE Developer Console → LINE Login Channel → Callback URL 加入 `https://<zeabur-backend>/api/auth/callback`
+- [ ] 2f.5 用現有 `public/` 前端（`?dev=1` 暫指 Zeabur staging 後端）驗證：API 回應正常、DB CRUD 讀寫正確
+- [ ] 2f.6 確認 LINE Login OAuth 完整流程可走通（登入 → Zeabur 回調 → 取得使用者資訊）
 
 ## 3. 建立 React + Vite + PWA 前端專案骨架
 
@@ -91,14 +124,14 @@
 
 ## 8. （第二階段）正式後端切換至 Zeabur
 
-> **前提**：第 7 節所有驗證項目通過，且 Zeabur PostgreSQL 已確認為正式資料庫
+> **前提**：第 7 節所有驗證項目通過；Zeabur DB 已在第一階段由真人驗證穩定（Task 2d）
 
 - [ ] 8.1 在 Zeabur 建立正式專案 `kj-champion`，為 `main` 分支建立獨立正式服務（與 staging 服務分開）
-- [ ] 8.2 設定正式 Zeabur 環境變數：`DATABASE_URL` = Zeabur PostgreSQL（已驗證的正式庫）、`FRONTEND_URL` = 現有 Vercel 前端 URL
+- [ ] 8.2 設定正式 Zeabur 環境變數：`DATABASE_URL` = Zeabur PostgreSQL 內網 URL、`FRONTEND_URL` = 現有 Vercel 前端 URL
 - [ ] 8.3 在 LINE Developer Console，正式 Callback URL 新增正式 Zeabur 網域
 - [ ] 8.4 將 Vercel 前端（`public/`）的 API 呼叫透過 Vercel rewrites proxy 至正式 Zeabur 後端
 - [ ] 8.5 觀察正式環境 24 小時，確認 API、LINE Login、DB 均正常
-- [ ] 8.6 確認穩定後，停用 Vercel 後端服務，**停用 Supabase**
+- [ ] 8.6 確認穩定後，停用 Vercel 後端服務（⚠️ **Supabase 此時仍保留，不停用**）
 
 ## 9. （第三階段）正式前端切換至 Cloudflare Pages
 
@@ -111,3 +144,6 @@
 - [ ] 9.5 觀察正式環境 24 小時，確認所有功能正常
 - [ ] 9.6 確認穩定後，停用 Vercel 前端服務（Vercel 完全退場）
 - [ ] 9.7 LINE Developer Console 正式 Callback URL 移除 Vercel 網域
+- [ ] 9.8 **關閉雙寫**：在 Zeabur 正式後端設定 `DUAL_WRITE_ENABLED=false`，Redeploy，觀察 24 小時確認無異常
+- [ ] 9.9 確認 Supabase 收不到新寫入（查詢最新一筆資料的 `created_at` 不再更新）
+- [ ] 9.10 ✅ 確認無誤後，**正式停用並刪除 Supabase 專案**（最終退場點）
