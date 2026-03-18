@@ -1,0 +1,120 @@
+name: 月備份 Supabase 資料庫
+
+# 每月 1 日台灣時間凌晨 2:00 執行（UTC 18:00 前一天）
+on:
+  schedule:
+    - cron: '0 18 28-31 * *'  # 每月最後幾天 UTC 18:00，搭配條件判斷改為 1 日
+  workflow_dispatch:            # 允許手動觸發
+
+jobs:
+  backup:
+    name: 備份資料庫到 GitHub Artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 確認是每月 1 日（schedule 無法精確到「每月1日」需手動判斷）
+        if: github.event_name == 'schedule'
+        run: |
+          DAY=$(date +%d)
+          # 僅在 1 日執行，其餘日期跳過（cron 限制：最近幾天觸發再判斷）
+          if [ "$DAY" != "01" ]; then
+            echo "今天是 $DAY 日，非 1 日，跳過備份。"
+            exit 0
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安裝 pg 套件
+        run: npm install pg --no-save
+
+      - name: 執行資料庫備份（JSON 格式）
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          BACKUP_DATE=$(date '+%Y-%m-%d')
+          node -e "
+          const { Pool } = require('pg');
+          const fs = require('fs');
+
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            max: 1,
+            connectionTimeoutMillis: 15000,
+            ssl: { rejectUnauthorized: false }
+          });
+
+          // 備份的資料表清單
+          const TABLES = ['members', 'calendar_events', 'event_participants'];
+
+          async function backup() {
+            const client = await pool.connect();
+            const backup = {
+              timestamp: new Date().toISOString(),
+              tables: {}
+            };
+
+            try {
+              for (const table of TABLES) {
+                try {
+                  const res = await client.query('SELECT * FROM ' + table + ' ORDER BY created_at DESC LIMIT 10000');
+                  backup.tables[table] = {
+                    count: res.rows.length,
+                    rows: res.rows
+                  };
+                  console.log('✅ ' + table + ': ' + res.rows.length + ' 筆');
+                } catch (err) {
+                  console.warn('⚠️ 資料表 ' + table + ' 不存在或查詢失敗:', err.message);
+                  backup.tables[table] = { count: 0, rows: [], error: err.message };
+                }
+              }
+
+              const filename = 'backup-' + process.env.BACKUP_DATE + '.json';
+              fs.writeFileSync(filename, JSON.stringify(backup, null, 2), 'utf8');
+
+              const totalRows = Object.values(backup.tables).reduce((s, t) => s + t.count, 0);
+              console.log('');
+              console.log('📦 備份完成：' + filename);
+              console.log('   總筆數：' + totalRows);
+              console.log('   檔案大小：' + (fs.statSync(filename).size / 1024).toFixed(1) + ' KB');
+
+            } finally {
+              client.release();
+              await pool.end();
+            }
+          }
+
+          backup().catch(err => {
+            console.error('❌ 備份失敗:', err.message);
+            process.exit(1);
+          });
+          "
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_DATE: ${{ steps.date.outputs.date }}
+
+      - name: 取得日期（供 artifact 命名）
+        id: date
+        run: echo "date=$(date '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: 上傳備份到 Artifacts（保留 90 天）
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ steps.date.outputs.date }}
+          path: backup-*.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: 備份摘要
+        if: success()
+        run: |
+          echo "## 🗄️ 資料庫備份完成" >> $GITHUB_STEP_SUMMARY
+          echo "- 日期：$(date '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- 存放：GitHub Actions Artifacts（保留 90 天）" >> $GITHUB_STEP_SUMMARY
+          echo "- 下載：Actions → 本次執行 → Artifacts" >> $GITHUB_STEP_SUMMARY

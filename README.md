@@ -1,8 +1,28 @@
 # 康九冠軍夥伴系統
 
-> 目前版本：v1.5.1
+> 目前版本：v1.5.2 | 分支：staging（部署架構遷移中）
 
-專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar、Google Sheets 與 Supabase。
+專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
+
+---
+
+## 部署架構
+
+### 目前（main 分支，正式）
+
+| 層級 | 技術 |
+|------|------|
+| 前端 | 純 HTML + 原生 JS + CSS（`public/`），Vercel Static |
+| 後端 | Node.js + Express.js，Vercel Serverless（`api/index.js`） |
+| 資料庫 | Supabase（PostgreSQL） |
+
+### 目標（staging 分支，遷移進行中）
+
+| 層級 | 技術 |
+|------|------|
+| 前端 | React + Vite + PWA（`frontend/`），Cloudflare Pages |
+| 後端 | Node.js + Express.js，Zeabur（容器化） |
+| 資料庫 | Zeabur PostgreSQL（staging 專用，與 Supabase 隔離） |
 
 ---
 
@@ -12,10 +32,9 @@
 |------|------|
 | 前端 | 純 HTML + 原生 JS + CSS（`public/`） |
 | 後端 | Node.js + Express.js（`server/`） |
-| 身份驗證 | LINE Login OAuth（不依賴 LIFF SDK） |
-| 資料庫 | Supabase（PostgreSQL）+ Google Calendar API + Google Sheets API |
-| 部署 | Vercel（前後端統一，Serverless） |
-| 本機開發 | ngrok（內網穿透，用於 LINE BOT Webhook 與 LINE Login 測試） |
+| 身份驗證 | LINE Login OAuth（不依賴 LIFF SDK，自製 `window.LIFF` 介面） |
+| 資料庫 | PostgreSQL（Supabase，遷移至 Zeabur 進行中） + Google Calendar API |
+| 本機開發 | ngrok（內網穿透，用於 LINE Login 與 LINE BOT Webhook 測試） |
 
 ---
 
@@ -81,7 +100,7 @@ Line_Liff/
 │   │   └── scroll-restore.js # 捲軸位置恢復
 │   └── css/style.css
 ├── server/                   # 後端
-│   ├── server.js             # Express 主入口
+│   ├── server.js             # Express 主入口（含 CORS 白名單）
 │   ├── routes/
 │   │   ├── auth.js           # LINE OAuth 回調（/api/auth/*）
 │   │   ├── calendar.js       # 行事曆 CRUD（/api/calendar/*）
@@ -99,25 +118,35 @@ Line_Liff/
 │   │   ├── sheetService.js
 │   │   └── versionService.js
 │   ├── config/
-│   │   ├── db.js             # Supabase 連線池
+│   │   ├── db.js             # PostgreSQL 連線池（Serverless/容器模式自動切換）
 │   │   └── lineConfig.js     # LINE API 設定驗證
 │   └── middleware/
 │       └── auth.js           # LINE User ID 驗證
 ├── api/
-│   └── index.js              # Vercel Serverless 入口
-├── database/
-│   ├── schema.sql            # 初始資料庫結構
-│   ├── rls-policies.sql      # Row-Level Security 策略
-│   └── *.sql                 # 遷移腳本
+│   └── index.js              # Vercel Serverless 入口（main 分支用）
+├── zbpack.json               # Zeabur 部署設定（staging 分支用）
+├── .github/
+│   └── workflows/
+│       ├── keep-supabase-alive.yml  # 定期 ping Supabase 防休眠
+│       └── monthly-backup.yml       # 每月自動備份資料庫
 ├── scripts/                  # 維護指令稿
+│   ├── backup-db.js          # 手動資料庫備份
+│   ├── restore-db.js         # 資料庫還原
 │   ├── migrate-sheet-to-supabase.js
 │   ├── sync-calendar-to-supabase.js
 │   ├── register-calendar-watch.js
 │   ├── renew-calendar-watch.js
 │   └── seed-members.js
+├── database/
+│   ├── schema.sql            # 初始資料庫結構
+│   ├── rls-policies.sql      # Row-Level Security 策略
+│   └── *.sql                 # 遷移腳本
 ├── docs/                     # 詳細說明文件
+├── openspec/                 # 功能變更規格文件（AI 輔助開發）
+│   └── changes/
+│       └── split-deploy-cloudflare-zeabur/  # 部署架構拆分計畫
 ├── ngrok.yml                 # ngrok 設定檔（本機開發）
-├── vercel.json               # Vercel 部署設定
+├── vercel.json               # Vercel 部署設定（main 分支）
 ├── CLAUDE.md                 # AI 助理規則
 ├── CHANGELOG.md              # 版本索引
 ├── .claude/context/          # 各版本詳細上下文
@@ -149,14 +178,8 @@ Line_Liff/
 # 安裝專案依賴（含 concurrently）
 npm install
 
-# 安裝 ngrok CLI（選其一）
-# 方法 A：官網下載 https://ngrok.com/download
-# 方法 B：npm 全域安裝
-npm install -g ngrok
-
 # 設定 ngrok Auth Token（一次性，免費帳號即可）
 ngrok config add-authtoken 你的TOKEN
-# 取得 Token：https://dashboard.ngrok.com/get-started/your-authtoken
 ```
 
 ### 設定環境變數
@@ -168,7 +191,7 @@ cp .env.example .env
 
 ### 啟動方式
 
-#### 方式一：單純本機測試（不需 LINE Login）
+#### 方式一：純本機測試（不需 LINE Login）
 
 ```bash
 npm run dev
@@ -179,26 +202,14 @@ npm run dev
 
 ```bash
 npm run dev:ngrok
-# 終端機會顯示 ngrok 公開 URL，例如：
-# https://abc123.ngrok-free.app -> http://localhost:8080
+# 終端機會顯示 ngrok 公開 URL
 ```
 
 啟動後，將 ngrok URL 填入 LINE Developers Console：
-
 - **LINE Login** → Callback URL：`https://你的ngrok網址/api/auth/line-callback`
 - **LINE BOT** → Webhook URL：`https://你的ngrok網址/api/line/webhook`
 
-> 注意：免費版 ngrok 每次重啟都會換網址，需重新更新 LINE Developers Console 的設定。
-
-#### 方式三：分開啟動（兩個終端機）
-
-```bash
-# 終端機 1
-npm run dev
-
-# 終端機 2
-npm run ngrok
-```
+> 注意：免費版 ngrok 每次重啟都會換網址，需重新更新設定。
 
 ### 測試未登入狀態
 
@@ -215,8 +226,8 @@ npm run ngrok
 | `npm run ngrok` | 啟動 ngrok 通道（port 8080） |
 | `npm run dev:ngrok` | 同時啟動伺服器 + ngrok |
 | `npm test` | 執行測試 |
-| `npm run migrate:members` | 從 Google Sheets 遷移成員資料到 Supabase |
-| `npm run sync:calendar` | 同步 Google Calendar 到 Supabase |
+| `npm run migrate:members` | 從 Google Sheets 遷移成員資料到 PostgreSQL |
+| `npm run sync:calendar` | 同步 Google Calendar 到 PostgreSQL |
 | `npm run watch:register` | 註冊 Google Calendar Watch |
 | `npm run watch:renew` | 更新 Google Calendar Watch |
 | `npm run seed:members` | 填入測試成員資料 |
@@ -230,17 +241,16 @@ npm run ngrok
 | `LINE_CHANNEL_ID` | LINE Channel ID | 是 |
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret | 是 |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token | 是 |
-| `LINE_LOGIN_CHANNEL_ID` | LINE Login Channel ID | 是 |
-| `LINE_LOGIN_CHANNEL_SECRET` | LINE Login Channel Secret | 是 |
-| `DATABASE_URL` | Supabase PostgreSQL 連線字串 | 是 |
+| `DATABASE_URL` | PostgreSQL 連線字串（Supabase 或 Zeabur） | 是 |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Service Account Email | 是 |
 | `GOOGLE_PRIVATE_KEY` | Google Service Account 私鑰 | 是 |
 | `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
-| `MEMBER_SHEET_ID` | 成員 Google Sheets ID | 是 |
-| `APP_URL` | 應用程式公開網址（正式環境） | 是 |
+| `APP_URL` | 後端公開網址（Zeabur 或 Vercel） | 是 |
+| `FRONTEND_URL` | 前端公開網址（Cloudflare Pages 或 Vercel） | 是（CORS 用） |
 | `PORT` | 伺服器 Port（預設 8080） | 否 |
 | `NODE_ENV` | 環境（development / production） | 否 |
-| `NGROK_AUTHTOKEN` | ngrok Auth Token（本機開發用） | 否 |
+| `LIFF_ID` | LINE LIFF ID | 否 |
+| `CRON_SECRET` | Vercel Cron 認證（保護 Cron endpoints） | 否 |
 
 ---
 
@@ -252,7 +262,6 @@ npm run ngrok
 | `/api/auth/line-callback` | GET | LINE OAuth 回調處理 |
 | `/api/calendar/events` | GET | 取得日期範圍行程 |
 | `/api/calendar/events/:id` | POST/PUT/DELETE | 行程 CRUD |
-| `/api/calendar/sync-my-birthday` | POST | 同步用戶生日行程 |
 | `/api/members` | GET | 取得所有成員 |
 | `/api/members/:lineId` | POST/PUT/DELETE | 成員管理 |
 | `/api/profile/me` | GET | 個人資料 |
@@ -260,31 +269,36 @@ npm run ngrok
 | `/api/financial/upload` | POST | 上傳財務文件（限 manager） |
 | `/api/financial/documents` | GET | 財務文件清單（限 manager） |
 | `/api/line/webhook` | POST | LINE BOT Webhook |
-| `/api/cron/sync` | GET | 每日行事曆同步（Vercel Cron） |
-| `/api/cron/renew-watch` | GET | 每日 Watch 更新（Vercel Cron） |
+| `/api/cron/sync` | GET | 每日行事曆同步 |
+| `/api/cron/renew-watch` | GET | 每日 Watch 更新 |
 | `/health` | GET | 健康檢查 |
 
 ---
 
-## 部署（Vercel）
+## 部署
+
+### 現行（Vercel，main 分支）
 
 前後端統一部署在 Vercel：
-
 - **後端**：Express app 透過 `api/index.js` 包裝成 Serverless Function
 - **前端**：`public/` 目錄由 Vercel 靜態伺服
 - **自動部署**：推送 `main` branch 即自動觸發
-- **Cron**：每日 02:00 UTC 同步行事曆、每日 00:00 UTC 更新 Watch
 
 ```bash
-# 手動部署（需安裝 Vercel CLI）
 vercel --prod
 ```
 
-詳細部署步驟：[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+### 目標（Zeabur + Cloudflare Pages，staging 分支）
+
+- **後端**：Zeabur 連接 GitHub `staging` 分支，自動部署 Node.js 容器
+- **前端**：Cloudflare Pages 連接 GitHub `staging` 分支，Build command：`cd frontend && npm install && npm run build`
+- **設定**：後端環境變數 `FRONTEND_URL` 設為 Cloudflare Pages 網域（CORS 用）
+
+詳細步驟：`openspec/changes/split-deploy-cloudflare-zeabur/tasks.md`
 
 ---
 
-## 資料庫結構（Supabase）
+## 資料庫結構
 
 ### members 表
 
@@ -314,5 +328,5 @@ vercel --prod
 ## 安全性注意事項
 
 - `.env`、`.env.backup`、`Key/` 目錄**永遠不推上 GitHub**
-- ngrok 測試完畢後立即關閉，不要長時間開著
-- 不要將 ngrok URL 貼到公開場合
+- ngrok 測試完畢後立即關閉
+- CORS 已設白名單，僅允許 `APP_URL`、`FRONTEND_URL` 及本機開發網址

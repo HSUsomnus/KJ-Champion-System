@@ -40,7 +40,28 @@ console.log('  路徑:', publicPath);
 
 // 中介層設定
 // 允許跨來源請求（CORS）
-app.use(cors());
+// 白名單：本機開發 + APP_URL（後端本身） + FRONTEND_URL（前端獨立部署，如 Vercel）
+const allowedOrigins = [
+  'http://localhost:8080',
+  'http://localhost:3000',
+  process.env.APP_URL,       // 後端本身的網址（Cloud Run）
+  process.env.FRONTEND_URL,  // 前端獨立部署網址（Vercel 等）
+].filter(Boolean); // 過濾掉未設定的 undefined
+
+console.log('🌐 CORS 允許來源:', allowedOrigins);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // origin 為 undefined 表示同源請求（如 Postman、curl、後端自呼叫）
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  CORS 拒絕來源: ${origin}`);
+      callback(new Error(`CORS 不允許來源: ${origin}`));
+    }
+  },
+  credentials: true, // 允許帶 Cookie / Authorization header
+}));
 
 // 解析 JSON 格式的請求 body
 app.use(express.json());

@@ -1,0 +1,64 @@
+name: 保持 Supabase 活躍（防 7 天暫停）
+
+# 每週一、四台灣時間早上 9:00 執行（UTC+8 = UTC 01:00）
+on:
+  schedule:
+    - cron: '0 1 * * 1,4'   # 每週一、四 UTC 01:00（台灣 09:00）
+  workflow_dispatch:          # 允許手動觸發（測試用）
+
+jobs:
+  ping-database:
+    name: Ping Supabase PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 只安裝 pg，不安裝全部 node_modules（快 10 倍）
+      - name: 安裝 pg 套件
+        run: npm install pg --no-save
+
+      - name: Ping 資料庫
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          node -e "
+          const { Pool } = require('pg');
+
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            max: 1,
+            connectionTimeoutMillis: 10000,
+            ssl: { rejectUnauthorized: false }
+          });
+
+          async function ping() {
+            const client = await pool.connect();
+            try {
+              const res = await client.query('SELECT NOW() as time, current_database() as db');
+              const row = res.rows[0];
+              console.log('✅ Supabase 連線成功');
+              console.log('   資料庫:', row.db);
+              console.log('   伺服器時間:', row.time);
+            } finally {
+              client.release();
+              await pool.end();
+            }
+          }
+
+          ping().catch(err => {
+            console.error('❌ 連線失敗:', err.message);
+            process.exit(1);
+          });
+          "
+
+      - name: 記錄執行時間
+        if: success()
+        run: echo "✅ $(date '+%Y-%m-%d %H:%M UTC') Supabase ping 成功" >> $GITHUB_STEP_SUMMARY

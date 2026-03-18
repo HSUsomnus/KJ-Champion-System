@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.2] - 2026-03-18
+
+git tag: v1.5.2
+摘要：建立 staging 分支部署架構，後端遷移至 Zeabur + 前端遷移至 Cloudflare Pages（Task 1 完成：zbpack.json、env.example 更新、CORS 白名單、DB 連線池環境感知、資料庫備份腳本）
+
+---
+
 ## [v1.5.1] - 2026-03-15
 
 git tag: v1.5.1
