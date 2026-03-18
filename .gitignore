@@ -46,6 +46,7 @@ build/
 !package-lock.json
 !vercel.json
 !tsconfig.json
+!zbpack.json
 
 # 金鑰、憑證資料夾（絕對不要推上 GitHub）
 Key/
@@ -60,3 +61,6 @@ ngrok.exe
 # 暫存檔案
 tmp/
 temp/
+
+# 資料庫備份（含敏感資料，不推送）
+backups/
