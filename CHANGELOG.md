@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.4] - 2026-03-22
+
+git tag: v1.5.4
+摘要：移除雙寫服務（dualWriteService）——刪除 dualWriteService.js，eventDbService 與 memberDbService 所有寫入改回直接寫主庫（Zeabur PostgreSQL）
+
+---
+
 ## [v1.5.2] - 2026-03-18
 
 git tag: v1.5.2

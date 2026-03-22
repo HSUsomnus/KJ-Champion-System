@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> 目前版本：v1.5.2
+> 目前版本：v1.5.4
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL 資料庫。
 
@@ -92,12 +92,11 @@ Line_Liff/
 │   │   ├── line.js           # LINE BOT 整合（/api/line/*）
 │   │   └── financial.js      # 財務（/api/financial/*，限 manager）
 │   ├── services/
-│   │   ├── dualWriteService.js   # ⭐ 雙寫備份服務（主庫 Zeabur → 備份 Supabase）
 │   │   ├── calendarService.js
 │   │   ├── calendarSyncService.js
 │   │   ├── calendarWatchService.js
-│   │   ├── eventDbService.js     # 行程 DB（含雙寫）
-│   │   ├── memberDbService.js    # 成員 DB（含雙寫）
+│   │   ├── eventDbService.js
+│   │   ├── memberDbService.js
 │   │   ├── lineService.js
 │   │   ├── sheetService.js
 │   │   └── versionService.js
@@ -126,17 +125,7 @@ Line_Liff/
 
 ## 資料庫架構
 
-目前採用 **Zeabur PostgreSQL 為主庫**，寫入時同步備份至 Supabase（fire-and-forget，只寫不讀）。
-
-| 角色 | 平台 | 用途 |
-|------|------|------|
-| 主庫 | Zeabur PostgreSQL | 所有讀寫 |
-| 備份庫 | Supabase PostgreSQL | 熱備份（只接收寫入） |
-
-雙寫由 `server/services/dualWriteService.js` 控制：
-- 主庫失敗 → 直接拋錯，請求失敗
-- 備份庫失敗 → `console.warn` 靜默，主流程不受影響
-- `DUAL_WRITE_ENABLED=false` → 停用備份，僅寫主庫
+目前採用 **Zeabur PostgreSQL** 作為唯一資料庫，所有讀寫皆指向此庫。
 
 ---
 
@@ -209,8 +198,6 @@ npm run dev:ngrok
 | `GOOGLE_PRIVATE_KEY` | Google Service Account 私鑰 | 是 |
 | `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
 | `APP_URL` | 應用程式公開網址（正式環境） | 是 |
-| `DUAL_WRITE_ENABLED` | 啟用 Supabase 雙寫備份（`true`/`false`） | 否 |
-| `SUPABASE_BACKUP_URL` | Supabase 備份庫 PostgreSQL 連線字串 | 雙寫時必填 |
 | `PORT` | 伺服器 Port（預設 8080） | 否 |
 | `NODE_ENV` | 環境（development / production） | 否 |
 | `CRON_SECRET` | Vercel Cron 認證密鑰 | 否 |
