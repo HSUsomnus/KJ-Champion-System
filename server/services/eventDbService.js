@@ -4,7 +4,6 @@
  */
 
 const db = require('../config/db');
-const { dualWrite, backupQuery, backupGetClient } = require('./dualWriteService');
 
 /**
  * 將資料庫 row 轉換成行程物件
@@ -121,10 +120,7 @@ const _upsertEventsToPool = async (getClientFn, events) => {
 const upsertEvents = async (events) => {
   if (events.length === 0) return 0;
   try {
-    return await dualWrite(
-      () => _upsertEventsToPool(db.getClient, events),
-      () => _upsertEventsToPool(backupGetClient, events)
-    );
+    return await _upsertEventsToPool(db.getClient, events);
   } catch (error) {
     console.error('❌ Upsert 行程失敗:', error.message);
     throw error;
@@ -159,10 +155,7 @@ const deleteEventsNotIn = async (googleEventIds, timeMin, timeMax) => {
       `, [timeMin, timeMax, ...googleEventIds]);
     };
 
-    const result = await dualWrite(
-      () => runDelete(db.query.bind(db)),
-      () => runDelete(backupQuery)
-    );
+    const result = await runDelete(db.query.bind(db));
     return result.rowCount;
   } catch (error) {
     console.error('❌ 刪除過期行程失敗:', error.message);
@@ -177,10 +170,7 @@ const deleteEventsNotIn = async (googleEventIds, timeMin, timeMax) => {
  */
 const deleteEventById = async (eventId) => {
   try {
-    const result = await dualWrite(
-      () => db.query(`DELETE FROM events WHERE id = $1 RETURNING id`, [eventId]),
-      () => backupQuery(`DELETE FROM events WHERE id = $1 RETURNING id`, [eventId])
-    );
+    const result = await db.query(`DELETE FROM events WHERE id = $1 RETURNING id`, [eventId]);
     return result.rowCount > 0;
   } catch (error) {
     console.error('❌ 刪除行程失敗:', error.message);
