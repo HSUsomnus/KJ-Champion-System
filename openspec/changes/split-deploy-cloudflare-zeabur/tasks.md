@@ -66,17 +66,23 @@
   - **原因**：使用者詢問診斷問題時，AI 未查 tasks 順序直接動手（違反規則）
   - **影響**：staging 現在也有 `dualWriteService.js`；對 2f 部署無害，但屬計畫外行為
   - **結論**：此修改本身不影響 2f 進行，但已記錄以防混淆
-- [ ] 2e.6 手動執行一筆寫入（新增測試行程），確認 Zeabur 與 Supabase 兩邊都有收到該筆資料
-  - ⏳ 等待 Vercel 部署 v1.5.2 完成後執行
-- [ ] 2e.7 模擬 Supabase 備份失敗（暫時填錯 `SUPABASE_BACKUP_URL`），確認主流程不受影響、log 出現 `[DualWrite] Supabase backup failed` 警告
-- [ ] ✅ 雙寫驗證通過後，才進行 2f
+- [x] ~~2e.6 手動執行一筆寫入（新增測試行程），確認 Zeabur 與 Supabase 兩邊都有收到該筆資料~~
+  - ❌ **跳過並取消（2026-03-22，v1.5.4）**：雙寫驗證問題無法解決，決定直接移除雙寫機制
+- [x] ~~2e.7 模擬 Supabase 備份失敗驗證~~
+  - ❌ **跳過並取消（同上）**
+- [x] 2e.8 **計畫外（v1.5.4）移除雙寫服務**：
+  - 刪除 `server/services/dualWriteService.js`（main + staging）
+  - `eventDbService.js`：3 處 `dualWrite()` 改回直接 `db.query`（upsertEvents、deleteEventsNotIn、deleteEventById）
+  - `memberDbService.js`：4 處 `dualWrite()` 改回直接 `db.query`（createMember、updateMember、updateMemberRole、updateFinancialAmount）
+  - 結果：所有寫入現在只走 Zeabur PostgreSQL，Supabase 不再接收任何寫入
+  - ✅ main + staging 均已推送，Vercel 已自動重新部署
 
 ### 2f. Zeabur 後端部署（staging）
 
 > DB 已驗證、雙寫已上線，後端平台才有意義搬移。
 
 - [ ] 2f.1 在 Zeabur 同一專案內新增 **Node.js 服務**，連接 GitHub repo，**指定監聽 `staging` 分支**
-- [ ] 2f.2 設定後端環境變數：`DATABASE_URL`（Zeabur **內網** PostgreSQL URL）、`DUAL_WRITE_ENABLED=true`、`SUPABASE_BACKUP_URL`、`LINE_*`、`GOOGLE_*`、`LIFF_ID`、`NODE_ENV=production`
+- [ ] 2f.2 設定後端環境變數：`DATABASE_URL`（Zeabur **內網** PostgreSQL URL）、`LINE_*`、`GOOGLE_*`、`LIFF_ID`、`NODE_ENV=production`（雙寫已移除，不需 `DUAL_WRITE_ENABLED` / `SUPABASE_BACKUP_URL`）
 - [ ] 2f.3 部署後確認後端啟動成功，**記錄 Zeabur 分配的網域**（e.g. `https://kj-champion.zeabur.app`）
 - [ ] 2f.4 在 LINE Developer Console → LINE Login Channel → Callback URL 加入 `https://<zeabur-backend>/api/auth/callback`
 - [ ] 2f.5 用現有 `public/` 前端（`?dev=1` 暫指 Zeabur staging 後端）驗證：API 回應正常、DB CRUD 讀寫正確
@@ -148,6 +154,6 @@
 - [ ] 9.5 觀察正式環境 24 小時，確認所有功能正常
 - [ ] 9.6 確認穩定後，停用 Vercel 前端服務（Vercel 完全退場）
 - [ ] 9.7 LINE Developer Console 正式 Callback URL 移除 Vercel 網域
-- [ ] 9.8 **關閉雙寫**：在 Zeabur 正式後端設定 `DUAL_WRITE_ENABLED=false`，Redeploy，觀察 24 小時確認無異常
-- [ ] 9.9 確認 Supabase 收不到新寫入（查詢最新一筆資料的 `created_at` 不再更新）
-- [ ] 9.10 ✅ 確認無誤後，**正式停用並刪除 Supabase 專案**（最終退場點）
+- [x] ~~9.8 關閉雙寫~~：❌ 不適用（雙寫已於 v1.5.4 從程式碼移除，無需設定環境變數）
+- [x] ~~9.9 確認 Supabase 收不到新寫入~~：✅ v1.5.4 起已確定不再寫入 Supabase
+- [ ] 9.10 **正式停用並刪除 Supabase 專案**（待第三階段前端切換完成後執行）

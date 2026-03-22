@@ -8,7 +8,7 @@
 
 `server/server.js` 已有 CORS middleware，透過 `FRONTEND_URL` 環境變數控制白名單，**後端程式碼無需修改**。
 
-**目前進度（2026-03-22）**：Task 1～2e.5 完成。正式 Vercel 後端已切換至 Zeabur DB 並上線雙寫服務（v1.5.2）。v1.5.3 補入 `staging` 分支遺漏的 `dualWriteService.js`（計畫外，見 tasks 2e.5b）。等待 2e.6 手動驗證後進行 2f（Zeabur 後端部署）。
+**目前進度（2026-03-22）**：Task 1～2e 全部結束。雙寫服務（dualWriteService）於 v1.5.2 實作、v1.5.4 已移除（驗證無法完成，決定跳過）。正式後端（Vercel）`DATABASE_URL` 指向 Zeabur PostgreSQL，所有寫入僅寫主庫。下一步：2f（Zeabur 後端部署）。
 
 ## Goals / Non-Goals
 
@@ -22,7 +22,7 @@
 
 **Non-Goals:**
 
-- 不修改後端 API 路由或業務邏輯（`dualWriteService` 僅在 service 層包裝 DB 寫入，不改 route）
+- 不修改後端 API 路由或業務邏輯（service 層 DB 寫入直接使用 `db.query`，不改 route）
 - 不拆分 GitHub 倉庫
 - 本次不切換正式環境的前端平台（第三階段才做）
 - staging 資料庫不共用正式 Supabase（staging 用 Zeabur 內建 PostgreSQL 隔離）
@@ -87,53 +87,17 @@ staging →  Cloudflare Pages (frontend/dist) + Zeabur 後端 + Zeabur PostgreSQ
 - 任何階段前：將 `DATABASE_URL` 切回 Supabase 連線字串，即時回退，資料無損
 - Supabase 在第三階段完成確認後才停用，停用前均可作為回退目標
 
-### Decision 1c：切換 Zeabur DB 後，持續雙寫 Supabase（只寫不讀）直到重構完成
+### ~~Decision 1c：切換 Zeabur DB 後，持續雙寫 Supabase~~ ❌ 已廢棄（v1.5.4）
 
-**選擇**：後端切換至 Zeabur PostgreSQL 作為主要讀寫庫後，同時以「非阻塞 fire-and-forget」方式將所有寫入操作（INSERT / UPDATE / DELETE）複製到 Supabase，但所有讀取只從 Zeabur 取得。重構完成（Task 9.10）後停止雙寫、停用 Supabase。
+**原計畫**：v1.5.2 實作 `dualWriteService.js`，所有寫入同步 fire-and-forget 備份至 Supabase。
 
-**實作方式**（`server/services/dualWriteService.js`，已完成 v1.5.2 / `main`）：
+**廢棄原因**：驗證（tasks 2e.6、2e.7）無法完成，雙寫機制帶來的複雜度超過收益，決定直接移除。
 
-```js
-// 寫入 Zeabur（主庫），成功後 fire-and-forget 寫入 Supabase（備份）
-async function dualWrite(primaryFn, backupFn) {
-  const result = await primaryFn();          // 主庫寫入，失敗直接拋出
-  backupFn().catch(err =>                    // 備份庫失敗不影響主流程
-    console.warn('[DualWrite] Supabase backup failed:', err.message)
-  );
-  return result;
-}
-```
+**v1.5.4 實際狀態**：
 
-所有涉及寫入的 service（`memberDbService`、`eventDbService`）在呼叫 DB 寫入時，改用 `dualWrite()` 包裝。
-
-**⚠️ 重要實作細節：**
-
-1. **SSL 連線**：Supabase 備份連線池**必須**設定 `ssl: { rejectUnauthorized: false }`，否則連線被拒且因 fire-and-forget 靜默失敗，難以察覺。初次實作遺漏此設定導致 2e.6 驗證失敗，v1.5.2 已修正。
-2. **分支歸屬**：雙寫程式碼必須 commit 至 `main` 分支（正式 Vercel 監聽 `main`）。`staging` 分支因 v1.5.3 計畫外補丁也已包含此檔案（tasks 2e.5b），對 2f 後端部署無害。
-3. **`SUPABASE_BACKUP_URL`** 須使用 Supabase **Direct 連線字串**（port 5432），非 Pooler（port 6543）。
-
-**環境變數控制**：
-
-```env
-DUAL_WRITE_ENABLED=true               # 開啟雙寫（重構期間）
-SUPABASE_BACKUP_URL=postgresql://...  # Supabase 備份庫 Direct URL（port 5432）
-```
-
-設 `DUAL_WRITE_ENABLED=false` 即可關閉，不需改程式碼。
-
-**理由**：
-
-- Supabase 作為 live 熱備份，萬一 Zeabur DB 出現問題，資料可從 Supabase 完整還原
-- Fire-and-forget 模式：Supabase 寫入失敗不阻塞正式流程，用戶無感知
-- 僅需改 service 層，不動 route 或前端
-- 重構完成後只需關掉環境變數，不留技術債
-
-**停止條件**：Task 9.8（第三階段確認完成）→ 設 `DUAL_WRITE_ENABLED=false` → 觀察 24 小時確認無異常 → 停用 Supabase。
-
-**Trade-off**：
-
-- 寫入有兩倍 DB 操作，輕微增加延遲（Supabase 為非同步，主流程不等待）
-- Supabase 與 Zeabur 的資料可能有微小落差（Supabase 寫入失敗時），但僅用於備份回復，非讀取來源
+- `server/services/dualWriteService.js` 已刪除
+- `memberDbService`、`eventDbService` 所有寫入改回直接 `db.query`（Zeabur 主庫）
+- Supabase 不再接收任何寫入，可於第二階段直接停用
 
 ---
 
@@ -246,9 +210,7 @@ Branch:            staging
 | --- | --- | --- |
 | DB 同步資料遺漏 | `pg_dump` 排除系統表時可能誤排業務表 | 事前列出所有 table 清單，逐一確認在 dump 範圍內 |
 | Supabase Auth 相依 | 若後端讀取 `auth.users` 需特別處理 | staging 登入改用 `?dev=1` 模擬，auth 資料不需同步 |
-| 雙寫資料落差 | Supabase 備份寫入失敗時，兩庫資料會有微小差異 | 僅備份用，非讀取來源；失敗時 `console.warn` 可監控 |
-| **雙寫 SSL 連線失敗** | **Supabase 要求 SSL，backupPool 若未設定 ssl 則靜默失敗，難以察覺** | **backupPool 加入 `ssl: { rejectUnauthorized: false }`（已修正，v1.5.2）** |
-| 雙寫忘記關閉 | 重構完成後未關 `DUAL_WRITE_ENABLED`，持續消耗 Supabase quota | Task 9.8 有明確關閉步驟，並驗證 Supabase 不再收到新寫入 |
+| ~~雙寫相關風險~~ | ~~雙寫已於 v1.5.4 移除，相關風險不再適用~~ | — |
 | React 前端重寫工作量 | 原 `public/` 頁面需逐一移植到 React | 先建立基礎架構，功能頁面可分批移植 |
 | `staging` 與 `main` 分支分歧 | 長期維護兩個分支可能出現 merge 衝突 | `staging` 定期從 `main` rebase |
 | PWA Service Worker 快取舊版 | SW 更新不及時導致用戶看到舊畫面 | 設定 `registerType: 'autoUpdate'`，新版本自動接管 |
@@ -267,14 +229,13 @@ Branch:            staging
 3. ✅ **Supabase → Zeabur 單向資料同步**：匯出 schema + 業務資料 → 匯入 Zeabur → 核對筆數與欄位
 4. ✅ **驗證 Zeabur DB 正確性**（COUNT 一致、抽查欄位、foreign key 有效）
 5. ✅ **正式後端（Vercel）換 `DATABASE_URL` 指向 Zeabur DB** → 真人驗證通過
-6. ✅ **雙寫服務實作**（v1.5.2 / `main`）：`dualWriteService.js` + service 層包裝 + SSL 修正 + Vercel 環境變數設定
-7. ⏳ **手動寫入驗證**（Task 2e.6）：確認 Zeabur 與 Supabase 兩邊均收到資料
-8. ⬜ **Zeabur 後端部署**（`staging` 分支）→ 設定環境變數 → 取得後端 URL（Task 2f）
-9. ⬜ **用 `public/` 前端（`?dev=1`）驗證 staging 後端**（API 回應、LINE Login、DB CRUD 均通過）
-10. ⬜ 新增 `frontend/`（Vite + React + PWA 骨架）→ `_redirects` 填入真實 Zeabur URL
-11. ⬜ Cloudflare Pages 連接 `staging` 分支 → 部署前端 → 取得前端 URL
-12. ⬜ Zeabur 設 `FRONTEND_URL` = Cloudflare Pages URL
-13. ⬜ 完整驗證：LINE Login、行事曆 CRUD、PWA 安裝
+6. ❌ ~~**雙寫服務實作**（v1.5.2）：實作後無法驗證，v1.5.4 已移除~~ → 所有寫入直接寫 Zeabur 主庫
+7. ⬜ **Zeabur 後端部署**（`staging` 分支）→ 設定環境變數 → 取得後端 URL（Task 2f）
+8. ⬜ **用 `public/` 前端（`?dev=1`）驗證 staging 後端**（API 回應、LINE Login、DB CRUD 均通過）
+9. ⬜ 新增 `frontend/`（Vite + React + PWA 骨架）→ `_redirects` 填入真實 Zeabur URL
+10. ⬜ Cloudflare Pages 連接 `staging` 分支 → 部署前端 → 取得前端 URL
+11. ⬜ Zeabur 設 `FRONTEND_URL` = Cloudflare Pages URL
+12. ⬜ 完整驗證：LINE Login、行事曆 CRUD、PWA 安裝
 
 ### 第二階段：正式後端切換至 Zeabur（前端不動）
 
@@ -285,7 +246,7 @@ Branch:            staging
 3. LINE Developer Console 正式 Callback URL 指向新 Zeabur 網域
 4. 將正式前端（Vercel / `public/`）的 API 呼叫切換至新 Zeabur 後端
 5. 觀察穩定性，確認無誤
-6. 停用 Vercel 後端服務（⚠️ **Supabase 此階段保留，不停用**）
+6. 停用 Vercel 後端服務（**Supabase 此階段可直接停用**，v1.5.4 起已無任何寫入）
 
 ### 第三階段：正式前端切換至 Cloudflare Pages（後端已在 Zeabur）
 
