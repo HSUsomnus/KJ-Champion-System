@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.3] - 2026-03-22
+
+git tag: v1.5.3
+摘要：修復 Supabase 雙寫失效問題——補回 staging 分支遺漏的 dualWriteService.js，使新增/更新/刪除行程能正確同步至 Supabase 備份庫
+
+---
+
 ## [v1.5.2] - 2026-03-18
 
 git tag: v1.5.2

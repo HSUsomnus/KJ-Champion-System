@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> 目前版本：v1.5.2 | 分支：staging（部署架構遷移中）
+> 目前版本：v1.5.3 | 分支：staging（部署架構遷移中）
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
@@ -113,6 +113,7 @@ Line_Liff/
 │   │   ├── calendarSyncService.js
 │   │   ├── calendarWatchService.js
 │   │   ├── eventDbService.js
+│   │   ├── dualWriteService.js   # 雙寫包裝（主庫→備份 Supabase）
 │   │   ├── lineService.js
 │   │   ├── memberDbService.js
 │   │   ├── sheetService.js
@@ -251,6 +252,8 @@ npm run dev:ngrok
 | `NODE_ENV` | 環境（development / production） | 否 |
 | `LIFF_ID` | LINE LIFF ID | 否 |
 | `CRON_SECRET` | Vercel Cron 認證（保護 Cron endpoints） | 否 |
+| `DUAL_WRITE_ENABLED` | 開啟雙寫備份（`true` / `false`） | 否 |
+| `SUPABASE_BACKUP_URL` | Supabase 備份庫連線字串（雙寫用） | 否 |
 
 ---
 
