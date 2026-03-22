@@ -77,6 +77,14 @@
   - 結果：所有寫入現在只走 Zeabur PostgreSQL，Supabase 不再接收任何寫入
   - ✅ main + staging 均已推送，Vercel 已自動重新部署
 
+### 2e.9 計畫外維護（2026-03-22）：清理 Google Sheets 死碼與變數命名
+
+- [x] 2e.9.1 刪除 `server/services/sheetService.js`（成員邏輯已全面改用 `memberDbService.js`，sheetService 無任何 require）
+- [x] 2e.9.2 移除 `googleAuth.js` 中的 `getSheetsClient()`、`getSheetConfig()`（死碼，僅被 sheetService 呼叫）
+- [x] 2e.9.3 移除 Service Account 的 `spreadsheets` scope（Sheets API 已不再使用）
+- [x] 2e.9.4 `financial.js`：將 `/sheet-view-url` fallback 從 `MEMBER_SHEET_ID` 改為 `FINANCIAL_SHEET_ID`（語意修正）
+- [x] 2e.9.5 `.env`：`MEMBER_SHEET_ID` → `FINANCIAL_SHEET_ID`，移除 `MEMBER_SHEET_NAME`（僅被死碼使用）
+
 ### 2f. Zeabur 後端部署（staging）
 
 > DB 已驗證、雙寫已上線，後端平台才有意義搬移。

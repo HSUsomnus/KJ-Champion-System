@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> 目前版本：v1.5.3 | 分支：staging（部署架構遷移中）
+> 目前版本：v1.5.5 | 分支：staging（部署架構遷移中）
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
@@ -115,7 +115,6 @@ Line_Liff/
 │   │   ├── eventDbService.js
 │   │   ├── lineService.js
 │   │   ├── memberDbService.js
-│   │   ├── sheetService.js
 │   │   └── versionService.js
 │   ├── config/
 │   │   ├── db.js             # PostgreSQL 連線池（Serverless/容器模式自動切換）
@@ -250,6 +249,7 @@ npm run dev:ngrok
 | `PORT` | 伺服器 Port（預設 8080） | 否 |
 | `NODE_ENV` | 環境（development / production） | 否 |
 | `LIFF_ID` | LINE LIFF ID | 否 |
+| `FINANCIAL_SHEET_ID` | 財務試算表 Google Sheets ID（唯讀連結 fallback） | 否 |
 | `CRON_SECRET` | Vercel Cron 認證（保護 Cron endpoints） | 否 |
 
 ---

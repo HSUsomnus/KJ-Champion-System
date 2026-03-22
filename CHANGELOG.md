@@ -6,6 +6,20 @@
 
 ---
 
+## [v1.5.5] - 2026-03-22
+
+git tag: v1.5.5
+摘要：清理 Google Sheets 死碼——刪除已廢棄的 sheetService.js、移除 googleAuth.js 中的 getSheetsClient/getSheetConfig/spreadsheets scope，並將 financial.js 中語意錯誤的 MEMBER_SHEET_ID 改名為 FINANCIAL_SHEET_ID
+
+---
+
+## [v1.5.4] - 2026-03-22
+
+git tag: v1.5.4
+摘要：移除雙寫服務（dualWriteService）——eventDbService 與 memberDbService 的寫入改回直接 db.query，Supabase 不再接收任何寫入；同步更新 OpenSpec 文件與 staging README
+
+---
+
 ## [v1.5.3] - 2026-03-22
 
 git tag: v1.5.3
