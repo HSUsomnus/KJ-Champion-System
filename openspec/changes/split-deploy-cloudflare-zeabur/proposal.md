@@ -19,8 +19,9 @@
 - **✅ 完成** Zeabur PostgreSQL 建立 + Supabase → Zeabur 單向資料同步（schema + 業務資料，已核對筆數）
 - **✅ 完成** 正式後端（Vercel）`DATABASE_URL` 切換至 Zeabur DB → 真人驗證通過
 - **✅ 完成（v1.5.2 / main）** `server/services/dualWriteService.js`：雙寫服務，所有 DB 寫入同時 fire-and-forget 複製到 Supabase 作為備份，讀取只從 Zeabur。以 `DUAL_WRITE_ENABLED` 環境變數控制開關
-  - ⚠️ **實作說明**：雙寫程式碼提交至 `main` 分支（v1.5.2），非 `staging`，因正式 Vercel 後端監聽 `main`
+  - ⚠️ **實作說明**：雙寫程式碼提交至 `main` 分支（v1.5.2），因正式 Vercel 後端監聽 `main`
   - 🐛 **SSL 修正**：`backupPool` 需設定 `ssl: { rejectUnauthorized: false }` 才能連線 Supabase（Supabase 要求 SSL），初次實作遺漏導致備份靜默失敗，已於 v1.5.2 修正
+  - ⚠️ **計畫外補丁（v1.5.3 / `staging`）**：`dualWriteService.js` 同時補入 `staging` 分支（本應只在 `main`），原因為 AI 誤操作；staging 最終也需此檔案（Task 2f），對後續流程無害，已記錄於 tasks 2e.5b
 - **✅ 完成** `memberDbService`、`eventDbService` 所有寫入改用 `dualWrite()` 包裝
 - **✅ 完成** Vercel 控制台設定 `DUAL_WRITE_ENABLED=true`、`SUPABASE_BACKUP_URL`，已重新部署
 - **⏳ 待驗證** 手動寫入測試，確認 Zeabur 與 Supabase 兩邊均收到資料（2e.6）

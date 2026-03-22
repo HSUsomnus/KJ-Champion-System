@@ -8,7 +8,7 @@
 
 `server/server.js` 已有 CORS middleware，透過 `FRONTEND_URL` 環境變數控制白名單，**後端程式碼無需修改**。
 
-**目前進度（2026-03-18）**：Task 1～2e.5 完成。正式 Vercel 後端已切換至 Zeabur DB 並上線雙寫服務（v1.5.2），等待 2e.6 手動驗證後進行 2f（Zeabur 後端部署）。
+**目前進度（2026-03-22）**：Task 1～2e.5 完成。正式 Vercel 後端已切換至 Zeabur DB 並上線雙寫服務（v1.5.2）。v1.5.3 補入 `staging` 分支遺漏的 `dualWriteService.js`（計畫外，見 tasks 2e.5b）。等待 2e.6 手動驗證後進行 2f（Zeabur 後端部署）。
 
 ## Goals / Non-Goals
 
@@ -109,7 +109,7 @@ async function dualWrite(primaryFn, backupFn) {
 **⚠️ 重要實作細節：**
 
 1. **SSL 連線**：Supabase 備份連線池**必須**設定 `ssl: { rejectUnauthorized: false }`，否則連線被拒且因 fire-and-forget 靜默失敗，難以察覺。初次實作遺漏此設定導致 2e.6 驗證失敗，v1.5.2 已修正。
-2. **分支歸屬**：雙寫程式碼必須 commit 至 `main` 分支（正式 Vercel 監聽 `main`），勿只放在 `staging`。
+2. **分支歸屬**：雙寫程式碼必須 commit 至 `main` 分支（正式 Vercel 監聽 `main`）。`staging` 分支因 v1.5.3 計畫外補丁也已包含此檔案（tasks 2e.5b），對 2f 後端部署無害。
 3. **`SUPABASE_BACKUP_URL`** 須使用 Supabase **Direct 連線字串**（port 5432），非 Pooler（port 6543）。
 
 **環境變數控制**：

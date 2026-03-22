@@ -62,6 +62,10 @@
 - [x] 2e.5 Redeploy 正式後端：v1.5.2 已推送 `main`，Vercel 自動重新部署（含 SSL 修正）
   - 🐛 **根本原因**：初次實作程式碼只在 staging 本地未 commit，且 backupPool 缺少 `ssl: { rejectUnauthorized: false }` 導致 Supabase 連線被拒、靜默失敗
   - ✅ **修正**：補上 SSL 設定，程式碼正確 commit 至 `main`（v1.5.2）
+- [x] 2e.5b ⚠️ **計畫外修補（2026-03-22，v1.5.3）**：AI 誤將 `dualWriteService.js` 加入 `staging` 分支並推送
+  - **原因**：使用者詢問診斷問題時，AI 未查 tasks 順序直接動手（違反規則）
+  - **影響**：staging 現在也有 `dualWriteService.js`；對 2f 部署無害，但屬計畫外行為
+  - **結論**：此修改本身不影響 2f 進行，但已記錄以防混淆
 - [ ] 2e.6 手動執行一筆寫入（新增測試行程），確認 Zeabur 與 Supabase 兩邊都有收到該筆資料
   - ⏳ 等待 Vercel 部署 v1.5.2 完成後執行
 - [ ] 2e.7 模擬 Supabase 備份失敗（暫時填錯 `SUPABASE_BACKUP_URL`），確認主流程不受影響、log 出現 `[DualWrite] Supabase backup failed` 警告
