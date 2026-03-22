@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.6] - 2026-03-22
+
+git tag: v1.5.6
+摘要：清理 .env 死碼（移除 ADMIN_LINE_USER_IDS、DUAL_WRITE_ENABLED、SUPABASE_BACKUP_URL、Google API 分拆舊變數）、補齊 FRONTEND_URL 與 CRON_SECRET；新增 Claude Code hooks（openspec-code-guard、openspec-sync-reminder）；同步 OpenSpec 文件
+
+---
+
 ## [v1.5.5] - 2026-03-22
 
 git tag: v1.5.5

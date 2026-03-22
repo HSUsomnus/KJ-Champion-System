@@ -85,6 +85,14 @@
 - [x] 2e.9.4 `financial.js`：將 `/sheet-view-url` fallback 從 `MEMBER_SHEET_ID` 改為 `FINANCIAL_SHEET_ID`（語意修正）
 - [x] 2e.9.5 `.env`：`MEMBER_SHEET_ID` → `FINANCIAL_SHEET_ID`，移除 `MEMBER_SHEET_NAME`（僅被死碼使用）
 
+### 2e.10 計畫外維護（2026-03-22）：清理 .env 死碼與補齊環境變數
+
+- [x] 2e.10.1 移除 `ADMIN_LINE_USER_IDS`（死碼，程式碼中無任何地方讀取）
+- [x] 2e.10.2 移除 `DUAL_WRITE_ENABLED`、`SUPABASE_BACKUP_URL`（雙寫已於 v1.5.4 從程式碼移除，相關環境變數已無用）
+- [x] 2e.10.3 移除舊版 Google API 分拆變數（`GOOGLE_SERVICE_ACCOUNT_EMAIL`、`GOOGLE_PRIVATE_KEY`、`GOOGLE_PROJECT_ID`）；僅保留 `GOOGLE_SERVICE_ACCOUNT_JSON`（方案 1，現行唯一使用方式）
+- [x] 2e.10.4 新增 `FRONTEND_URL`（Vercel 前端 URL，CORS middleware 白名單用）
+- [x] 2e.10.5 新增 `CRON_SECRET`（目前留空；未設定時 Cron endpoint 無認證保護，部署時應填入隨機字串）
+
 ### 2f. Zeabur 後端部署（staging）
 
 > DB 已驗證、雙寫已上線，後端平台才有意義搬移。

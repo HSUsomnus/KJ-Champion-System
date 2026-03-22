@@ -42,7 +42,7 @@
 #### Scenario: env.example 涵蓋所有必要變數
 
 - **WHEN** 開發者對照 `env.example` 在 Zeabur 控制台設定環境變數
-- **THEN** 後端服務正常啟動並連接所有外部服務（Supabase、Google API、LINE）
+- **THEN** 後端服務正常啟動並連接所有外部服務（Zeabur PostgreSQL、Google API、LINE）
 
 ### Requirement: LINE OAuth 回調 URL 相容性
 

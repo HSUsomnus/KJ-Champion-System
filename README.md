@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> 目前版本：v1.5.5 | 分支：staging（部署架構遷移中）
+> 目前版本：v1.5.6 | 分支：staging（部署架構遷移中）
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
@@ -241,8 +241,7 @@ npm run dev:ngrok
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret | 是 |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token | 是 |
 | `DATABASE_URL` | PostgreSQL 連線字串（Supabase 或 Zeabur） | 是 |
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Service Account Email | 是 |
-| `GOOGLE_PRIVATE_KEY` | Google Service Account 私鑰 | 是 |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Service Account 完整 JSON（方案 1，建議） | 是 |
 | `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
 | `APP_URL` | 後端公開網址（Zeabur 或 Vercel） | 是 |
 | `FRONTEND_URL` | 前端公開網址（Cloudflare Pages 或 Vercel） | 是（CORS 用） |

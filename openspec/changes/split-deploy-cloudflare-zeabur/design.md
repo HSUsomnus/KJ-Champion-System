@@ -8,7 +8,7 @@
 
 `server/server.js` 已有 CORS middleware，透過 `FRONTEND_URL` 環境變數控制白名單，**後端程式碼無需修改**。
 
-**目前進度（2026-03-22）**：Task 1～2e 全部結束。雙寫服務（dualWriteService）於 v1.5.2 實作、v1.5.4 已移除（驗證無法完成，決定跳過）。正式後端（Vercel）`DATABASE_URL` 指向 Zeabur PostgreSQL，所有寫入僅寫主庫。下一步：2f（Zeabur 後端部署）。
+**目前進度（2026-03-22）**：Task 1～2e 全部結束（含 2e.10 `.env` 清理）。雙寫服務（dualWriteService）於 v1.5.2 實作、v1.5.4 已移除（驗證無法完成，決定跳過）。正式後端（Vercel）`DATABASE_URL` 指向 Zeabur PostgreSQL，所有寫入僅寫主庫。`.env` 已清理：移除死碼（`ADMIN_LINE_USER_IDS`、`DUAL_WRITE_ENABLED`、`SUPABASE_BACKUP_URL`、Google API 分拆舊變數），新增 `FRONTEND_URL` 與 `CRON_SECRET`（留空）。下一步：2f（Zeabur 後端部署）。
 
 ## Goals / Non-Goals
 
