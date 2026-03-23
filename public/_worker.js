@@ -17,10 +17,20 @@ export default {
         method: request.method,
         headers: request.headers,
         body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : null,
-        redirect: 'follow',
+        redirect: 'manual',
       });
 
-      return fetch(proxyRequest);
+      const response = await fetch(proxyRequest);
+
+      // 後端若回傳 redirect（如 LINE OAuth 跳轉），直接讓瀏覽器跟隨，不在 Worker 內代理
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get('Location');
+        if (location) {
+          return Response.redirect(location, response.status);
+        }
+      }
+
+      return response;
     }
 
     return env.ASSETS.fetch(request);
