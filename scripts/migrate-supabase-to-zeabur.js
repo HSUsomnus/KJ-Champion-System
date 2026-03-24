@@ -6,10 +6,13 @@
 
 const { Pool } = require('pg');
 
-const SOURCE_URL =
-  'postgresql://postgres:DATAd0443779@db.fsrkhmnqmbbhwdsmacnn.supabase.co:5432/postgres';
-const TARGET_URL =
-  'postgresql://root:P26cdVp9lg1m3ebiu0ZvCs75kfn8G4jN@43.163.196.8:30756/zeabur';
+const SOURCE_URL = process.env.SUPABASE_DATABASE_URL;
+const TARGET_URL = process.env.DATABASE_URL;
+
+if (!SOURCE_URL || !TARGET_URL) {
+  console.error('❌ 請設定環境變數：SUPABASE_DATABASE_URL、DATABASE_URL');
+  process.exit(1);
+}
 
 const source = new Pool({ connectionString: SOURCE_URL, ssl: { rejectUnauthorized: false } });
 const target = new Pool({ connectionString: TARGET_URL, ssl: false });
