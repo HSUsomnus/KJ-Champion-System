@@ -13,7 +13,7 @@
 
 ### 第一階段：建立 staging 測試環境（進行中）
 
-> **執行順序：DB 同步驗證 → 正式後端換 DB（真人驗證）→ staging 後端部署 → 前端部署**
+> **執行順序：DB 同步驗證 → 正式後端換 DB（真人驗證）→ staging 後端部署 → 現有前端驗證（`public/`）→ Pencil 互動設計 → React 前端重構**
 
 - **✅ 完成** `staging` 分支：從 `main` 建立，含 `zbpack.json`（Zeabur 部署設定）
 - **✅ 完成** Zeabur PostgreSQL 建立 + Supabase → Zeabur 單向資料同步（schema + 業務資料，已核對筆數）

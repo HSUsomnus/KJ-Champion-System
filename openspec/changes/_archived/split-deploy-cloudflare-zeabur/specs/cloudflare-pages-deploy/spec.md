@@ -2,6 +2,30 @@
 
 ## ADDED Requirements
 
+### Requirement: 現有前端驗證部署（重構前）
+
+在進行 React 重構之前，Cloudflare Pages SHALL 先以「無 build command」方式部署現有 `public/` 目錄，作為前後端溝通與資料庫連線的驗證環境。Build output directory 設為 `public`，Build command 留空。
+
+#### Scenario: 現有前端成功部署
+
+- **WHEN** Cloudflare Pages 以 `public` 為輸出目錄、無 build command 完成部署
+- **THEN** 瀏覽器可訪問 Cloudflare Pages URL，載入現有純 HTML 前端頁面
+
+#### Scenario: 前後端 API 溝通驗證通過
+
+- **WHEN** 從 Cloudflare Pages 網域呼叫 `/api/members` 與 `/api/calendar/events`
+- **THEN** 回傳正確資料，無跨域錯誤，確認前端 → Zeabur 後端通訊正常
+
+#### Scenario: 資料庫連線驗證通過
+
+- **WHEN** 透過前端執行新增 / 刪除測試行程
+- **THEN** 資料確實寫入 Zeabur PostgreSQL，並可正確讀取，確認 DB 連線無誤
+
+#### Scenario: LINE Login 流程驗證通過
+
+- **WHEN** 使用者從 Cloudflare Pages URL 進行 LINE Login
+- **THEN** OAuth 回調至 Zeabur 後端後成功取得使用者資訊，登入流程完整可用
+
 ### Requirement: Vite Build Pipeline
 
 Cloudflare Pages 專案 SHALL 設定 build command 為 `cd frontend && npm install && npm run build`，Build output directory 為 `frontend/dist`，並監聽 `staging` 分支。

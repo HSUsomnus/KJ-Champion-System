@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> 目前版本：v1.5.6 | 分支：staging（部署架構遷移中）
+> 目前版本：v1.6.0 | 部署：Cloudflare Pages + Zeabur
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
@@ -8,21 +8,20 @@
 
 ## 部署架構
 
-### 目前（main 分支，正式）
+| 層級 | 技術 | 服務 |
+|------|------|------|
+| 前端 | 純 HTML + 原生 JS + CSS（`public/`） | Cloudflare Pages（`kj-champion-system.pages.dev`） |
+| API Proxy | Cloudflare Worker（`public/_worker.js`） | 攔截 `/api/*` 轉發至 Zeabur 後端 |
+| 後端 | Node.js + Express.js（`server/`） | Zeabur（`kj-champion-system.zeabur.app`） |
+| 資料庫 | PostgreSQL | Zeabur PostgreSQL |
 
-| 層級 | 技術 |
-|------|------|
-| 前端 | 純 HTML + 原生 JS + CSS（`public/`），Vercel Static |
-| 後端 | Node.js + Express.js，Vercel Serverless（`api/index.js`） |
-| 資料庫 | Supabase（PostgreSQL） |
+### 請求流程
 
-### 目標（staging 分支，遷移進行中）
-
-| 層級 | 技術 |
-|------|------|
-| 前端 | React + Vite + PWA（`frontend/`），Cloudflare Pages |
-| 後端 | Node.js + Express.js，Zeabur（容器化） |
-| 資料庫 | Zeabur PostgreSQL（staging 專用，與 Supabase 隔離） |
+```
+瀏覽器
+  └─ /api/* → Cloudflare Worker (_worker.js) → Zeabur 後端
+  └─ 靜態資源 → Cloudflare Pages (env.ASSETS)
+```
 
 ---
 
@@ -33,7 +32,7 @@
 | 前端 | 純 HTML + 原生 JS + CSS（`public/`） |
 | 後端 | Node.js + Express.js（`server/`） |
 | 身份驗證 | LINE Login OAuth（不依賴 LIFF SDK，自製 `window.LIFF` 介面） |
-| 資料庫 | PostgreSQL（Supabase，遷移至 Zeabur 進行中） + Google Calendar API |
+| 資料庫 | PostgreSQL（Zeabur）+ Google Calendar API |
 | 本機開發 | ngrok（內網穿透，用於 LINE Login 與 LINE BOT Webhook 測試） |
 
 ---
@@ -67,7 +66,7 @@
 
 ```text
 Line_Liff/
-├── public/                   # 前端（正式版，純 HTML/JS/CSS）
+├── public/                   # 前端（純 HTML/JS/CSS）
 │   ├── index.html            # 月曆主頁（進入點）
 │   ├── list.html             # 行程列表
 │   ├── add-event.html        # 新增行程
@@ -82,6 +81,7 @@ Line_Liff/
 │   ├── open-external.html    # 外部連結中介頁
 │   ├── manifest.json         # PWA 設定
 │   ├── sw.js                 # Service Worker
+│   ├── _worker.js            # Cloudflare Worker（/api/* proxy）
 │   ├── js/
 │   │   ├── liff.js           # ⭐ 核心：LINE Login OAuth + window.LIFF 介面
 │   │   ├── calendar.js       # 月曆邏輯
@@ -117,38 +117,21 @@ Line_Liff/
 │   │   ├── memberDbService.js
 │   │   └── versionService.js
 │   ├── config/
-│   │   ├── db.js             # PostgreSQL 連線池（Serverless/容器模式自動切換）
+│   │   ├── db.js             # PostgreSQL 連線池
 │   │   └── lineConfig.js     # LINE API 設定驗證
 │   └── middleware/
 │       └── auth.js           # LINE User ID 驗證
-├── api/
-│   └── index.js              # Vercel Serverless 入口（main 分支用）
-├── zbpack.json               # Zeabur 部署設定（staging 分支用）
+├── zbpack.json               # Zeabur 部署設定
+├── openspec/                 # 功能變更規格文件（AI 輔助開發）
+│   ├── STATUS.md             # 當前進度儀表板
+│   └── changes/              # 各 change 的規格與任務
 ├── .github/
 │   └── workflows/
-│       ├── keep-supabase-alive.yml  # 定期 ping Supabase 防休眠
-│       └── monthly-backup.yml       # 每月自動備份資料庫
+│       └── monthly-backup.yml  # 每月自動備份資料庫
 ├── scripts/                  # 維護指令稿
-│   ├── backup-db.js          # 手動資料庫備份
-│   ├── restore-db.js         # 資料庫還原
-│   ├── migrate-sheet-to-supabase.js
-│   ├── sync-calendar-to-supabase.js
-│   ├── register-calendar-watch.js
-│   ├── renew-calendar-watch.js
-│   └── seed-members.js
-├── database/
-│   ├── schema.sql            # 初始資料庫結構
-│   ├── rls-policies.sql      # Row-Level Security 策略
-│   └── *.sql                 # 遷移腳本
-├── docs/                     # 詳細說明文件
-├── openspec/                 # 功能變更規格文件（AI 輔助開發）
-│   └── changes/
-│       └── split-deploy-cloudflare-zeabur/  # 部署架構拆分計畫
-├── ngrok.yml                 # ngrok 設定檔（本機開發）
-├── vercel.json               # Vercel 部署設定（main 分支）
+├── database/                 # SQL schema 與遷移腳本
 ├── CLAUDE.md                 # AI 助理規則
 ├── CHANGELOG.md              # 版本索引
-├── .claude/context/          # 各版本詳細上下文
 └── package.json
 ```
 
@@ -174,10 +157,7 @@ Line_Liff/
 ### 安裝
 
 ```bash
-# 安裝專案依賴（含 concurrently）
 npm install
-
-# 設定 ngrok Auth Token（一次性，免費帳號即可）
 ngrok config add-authtoken 你的TOKEN
 ```
 
@@ -190,29 +170,18 @@ cp .env.example .env
 
 ### 啟動方式
 
-#### 方式一：純本機測試（不需 LINE Login）
-
 ```bash
+# 純本機測試（不需 LINE Login）
 npm run dev
-# 開啟 http://localhost:8080?dev=1  ← 自動模擬登入
-```
+# 開啟 http://localhost:8080?dev=1
 
-#### 方式二：同時啟動伺服器 + ngrok（測試真實 LINE Login 或 Webhook）
-
-```bash
+# 同時啟動伺服器 + ngrok（測試真實 LINE Login 或 Webhook）
 npm run dev:ngrok
-# 終端機會顯示 ngrok 公開 URL
 ```
 
 啟動後，將 ngrok URL 填入 LINE Developers Console：
 - **LINE Login** → Callback URL：`https://你的ngrok網址/api/auth/line-callback`
 - **LINE BOT** → Webhook URL：`https://你的ngrok網址/api/line/webhook`
-
-> 注意：免費版 ngrok 每次重啟都會換網址，需重新更新設定。
-
-### 測試未登入狀態
-
-清除瀏覽器 localStorage 中的 `lineUserId` 再重整。
 
 ---
 
@@ -225,11 +194,6 @@ npm run dev:ngrok
 | `npm run ngrok` | 啟動 ngrok 通道（port 8080） |
 | `npm run dev:ngrok` | 同時啟動伺服器 + ngrok |
 | `npm test` | 執行測試 |
-| `npm run migrate:members` | 從 Google Sheets 遷移成員資料到 PostgreSQL |
-| `npm run sync:calendar` | 同步 Google Calendar 到 PostgreSQL |
-| `npm run watch:register` | 註冊 Google Calendar Watch |
-| `npm run watch:renew` | 更新 Google Calendar Watch |
-| `npm run seed:members` | 填入測試成員資料 |
 
 ---
 
@@ -240,16 +204,15 @@ npm run dev:ngrok
 | `LINE_CHANNEL_ID` | LINE Channel ID | 是 |
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret | 是 |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token | 是 |
-| `DATABASE_URL` | PostgreSQL 連線字串（Supabase 或 Zeabur） | 是 |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Service Account 完整 JSON（方案 1，建議） | 是 |
+| `DATABASE_URL` | PostgreSQL 連線字串（Zeabur，建議用 `${POSTGRES_CONNECTION_STRING}`） | 是 |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Service Account 完整 JSON | 是 |
 | `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
-| `APP_URL` | 後端公開網址（Zeabur 或 Vercel） | 是 |
-| `FRONTEND_URL` | 前端公開網址（Cloudflare Pages 或 Vercel） | 是（CORS 用） |
-| `PORT` | 伺服器 Port（預設 8080） | 否 |
-| `NODE_ENV` | 環境（development / production） | 否 |
-| `LIFF_ID` | LINE LIFF ID | 否 |
-| `FINANCIAL_SHEET_ID` | 財務試算表 Google Sheets ID（唯讀連結 fallback） | 否 |
-| `CRON_SECRET` | Vercel Cron 認證（保護 Cron endpoints） | 否 |
+| `FRONTEND_URL` | 前端公開網址（CORS 用，Cloudflare Pages） | 是 |
+| `APP_URL` | 後端公開網址（Zeabur） | 是 |
+| `NODE_ENV` | 環境（development / production） | 是 |
+| `LIFF_ID` | LINE LIFF ID（備用） | 否 |
+| `FINANCIAL_SHEET_ID` | 財務試算表 Google Sheets ID | 否 |
+| `CRON_SECRET` | Cron 認證 | 否 |
 
 ---
 
@@ -268,32 +231,22 @@ npm run dev:ngrok
 | `/api/financial/upload` | POST | 上傳財務文件（限 manager） |
 | `/api/financial/documents` | GET | 財務文件清單（限 manager） |
 | `/api/line/webhook` | POST | LINE BOT Webhook |
-| `/api/cron/sync` | GET | 每日行事曆同步 |
-| `/api/cron/renew-watch` | GET | 每日 Watch 更新 |
 | `/health` | GET | 健康檢查 |
 
 ---
 
 ## 部署
 
-### 現行（Vercel，main 分支）
+### 前端（Cloudflare Pages）
 
-前後端統一部署在 Vercel：
-- **後端**：Express app 透過 `api/index.js` 包裝成 Serverless Function
-- **前端**：`public/` 目錄由 Vercel 靜態伺服
-- **自動部署**：推送 `main` branch 即自動觸發
+- 連接 GitHub `main` branch，自動部署
+- Build command：不需要（純靜態，直接發佈 `public/`）
+- Root directory：`public`
 
-```bash
-vercel --prod
-```
+### 後端（Zeabur）
 
-### 目標（Zeabur + Cloudflare Pages，staging 分支）
-
-- **後端**：Zeabur 連接 GitHub `staging` 分支，自動部署 Node.js 容器
-- **前端**：Cloudflare Pages 連接 GitHub `staging` 分支，Build command：`cd frontend && npm install && npm run build`
-- **設定**：後端環境變數 `FRONTEND_URL` 設為 Cloudflare Pages 網域（CORS 用）
-
-詳細步驟：`openspec/changes/split-deploy-cloudflare-zeabur/tasks.md`
+- 連接 GitHub `main` branch，自動部署 Node.js 容器
+- 設定環境變數（`DATABASE_URL`、`LINE_*`、`GOOGLE_SERVICE_ACCOUNT_JSON` 等）
 
 ---
 
@@ -320,12 +273,11 @@ vercel --prod
 
 ## 版本記錄
 
-詳見 [CHANGELOG.md](./CHANGELOG.md)。各版本完整上下文：[.claude/context/](./.claude/context/)
+詳見 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 
 ## 安全性注意事項
 
 - `.env`、`.env.backup`、`Key/` 目錄**永遠不推上 GitHub**
-- ngrok 測試完畢後立即關閉
-- CORS 已設白名單，僅允許 `APP_URL`、`FRONTEND_URL` 及本機開發網址
+- CORS 已設白名單，僅允許 `FRONTEND_URL` 及本機開發網址

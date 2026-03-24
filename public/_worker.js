@@ -4,7 +4,7 @@
  * 其餘靜態資源由 env.ASSETS 處理
  */
 
-const ZEABUR_BACKEND = 'https://kj-champion.zeabur.app';
+const ZEABUR_BACKEND = 'https://kj-champion-system.zeabur.app';
 
 export default {
   async fetch(request, env) {

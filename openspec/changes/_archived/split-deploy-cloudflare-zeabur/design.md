@@ -8,7 +8,7 @@
 
 `server/server.js` 已有 CORS middleware，透過 `FRONTEND_URL` 環境變數控制白名單，**後端程式碼無需修改**。
 
-**目前進度（2026-03-22）**：Task 1～2e 全部結束（含 2e.10 `.env` 清理）。雙寫服務（dualWriteService）於 v1.5.2 實作、v1.5.4 已移除（驗證無法完成，決定跳過）。正式後端（Vercel）`DATABASE_URL` 指向 Zeabur PostgreSQL，所有寫入僅寫主庫。`.env` 已清理：移除死碼（`ADMIN_LINE_USER_IDS`、`DUAL_WRITE_ENABLED`、`SUPABASE_BACKUP_URL`、Google API 分拆舊變數），新增 `FRONTEND_URL` 與 `CRON_SECRET`（留空）。下一步：2f（Zeabur 後端部署）。
+**目前進度（2026-03-23）**：Task 1～2f 全部結束。Zeabur 後端已部署並正常運作，網域為 `https://kj-champion.zeabur.app`。LINE Login OAuth 完整流程已驗證（需設定 `APP_URL=https://kj-champion.zeabur.app`，否則 callback 會跳回 Vercel）。LINE Developer Console Callback URL 已新增 Zeabur 網域，與 Vercel URL 並存。下一步：2g（部署現有 `public/` 至 Cloudflare Pages）。
 
 ## Goals / Non-Goals
 
@@ -39,8 +39,7 @@
 | --- | --- |
 | Zeabur 正式專案 | `kj-champion` |
 | Zeabur staging 專案 | `kj-champion-staging` |
-| Cloudflare Pages 正式 | `kj-champion` |
-| Cloudflare Pages staging | `kj-champion-staging` |
+| Cloudflare Pages 專案（staging + 正式共用） | `kj-champion-system` |
 | 後端網域（參考） | `kj-champion.zeabur.app` |
 | 前端網域（參考） | `kj-champion.pages.dev` |
 | React 前端 `frontend/` 內部 | 元件、函式、型別均以 `KjChampion` / `kjChampion` 命名 |
@@ -170,17 +169,32 @@ staging →  Cloudflare Pages (frontend/dist) + Zeabur 後端 + Zeabur PostgreSQ
 
 ### Decision 4：用 Cloudflare `_redirects` 做 API Proxy
 
-**選擇**：`frontend/public/_redirects`（Vite build 時會複製到 `dist/`）設定 `/api/*` → Zeabur 後端 proxy。
+**選擇**：使用 `public/_worker.js`（Cloudflare Workers）攔截 `/api/*` 請求並 proxy 至 Zeabur 後端，靜態資源由 `env.ASSETS.fetch()` 處理。
 
-```text
-/api/*  https://<zeabur-backend-url>/api/:splat  200
+```js
+// public/_worker.js
+const ZEABUR_BACKEND = 'https://kj-champion.zeabur.app';
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/')) {
+      return fetch(ZEABUR_BACKEND + url.pathname + url.search, { ... });
+    }
+    return env.ASSETS.fetch(request);
+  },
+};
 ```
 
-**理由**：新前端的 API 呼叫仍使用相對路徑 `/api/...`，`_redirects` 在平台層透明轉發，前端程式碼無需感知後端 URL。
+**理由**：Cloudflare Pages 的 `_redirects` 不支援 proxy 到外部 URL（`200` status 只允許相對路徑）。`_worker.js` 是 Cloudflare 官方建議的外部 proxy 方式，前端程式碼仍使用相對路徑 `/api/...`，無需感知後端 URL。
+
+**適用範圍**：
+
+- `public/_worker.js`：2g 驗證階段（現有靜態前端）
+- `frontend/public/_worker.js`：Task 3+ React 前端，同樣適用此方式（取代原 `_redirects` 計畫）
 
 ### Decision 5：CORS 只需設環境變數
 
-**選擇**：`server.js` CORS 已有 `FRONTEND_URL` 支援，在 Zeabur 設定 `FRONTEND_URL=https://kj-champion-staging.pages.dev` 即可，無需改程式碼。
+**選擇**：`server.js` CORS 已有 `FRONTEND_URL` 支援，在 Zeabur 設定 `FRONTEND_URL=https://kj-champion-system.pages.dev` 即可，無需改程式碼。
 
 ### Decision 6：Cloudflare Pages build 設定
 
@@ -230,12 +244,22 @@ Branch:            staging
 4. ✅ **驗證 Zeabur DB 正確性**（COUNT 一致、抽查欄位、foreign key 有效）
 5. ✅ **正式後端（Vercel）換 `DATABASE_URL` 指向 Zeabur DB** → 真人驗證通過
 6. ❌ ~~**雙寫服務實作**（v1.5.2）：實作後無法驗證，v1.5.4 已移除~~ → 所有寫入直接寫 Zeabur 主庫
-7. ⬜ **Zeabur 後端部署**（`staging` 分支）→ 設定環境變數 → 取得後端 URL（Task 2f）
-8. ⬜ **用 `public/` 前端（`?dev=1`）驗證 staging 後端**（API 回應、LINE Login、DB CRUD 均通過）
-9. ⬜ 新增 `frontend/`（Vite + React + PWA 骨架）→ `_redirects` 填入真實 Zeabur URL
-10. ⬜ Cloudflare Pages 連接 `staging` 分支 → 部署前端 → 取得前端 URL
-11. ⬜ Zeabur 設 `FRONTEND_URL` = Cloudflare Pages URL
-12. ⬜ 完整驗證：LINE Login、行事曆 CRUD、PWA 安裝
+7. ✅ **Zeabur 後端部署**（`staging` 分支）→ 設定環境變數 → 取得後端 URL（Task 2f）：`https://kj-champion.zeabur.app`
+8. ⬜ **部署現有 `public/` 至 Cloudflare Pages**（Task 2g，重構前驗證）：
+   - Cloudflare Pages 設定 Build command 留空、Build output directory 為 `public`
+   - 驗證前後端 API 溝通（`/api/members`、`/api/calendar/events`、CRUD 讀寫）
+   - 驗證 Zeabur PostgreSQL 連線（資料確實落庫）
+   - 驗證 LINE Login OAuth 完整流程（登入 → Zeabur 回調 → 取得使用者資訊）
+   - **全部通過後才進行步驟 9**
+9. ⬜ **Pencil 互動設計**（Task 2h，重構前必做）：
+   - 盤點現有 `public/` 所有頁面與跳轉關係
+   - 使用 Pencil 重新設計各頁面 UI 佈局與互動流程
+   - 確認設計稿與後端 API 對齊
+   - 使用者確認設計稿後鎖定，才進行步驟 10
+10. ⬜ 新增 `frontend/`（Vite + React + PWA 骨架）→ `_redirects` 填入真實 Zeabur URL（Task 3）
+11. ⬜ Cloudflare Pages 更新 build 設定（`cd frontend && npm install && npm run build`）→ 部署 React 前端 → 取得前端 URL（Task 5）
+12. ⬜ Zeabur 設 `FRONTEND_URL` = Cloudflare Pages URL
+13. ⬜ 完整驗證：LINE Login、行事曆 CRUD、PWA 安裝
 
 ### 第二階段：正式後端切換至 Zeabur（前端不動）
 
