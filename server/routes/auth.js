@@ -10,6 +10,8 @@ const axios = require('axios');
 const LINE_CHANNEL_ID = process.env.LINE_CHANNEL_ID;
 const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET;
 const APP_URL = process.env.APP_URL || 'http://localhost:8080';
+// 登入後跳回前端域名（分離部署時 FRONTEND_URL 與 APP_URL 不同）
+const FRONTEND_URL = process.env.FRONTEND_URL || APP_URL;
 
 /**
  * GET /api/auth/line-login
@@ -89,7 +91,7 @@ router.get('/line-callback', async (req, res) => {
 
     // 導回前端頁面，帶上使用者資訊（前端會存到 localStorage 並清除 URL 參數）
     const sep = returnUrl.includes('?') ? '&' : '?';
-    const finalUrl = `${returnUrl}${sep}userId=${encodeURIComponent(lineUserId)}&displayName=${encodeURIComponent(displayName)}&pictureUrl=${encodeURIComponent(pictureUrl)}&auth=1`;
+    const finalUrl = `${FRONTEND_URL}${returnUrl}${sep}userId=${encodeURIComponent(lineUserId)}&displayName=${encodeURIComponent(displayName)}&pictureUrl=${encodeURIComponent(pictureUrl)}&auth=1`;
     res.redirect(finalUrl);
 
   } catch (error) {

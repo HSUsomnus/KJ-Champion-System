@@ -6,17 +6,38 @@
 
 ---
 
+## [v1.5.6] - 2026-03-22
+
+git tag: v1.5.6
+摘要：清理 .env 死碼（移除 ADMIN_LINE_USER_IDS、DUAL_WRITE_ENABLED、SUPABASE_BACKUP_URL、Google API 分拆舊變數）、補齊 FRONTEND_URL 與 CRON_SECRET；新增 Claude Code hooks（openspec-code-guard、openspec-sync-reminder）；同步 OpenSpec 文件
+
+---
+
+## [v1.5.5] - 2026-03-22
+
+git tag: v1.5.5
+摘要：清理 Google Sheets 死碼——刪除已廢棄的 sheetService.js、移除 googleAuth.js 中的 getSheetsClient/getSheetConfig/spreadsheets scope，並將 financial.js 中語意錯誤的 MEMBER_SHEET_ID 改名為 FINANCIAL_SHEET_ID
+
+---
+
 ## [v1.5.4] - 2026-03-22
 
 git tag: v1.5.4
-摘要：移除雙寫服務（dualWriteService）——刪除 dualWriteService.js，eventDbService 與 memberDbService 所有寫入改回直接寫主庫（Zeabur PostgreSQL）
+摘要：移除雙寫服務（dualWriteService）——eventDbService 與 memberDbService 的寫入改回直接 db.query，Supabase 不再接收任何寫入；同步更新 OpenSpec 文件與 staging README
+
+---
+
+## [v1.5.3] - 2026-03-22
+
+git tag: v1.5.3
+摘要：修復 Supabase 雙寫失效問題——補回 staging 分支遺漏的 dualWriteService.js，使新增/更新/刪除行程能正確同步至 Supabase 備份庫
 
 ---
 
 ## [v1.5.2] - 2026-03-18
 
 git tag: v1.5.2
-摘要：新增 Supabase 雙寫備份服務（dualWriteService），主庫 Zeabur 寫入同時 fire-and-forget 備份至 Supabase，修正 SSL 連線設定
+摘要：建立 staging 分支部署架構，後端遷移至 Zeabur + 前端遷移至 Cloudflare Pages（Task 1 完成：zbpack.json、env.example 更新、CORS 白名單、DB 連線池環境感知、資料庫備份腳本）
 
 ---
 

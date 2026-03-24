@@ -6,13 +6,21 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// 判斷執行環境
+// Vercel Serverless：每個 Function 實例各自建立 pool，需嚴格限制連線數
+// 否則多個實例同時啟動會超過 Supabase 免費版上限（約 15 條）
+// Cloud Run / 本機：長時間運行的容器，可使用較大的連線池
+const isServerless = !!(process.env.VERCEL || process.env.VERCEL_ENV);
+const maxConnections = isServerless ? 2 : 10;
+
+console.log(`🔌 DB 連線池：${isServerless ? 'Serverless 模式' : '容器/本機模式'}，max=${maxConnections}`);
+
 // 建立連線池
 // Supabase 建議使用 Transaction Mode (port 6543) 以支援 Serverless 環境
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Supabase Transaction Mode 預設設定
-  max: 20,                    // 最大連線數
-  idleTimeoutMillis: 30000,   // 閒置連線逾時 30 秒
+  max: maxConnections,           // Serverless: 2，容器: 10
+  idleTimeoutMillis: isServerless ? 10000 : 30000,   // Serverless 縮短閒置逾時
   connectionTimeoutMillis: 2000, // 連線建立逾時 2 秒
 });
 
