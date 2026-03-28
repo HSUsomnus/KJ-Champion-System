@@ -20,7 +20,7 @@
 4. 機密檢查
 5. 列出項目清單，**使用者明確確認**
 6. `git push origin main`
-7. `git tag vX.Y.Z && git push --tags`
+7. `git tag X.Y.Z && git push --tags`
 
 ## 前端目錄
 

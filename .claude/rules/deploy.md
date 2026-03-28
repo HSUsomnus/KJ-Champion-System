@@ -41,7 +41,7 @@ git push origin dev
 
 ```bash
 git push origin main
-git tag vX.Y.Z
+git tag X.Y.Z
 git push --tags
 ```
 
@@ -52,4 +52,4 @@ git push --tags
 3. README 完整重寫
 4. 機密檢查
 5. 使用者**明確確認**後才執行（最高確認要求）
-6. `git tag vX.Y.Z && git push --tags`
+6. `git tag X.Y.Z && git push --tags`
