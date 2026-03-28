@@ -30,7 +30,7 @@ process.stdin.on('end', () => {
     } catch (_) {}
 
     // 決定注入哪些規則
-    const rulesToLoad = ['core'];
+    const rulesToLoad = ['workflow'];
 
     if (/\/(public|frontend)\//.test(normalized)) {
       rulesToLoad.push('frontend');
@@ -43,7 +43,7 @@ process.stdin.on('end', () => {
     }
 
     if (branch === 'main') rulesToLoad.push('main');
-    else if (branch === 'staging') rulesToLoad.push('staging');
+    else if (branch === 'dev') rulesToLoad.push('deploy');
 
     // 讀取並合併規則內容
     const rulesDir = path.join(__dirname, '../rules');
