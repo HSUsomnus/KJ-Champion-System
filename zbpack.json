@@ -1,0 +1,4 @@
+{
+  "nodejs_version": "18",
+  "start_command": "node server/server.js"
+}

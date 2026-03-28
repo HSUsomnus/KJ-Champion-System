@@ -21,7 +21,6 @@ const getServiceAccountAuth = () => {
           key: credentials.private_key, // JSON 裡的 private_key 已經有正確的換行
           scopes: [
             'https://www.googleapis.com/auth/calendar',
-            'https://www.googleapis.com/auth/spreadsheets',
             'https://www.googleapis.com/auth/drive.file',
             'https://www.googleapis.com/auth/drive', // 轉成 Google Sheet 並設「知道連結可檢視」需此範圍
           ],
@@ -86,15 +85,6 @@ const getCalendarClient = async () => {
   return google.calendar({ version: 'v3', auth });
 };
 
-// 取得已認證的 Sheets API 客戶端
-const getSheetsClient = async () => {
-  const auth = getServiceAccountAuth();
-  if (!auth) {
-    return null;
-  }
-  return google.sheets({ version: 'v4', auth });
-};
-
 // 取得已認證的 Drive API 客戶端（用於上傳試算表並轉成唯讀 Google Sheet）
 const getDriveClient = async () => {
   const auth = getServiceAccountAuth();
@@ -114,23 +104,9 @@ const getGroupCalendarId = () => {
   return calendarId;
 };
 
-// 取得成員資料表設定
-const getSheetConfig = () => {
-  const sheetId = process.env.MEMBER_SHEET_ID;
-  const sheetName = process.env.MEMBER_SHEET_NAME || '成員資料';
-  
-  if (!sheetId) {
-    throw new Error('缺少 MEMBER_SHEET_ID 環境變數');
-  }
-  
-  return { sheetId, sheetName };
-};
-
 module.exports = {
   getServiceAccountAuth,
   getCalendarClient,
-  getSheetsClient,
   getDriveClient,
   getGroupCalendarId,
-  getSheetConfig,
 };
