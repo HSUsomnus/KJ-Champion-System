@@ -6,10 +6,15 @@
 
 ## 工作流
 
-- **「修改計畫」** → 只動文件（proposal → design → tasks → STATUS）
-- **「執行計畫」** → 才可動程式碼（讀 STATUS → 讀 tasks → 實作 → 更新）
+| 關鍵字 | 動作 |
+| ------ | ---- |
+| **「新增功能」** | 切分支 + 開 OpenSpec change |
+| **「修改計畫」** | 確認分支 → 只動文件 |
+| **「執行計畫」** | 確認分支 → 實作程式碼 |
+| **「測試功能」** | merge 到 dev |
+| **「功能上線」** | merge 到 main，關 change |
 
-詳細規則由 Hook 在需要時自動注入（`.claude/rules/`）。
+詳細規則：`.claude/rules/workflow.md`
 
 ## 推送前必做（摘要）
 

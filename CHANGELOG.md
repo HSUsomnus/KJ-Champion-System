@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.5.7] - 2026-03-28
+
+git tag: v1.5.7
+摘要：重構 .claude/rules/——合併 core.md + global.md 為 workflow.md，整合 OpenSpec 工作流與 git 分支流程，加入修改/執行計畫前強制確認分支的安全閘門；更新 CLAUDE.md 工作流摘要
+
+---
+
 ## [v1.5.6] - 2026-03-22
 
 git tag: v1.5.6

@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **分支：`main`（正式上線）** | 版本：v1.6.0 | 更新：2026-03-28
+> **分支：`main`（正式上線）** | 版本：v1.5.7 | 更新：2026-03-28
 >
 > 正式前端：`kj-champion-system.pages.dev` | 後端：`kj-champion-system.zeabur.app`
 
