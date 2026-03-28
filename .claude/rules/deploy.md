@@ -22,19 +22,18 @@ git commit -m "feat/fix/chore: ..."
 
 ---
 
-## 推送到 staging
+## 推送到 dev（測試站）
 
 ```bash
-git push origin staging
-git tag staging-vX.Y.Z
-git push --tags
+git checkout dev
+git merge m_b_功能名稱
+git push origin dev
 ```
 
-- README 重寫：✅ 必做
+- README 重寫：✅ 必做（反映 dev 現況）
 - 機密檢查：✅ 必做
 - CHANGELOG 更新：選擇性
-- `.claude/context/` 版本文件：選擇性
-- 確認不影響 main 正式環境
+- **⛔ 絕不從 dev push 到 main**
 
 ---
 

@@ -6,7 +6,8 @@
 
 ## 嚴格規則
 
-- 不在 main 上直接開發，只接受從 staging merge 的驗證過內容
+- 不在 main 上直接開發，只接受從**功能分支**（`m_b_*`）或 `hotfix` merge 的驗證過內容
+- **⛔ 絕不從 dev 分支 merge 回 main**（dev 含未批准上線的功能）
 - WIP 代碼、未測試功能 → 禁止 push 到 main
 - DB 是正式資料，任何 schema 變動需額外確認
 - 不接受實驗性代碼
