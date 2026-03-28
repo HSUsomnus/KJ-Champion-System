@@ -42,10 +42,30 @@ hotfix        ← 緊急修復，從 main 切出
 3. **git add 具體檔案**（禁止 git add -A）
 4. **列出清單給使用者確認**，未確認不得 push
 
+## .claude/ 特殊規則
+
+**.claude/ 是全域設定，必須與 main 保持一致。**
+
+任何分支上只要修改了 `.claude/` 內的任何檔案，**立即單獨處理**：
+
+```
+1. git add .claude/<修改的檔案>
+2. git commit -m "chore: 更新 .claude/..."
+3. git checkout main
+4. git cherry-pick <commit hash>
+5. git push origin main
+6. git checkout <回到原分支>
+```
+
+- 不得將 `.claude/` 的修改混入功能 commit
+- 不得等到功能上線才一起 merge `.claude/` 的變更
+- `.claude/` 永遠只從 `main` 傳播到其他分支（不逆流）
+
 ## 嚴禁行為
 
-- ❌ 直接在 main 上開發
+- ❌ 直接在 main 上開發（.claude/ 修改除外）
 - ❌ 將 dev merge 回 main
 - ❌ 功能分支只建本機不 push 到遠端
 - ❌ push 前沒有重寫 README
 - ❌ 使用 git add -A
+- ❌ 將 .claude/ 修改與功能程式碼混在同一個 commit
