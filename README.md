@@ -1,6 +1,8 @@
 # 康九冠軍夥伴系統
 
-> 目前版本：v1.6.0 | 部署：Cloudflare Pages + Zeabur
+> **分支：`main`（正式上線）** | 版本：v1.6.0 | 更新：2026-03-28
+>
+> 正式前端：`kj-champion-system.pages.dev` | 後端：`kj-champion-system.zeabur.app`
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
