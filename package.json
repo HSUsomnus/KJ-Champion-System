@@ -13,7 +13,8 @@
     "migrate:members": "node scripts/migrate-sheet-to-supabase.js",
     "sync:calendar": "node scripts/sync-calendar-to-supabase.js",
     "watch:register": "node scripts/register-calendar-watch.js",
-    "watch:renew": "node scripts/renew-calendar-watch.js"
+    "watch:renew": "node scripts/renew-calendar-watch.js",
+    "setup-hooks": "node scripts/setup-hooks.js"
   },
   "keywords": [
     "line",
