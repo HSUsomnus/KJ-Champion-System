@@ -25,7 +25,6 @@ process.stdin.on('end', () => {
     const rulesDir = path.join(__dirname, '../rules');
     const rulesToLoad = ['deploy'];
     if (branch === 'main') rulesToLoad.push('main');
-    else if (branch === 'dev') rulesToLoad.push('deploy');
 
     const contents = [];
     for (const rule of rulesToLoad) {
