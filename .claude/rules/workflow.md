@@ -100,7 +100,9 @@ hotfix    ← 緊急修復，從 main 切出
 
 ## .claude/ 特殊規則
 
-**.claude/ 是全域設定，必須與 main 保持一致。**
+**.claude/ 是全域設定，所有分支必須同步。main 是唯一來源。**
+
+### 修改流程（任何分支皆同）
 
 任何分支上只要修改了 `.claude/` 內的任何檔案，**立即單獨處理**：
 
@@ -109,11 +111,15 @@ git add .claude/<修改的檔案>
 git commit -m "chore: 更新 .claude/..."
 git checkout main
 git cherry-pick <commit hash>
-git push origin main
+git push origin main          # ← 必須立即 push，確保遠端同步
 git checkout <回到原分支>
 ```
 
-`.claude/` 永遠只從 `main` 傳播，不逆流。
+### 同步機制
+
+- **來源**：`main` 是 `.claude/` 的唯一真實來源，永遠只從 main 傳播，不逆流
+- **自動同步**：`post-checkout` hook 會在切換分支時，自動從 `origin/main` 拉取最新 `.claude/`
+- **確保所有分支一致**：修改後必須 push main，這樣其他分支（包括其他開發者）切換時都能拿到最新版
 
 ---
 
