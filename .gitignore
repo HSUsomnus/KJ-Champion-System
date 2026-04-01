@@ -47,6 +47,7 @@ build/
 !vercel.json
 !tsconfig.json
 !zbpack.json
+!.claude/settings.json
 
 # 金鑰、憑證資料夾（絕對不要推上 GitHub）
 Key/
