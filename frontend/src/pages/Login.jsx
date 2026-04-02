@@ -75,8 +75,16 @@ export default function Login() {
       <img
         src="/康九_logo.png"
         alt="KJ Champion"
-        className="w-36 object-contain mb-10"
+        className="w-36 object-contain mb-4"
       />
+
+      {/* 標題 */}
+      <h1
+        className="text-xl font-semibold mb-10"
+        style={{ color: '#2C2C2C', letterSpacing: '0.06em' }}
+      >
+        康九冠軍小幫手系統
+      </h1>
 
       {authState === 'idle' && (
         <button
