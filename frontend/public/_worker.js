@@ -1,6 +1,7 @@
 /**
  * Cloudflare Pages Worker
  * 攔截 /api/* 請求，proxy 至 Zeabur 後端
+ * OAuth redirect 自動重寫為當前 origin（避免 DEV/正式站混跳）
  * 其餘靜態資源由 env.ASSETS 處理，找不到時 fallback 到 index.html（SPA）
  */
 
@@ -9,6 +10,7 @@ const ZEABUR_BACKEND = 'https://kj-champion-system.zeabur.app';
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const currentOrigin = url.origin;
 
     if (url.pathname.startsWith('/api/')) {
       const targetUrl = ZEABUR_BACKEND + url.pathname + url.search;
@@ -22,10 +24,22 @@ export default {
 
       const response = await fetch(proxyRequest);
 
-      // 後端若回傳 redirect（如 LINE OAuth 跳轉），直接讓瀏覽器跟隨，不在 Worker 內代理
+      // 後端若回傳 redirect（如 LINE OAuth 跳轉）
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get('Location');
         if (location) {
+          // 外部跳轉（如 LINE 授權頁）→ 直接放行
+          try {
+            const locUrl = new URL(location);
+            // 若 redirect 目標是後端或前端站 → 重寫為當前 origin
+            // 這樣無論 DEV 站或正式站，都跳回自己
+            if (locUrl.origin === ZEABUR_BACKEND || locUrl.hostname.includes('pages.dev') || locUrl.hostname.includes('kj-champion')) {
+              const rewritten = currentOrigin + locUrl.pathname + locUrl.search + locUrl.hash;
+              return Response.redirect(rewritten, response.status);
+            }
+          } catch (e) {
+            // location 解析失敗，直接放行
+          }
           return Response.redirect(location, response.status);
         }
       }
