@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
@@ -232,8 +232,8 @@ export default function UserStatsEdit() {
         </div>
       </main>
 
-      <FabNav onOpen={useCallback(() => setActiveFab('nav'), [])} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={useCallback(() => setActiveFab('action'), [])} />
+      <FabNav onOpen={() => setActiveFab('nav')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
       <ConfirmLeaveDialog blocker={blocker} />
     </div>
   )

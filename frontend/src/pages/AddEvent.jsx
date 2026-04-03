@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import Header from '../components/Header'
@@ -171,8 +171,8 @@ export default function AddEvent() {
         </div>
       </main>
 
-      <FabNav onOpen={useCallback(() => setActiveFab('nav'), [])} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={useCallback(() => setActiveFab('action'), [])} />
+      <FabNav onOpen={() => setActiveFab('nav')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
       <ConfirmLeaveDialog blocker={blocker} />
       <ShareConfirmDialog open={showShareDialog} isEdit={isEdit} onShare={handleShare} onCancel={handleSkipShare} />
     </div>

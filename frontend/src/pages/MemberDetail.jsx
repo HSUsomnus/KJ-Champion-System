@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
@@ -228,8 +228,8 @@ export default function MemberDetail() {
         )}
       </main>
 
-      <FabNav onOpen={useCallback(() => setActiveFab('nav'), [])} />
-      <FabAction onOpen={useCallback(() => setActiveFab('action'), [])} />
+      <FabNav onOpen={() => setActiveFab('nav')} />
+      <FabAction onOpen={() => setActiveFab('action')} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
@@ -78,7 +78,7 @@ export default function Management() {
             </button>
           </div>
         </main>
-        <FabNav onOpen={useCallback(() => setActiveFab('nav'), [])} />
+        <FabNav onOpen={() => setActiveFab('nav')} />
       </div>
     )
   }
@@ -165,8 +165,8 @@ export default function Management() {
         )}
       </main>
 
-      <FabNav onOpen={useCallback(() => setActiveFab('nav'), [])} />
-      <FabAction onOpen={useCallback(() => setActiveFab('action'), [])} />
+      <FabNav onOpen={() => setActiveFab('nav')} />
+      <FabAction onOpen={() => setActiveFab('action')} />
     </div>
   )
 }

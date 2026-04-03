@@ -90,9 +90,10 @@
      - 後端 API 資料正確顯示
      - LINE Login OAuth 完整流程
      - PWA 安裝與離線快取
+  - ✅ 修正 React hooks 違規：移除所有頁面 JSX 內的 inline useCallback（13 個檔案），避免 early return 導致 hooks 數量不一致崩潰（React error #310）
 
 ---
 
-> **下一步**：06.7 API 串接完成。說「執行計畫」推送 DEV 測試（06.8）。
+> **下一步**：06.8 DEV 測試中，修復 bug 後重新推送驗證。
 
-最後更新：2026-04-02
+最後更新：2026-04-03

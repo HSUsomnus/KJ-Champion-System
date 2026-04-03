@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
@@ -119,8 +119,8 @@ export default function UserStats() {
         </section>
       </main>
 
-      <FabNav onOpen={useCallback(() => setActiveFab('nav'), [])} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={useCallback(() => setActiveFab('action'), [])} />
+      <FabNav onOpen={() => setActiveFab('nav')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
     </div>
   )
 }
