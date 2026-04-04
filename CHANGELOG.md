@@ -6,6 +6,27 @@
 
 ---
 
+## [v2.0.1] - 2026-04-04
+
+git tag: v2.0.1
+摘要：Vercel 全站 301 轉址到 Cloudflare Pages — 舊 Vercel 網址自動跳轉至 `kj-champion-system.pages.dev`，確保團隊成員使用固定入口
+
+---
+
+## [v2.0.0] - 2026-04-04
+
+git tag: v2.0.0
+摘要：全新 React 前端上線 — React 18 + Vite 5 + Tailwind CSS（Warm Minimal 風格），取代舊純 HTML+JS 前端（`public/` 已刪除），前端目錄改為 `frontend/`；含完整頁面重建、React Router SPA、Vite PWA、LINE Login 整合
+
+---
+
+## [v1.6.0] - 2026-04-04
+
+git tag: v1.6.0
+摘要：後端 OAuth 動態 redirect — LINE Login callback 自動偵測前端 origin（從 Origin/Referer header），通過白名單驗證後 redirect 回發起登入的前端站，解決 DEV/正式站登入後混跳問題
+
+---
+
 ## [v1.5.7] - 2026-03-28
 
 git tag: v1.5.7

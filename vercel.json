@@ -1,29 +1,9 @@
 {
-  "version": 2,
-  "builds": [
+  "redirects": [
     {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.js"
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/sync",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/renew-watch",
-      "schedule": "0 0 * * *"
+      "source": "/(.*)",
+      "destination": "https://kj-champion-system.pages.dev/$1",
+      "permanent": true
     }
   ]
 }
