@@ -6,6 +6,13 @@
 
 ---
 
+## [v1.6.0] - 2026-04-04
+
+git tag: v1.6.0
+摘要：後端 OAuth 動態 redirect — LINE Login callback 自動偵測前端 origin（從 Origin/Referer header），通過白名單驗證後 redirect 回發起登入的前端站，解決 DEV/正式站登入後混跳問題
+
+---
+
 ## [v1.5.7] - 2026-03-28
 
 git tag: v1.5.7
