@@ -38,6 +38,7 @@ graph LR
 | 05 | [production-cutover](changes/05-production-cutover/tasks.md) | ⬜ FUTURE | React 版正式切換，進入前提：04 通過 |
 | 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，已合併 main（v2.0.0） |
 | 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | 後端 OAuth redirect 自動偵測前端 origin，已合併 main（v1.6.0） |
+| 08 | [pwa-upgrade](changes/08-pwa-upgrade/tasks.md) | 🔄 **IN PROGRESS** | PWA 全平台升級（Android + iOS + Desktop），分支 `m_b_pwa_upgrade` |
 
 ---
 
