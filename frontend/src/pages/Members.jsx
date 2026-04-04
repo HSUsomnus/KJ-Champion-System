@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
+import TagBadge from '../components/TagBadge'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapMember } from '../services/api'
 
@@ -20,13 +21,25 @@ export default function Members() {
   const [activeFab, setActiveFab] = useState(null)
   const [search, setSearch] = useState('')
   const [members, setMembers] = useState([])
+  const [memberTagsMap, setMemberTagsMap] = useState({})
   const navigate = useNavigate()
 
   useEffect(() => {
     api.getMembers()
       .then(res => {
         if (res.success && res.data) {
-          setMembers(res.data.map(mapMember))
+          const mapped = res.data.map(mapMember)
+          setMembers(mapped)
+          // 批量載入每個成員的標籤
+          mapped.forEach(m => {
+            api.getMemberTags(m.lineId)
+              .then(r => {
+                if (r.success) {
+                  setMemberTagsMap(prev => ({ ...prev, [m.lineId]: r.data }))
+                }
+              })
+              .catch(() => {})
+          })
         }
       })
       .catch(() => {})
@@ -83,6 +96,18 @@ export default function Members() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: '#2C2C2C' }}>{member.displayName || member.realName}</p>
                   <p className="text-xs truncate" style={{ color: '#8A8680' }}>{member.realName}</p>
+                  {(() => {
+                    const tags = (memberTagsMap[member.lineId] || []).filter(t => !t.isSystem)
+                    if (tags.length === 0) return null
+                    const show = tags.slice(0, 3)
+                    const extra = tags.length - 3
+                    return (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {show.map(t => <TagBadge key={t.id} name={t.name} color={t.color} bgColor={t.bgColor} />)}
+                        {extra > 0 && <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: '#EFEDE9', color: '#8A8680' }}>+{extra}</span>}
+                      </div>
+                    )
+                  })()}
                 </div>
                 <span className="text-xs px-2.5 py-1 rounded-full shrink-0" style={{ background: sc.bg, color: sc.color }}>
                   {member.starLevel}

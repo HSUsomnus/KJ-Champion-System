@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction from '../components/FabAction'
+import TagBadge from '../components/TagBadge'
+import TagSelector from '../components/TagSelector'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapMember } from '../services/api'
 
@@ -58,19 +60,52 @@ export default function MemberDetail() {
   const [member, setMember] = useState(null)
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [memberTags, setMemberTags] = useState([])
+  const [allTags, setAllTags] = useState([])
+  const [showTagSelector, setShowTagSelector] = useState(false)
+
+  const canManageTags = user && ['開發者', '負責人', '管理者'].includes(user.role)
 
   useEffect(() => {
     Promise.all([
       api.getMember(id).then(res => res.success ? mapMember(res.data) : null),
       api.getFinancialList(id).then(res => res.success ? res.data : []).catch(() => []),
+      api.getMemberTags(id).then(res => res.success ? res.data : []).catch(() => []),
     ])
-      .then(([m, docs]) => {
+      .then(([m, docs, tags]) => {
         setMember(m)
         setDocuments(docs)
+        setMemberTags(tags)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
+
+  const openTagSelector = async () => {
+    try {
+      const res = await api.getTags()
+      if (res.success) setAllTags(res.data)
+    } catch {}
+    setShowTagSelector(true)
+  }
+
+  const handleTagChange = async (newTagIds) => {
+    const currentRealIds = memberTags.filter(t => !t.isSystem).map(t => t.id)
+    const toAdd = newTagIds.filter(id => !currentRealIds.includes(id))
+    const toRemove = currentRealIds.filter(id => !newTagIds.includes(id))
+
+    for (const tagId of toAdd) {
+      try { await api.assignTag(id, user.lineId, tagId) } catch {}
+    }
+    for (const tagId of toRemove) {
+      try { await api.removeTag(id, tagId, user.lineId) } catch {}
+    }
+
+    try {
+      const res = await api.getMemberTags(id)
+      if (res.success) setMemberTags(res.data)
+    } catch {}
+  }
 
   if (loading) {
     return (
@@ -136,19 +171,54 @@ export default function MemberDetail() {
           member.hideProfile ? (
             <HiddenNotice label="該用戶隱藏資料" />
           ) : (
-            <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
-              {[
-                { label: '真實姓名', value: member.realName },
-                { label: 'Email', value: member.email },
-                { label: '電話號碼', value: member.phone },
-                { label: '生日', value: formatBirthday(member.birthday) },
-              ].map((item, idx, arr) => (
-                <div key={item.label} className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: idx < arr.length - 1 ? '1px solid #E2DED8' : 'none' }}>
-                  <span className="text-sm" style={{ color: '#8A8680' }}>{item.label}</span>
-                  <span className="text-sm font-medium" style={{ color: '#2C2C2C' }}>{item.value || '未設定'}</span>
+            <>
+              <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
+                {[
+                  { label: '真實姓名', value: member.realName },
+                  { label: 'Email', value: member.email },
+                  { label: '電話號碼', value: member.phone },
+                  { label: '生日', value: formatBirthday(member.birthday) },
+                ].map((item, idx, arr) => (
+                  <div key={item.label} className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: idx < arr.length - 1 ? '1px solid #E2DED8' : 'none' }}>
+                    <span className="text-sm" style={{ color: '#8A8680' }}>{item.label}</span>
+                    <span className="text-sm font-medium" style={{ color: '#2C2C2C' }}>{item.value || '未設定'}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* 標籤區塊 */}
+              {memberTags.length > 0 && (
+                <div className="rounded-2xl p-4 shadow-sm mt-3" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <p className="text-sm" style={{ color: '#8A8680' }}>標籤</p>
+                    {canManageTags && (
+                      <button onClick={openTagSelector} className="text-xs px-2.5 py-1 rounded-full transition-all active:scale-95" style={{ background: '#EFEDE9', color: '#8A8680' }}>
+                        編輯
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {memberTags.map(tag => (
+                      <TagBadge key={tag.id} name={tag.name} color={tag.color} bgColor={tag.bgColor} isSystem={tag.isSystem} />
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              )}
+              {memberTags.length === 0 && canManageTags && (
+                <button onClick={openTagSelector} className="w-full rounded-2xl p-4 shadow-sm mt-3 text-center transition-all active:scale-[0.98]" style={{ background: '#fff', border: '1px dashed #E2DED8' }}>
+                  <p className="text-xs" style={{ color: '#8A8680' }}>+ 新增標籤</p>
+                </button>
+              )}
+
+              {showTagSelector && (
+                <TagSelector
+                  allTags={allTags}
+                  selectedTagIds={memberTags.filter(t => !t.isSystem).map(t => t.id)}
+                  onChange={handleTagChange}
+                  onClose={() => setShowTagSelector(false)}
+                />
+              )}
+            </>
           )
         )}
 

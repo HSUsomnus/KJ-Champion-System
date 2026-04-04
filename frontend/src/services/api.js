@@ -155,4 +155,33 @@ export const api = {
   }),
   checkFinancialPermission: (editorId, targetUserId) =>
     request(`/financial/check-permission?editorId=${editorId}&targetUserId=${targetUserId}`),
+
+  // === Tags ===
+  getTags: (category) => {
+    let url = '/tags'
+    if (category) url += `?category=${encodeURIComponent(category)}`
+    return request(url)
+  },
+  createTag: (editorId, { name, category, color, bgColor, description }) =>
+    request('/tags', {
+      method: 'POST',
+      body: JSON.stringify({ editorId, name, category, color, bgColor, description }),
+    }),
+  updateTag: (id, editorId, data) =>
+    request(`/tags/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ editorId, ...data }),
+    }),
+  deleteTag: (id, editorId) =>
+    request(`/tags/${id}?editorId=${editorId}`, { method: 'DELETE' }),
+  getMemberTags: (lineId) => request(`/tags/member/${lineId}`),
+  assignTag: (lineId, editorId, tagId) =>
+    request(`/tags/member/${lineId}`, {
+      method: 'POST',
+      body: JSON.stringify({ editorId, tagId }),
+    }),
+  removeTag: (lineId, tagId, editorId) =>
+    request(`/tags/member/${lineId}/${tagId}?editorId=${editorId}`, { method: 'DELETE' }),
+  getTagMembers: (tagId, editorId) =>
+    request(`/tags/${tagId}/members?editorId=${editorId}`),
 }
