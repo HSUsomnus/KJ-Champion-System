@@ -17,6 +17,7 @@ graph LR
   05["⬜ 05\nproduction-cutover"]
 
   01 --> 02 --> 025 --> 03 --> 04 --> 05
+  025 --> 06
 
   style 01 fill:#d4edda,stroke:#28a745,color:#155724
   style 02 fill:#d4edda,stroke:#28a745,color:#155724
@@ -24,6 +25,7 @@ graph LR
   style 03 fill:#f8f9fa,stroke:#adb5bd,color:#6c757d
   style 04 fill:#f8f9fa,stroke:#adb5bd,color:#6c757d
   style 05 fill:#f8f9fa,stroke:#adb5bd,color:#6c757d
+  style 06 fill:#cce5ff,stroke:#004085,color:#004085
 ```
 
 | # | Change | 狀態 | 說明 |
@@ -34,8 +36,8 @@ graph LR
 | 03 | [pencil-ui-design](changes/03-pencil-ui-design/tasks.md) | ⬜ NEXT | 設計稿（Pencil），進入前提：025 完成 |
 | 04 | [react-vite-pwa-frontend](changes/04-react-vite-pwa-frontend/tasks.md) | ⬜ FUTURE | React 重構，進入前提：03 完成 |
 | 05 | [production-cutover](changes/05-production-cutover/tasks.md) | ⬜ FUTURE | React 版正式切換，進入前提：04 通過 |
-| 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | 🔄 ACTIVE | React+Vite+PWA 新UI，06.8 DEV 測試中（87%） |
-| 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | 🔄 **CURRENT** | 後端 OAuth redirect 自動偵測前端 origin（0%） |
+| 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，已合併 main（v2.0.0） |
+| 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | 後端 OAuth redirect 自動偵測前端 origin，已合併 main（v1.6.0） |
 
 ---
 
@@ -109,4 +111,4 @@ graph LR
 
 ---
 
-*最後更新：2026-04-03*
+*最後更新：2026-04-04*
