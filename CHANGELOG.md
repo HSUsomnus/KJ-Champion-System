@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.0] - 2026-04-04
+
+git tag: v2.0.0
+摘要：全新 React 前端上線 — React 18 + Vite 5 + Tailwind CSS（Warm Minimal 風格），取代舊純 HTML+JS 前端（`public/` 已刪除），前端目錄改為 `frontend/`；含完整頁面重建、React Router SPA、Vite PWA、LINE Login 整合
+
+---
+
 ## [v1.6.0] - 2026-04-04
 
 git tag: v1.6.0
