@@ -91,6 +91,7 @@
      - LINE Login OAuth 完整流程
      - PWA 安裝與離線快取
   - ✅ 修正 React hooks 違規：移除所有頁面 JSX 內的 inline useCallback（13 個檔案），避免 early return 導致 hooks 數量不一致崩潰（React error #310）
+  - ✅ 修正行程編輯頁標題 placeholder：依類型動態顯示提示詞（與舊版一致）
 
 ---
 

@@ -15,7 +15,8 @@ export default function Header({ user }) {
         <img
           src="/康九_logo.png"
           alt="KJ Champion"
-          className="h-8 w-auto object-contain"
+          className="h-8 w-auto object-contain cursor-pointer"
+          onClick={() => navigate('/')}
         />
         <button
           onClick={handleRefresh}

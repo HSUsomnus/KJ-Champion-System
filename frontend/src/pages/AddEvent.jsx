@@ -11,6 +11,13 @@ import { api, formToEventPayload } from '../services/api'
 
 const EVENT_TYPES = ['學員上課', '活動', '諮詢簽約', '紫星行程聊聊']
 
+const TITLE_PLACEHOLDERS = {
+  '學員上課': '名字+金流課/藍圖課，ex:小陞金流課',
+  '活動': '時間(選)+名稱+(財商/加盟)(選)，ex:13台北組聚(財商)、醫美茶會',
+  '諮詢簽約': '時間+名字+保單諮詢/財物諮詢/保單簽約/天耀簽約，ex:13小陞財務諮詢',
+  '紫星行程聊聊': '時間+名字+聊聊or其他',
+}
+
 function ShareConfirmDialog({ open, onShare, onCancel, isEdit }) {
   if (!open) return null
   return createPortal(
@@ -119,7 +126,7 @@ export default function AddEvent() {
         <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
             <label className="block text-xs mb-1.5" style={{ color: '#8A8680' }}>標題</label>
-            <input type="text" value={form.title} onChange={e => set('title', e.target.value)} required placeholder="輸入行程名稱" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+            <input type="text" value={form.title} onChange={e => set('title', e.target.value)} required placeholder={TITLE_PLACEHOLDERS[form.type] || '輸入行程名稱'} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
           </div>
 
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
