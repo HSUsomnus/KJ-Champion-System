@@ -34,6 +34,8 @@ graph LR
 | 03 | [pencil-ui-design](changes/03-pencil-ui-design/tasks.md) | ⬜ NEXT | 設計稿（Pencil），進入前提：025 完成 |
 | 04 | [react-vite-pwa-frontend](changes/04-react-vite-pwa-frontend/tasks.md) | ⬜ FUTURE | React 重構，進入前提：03 完成 |
 | 05 | [production-cutover](changes/05-production-cutover/tasks.md) | ⬜ FUTURE | React 版正式切換，進入前提：04 通過 |
+| 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | 🔄 ACTIVE | React+Vite+PWA 新UI，06.8 DEV 測試中（87%） |
+| 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | 🔄 **CURRENT** | 後端 OAuth redirect 自動偵測前端 origin（0%） |
 
 ---
 
@@ -107,4 +109,4 @@ graph LR
 
 ---
 
-*最後更新：2026-03-24*
+*最後更新：2026-04-03*
