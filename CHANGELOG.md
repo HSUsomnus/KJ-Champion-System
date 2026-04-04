@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.1] - 2026-04-04
+
+git tag: v2.0.1
+摘要：Vercel 全站 301 轉址到 Cloudflare Pages — 舊 Vercel 網址自動跳轉至 `kj-champion-system.pages.dev`，確保團隊成員使用固定入口
+
+---
+
 ## [v2.0.0] - 2026-04-04
 
 git tag: v2.0.0
