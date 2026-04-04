@@ -126,7 +126,10 @@ export default function AddEvent() {
         <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
             <label className="block text-xs mb-1.5" style={{ color: '#8A8680' }}>標題</label>
-            <input type="text" value={form.title} onChange={e => set('title', e.target.value)} required placeholder={TITLE_PLACEHOLDERS[form.type] || '輸入行程名稱'} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+            <input type="text" value={form.title} onChange={e => set('title', e.target.value)} required placeholder="輸入行程名稱" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+            {TITLE_PLACEHOLDERS[form.type] && (
+              <p className="mt-1.5 text-xs leading-relaxed" style={{ color: '#8A8680' }}>{TITLE_PLACEHOLDERS[form.type]}</p>
+            )}
           </div>
 
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
