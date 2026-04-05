@@ -11,6 +11,7 @@ import UserStatsEdit from './pages/UserStatsEdit'
 import Financial from './pages/Financial'
 import AddEvent from './pages/AddEvent'
 import EventDetail from './pages/EventDetail'
+import FinancialEdit from './pages/FinancialEdit'
 import FinancialUpload from './pages/FinancialUpload'
 import FinancialPreview from './pages/FinancialPreview'
 import Management from './pages/Management'
@@ -47,6 +48,7 @@ const router = createBrowserRouter([
       { path: '/user-stats', element: <UserStats /> },
       { path: '/user-stats/edit', element: <UserStatsEdit /> },
       { path: '/financial', element: <Financial /> },
+      { path: '/financial/edit', element: <FinancialEdit /> },
       { path: '/add-event', element: <AddEvent /> },
       { path: '/event/:id', element: <EventDetail /> },
       { path: '/financial-upload', element: <FinancialUpload /> },

@@ -7,16 +7,16 @@ import { useBlocker } from 'react-router-dom'
  * 回傳 [blocker, setSaved]
  * - 呼叫 setSaved(true) 後導航不再攔截（用於「確認」按鈕）
  */
-export function useLeaveGuard(shouldBlock = true) {
+export function useLeaveGuard() {
   const [saved, setSaved] = useState(false)
-  const blocker = useBlocker(shouldBlock && !saved)
+  const blocker = useBlocker(!saved)
 
   useEffect(() => {
-    if (!shouldBlock || saved) return
+    if (saved) return
     const handler = (e) => { e.preventDefault(); e.returnValue = '' }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [shouldBlock, saved])
+  }, [saved])
 
   return [blocker, useCallback(() => setSaved(true), [])]
 }
