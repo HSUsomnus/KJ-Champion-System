@@ -5,9 +5,10 @@ import { useAuth } from '../contexts/AuthContext'
 import * as XLSX from 'xlsx'
 
 function argbToHex(argb) {
-  if (!argb) return null
-  const hex = argb.replace(/^FF/i, '')
-  return hex.length === 6 ? `#${hex}` : null
+  if (!argb || typeof argb !== 'string') return null
+  if (argb.length === 6) return `#${argb}`
+  if (argb.length === 8) return `#${argb.slice(2)}` // AARRGGBB → #RRGGBB
+  return null
 }
 
 function getCellStyle(cell) {
@@ -15,9 +16,10 @@ function getCellStyle(cell) {
   const s = cell.s
   const style = {}
 
-  // 背景色
-  const fgColor = s.fill?.fgColor
-  if (fgColor?.rgb && fgColor.rgb !== '00000000') {
+  // 背景色（只處理 solid fill）
+  const fill = s.fill
+  const fgColor = fill?.fgColor
+  if (fill?.patternType === 'solid' && fgColor?.rgb) {
     const bg = argbToHex(fgColor.rgb)
     if (bg) style.background = bg
   }
