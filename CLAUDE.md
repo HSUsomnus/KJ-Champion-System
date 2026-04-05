@@ -37,6 +37,10 @@
 功能、伺服器、資料庫、插件等程式碼變更**禁止直推 main**。
 詳見 `.claude/rules/deploy.md`。
 
+### main 推送後必須同步所有分支
+
+任何 push 到 main 之後，立即將 main merge 到所有其他本機分支（`dev`、`m_b_*` 等），確保規則與基礎建設全域一致。
+
 ## 版本記憶
 
 版本索引：`CHANGELOG.md`，詳細上下文：`.claude/context/vX.Y.Z.md`

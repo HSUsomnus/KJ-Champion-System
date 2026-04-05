@@ -62,11 +62,18 @@ git commit -m "chore: 更新 ..."
 git checkout main
 git cherry-pick <commit hash>
 git push origin main
+# 同步到所有本機分支
+git checkout dev && git merge main
+for branch in $(git branch --list 'm_b_*'); do git checkout "$branch" && git merge main; done
 git checkout <回到原分支>
 ```
 
 README 重寫、CHANGELOG 更新：**不需要**（規則類更新不影響產品功能）。
 機密檢查：仍然必做。
+
+### main 推送後同步規則
+
+**任何 push 到 main 之後，必須立即將 main merge 到所有其他本機分支**（`dev`、`m_b_*`），確保規則與基礎建設全域一致。此規則適用於所有 main 推送場景（規則直推、功能上線、hotfix）。
 
 ---
 
