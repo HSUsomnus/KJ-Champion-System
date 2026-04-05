@@ -12,11 +12,11 @@ export function useLeaveGuard(shouldBlock = true) {
   const blocker = useBlocker(shouldBlock && !saved)
 
   useEffect(() => {
-    if (saved) return
+    if (!shouldBlock || saved) return
     const handler = (e) => { e.preventDefault(); e.returnValue = '' }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [saved])
+  }, [shouldBlock, saved])
 
   return [blocker, useCallback(() => setSaved(true), [])]
 }
