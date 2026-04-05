@@ -4,10 +4,41 @@ import Header from '../components/Header'
 import { useAuth } from '../contexts/AuthContext'
 import * as XLSX from 'xlsx'
 
-function argbToHex(argb) {
-  if (!argb || typeof argb !== 'string') return null
-  if (argb.length === 6) return `#${argb}`
-  if (argb.length === 8) return `#${argb.slice(2)}` // AARRGGBB → #RRGGBB
+// Office 預設 theme 顏色（index 0-9）
+const THEME_COLORS = [
+  'FFFFFF','000000','E7E6E6','44546A',
+  '4472C4','ED7D31','A5A5A5','FFC000',
+  '5B9BD5','70AD47',
+]
+
+function applyTint(hex, tint) {
+  let r = parseInt(hex.slice(0,2),16)
+  let g = parseInt(hex.slice(2,4),16)
+  let b = parseInt(hex.slice(4,6),16)
+  if (tint > 0) {
+    r = Math.round(r + (255-r)*tint)
+    g = Math.round(g + (255-g)*tint)
+    b = Math.round(b + (255-b)*tint)
+  } else {
+    r = Math.round(r*(1+tint))
+    g = Math.round(g*(1+tint))
+    b = Math.round(b*(1+tint))
+  }
+  return [r,g,b].map(v=>Math.min(255,Math.max(0,v)).toString(16).padStart(2,'0')).join('')
+}
+
+function resolveColor(colorObj) {
+  if (!colorObj) return null
+  if (colorObj.rgb) {
+    const hex = colorObj.rgb.length === 8 ? colorObj.rgb.slice(2) : colorObj.rgb
+    return `#${hex}`
+  }
+  if (colorObj.theme !== undefined) {
+    const base = THEME_COLORS[colorObj.theme]
+    if (!base) return null
+    const hex = colorObj.tint ? applyTint(base, colorObj.tint) : base
+    return `#${hex}`
+  }
   return null
 }
 
@@ -16,12 +47,12 @@ function getCellStyle(cell) {
   const s = cell.s
   const style = {}
 
-  // 背景色（只處理 solid fill）
+  // 背景色
   const fill = s.fill
   const fgColor = fill?.fgColor
-  if (fill?.patternType === 'solid' && fgColor?.rgb) {
-    const bg = argbToHex(fgColor.rgb)
-    if (bg) style.background = bg
+  if (fgColor && fill?.patternType === 'solid') {
+    const bg = resolveColor(fgColor)
+    if (bg && bg.toUpperCase() !== '#FFFFFF') style.background = bg
   }
 
   // 字體
