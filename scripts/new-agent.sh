@@ -17,11 +17,23 @@ fi
 BRANCH_NAME="m_b_$FEATURE_NAME"
 WORKTREE_PATH=".claude/worktrees/$FEATURE_NAME"
 
+# 開啟 VSCode 的跨平台函式（Windows bash 需透過 PowerShell）
+open_vscode() {
+  local target="$1"
+  local abs_path
+  abs_path=$(cd "$target" && pwd -W 2>/dev/null || pwd)
+  if command -v powershell.exe &>/dev/null; then
+    powershell.exe -Command "code '$abs_path'"
+  else
+    code "$abs_path"
+  fi
+}
+
 # 檢查 worktree 是否已存在
 if [ -d "$WORKTREE_PATH" ]; then
   echo "Worktree 已存在：$WORKTREE_PATH"
   echo "直接開啟 VSCode 視窗..."
-  code "$WORKTREE_PATH"
+  open_vscode "$WORKTREE_PATH"
   exit 0
 fi
 
@@ -71,7 +83,7 @@ NOWEOF
 
 # 開啟新 VSCode 視窗
 echo "開啟新 VSCode 視窗..."
-code "$WORKTREE_PATH"
+open_vscode "$WORKTREE_PATH"
 
 echo ""
 echo "完成！"
