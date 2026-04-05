@@ -28,21 +28,29 @@
   - `1d0c8d1` — 修復財力上傳檔案選擇器 + 財力頁功能補齊
   - `61c87a8` — 新增 hotfix 完整工作流規則
   - `302f627` — 試算表預覽頁 + 選取/編輯模式 + 管理介面不受隱藏
-- **hotfix 準備收尾**：commit → push → merge main
+- **需要 revert main 上的錯誤 commit `91bf7b5`**
 
-### 本次 hotfix 已修的問題
+### 本次 hotfix 已修的問題（302f627 之前的 commit，正確）
 
 1. **手機檔案選擇器** — accept 移除圖片 MIME type，只保留 xlsx/xls/csv，手機不再跳媒體 picker
 2. **試算表預覽** — 新增 `FinancialPreview.jsx`，用 xlsx 套件前端解析並以 Excel 風格表格展示
 3. **管理介面 → 用戶財力頁** — Management 財力 tab 卡片可點擊導航、不受隱藏開關、editMode 時可編輯財力金額（瀑布流 picker 100萬～10億）
 4. **選取/編輯模式** — FAB「選取/編輯」進入、多選卡片、刪除/下載/確認/取消、離開守衛（ConfirmLeaveDialog）
 5. **FAB 顏色統一** — editMode 不再改變 FAB 顏色
-6. **離開守衛統一** — 改用共用 `useLeaveGuard` hook，取代自行內嵌 useBlocker
-7. **點擊文件用原生 APP 開啟** — Web Share API with files，手機可直接用 Excel/Google Sheets/Numbers 開啟試算表，桌面 fallback 到網頁預覽
+
+### ⛔ 錯誤 commit `91bf7b5`（需 revert）
+
+以下改動全部錯誤，已 push 到 main，需要 revert：
+- **useLeaveGuard 錯誤**：把 `useBlocker(editMode)` 換成 `useLeaveGuard()`，導致一進頁面就攔截所有導航。Financial.jsx 是有模式切換的頁面，只需 `useBlocker(editMode)` 在編輯模式時攔截，不該用 `useLeaveGuard`
+- **Web Share API 錯誤**：`navigator.share({ files })` 彈出的是「分享」選單，不是 LINE 聊天室的「用 APP 開啟檔案」體驗。方向完全錯誤
+- **計畫外修改混入**：FAB 顏色、setSaved(true) 等不在 plan mode 計畫中的改動被混入同一 commit
 
 ### 下一步
 
-- commit → push → merge main → 等使用者確認後刪除 hotfix 分支 → main 同步到所有本機分支
+1. **revert main 上的 `91bf7b5`** → push main
+2. **重新研究** LINE 聊天室開啟檔案的實際機制（不是 Web Share API）
+3. **正確實作**：Financial.jsx 點擊文件卡片用本地 APP 開啟試算表
+4. 離開守衛維持 `useBlocker(editMode)` 不動
 
 ## 已知地雷
 
