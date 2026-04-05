@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
@@ -20,34 +20,11 @@ export default function Financial() {
   const [hideDocuments, setHideDocuments] = useState(false)
   const [documents, setDocuments] = useState([])
   const [financialAmount, setFinancialAmount] = useState('')
-  const [openingDocId, setOpeningDocId] = useState(null)
-  // 預先 fetch 的 blob cache，key = doc.id
-  const blobCache = useRef(new Map())
-
   useEffect(() => {
     if (!viewUserId) return
     api.getFinancialList(viewUserId)
       .then(res => {
-        if (res.success && res.data) {
-          setDocuments(res.data)
-          // 文件列表載入後預先 fetch 所有 blob，確保點擊時可同步呼叫 navigator.share
-          const mimeMap = {
-            xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            xls: 'application/vnd.ms-excel',
-            csv: 'text/csv',
-          }
-          res.data.forEach(doc => {
-            fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
-              .then(r => r.ok ? r.blob() : null)
-              .then(blob => {
-                if (!blob) return
-                const ext = doc.original_filename.split('.').pop().toLowerCase()
-                const mimeType = blob.type || mimeMap[ext] || 'application/octet-stream'
-                blobCache.current.set(doc.id, new File([blob], doc.original_filename, { type: mimeType }))
-              })
-              .catch(() => {})
-          })
-        }
+        if (res.success && res.data) setDocuments(res.data)
       })
       .catch(() => {})
   }, [viewUserId])
@@ -67,45 +44,11 @@ export default function Financial() {
     }
   }, [user?.lineId, viewUserId, isViewingOther])
 
-  const handleOpenDoc = async (doc) => {
-    if (openingDocId) return
-
-    const fallback = () => navigate(
-      `/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`
-    )
-
-    const cached = blobCache.current.get(doc.id)
-
-    if (cached && navigator.canShare?.({ files: [cached] })) {
-      // blob 已在 cache，同步呼叫 navigator.share（保留 user activation）
-      try {
-        await navigator.share({ files: [cached] })
-      } catch (err) {
-        if (err.name !== 'AbortError') fallback()
-      }
-      return
-    }
-
-    // cache 未就緒，退回 async fetch 流程
-    setOpeningDocId(doc.id)
-    const mimeMap = {
-      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      xls: 'application/vnd.ms-excel',
-      csv: 'text/csv',
-    }
-    try {
-      const res = await fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
-      if (!res.ok) { fallback(); return }
-      const blob = await res.blob()
-      const ext = doc.original_filename.split('.').pop().toLowerCase()
-      const mimeType = blob.type || mimeMap[ext] || 'application/octet-stream'
-      const file = new File([blob], doc.original_filename, { type: mimeType })
-      blobCache.current.set(doc.id, file)
-      fallback() // share 手勢已過期，只能 fallback；下次點擊會走 cache 路徑
-    } catch {
-      fallback()
-    } finally {
-      setOpeningDocId(null)
+  const handleOpenDoc = (doc) => {
+    if (doc.sheet_view_url) {
+      window.open(doc.sheet_view_url, '_blank')
+    } else {
+      navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
     }
   }
 
@@ -212,14 +155,9 @@ export default function Financial() {
               <div
                 key={doc.id}
                 className="relative overflow-hidden rounded-2xl p-4 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-                style={{ background: '#fff', border: '1px solid #E2DED8', pointerEvents: openingDocId === doc.id ? 'none' : undefined }}
+                style={{ background: '#fff', border: '1px solid #E2DED8' }}
                 onClick={() => handleOpenDoc(doc)}
               >
-                {openingDocId === doc.id && (
-                  <div className="absolute inset-0 rounded-2xl flex items-center justify-center z-10" style={{ background: 'rgba(247,245,242,0.7)' }}>
-                    <span className="text-xs font-medium" style={{ color: '#4A7C59' }}>開啟中…</span>
-                  </div>
-                )}
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#E8F0EB' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A7C59" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
