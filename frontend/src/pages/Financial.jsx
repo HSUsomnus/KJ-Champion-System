@@ -20,6 +20,7 @@ export default function Financial() {
   const [hideDocuments, setHideDocuments] = useState(false)
   const [documents, setDocuments] = useState([])
   const [financialAmount, setFinancialAmount] = useState('')
+  const [openingDocId, setOpeningDocId] = useState(null)
 
   useEffect(() => {
     if (!viewUserId) return
@@ -45,11 +46,25 @@ export default function Financial() {
     }
   }, [user?.lineId, viewUserId, isViewingOther])
 
-  const handleOpenDoc = (doc) => {
-    const url = `/api/financial/download/${doc.id}?userId=${viewUserId}`
-    const opened = window.open(url, '_blank')
-    if (!opened) {
-      navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
+  const handleOpenDoc = async (doc) => {
+    if (openingDocId) return
+    setOpeningDocId(doc.id)
+    try {
+      const res = await fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
+      if (!res.ok) throw new Error()
+      const blob = await res.blob()
+      const file = new File([blob], doc.original_filename, { type: blob.type })
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] })
+      } else {
+        navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
+      }
+    } finally {
+      setOpeningDocId(null)
     }
   }
 
@@ -156,9 +171,14 @@ export default function Financial() {
               <div
                 key={doc.id}
                 className="relative overflow-hidden rounded-2xl p-4 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-                style={{ background: '#fff', border: '1px solid #E2DED8' }}
+                style={{ background: '#fff', border: '1px solid #E2DED8', pointerEvents: openingDocId === doc.id ? 'none' : undefined }}
                 onClick={() => handleOpenDoc(doc)}
               >
+                {openingDocId === doc.id && (
+                  <div className="absolute inset-0 rounded-2xl flex items-center justify-center z-10" style={{ background: 'rgba(247,245,242,0.7)' }}>
+                    <span className="text-xs font-medium" style={{ color: '#4A7C59' }}>開啟中…</span>
+                  </div>
+                )}
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#E8F0EB' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A7C59" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
