@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate, useBlocker } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
-import ConfirmLeaveDialog from '../components/ConfirmLeaveDialog'
+import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
 
@@ -29,15 +29,10 @@ export default function Financial() {
   const [canEdit, setCanEdit] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [selected, setSelected] = useState(new Set())
+  const [sharingDocId, setSharingDocId] = useState(null)
 
   // 編輯模式離開守衛
-  const blocker = useBlocker(editMode)
-  useEffect(() => {
-    if (!editMode) return
-    const handler = (e) => { e.preventDefault(); e.returnValue = '' }
-    window.addEventListener('beforeunload', handler)
-    return () => window.removeEventListener('beforeunload', handler)
-  }, [editMode])
+  const [blocker, setSaved] = useLeaveGuard()
 
   useEffect(() => {
     if (!viewUserId) return
@@ -81,8 +76,26 @@ export default function Financial() {
     }
   }
 
-  const handleViewSheet = (doc) => {
-    navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
+  const handleOpenDoc = async (doc) => {
+    if (sharingDocId) return
+    setSharingDocId(doc.id)
+    try {
+      const res = await fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
+      if (!res.ok) throw new Error()
+      const blob = await res.blob()
+      const file = new File([blob], doc.original_filename, { type: blob.type })
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] })
+      } else {
+        navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
+      }
+    } finally {
+      setSharingDocId(null)
+    }
   }
 
   const toggleSelect = (id) => {
@@ -158,7 +171,7 @@ export default function Financial() {
     },
     {
       label: '確認',
-      onClick: () => { setEditMode(false); setSelected(new Set()) },
+      onClick: () => { setSaved(true); setEditMode(false); setSelected(new Set()) },
       labelBg: '#FDECEA', labelColor: '#C0392B', labelBorderColor: '#C0392B',
       btnBg: '#FDECEA', btnColor: '#C0392B', btnBorderColor: '#C0392B',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
@@ -272,10 +285,15 @@ export default function Financial() {
               return (
                 <div
                   key={doc.id}
-                  className="rounded-2xl p-4 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
-                  style={{ background: '#fff', border: `1px solid ${editMode && isSelected ? '#4A7C59' : '#E2DED8'}` }}
-                  onClick={() => editMode ? toggleSelect(doc.id) : handleViewSheet(doc)}
+                  className="relative overflow-hidden rounded-2xl p-4 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+                  style={{ background: '#fff', border: `1px solid ${editMode && isSelected ? '#4A7C59' : '#E2DED8'}`, pointerEvents: sharingDocId === doc.id ? 'none' : undefined }}
+                  onClick={() => editMode ? toggleSelect(doc.id) : handleOpenDoc(doc)}
                 >
+                  {sharingDocId === doc.id && (
+                    <div className="absolute inset-0 rounded-2xl flex items-center justify-center z-10" style={{ background: 'rgba(247,245,242,0.7)' }}>
+                      <span className="text-xs font-medium" style={{ color: '#4A7C59' }}>開啟中…</span>
+                    </div>
+                  )}
                   <div className="flex items-start gap-3">
                     {editMode && (
                       <div className="flex items-center shrink-0 self-center">
@@ -322,7 +340,7 @@ export default function Financial() {
       </main>
 
       <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor={editMode ? '#2C2C2C' : '#4A7C59'} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor="#4A7C59" onOpen={() => setActiveFab('action')} />
       <ConfirmLeaveDialog blocker={blocker} />
     </div>
   )
