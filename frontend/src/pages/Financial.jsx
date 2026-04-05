@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
@@ -21,12 +21,33 @@ export default function Financial() {
   const [documents, setDocuments] = useState([])
   const [financialAmount, setFinancialAmount] = useState('')
   const [openingDocId, setOpeningDocId] = useState(null)
+  // 預先 fetch 的 blob cache，key = doc.id
+  const blobCache = useRef(new Map())
 
   useEffect(() => {
     if (!viewUserId) return
     api.getFinancialList(viewUserId)
       .then(res => {
-        if (res.success && res.data) setDocuments(res.data)
+        if (res.success && res.data) {
+          setDocuments(res.data)
+          // 文件列表載入後預先 fetch 所有 blob，確保點擊時可同步呼叫 navigator.share
+          const mimeMap = {
+            xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            xls: 'application/vnd.ms-excel',
+            csv: 'text/csv',
+          }
+          res.data.forEach(doc => {
+            fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
+              .then(r => r.ok ? r.blob() : null)
+              .then(blob => {
+                if (!blob) return
+                const ext = doc.original_filename.split('.').pop().toLowerCase()
+                const mimeType = blob.type || mimeMap[ext] || 'application/octet-stream'
+                blobCache.current.set(doc.id, new File([blob], doc.original_filename, { type: mimeType }))
+              })
+              .catch(() => {})
+          })
+        }
       })
       .catch(() => {})
   }, [viewUserId])
@@ -48,46 +69,43 @@ export default function Financial() {
 
   const handleOpenDoc = async (doc) => {
     if (openingDocId) return
-    setOpeningDocId(doc.id)
 
     const fallback = () => navigate(
       `/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`
     )
 
-    let blob
-    try {
-      const res = await fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
-      if (!res.ok) { fallback(); return }
-      blob = await res.blob()
-    } catch {
-      fallback(); return
-    } finally {
-      setOpeningDocId(null)
+    const cached = blobCache.current.get(doc.id)
+
+    if (cached && navigator.canShare?.({ files: [cached] })) {
+      // blob 已在 cache，同步呼叫 navigator.share（保留 user activation）
+      try {
+        await navigator.share({ files: [cached] })
+      } catch (err) {
+        if (err.name !== 'AbortError') fallback()
+      }
+      return
     }
 
-    // 確保 MIME type 不為空
-    const ext = doc.original_filename.split('.').pop().toLowerCase()
+    // cache 未就緒，退回 async fetch 流程
+    setOpeningDocId(doc.id)
     const mimeMap = {
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       xls: 'application/vnd.ms-excel',
       csv: 'text/csv',
     }
-    const mimeType = blob.type || mimeMap[ext] || 'application/octet-stream'
-    const file = new File([blob], doc.original_filename, { type: mimeType })
-
-    // [DEBUG] 暫時 alert，測完移除
-    const canShare = navigator.canShare?.({ files: [file] })
-    alert(`share: ${typeof navigator.share}\ncanShare: ${canShare}\nmime: ${mimeType}\nsize: ${blob.size}`)
-
-    if (canShare) {
-      try {
-        await navigator.share({ files: [file] })
-      } catch (err) {
-        alert(`share error: ${err.name} ${err.message}`)
-        if (err.name !== 'AbortError') fallback()
-      }
-    } else {
+    try {
+      const res = await fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
+      if (!res.ok) { fallback(); return }
+      const blob = await res.blob()
+      const ext = doc.original_filename.split('.').pop().toLowerCase()
+      const mimeType = blob.type || mimeMap[ext] || 'application/octet-stream'
+      const file = new File([blob], doc.original_filename, { type: mimeType })
+      blobCache.current.set(doc.id, file)
+      fallback() // share 手勢已過期，只能 fallback；下次點擊會走 cache 路徑
+    } catch {
       fallback()
+    } finally {
+      setOpeningDocId(null)
     }
   }
 
