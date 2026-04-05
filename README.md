@@ -36,7 +36,7 @@
 | 行程管理 | 新增、編輯、刪除行程（同步 Google Calendar） | admin / manager |
 | 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
 | 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
-| 財務功能 | 上傳財務報表、手機原生 APP 開啟試算表（Web Share API）、網頁預覽（fallback） | manager |
+| 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
 | LINE Login | OAuth 2.0 登入，動態偵測前端 origin 自動 redirect | 所有人 |
 | PWA | 可安裝至手機桌面（Vite PWA Plugin） | 所有人 |
 
@@ -100,7 +100,7 @@ npm run dev
 │   │   │   ├── MemberDetail.jsx # 成員詳情
 │   │   │   ├── Profile.jsx      # 個人資料
 │   │   │   ├── Management.jsx   # 管理後台
-│   │   │   ├── Financial.jsx    # 財力頁（原生 APP 開啟 + 選取/編輯模式）
+│   │   │   ├── Financial.jsx    # 財力頁（選取/編輯模式 + 離開守衛）
 │   │   │   ├── FinancialUpload.jsx  # 財力上傳
 │   │   │   ├── FinancialPreview.jsx # 試算表網頁預覽
 │   │   │   ├── Login.jsx        # 登入頁
