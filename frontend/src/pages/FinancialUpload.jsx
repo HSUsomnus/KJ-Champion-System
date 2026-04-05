@@ -91,7 +91,7 @@ export default function FinancialUpload() {
           </div>
           <p className="text-sm font-medium" style={{ color: '#2C2C2C' }}>點擊或拖曳上傳</p>
           <p className="text-xs mt-1" style={{ color: '#8A8680' }}>支援 Excel、CSV、PDF、JPG、PNG</p>
-          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv,.pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv,.pdf,.jpg,.jpeg,.png,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/pdf,image/jpeg,image/png" onChange={handleFileChange} className="hidden" />
         </div>
 
         {file && (
