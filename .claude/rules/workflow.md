@@ -118,8 +118,8 @@ git checkout <回到原分支>
 ### 同步機制
 
 - **來源**：`main` 是 `.claude/` 的唯一真實來源，永遠只從 main 傳播，不逆流
-- **自動同步**：`post-checkout` hook 會在切換分支時，自動從 `origin/main` 拉取最新 `.claude/`
-- **確保所有分支一致**：修改後必須 push main，這樣其他分支（包括其他開發者）切換時都能拿到最新版
+- **同步方式**：push main 後，立即將 main merge 到所有本機分支（取代舊的 post-checkout hook）
+- **確保所有分支一致**：修改後必須 push main，再執行全分支 merge
 
 ---
 

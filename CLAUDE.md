@@ -41,6 +41,8 @@
 
 任何 push 到 main 之後，立即將 main merge 到所有其他本機分支（`dev`、`m_b_*` 等），確保規則與基礎建設全域一致。
 
+**⚠️ 執行前警告使用者：** merge 過程需要 checkout 各分支，若有 worktree 佔用的分支會先暫時移除 worktree，merge 完成後自動重建。請確認所有 worktree 內無未儲存的工作。
+
 ## 版本記憶
 
 版本索引：`CHANGELOG.md`，詳細上下文：`.claude/context/vX.Y.Z.md`
