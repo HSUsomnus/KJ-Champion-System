@@ -49,22 +49,40 @@ export default function Financial() {
   const handleOpenDoc = async (doc) => {
     if (openingDocId) return
     setOpeningDocId(doc.id)
+
+    const fallback = () => navigate(
+      `/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`
+    )
+
+    let blob
     try {
       const res = await fetch(`/api/financial/download/${doc.id}?userId=${viewUserId}`)
-      if (!res.ok) throw new Error()
-      const blob = await res.blob()
-      const file = new File([blob], doc.original_filename, { type: blob.type })
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] })
-      } else {
-        navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
-      }
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
-      }
+      if (!res.ok) { fallback(); return }
+      blob = await res.blob()
+    } catch {
+      fallback(); return
     } finally {
       setOpeningDocId(null)
+    }
+
+    // 確保 MIME type 不為空
+    const ext = doc.original_filename.split('.').pop().toLowerCase()
+    const mimeMap = {
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      xls: 'application/vnd.ms-excel',
+      csv: 'text/csv',
+    }
+    const mimeType = blob.type || mimeMap[ext] || 'application/octet-stream'
+    const file = new File([blob], doc.original_filename, { type: mimeType })
+
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] })
+      } catch (err) {
+        if (err.name !== 'AbortError') fallback()
+      }
+    } else {
+      fallback()
     }
   }
 
