@@ -7,9 +7,9 @@ import { useBlocker } from 'react-router-dom'
  * 回傳 [blocker, setSaved]
  * - 呼叫 setSaved(true) 後導航不再攔截（用於「確認」按鈕）
  */
-export function useLeaveGuard() {
+export function useLeaveGuard(shouldBlock = true) {
   const [saved, setSaved] = useState(false)
-  const blocker = useBlocker(!saved)
+  const blocker = useBlocker(shouldBlock && !saved)
 
   useEffect(() => {
     if (saved) return

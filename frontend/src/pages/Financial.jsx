@@ -31,8 +31,8 @@ export default function Financial() {
   const [selected, setSelected] = useState(new Set())
   const [sharingDocId, setSharingDocId] = useState(null)
 
-  // 編輯模式離開守衛
-  const [blocker, setSaved] = useLeaveGuard()
+  // 編輯模式離開守衛（只有進入選取/編輯模式才攔截）
+  const [blocker, setSaved] = useLeaveGuard(editMode)
 
   useEffect(() => {
     if (!viewUserId) return
