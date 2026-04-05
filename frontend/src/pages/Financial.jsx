@@ -75,10 +75,15 @@ export default function Financial() {
     const mimeType = blob.type || mimeMap[ext] || 'application/octet-stream'
     const file = new File([blob], doc.original_filename, { type: mimeType })
 
-    if (navigator.canShare?.({ files: [file] })) {
+    // [DEBUG] 暫時 alert，測完移除
+    const canShare = navigator.canShare?.({ files: [file] })
+    alert(`share: ${typeof navigator.share}\ncanShare: ${canShare}\nmime: ${mimeType}\nsize: ${blob.size}`)
+
+    if (canShare) {
       try {
         await navigator.share({ files: [file] })
       } catch (err) {
+        alert(`share error: ${err.name} ${err.message}`)
         if (err.name !== 'AbortError') fallback()
       }
     } else {
