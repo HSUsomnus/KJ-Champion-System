@@ -6,11 +6,20 @@
 
 set -e
 
-FEATURE_NAME=$1
+FEATURE_NAME=""
+SKIP_VSCODE=false
+
+# 解析參數
+for arg in "$@"; do
+  case "$arg" in
+    --skip-vscode) SKIP_VSCODE=true ;;
+    *) FEATURE_NAME="$arg" ;;
+  esac
+done
 
 if [ -z "$FEATURE_NAME" ]; then
   echo "錯誤：請提供功能名稱"
-  echo "使用方式：bash scripts/new-agent.sh <功能名稱>"
+  echo "使用方式：bash scripts/new-agent.sh <功能名稱> [--skip-vscode]"
   exit 1
 fi
 
@@ -32,8 +41,10 @@ open_vscode() {
 # 檢查 worktree 是否已存在
 if [ -d "$WORKTREE_PATH" ]; then
   echo "Worktree 已存在：$WORKTREE_PATH"
-  echo "直接開啟 VSCode 視窗..."
-  open_vscode "$WORKTREE_PATH"
+  if [ "$SKIP_VSCODE" = false ]; then
+    echo "直接開啟 VSCode 視窗..."
+    open_vscode "$WORKTREE_PATH"
+  fi
   exit 0
 fi
 
@@ -82,8 +93,10 @@ cat > "$WORKTREE_PATH/NOW.md" << 'NOWEOF'
 NOWEOF
 
 # 開啟新 VSCode 視窗
-echo "開啟新 VSCode 視窗..."
-open_vscode "$WORKTREE_PATH"
+if [ "$SKIP_VSCODE" = false ]; then
+  echo "開啟新 VSCode 視窗..."
+  open_vscode "$WORKTREE_PATH"
+fi
 
 echo ""
 echo "完成！"

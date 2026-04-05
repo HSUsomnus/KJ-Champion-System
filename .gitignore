@@ -26,6 +26,7 @@ Thumbs.db
 # Claude Code 本機設定（不推送）
 .claude/settings.local.json
 .claude/commands/
+!.claude/commands/*.md
 .claude/skills/
 .claude/worktrees/
 
