@@ -12,6 +12,7 @@ import Financial from './pages/Financial'
 import AddEvent from './pages/AddEvent'
 import EventDetail from './pages/EventDetail'
 import FinancialUpload from './pages/FinancialUpload'
+import FinancialPreview from './pages/FinancialPreview'
 import Management from './pages/Management'
 import MemberDetail from './pages/MemberDetail'
 
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
       { path: '/add-event', element: <AddEvent /> },
       { path: '/event/:id', element: <EventDetail /> },
       { path: '/financial-upload', element: <FinancialUpload /> },
+      { path: '/financial-preview', element: <FinancialPreview /> },
       { path: '/management', element: <Management /> },
       { path: '/member/:id', element: <MemberDetail /> },
     ],

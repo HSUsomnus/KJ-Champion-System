@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate, useBlocker } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
+import ConfirmLeaveDialog from '../components/ConfirmLeaveDialog'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
 
@@ -11,6 +12,7 @@ AMOUNT_OPTIONS.push('10億')
 
 export default function Financial() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const targetUserId = searchParams.get('userId')
   const targetUserName = searchParams.get('name')
@@ -27,6 +29,15 @@ export default function Financial() {
   const [canEdit, setCanEdit] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [selected, setSelected] = useState(new Set())
+
+  // 編輯模式離開守衛
+  const blocker = useBlocker(editMode)
+  useEffect(() => {
+    if (!editMode) return
+    const handler = (e) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [editMode])
 
   useEffect(() => {
     if (!viewUserId) return
@@ -71,8 +82,7 @@ export default function Financial() {
   }
 
   const handleViewSheet = (doc) => {
-    const url = `/api/financial/view-as-sheet/${doc.id}?userId=${viewUserId}`
-    window.open(url, '_blank')
+    navigate(`/financial-preview?docId=${doc.id}&userId=${viewUserId}&filename=${encodeURIComponent(doc.original_filename)}`)
   }
 
   const toggleSelect = (id) => {
@@ -106,28 +116,32 @@ export default function Financial() {
     }
   }
 
-  const normalFabItems = isViewingOther ? [] : [
-    {
-      label: '上傳財力', path: '/financial-upload',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-      ),
-    },
-    {
-      label: '編輯',
-      onClick: () => { setEditMode(true); setSelected(new Set()) },
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-        </svg>
-      ),
-    },
-  ]
+  const selectEditItem = {
+    label: '選取/編輯',
+    onClick: () => { setEditMode(true); setSelected(new Set()) },
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    ),
+  }
+
+  const normalFabItems = isViewingOther
+    ? [selectEditItem]
+    : [
+        {
+          label: '上傳財力', path: '/financial-upload',
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          ),
+        },
+        selectEditItem,
+      ]
 
   const editFabItems = [
     {
@@ -144,7 +158,7 @@ export default function Financial() {
     },
     {
       label: '確認',
-      onClick: handleDeleteSelected,
+      onClick: () => { setEditMode(false); setSelected(new Set()) },
       labelBg: '#FDECEA', labelColor: '#C0392B', labelBorderColor: '#C0392B',
       btnBg: '#FDECEA', btnColor: '#C0392B', btnBorderColor: '#C0392B',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
@@ -169,29 +183,31 @@ export default function Financial() {
           <h1 className="text-base font-semibold" style={{ color: '#2C2C2C' }}>
             {isViewingOther ? `${targetUserName || '用戶'}的財力` : '用戶財力'}
           </h1>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-xs" style={{ color: '#8A8680' }}>隱藏</span>
-            <button
-              type="button" role="switch" aria-checked={hideFinancial}
-              onClick={() => setHideFinancial(v => !v)}
-              className="relative w-10 h-[22px] rounded-full transition-colors"
-              style={{ background: hideFinancial ? '#4A7C59' : '#E2DED8' }}
-            >
-              <span className="absolute top-[2px] left-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform" style={{ transform: hideFinancial ? 'translateX(18px)' : 'translateX(0)' }} />
-            </button>
-          </label>
+          {!isViewingOther && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-xs" style={{ color: '#8A8680' }}>隱藏</span>
+              <button
+                type="button" role="switch" aria-checked={hideFinancial}
+                onClick={() => setHideFinancial(v => !v)}
+                className="relative w-10 h-[22px] rounded-full transition-colors"
+                style={{ background: hideFinancial ? '#4A7C59' : '#E2DED8' }}
+              >
+                <span className="absolute top-[2px] left-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform" style={{ transform: hideFinancial ? 'translateX(18px)' : 'translateX(0)' }} />
+              </button>
+            </label>
+          )}
         </div>
 
         {/* 財力金額 */}
         <section
           className="rounded-2xl p-4 shadow-sm mb-3 flex items-center justify-between"
-          style={{ background: '#fff', border: '1px solid #E2DED8', cursor: (isViewingOther && canEdit) ? 'pointer' : 'default' }}
-          onClick={() => { if (isViewingOther && canEdit) setShowAmountPicker(true) }}
+          style={{ background: '#fff', border: '1px solid #E2DED8', cursor: (editMode && isViewingOther && canEdit) ? 'pointer' : 'default' }}
+          onClick={() => { if (editMode && isViewingOther && canEdit) setShowAmountPicker(true) }}
         >
           <span className="text-sm" style={{ color: '#8A8680' }}>財力金額</span>
           <div className="flex items-center gap-2">
             <span className="text-base font-bold" style={{ color: displayAmount ? '#4A7C59' : '#8A8680' }}>{displayAmount || '無資料'}</span>
-            {isViewingOther && canEdit && (
+            {editMode && isViewingOther && canEdit && (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8680" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
@@ -235,17 +251,19 @@ export default function Financial() {
             <h2 className="text-sm font-semibold" style={{ color: '#8A8680', letterSpacing: '0.06em' }}>歷史上傳記錄</h2>
             <div className="flex items-center gap-3">
               <span className="text-xs" style={{ color: '#8A8680' }}>共 {documents.length} 份</span>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <span className="text-xs" style={{ color: '#8A8680' }}>隱藏</span>
-                <button
-                  type="button" role="switch" aria-checked={hideDocuments}
-                  onClick={() => setHideDocuments(v => !v)}
-                  className="relative w-10 h-[22px] rounded-full transition-colors"
-                  style={{ background: hideDocuments ? '#4A7C59' : '#E2DED8' }}
-                >
-                  <span className="absolute top-[2px] left-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform" style={{ transform: hideDocuments ? 'translateX(18px)' : 'translateX(0)' }} />
-                </button>
-              </label>
+              {!isViewingOther && (
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <span className="text-xs" style={{ color: '#8A8680' }}>隱藏</span>
+                  <button
+                    type="button" role="switch" aria-checked={hideDocuments}
+                    onClick={() => setHideDocuments(v => !v)}
+                    className="relative w-10 h-[22px] rounded-full transition-colors"
+                    style={{ background: hideDocuments ? '#4A7C59' : '#E2DED8' }}
+                  >
+                    <span className="absolute top-[2px] left-[2px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform" style={{ transform: hideDocuments ? 'translateX(18px)' : 'translateX(0)' }} />
+                  </button>
+                </label>
+              )}
             </div>
           </div>
           <div className="flex flex-col gap-3">
@@ -304,7 +322,8 @@ export default function Financial() {
       </main>
 
       <FabNav onOpen={() => setActiveFab('nav')} />
-      {fabItems.length > 0 && <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor={editMode ? '#2C2C2C' : '#4A7C59'} onOpen={() => setActiveFab('action')} />}
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor={editMode ? '#2C2C2C' : '#4A7C59'} onOpen={() => setActiveFab('action')} />
+      <ConfirmLeaveDialog blocker={blocker} />
     </div>
   )
 }
