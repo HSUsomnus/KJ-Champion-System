@@ -21,6 +21,7 @@
 | **「新增功能」** | 切分支 + 開 OpenSpec change |
 | **「修改計畫」** | 確認分支 → 只動文件 |
 | **「執行計畫」** | 確認分支 → 實作程式碼 |
+| **「修 bug」** | 從 main 切 hotfix → 修復 → merge main → 刪 hotfix → 同步所有分支 |
 | **「測試功能」** | merge 到 dev |
 | **「功能上線」** | merge 到 main，關 change |
 

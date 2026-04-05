@@ -58,6 +58,37 @@
 
 ---
 
+## 「修 bug」流程（hotfix）
+
+1. 從 main 切出 hotfix 分支：
+   ```bash
+   git checkout main
+   git checkout -b hotfix/描述
+   git push origin hotfix/描述
+   ```
+2. 在 hotfix 分支上修復 bug（可能多次 commit）
+3. 修復完成後，merge 到 main 並 push：
+   ```bash
+   git checkout main
+   git merge hotfix/描述
+   git push origin main
+   ```
+4. 刪除 hotfix 分支（本機 + 遠端）：
+   ```bash
+   git branch -d hotfix/描述
+   git push origin --delete hotfix/描述
+   ```
+5. 將 main 同步到所有其他本機分支（`dev`、`m_b_*`）：
+   ```bash
+   git checkout dev && git merge main
+   for branch in $(git branch --list 'm_b_*'); do git checkout "$branch" && git merge main; done
+   git checkout main
+   ```
+
+> **注意**：步驟 3～5 是連續動作，hotfix 合併 main → 刪除 hotfix → main 同步到其他分支。不要在 hotfix 尚未刪除時就開始同步。
+
+---
+
 ## 「功能上線」流程
 
 1. 確認所有 tasks 皆為 `[x]`
