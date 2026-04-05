@@ -31,6 +31,12 @@
 機密檢查 + README 完整重寫 + 使用者確認。
 詳細步驟見 `.claude/rules/deploy.md`。
 
+### 規則類更新可直推 main
+
+`.claude/`、`.gitignore`、`scripts/`工具腳本、`CLAUDE.md` 等規則類變更，可直接 cherry-pick 到 main 並 push，不需走功能分支流程。
+功能、伺服器、資料庫、插件等程式碼變更**禁止直推 main**。
+詳見 `.claude/rules/deploy.md`。
+
 ## 版本記憶
 
 版本索引：`CHANGELOG.md`，詳細上下文：`.claude/context/vX.Y.Z.md`

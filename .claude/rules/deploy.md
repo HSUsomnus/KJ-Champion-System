@@ -37,6 +37,39 @@ git push origin dev
 
 ---
 
+## 規則類更新 — 直推 main
+
+以下類型的變更屬於「規則 / 基礎建設」，可在任何分支 commit 後直接 cherry-pick 到 main 並 push：
+
+- `.claude/` 內所有檔案（rules、commands、context、settings）
+- `.gitignore`
+- `scripts/` 中的工具腳本（非業務邏輯）
+- `CLAUDE.md`、`CHANGELOG.md`
+
+**不得直推 main 的變更**（必須走功能分支 → merge 流程）：
+
+- 功能程式碼（`server/`、`frontend/`、`public/`）
+- 資料庫相關（migrations、schema、seeds）
+- 套件 / 依賴變更（`package.json`、`package-lock.json`）
+- 部署設定（`_worker.js`、`vercel.json`、`zbpack.json`）
+- 插件 / 第三方整合
+
+### 直推流程
+
+```bash
+git add <規則檔案>
+git commit -m "chore: 更新 ..."
+git checkout main
+git cherry-pick <commit hash>
+git push origin main
+git checkout <回到原分支>
+```
+
+README 重寫、CHANGELOG 更新：**不需要**（規則類更新不影響產品功能）。
+機密檢查：仍然必做。
+
+---
+
 ## 推送到 main（正式上線）
 
 ```bash
