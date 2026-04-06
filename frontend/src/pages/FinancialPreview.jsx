@@ -13,6 +13,19 @@ const THEME_COLORS = [
   '5B9BD5','70AD47',
 ]
 
+// Excel 標準 indexed 色盤（index 0-63），index 64 = auto（透明/預設）
+// 來源：OOXML 規格 §18.8.27
+const INDEXED_COLORS = [
+  '000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF',
+  '000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF',
+  '800000','008000','000080','808000','800080','008080','C0C0C0','808080',
+  '9999FF','993366','FFFFCC','CCFFFF','660066','FF8080','0066CC','CCCCFF',
+  '000080','FF00FF','FFFF00','00FFFF','800080','800000','008080','0000FF',
+  '00CCFF','CCFFFF','CCFFCC','FFFF99','99CCFF','FF99CC','CC99FF','FFCC99',
+  '3366FF','33CCCC','99CC00','FFCC00','FF9900','FF6600','666699','969696',
+  '003366','339966','003300','333300','993300','993366','333399','333333',
+]
+
 function applyTint(hex, tint) {
   let r = parseInt(hex.slice(0,2),16)
   let g = parseInt(hex.slice(2,4),16)
@@ -31,9 +44,16 @@ function applyTint(hex, tint) {
 
 function resolveColor(colorObj) {
   if (!colorObj) return null
+  // auto（index 64）= 預設色，視為無色
+  if (colorObj.auto || colorObj.indexed === 64) return null
   if (colorObj.rgb) {
+    // SheetJS 有時回傳 AARRGGBB 8 碼，去掉前兩碼 alpha
     const hex = colorObj.rgb.length === 8 ? colorObj.rgb.slice(2) : colorObj.rgb
     return `#${hex}`
+  }
+  if (colorObj.indexed !== undefined) {
+    const base = INDEXED_COLORS[colorObj.indexed]
+    return base ? `#${base}` : null
   }
   if (colorObj.theme !== undefined) {
     const base = THEME_COLORS[colorObj.theme]
