@@ -22,6 +22,23 @@
    git checkout -b m_b_功能名稱
    git push origin m_b_功能名稱
    ```
+
+   > **前後端分支策略**：若功能同時涉及前端（`frontend/`）和後端（`server/`），
+   > 必須建立兩個獨立分支，避免測試修改時程式碼互相污染：
+   >
+   > ```bash
+   > git checkout main
+   > git checkout -b m_b_功能名稱_backend
+   > git push origin m_b_功能名稱_backend
+   > git checkout main
+   > git checkout -b m_b_功能名稱_frontend
+   > git push origin m_b_功能名稱_frontend
+   > ```
+   >
+   > - OpenSpec change 共用一份，tasks 中標註所屬分支（backend / frontend）
+   > - 測試：各自 merge 到 dev 驗證，**後端先驗證，通過後才驗證前端**
+   > - 上線：依序 merge 到 main（後端先於前端）
+
 3. 在 `openspec/` 建立新 change：`proposal.md` → `design.md` → `tasks.md` → `STATUS.md`
 4. 告知使用者：「分支 `m_b_功能名稱` 已建立，OpenSpec change 已開，說『執行計畫』開始實作」
 
@@ -109,7 +126,9 @@
 
 ```
 main      ← 正式上線，只接受 m_b_* / hotfix merge
-  └─ m_b_*  ← 功能分支，對應一個 OpenSpec change
+  ├─ m_b_*            ← 純前端或純後端功能分支
+  ├─ m_b_*_backend    ← 前後端功能的後端分支
+  └─ m_b_*_frontend   ← 前後端功能的前端分支
 dev       ← QA 測試，絕不 merge 回 main
 hotfix    ← 緊急修復，從 main 切出
 ```
