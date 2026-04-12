@@ -403,10 +403,101 @@ const pushMessagesToUser = async (userId, messages) => {
   }
 };
 
+/**
+ * 產生「明日行程預報」Flex 字卡（每日定時推播用）
+ * @param {Array} events - 明日行程陣列（已排序）
+ * @param {string} dateStr - 明日日期顯示文字（例：「4月13日 星期一」）
+ * @returns {object} Flex Bubble contents
+ */
+const generateDailyAgendaFlexMessage = (events, dateStr) => {
+  const appUrl = (() => {
+    try { return getAppUrl(); } catch { return ''; }
+  })();
+  const calendarUrl = appUrl ? `${appUrl}/calendar` : 'https://calendar.google.com';
+
+  // 每個事件一行（時間 + 標題 + 類型）
+  const eventRows = [];
+  events.forEach((event, idx) => {
+    const isAllDay = !!event.allDay || /^\d{4}-\d{2}-\d{2}$/.test(String(event.start || '').trim());
+    let timeStr = '全天';
+    if (!isAllDay) {
+      const date = new Date(event.start);
+      timeStr = date.toLocaleTimeString('zh-TW', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Taipei',
+        hour12: false,
+      });
+    }
+    const typeLabel = (event.type && String(event.type).trim()) ? event.type.trim() : '活動';
+    const typeColor = SHARE_CARD_TYPE_COLOR[typeLabel] || SHARE_CARD_TYPE_COLOR['活動'];
+
+    if (idx > 0) {
+      eventRows.push({ type: 'separator', margin: 'md', color: '#EEEEEE' });
+    }
+    eventRows.push({
+      type: 'box',
+      layout: 'vertical',
+      margin: 'md',
+      spacing: 'xs',
+      contents: [
+        {
+          type: 'box',
+          layout: 'horizontal',
+          contents: [
+            { type: 'text', text: `🕐 ${timeStr}`, size: 'sm', color: '#666666', flex: 2 },
+            { type: 'text', text: typeLabel, size: 'xs', color: typeColor, weight: 'bold', align: 'end', flex: 1 },
+          ],
+        },
+        { type: 'text', text: event.title || '未命名行程', size: 'md', color: '#2C2C2C', weight: 'bold', wrap: true },
+      ],
+    });
+  });
+
+  return {
+    type: 'bubble',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        { type: 'text', text: '📅 明日行程預報', size: 'lg', weight: 'bold', color: '#ffffff' },
+        { type: 'text', text: dateStr, size: 'sm', color: '#ffffff', margin: 'xs' },
+      ],
+      backgroundColor: '#4285F4',
+      paddingAll: '16px',
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        { type: 'text', text: `共 ${events.length} 個行程`, size: 'sm', color: '#888888', weight: 'bold' },
+        ...eventRows,
+      ],
+      spacing: 'none',
+      paddingAll: '16px',
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'button',
+          action: { type: 'uri', label: '📅 開啟行事曆', uri: calendarUrl },
+          style: 'primary',
+          height: 'sm',
+          color: '#4A7C59',
+        },
+      ],
+      paddingAll: '12px',
+    },
+  };
+};
+
 module.exports = {
   generateShareMessage,
   generateShareFlexMessage,
   generateMonthShareMessage,
+  generateDailyAgendaFlexMessage,
   generateInviteMessage,
   generateInviteFlexMessage,
   generateInviteFlexMessageMinimal,

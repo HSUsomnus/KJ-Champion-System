@@ -38,6 +38,7 @@ graph LR
 | 05 | [production-cutover](changes/05-production-cutover/tasks.md) | ⬜ FUTURE | React 版正式切換，進入前提：04 通過 |
 | 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，已合併 main（v2.0.0） |
 | 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | 後端 OAuth redirect 自動偵測前端 origin，已合併 main（v1.6.0） |
+| 08 | [每日行程推播](changes/08-每日行程推播/tasks.md) | 🔄 IN PROGRESS | LINE Bot 每日定時推送明日行程（前後端獨立分支） |
 
 ---
 
