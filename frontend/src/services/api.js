@@ -155,4 +155,14 @@ export const api = {
   }),
   checkFinancialPermission: (editorId, targetUserId) =>
     request(`/financial/check-permission?editorId=${editorId}&targetUserId=${targetUserId}`),
+
+  // === LINE Bot 每日行程推播設定（開發者） ===
+  getAgendaSettings: () => request('/line/agenda-settings'),
+  updateAgendaSettings: (body) => request('/line/agenda-settings', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  }),
+  pushDailyAgenda: () => request('/line/push-daily-agenda', {
+    method: 'POST',
+  }),
 }
