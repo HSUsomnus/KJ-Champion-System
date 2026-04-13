@@ -126,11 +126,21 @@ export default function Management() {
         {tab === '財力' && (
           <div className="flex flex-col gap-3">
             {members.map(m => (
-              <div key={m.lineId} className="rounded-2xl p-4 shadow-sm flex items-center justify-between" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
+              <div
+                key={m.lineId}
+                className="rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer transition-all active:scale-[0.98]"
+                style={{ background: '#fff', border: '1px solid #E2DED8' }}
+                onClick={() => navigate(`/financial?userId=${m.lineId}&name=${encodeURIComponent(m.realName)}`)}
+              >
                 <div>
                   <p className="text-sm font-medium" style={{ color: '#2C2C2C' }}>{m.realName}</p>
                 </div>
-                <span className="text-sm font-bold" style={{ color: m.financialAmount ? '#4A7C59' : '#8A8680' }}>{m.financialAmount || '無資料'}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold" style={{ color: m.financialAmount ? '#4A7C59' : '#8A8680' }}>{m.financialAmount || '無資料'}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8680" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
               </div>
             ))}
           </div>
