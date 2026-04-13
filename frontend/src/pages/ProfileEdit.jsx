@@ -64,7 +64,7 @@ export default function ProfileEdit() {
 
   const fabItems = [
     {
-      label: saving ? '儲存中...' : '確認',
+      label: saving ? '儲存中...' : '確認/儲存',
       onClick: handleConfirm,
       labelBg: '#FDECEA', labelColor: '#C0392B', labelBorderColor: '#C0392B',
       btnBg: '#FDECEA', btnColor: '#C0392B', btnBorderColor: '#C0392B',

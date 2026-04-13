@@ -71,7 +71,8 @@ export default function AddEvent() {
   const [showShareDialog, setShowShareDialog] = useState(false)
 
   const handleConfirm = async () => {
-    if (!form.title || !form.date) return
+    if (!form.title?.trim()) { alert('請輸入標題'); return }
+    if (!form.date) { alert('請選擇開始日期'); return }
     setSaving(true)
     try {
       const payload = formToEventPayload(form)
@@ -104,7 +105,7 @@ export default function AddEvent() {
 
   const fabItems = [
     {
-      label: saving ? '儲存中...' : '確認', onClick: handleConfirm,
+      label: saving ? '儲存中...' : '確認/儲存', onClick: handleConfirm,
       labelBg: '#FDECEA', labelColor: '#C0392B', labelBorderColor: '#C0392B',
       btnBg: '#FDECEA', btnColor: '#C0392B', btnBorderColor: '#C0392B',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
