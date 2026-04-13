@@ -105,17 +105,38 @@ export default function AgendaSettings() {
     }
   }
 
-  // Toggle UI：圓形 knob + Warm Minimal 色彩（符合 DESIGN_SYSTEM 圓形元素主視覺）
+  // Toggle UI：全 inline style（避免 Tailwind JIT 漏掃 class 導致 knob 不見）
+  // 尺寸：軌道 48x28 / knob 24x24 / 左右留白 2px
   const Toggle = ({ on, onClick, label }) => (
     <button
       onClick={onClick}
-      className="relative w-12 h-7 rounded-full transition-colors"
-      style={{ background: on ? '#4A7C59' : '#D0CCC5', flexShrink: 0 }}
       aria-label={label}
+      style={{
+        position: 'relative',
+        width: 48,
+        height: 28,
+        borderRadius: 999,
+        border: 'none',
+        padding: 0,
+        flexShrink: 0,
+        cursor: 'pointer',
+        background: on ? '#4A7C59' : '#D0CCC5',
+        transition: 'background-color 0.2s ease',
+      }}
     >
       <span
-        className="absolute top-0.5 w-6 h-6 bg-white rounded-full transition-transform"
-        style={{ transform: on ? 'translateX(22px)' : 'translateX(2px)' }}
+        style={{
+          position: 'absolute',
+          top: 2,
+          left: 2,
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          background: '#fff',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
+          transform: on ? 'translateX(20px)' : 'translateX(0)',
+          transition: 'transform 0.2s ease',
+        }}
       />
     </button>
   )
