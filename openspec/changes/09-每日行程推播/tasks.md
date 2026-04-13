@@ -23,9 +23,25 @@
 - [x] 4.1 `server/server.js` 啟動 scheduler、掛上 graceful shutdown
 
 ### 5. 驗證（後端先）
-- [ ] 5.1 merge 到 dev 並 push，確認 server log 輸出 `📅 每日行程推播：已排程`
-- [ ] 5.2 手動呼叫 `POST /api/line/push-daily-agenda` 成功推送 Flex 到 LINE
-- [ ] 5.3 `GET /PUT /api/line/agenda-settings` 讀寫正常
+- [x] 5.1 merge 到 dev 並 push，確認 server log 輸出 `📅 每日行程推播：已排程`
+- [x] 5.2 手動呼叫 `POST /api/line/push-daily-agenda` 成功推送 Flex 到 LINE
+- [x] 5.3 `GET /PUT /api/line/agenda-settings` 讀寫正常
+
+### 5.5 字卡重新設計（Phase 1 驗證後追加，符合 DESIGN_SYSTEM.md）
+- [x] 5.5.1 修 `agendaService.js` 時區 bug（`new Date(toLocaleString)` → `Intl.DateTimeFormat`）
+- [x] 5.5.2 修 `lineService.js` `generateDailyAgendaFlexMessage`：
+  - 全面移除 emoji（禁止 emoji 作 icon）
+  - 加圓形 dot bullet（8x8 cornerRadius 4px，依類型色）
+  - 類型改膠囊 badge（cornerRadius xxl、accent-light 底）
+  - Header 改 Warm Minimal accent `#4A7C59`
+  - Footer 主要按鈕改深炭灰 `#2C2C2C`
+  - event row 加 `action.uri = ${FRONTEND_URL}/event/${id}` 可點進詳情
+  - Footer URL 改用 `FRONTEND_URL`（前端網址）
+- [x] 5.5.3 修 altText 移除 emoji
+- [ ] 5.5.4 merge 到 dev 並 push，手機測試：
+  - 字卡 Header 墨綠、日期正確、無 emoji
+  - Event row 可點進 `/event/:id`
+  - Footer「開啟行事曆」可點進 `/calendar`
 
 ## 前端（分支 `m_b_每日行程推播_frontend`）
 

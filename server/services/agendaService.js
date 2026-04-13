@@ -78,22 +78,39 @@ const updateAgendaSettings = async (updates) => {
 };
 
 /**
+ * 取得台北時區「明天」的 Y/M/D
+ * 用 Intl.DateTimeFormat 直接讀台北時區的年月日，避免 new Date(toLocaleString())
+ * 把字串當 UTC 重解析的陷阱（會多算 8 小時導致日期多跳一天）
+ */
+const getTomorrowDateInTaipei = () => {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const parts = fmt.formatToParts(new Date());
+  const y = parseInt(parts.find((p) => p.type === 'year').value, 10);
+  const m = parseInt(parts.find((p) => p.type === 'month').value, 10);
+  const d = parseInt(parts.find((p) => p.type === 'day').value, 10);
+  const todayUtc = new Date(Date.UTC(y, m - 1, d));
+  todayUtc.setUTCDate(todayUtc.getUTCDate() + 1);
+  return {
+    year: todayUtc.getUTCFullYear(),
+    month: todayUtc.getUTCMonth() + 1,
+    day: todayUtc.getUTCDate(),
+    utcDate: todayUtc, // 供 weekday 計算
+  };
+};
+
+/**
  * 取得明日的行程（台北時區 00:00 ~ 23:59）
  * @returns {Promise<Array>} 排序過的行程陣列
  */
 const getTomorrowEvents = async () => {
-  // 台北時區的「明天」
-  const now = new Date();
-  const taipeiNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
-  const tomorrow = new Date(taipeiNow);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const year = tomorrow.getFullYear();
-  const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-  const day = String(tomorrow.getDate()).padStart(2, '0');
-
-  const timeMin = `${year}-${month}-${day}T00:00:00+08:00`;
-  const timeMax = `${year}-${month}-${day}T23:59:59+08:00`;
+  const { year, month, day } = getTomorrowDateInTaipei();
+  const mm = String(month).padStart(2, '0');
+  const dd = String(day).padStart(2, '0');
+  const timeMin = `${year}-${mm}-${dd}T00:00:00+08:00`;
+  const timeMax = `${year}-${mm}-${dd}T23:59:59+08:00`;
 
   return await eventDbService.getEventsByRange(timeMin, timeMax);
 };
@@ -110,19 +127,16 @@ const filterMembersByTarget = (members, target) => {
 };
 
 /**
- * 將 YYYY-MM-DD 日期字串轉成台北時區中文日期顯示（M月D日 星期X）
+ * 將明日日期格式化成中文顯示（「M月D日 星期X」）
+ * 用 getTomorrowDateInTaipei() 確保時區正確
  */
 const formatTomorrowDateStr = () => {
-  const now = new Date();
-  const taipeiNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
-  const tomorrow = new Date(taipeiNow);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toLocaleDateString('zh-TW', {
-    month: 'long',
-    day: 'numeric',
+  const { month, day, utcDate } = getTomorrowDateInTaipei();
+  const weekday = utcDate.toLocaleDateString('zh-TW', {
     weekday: 'long',
-    timeZone: 'Asia/Taipei',
+    timeZone: 'UTC', // utcDate 的 Y/M/D 本就是台北明日，取 UTC 一致
   });
+  return `${month}月${day}日 ${weekday}`;
 };
 
 /** 延遲 ms 毫秒 */
@@ -156,7 +170,7 @@ const sendDailyAgenda = async () => {
 
   const dateStr = formatTomorrowDateStr();
   const flex = lineService.generateDailyAgendaFlexMessage(events, dateStr);
-  const altText = `📅 明日行程（${dateStr}）共 ${events.length} 個行程`;
+  const altText = `明日行程（${dateStr}）共 ${events.length} 個行程`;
   const messages = [{ type: 'flex', altText, contents: flex }];
 
   let sent = 0;
