@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.4] - 2026-04-13
+
+git tag: v2.0.4
+摘要：hotfix — 修復新增行程兩個 UX bug。(1) 必填欄位漏填時靜默 return 改為明確 alert 提示。(2) `useLeaveGuard` 原用 `useState` 記錄 saved，與 react-router v7 `useBlocker` 的 useEffect 延遲註冊產生時序競態，`setSaved()` 後立即 navigate 會誤跳「尚未儲存」警告；改用 `useRef` 同步讀寫解決。附帶把全站 5 個編輯頁紅色 FAB「確認」改為「確認/儲存」。
+
+---
+
 ## [v2.0.3] - 2026-04-12
 
 git tag: v2.0.3
