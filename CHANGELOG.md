@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.3] - 2026-04-12
+
+git tag: v2.0.3
+摘要：hotfix — `_worker.js` 依 Pages 網址自動路由後端。修復 `kjcs-dev.pages.dev` 過去會把 /api/* 轉到正式後端造成 CORS + 404 的問題。新增 `resolveBackend(hostname)`：kjcs-dev 走 dev 後端、其他走正式後端。正式站行為不變。
+
+---
+
 ## [v2.0.2] - 2026-04-06
 
 git tag: v2.0.2
