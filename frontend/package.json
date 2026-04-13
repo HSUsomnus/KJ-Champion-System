@@ -16,7 +16,9 @@
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.2",
     "tailwindcss": "^4.2.2",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "x-data-spreadsheet": "^1.1.9",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -27,7 +29,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "sharp": "^0.34.5",
+    "less": "^4.6.4",
     "vite": "^8.0.1"
   }
 }
