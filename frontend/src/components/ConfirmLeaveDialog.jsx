@@ -1,24 +1,34 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useBlocker } from 'react-router-dom'
 
 /**
  * 編輯頁離開守衛
  * 回傳 [blocker, setSaved]
- * - 呼叫 setSaved(true) 後導航不再攔截（用於「確認」按鈕）
+ * - 呼叫 setSaved() 後導航不再攔截（用於「確認/儲存」按鈕）
+ *
+ * 設計決策：用 useRef 而非 useState 記錄 saved 狀態
+ * 原因：useState 的更新是非同步的，而 shouldBlock 函式由 useBlocker 透過
+ *   useEffect 延遲註冊；在 setSaved() 之後立即 navigate 時，舊的 blocker
+ *   可能尚未更新到「不攔截」，造成誤跳「未儲存離開」警告。
+ *   改用 ref 可同步讀寫，shouldBlock 每次被呼叫時讀到最新值。
  */
 export function useLeaveGuard() {
-  const [saved, setSaved] = useState(false)
-  const blocker = useBlocker(!saved)
+  const savedRef = useRef(false)
+  const shouldBlock = useCallback(() => !savedRef.current, [])
+  const blocker = useBlocker(shouldBlock)
 
   useEffect(() => {
-    if (saved) return
-    const handler = (e) => { e.preventDefault(); e.returnValue = '' }
+    const handler = (e) => {
+      if (savedRef.current) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [saved])
+  }, [])
 
-  return [blocker, useCallback(() => setSaved(true), [])]
+  return [blocker, useCallback(() => { savedRef.current = true }, [])]
 }
 
 export default function ConfirmLeaveDialog({ blocker }) {
