@@ -38,10 +38,20 @@
   - event row 加 `action.uri = ${FRONTEND_URL}/event/${id}` 可點進詳情
   - Footer URL 改用 `FRONTEND_URL`（前端網址）
 - [x] 5.5.3 修 altText 移除 emoji
-- [ ] 5.5.4 merge 到 dev 並 push，手機測試：
+- [x] 5.5.4 merge 到 dev 並 push，手機測試：
   - 字卡 Header 墨綠、日期正確、無 emoji
   - Event row 可點進 `/event/:id`
   - Footer「開啟行事曆」可點進 `/calendar`
+
+### 5.6 Event row 卡片化（第二輪視覺調整）
+- [x] 5.6.1 body 背景改 `#F7F5F2`（Warm Minimal bg 米白），讓白色 row 突出
+- [x] 5.6.2 每個 event row 加邊框 + 圓角 + padding，符合 DESIGN_SYSTEM 卡片規範：
+  - `backgroundColor: '#FFFFFF'`
+  - `borderWidth: '1px'`、`borderColor: '#E2DED8'`
+  - `cornerRadius: 'lg'`（12px）
+  - `paddingAll: '12px'`
+- [x] 5.6.3 移除 event 間 separator（卡片本身已有邊框，多餘）
+- [ ] 5.6.4 merge 到 dev 並 push，手機測試：event row 可見為獨立卡片
 
 ## 前端（分支 `m_b_每日行程推播_frontend`）
 

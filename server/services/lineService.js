@@ -446,16 +446,16 @@ const generateDailyAgendaFlexMessage = (events, dateStr) => {
     const typeColor = SHARE_CARD_TYPE_COLOR[typeLabel] || SHARE_CARD_TYPE_COLOR['活動'];
     const eventUri = baseUrl ? `${baseUrl}/event/${event.id || ''}` : calendarUrl;
 
-    // 事件間分隔（非第一項才加）
-    if (idx > 0) {
-      bodyContents.push({ type: 'separator', margin: 'lg', color: '#E2DED8' });
-    }
-
     bodyContents.push({
       type: 'box',
       layout: 'horizontal',
-      margin: 'lg',
+      margin: 'md',
       spacing: 'md',
+      paddingAll: '12px',
+      cornerRadius: 'lg',
+      borderWidth: '1px',
+      borderColor: '#E2DED8',
+      backgroundColor: '#FFFFFF',
       action: { type: 'uri', uri: eventUri },
       contents: [
         // 圓形 dot（8x8，依類型色）— 體現 DESIGN_SYSTEM 「圓形主視覺」
@@ -525,7 +525,7 @@ const generateDailyAgendaFlexMessage = (events, dateStr) => {
       contents: bodyContents,
       spacing: 'none',
       paddingAll: '16px',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#F7F5F2', // Warm Minimal bg，讓白色 event row 卡片浮出
     },
     footer: {
       type: 'box',
