@@ -97,3 +97,49 @@ git push --tags
 4. 機密檢查
 5. 使用者**明確確認**後才執行（最高確認要求）
 6. `git tag X.Y.Z && git push --tags`
+
+---
+
+## ⚠️ Claude Code Remote (CCR) 沙箱 git 限制
+
+**環境判定**：`env` 含 `CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE` 或 `CCR_TEST_GITPROXY=1`，或 `git remote -v` 指向 `127.0.0.1:<port>/git/...`。此時 Claude 所在沙箱的 git 流量經 CCR 本機 git proxy 轉發到 GitHub。
+
+**已驗證的拒絕操作**（HTTP 403）：
+
+| 操作 | refspec | 結果 |
+|---|---|---|
+| `git push --tags` / `git push origin <tag>` | `refs/tags/*` 新增 | ❌ 403 |
+| `git push origin --delete <branch>` | `... → 0000...`（刪除） | ❌ 403 |
+| `git push -f` / `--force-with-lease`（推測） | 強制覆寫 | ❌ 預期 403 |
+
+**合法操作**（不受限）：
+
+- Push commit 到既有分支（含 main、dev、m_b_*、hotfix/*）
+- 建立新分支（`refs/heads/*` 新增）
+- Fetch / pull
+
+### 遇到 403 時的 Claude 行為規則
+
+1. **不可因為 bash 最後一行出現 `Everything up-to-date` 就認為成功** — 必須用 `git ls-remote --tags origin` 與 `git ls-remote --heads origin` 親自驗證
+2. 推完 main 後 **必須主動告知** 使用者：
+   - tag 未建立在遠端
+   - hotfix / 要刪的分支仍在遠端
+3. 提供給使用者 **兩種手動補做方式**：
+   - **本機終端機**（指令直給）：
+     ```bash
+     git tag X.Y.Z <commit>
+     git push origin X.Y.Z
+     git push origin --delete <branch>
+     ```
+   - **手機 / 電腦瀏覽器**（GitHub Web UI）：
+     - Tag：`github.com/<owner>/<repo>/releases/new` → Choose a tag 輸入版本號 → Create new tag on publish → Publish release
+     - 刪分支：`github.com/<owner>/<repo>/branches` → Your branches → 🗑️
+4. 使用者完成後，Claude 以 `git fetch origin --prune --tags` 同步並 `ls-remote` 驗證
+
+### 為什麼 CCR 封鎖這些操作
+
+tag 與 ref 刪除是典型的「release / 破壞性」寫入，沙箱封鎖是為避免：
+- AI 誤觸發下游 release pipeline（CI/CD 綁 tag 事件）
+- AI 誤刪使用者的 feature 分支導致工作遺失
+- AI 強制覆寫歷史
+這是刻意的安全設計，不是 bug，不要嘗試繞過。
