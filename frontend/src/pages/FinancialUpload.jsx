@@ -57,7 +57,7 @@ export default function FinancialUpload() {
 
   const fabItems = [
     {
-      label: uploading ? '上傳中...' : '確認',
+      label: uploading ? '上傳中...' : '確認/儲存',
       onClick: handleConfirm,
       labelBg: '#FDECEA', labelColor: '#C0392B', labelBorderColor: '#C0392B',
       btnBg: '#FDECEA', btnColor: '#C0392B', btnBorderColor: '#C0392B',
