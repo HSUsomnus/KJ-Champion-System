@@ -6,6 +6,27 @@
 
 ---
 
+## [v2.0.4] - 2026-04-13
+
+git tag: v2.0.4
+摘要：hotfix — 修復新增行程兩個 UX bug。(1) 必填欄位漏填時靜默 return 改為明確 alert 提示。(2) `useLeaveGuard` 原用 `useState` 記錄 saved，與 react-router v7 `useBlocker` 的 useEffect 延遲註冊產生時序競態，`setSaved()` 後立即 navigate 會誤跳「尚未儲存」警告；改用 `useRef` 同步讀寫解決。附帶把全站 5 個編輯頁紅色 FAB「確認」改為「確認/儲存」。
+
+---
+
+## [v2.0.3] - 2026-04-12
+
+git tag: v2.0.3
+摘要：hotfix — `_worker.js` 依 Pages 網址自動路由後端。修復 `kjcs-dev.pages.dev` 過去會把 /api/* 轉到正式後端造成 CORS + 404 的問題。新增 `resolveBackend(hostname)`：kjcs-dev 走 dev 後端、其他走正式後端。正式站行為不變。
+
+---
+
+## [v2.0.2] - 2026-04-06
+
+git tag: v2.0.2
+摘要：修復試算表預覽顏色不正確 — 補上 Excel 標準 64 色 indexed 色盤（OOXML §18.8.27），修正 auto 色判斷及 AARRGGBB 8 碼 alpha 前綴處理，舊版/標準 Excel 文件的儲存格顏色現在能正確顯示
+
+---
+
 ## [v2.0.1] - 2026-04-04
 
 git tag: v2.0.1

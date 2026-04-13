@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.0.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-04
+> **版本 v2.0.4** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-13
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
@@ -36,7 +36,7 @@
 | 行程管理 | 新增、編輯、刪除行程（同步 Google Calendar） | admin / manager |
 | 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
 | 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
-| 財務功能 | 上傳與預覽財務報表 | manager |
+| 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
 | LINE Login | OAuth 2.0 登入，動態偵測前端 origin 自動 redirect | 所有人 |
 | PWA | 可安裝至手機桌面（Vite PWA Plugin） | 所有人 |
 
@@ -100,11 +100,12 @@ npm run dev
 │   │   │   ├── MemberDetail.jsx # 成員詳情
 │   │   │   ├── Profile.jsx      # 個人資料
 │   │   │   ├── Management.jsx   # 管理後台
-│   │   │   ├── Financial.jsx    # 財務預覽
-│   │   │   ├── FinancialUpload.jsx
+│   │   │   ├── Financial.jsx    # 財力頁（選取/編輯模式 + 離開守衛）
+│   │   │   ├── FinancialUpload.jsx  # 財力上傳
+│   │   │   ├── FinancialPreview.jsx # 試算表網頁預覽
 │   │   │   ├── Login.jsx        # 登入頁
 │   │   │   └── UserStats.jsx    # 使用者統計
-│   │   ├── components/          # 共用元件
+│   │   ├── components/          # 共用元件（Header, FabNav, FabAction, ConfirmLeaveDialog）
 │   │   ├── contexts/            # React Context（Auth、User）
 │   │   ├── services/            # API 呼叫服務
 │   │   └── utils/               # 工具函式
