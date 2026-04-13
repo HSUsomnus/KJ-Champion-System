@@ -1,19 +1,31 @@
 /**
  * Cloudflare Pages Worker
- * 攔截 /api/* 請求，proxy 至 Zeabur 後端
+ * 攔截 /api/* 請求，依當前 Pages 網址自動 proxy 至對應的 Zeabur 後端
  * OAuth redirect 自動重寫為當前 origin（避免 DEV/正式站混跳）
  * 其餘靜態資源由 env.ASSETS 處理，找不到時 fallback 到 index.html（SPA）
  */
 
-const ZEABUR_BACKEND = 'https://kj-champion-system.zeabur.app';
+const ZEABUR_BACKEND_PROD = 'https://kj-champion-system.zeabur.app';
+const ZEABUR_BACKEND_DEV = 'https://kj-champion-system-dev.zeabur.app';
+
+// 依 Pages 網址判斷要 proxy 到哪個後端
+// - kjcs-dev.pages.dev → dev 後端
+// - 其他（kj-champion-system.pages.dev / 自訂網域）→ 正式後端
+const resolveBackend = (hostname) => {
+  if (hostname === 'kjcs-dev.pages.dev' || hostname.startsWith('kjcs-dev')) {
+    return ZEABUR_BACKEND_DEV;
+  }
+  return ZEABUR_BACKEND_PROD;
+};
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const currentOrigin = url.origin;
+    const backend = resolveBackend(url.hostname);
 
     if (url.pathname.startsWith('/api/')) {
-      const targetUrl = ZEABUR_BACKEND + url.pathname + url.search;
+      const targetUrl = backend + url.pathname + url.search;
 
       const proxyRequest = new Request(targetUrl, {
         method: request.method,
@@ -33,7 +45,7 @@ export default {
             const locUrl = new URL(location);
             // 若 redirect 目標是後端或前端站 → 重寫為當前 origin
             // 這樣無論 DEV 站或正式站，都跳回自己
-            if (locUrl.origin === ZEABUR_BACKEND || locUrl.hostname.includes('pages.dev') || locUrl.hostname.includes('kj-champion')) {
+            if (locUrl.origin === backend || locUrl.hostname.includes('pages.dev') || locUrl.hostname.includes('kj-champion')) {
               const rewritten = currentOrigin + locUrl.pathname + locUrl.search + locUrl.hash;
               return Response.redirect(rewritten, response.status);
             }
