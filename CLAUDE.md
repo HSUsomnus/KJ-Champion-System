@@ -21,6 +21,7 @@
 | **「新增功能」** | 切分支 + 開 OpenSpec change |
 | **「修改計畫」** | 確認分支 → 只動文件 |
 | **「執行計畫」** | 確認分支 → 實作程式碼 |
+| **「修 bug」** | 從 main 切 hotfix → 修復 → merge main → 刪 hotfix → 同步所有分支 |
 | **「測試功能」** | merge 到 dev |
 | **「功能上線」** | merge 到 main，關 change |
 
@@ -30,6 +31,18 @@
 
 機密檢查 + README 完整重寫 + 使用者確認。
 詳細步驟見 `.claude/rules/deploy.md`。
+
+### 規則類更新可直推 main
+
+`.claude/`、`.gitignore`、`scripts/`工具腳本、`CLAUDE.md` 等規則類變更，可直接 cherry-pick 到 main 並 push，不需走功能分支流程。
+功能、伺服器、資料庫、插件等程式碼變更**禁止直推 main**。
+詳見 `.claude/rules/deploy.md`。
+
+### main 推送後必須同步所有分支
+
+任何 push 到 main 之後，立即將 main merge 到所有其他本機分支（`dev`、`m_b_*` 等），確保規則與基礎建設全域一致。
+
+**⚠️ 執行前警告使用者：** merge 過程需要 checkout 各分支，若有 worktree 佔用的分支會先暫時移除 worktree，merge 完成後自動重建。請確認所有 worktree 內無未儲存的工作。
 
 ## 版本記憶
 
