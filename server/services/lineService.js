@@ -403,10 +403,152 @@ const pushMessagesToUser = async (userId, messages) => {
   }
 };
 
+/**
+ * 產生「明日行程預報」Flex 字卡（每日定時推播用）
+ *
+ * 遵循 frontend/DESIGN_SYSTEM.md（Warm Minimal）：
+ * - 禁用 emoji 作 icon（L270）
+ * - 圓形元素為主視覺（L15）：事件前用圓點 bullet、類型用膠囊 badge
+ * - 色彩：accent #4A7C59、text-primary #2C2C2C、text-muted #8A8680、
+ *   surface #FFFFFF、border #E2DED8、accent-light #E8F0EB、主要按鈕 #2C2C2C
+ *
+ * @param {Array} events - 明日行程陣列（已排序）
+ * @param {string} dateStr - 明日日期顯示文字（例：「4月14日 星期二」）
+ * @returns {object} Flex Bubble contents
+ */
+const generateDailyAgendaFlexMessage = (events, dateStr) => {
+  // 優先用前端網址（FRONTEND_URL），fallback 到 APP_URL
+  const frontendUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '');
+  const appUrl = (() => {
+    try { return getAppUrl(); } catch { return ''; }
+  })();
+  const baseUrl = frontendUrl || appUrl;
+  const calendarUrl = baseUrl ? `${baseUrl}/calendar` : 'https://calendar.google.com';
+
+  // Body 內容：第一項為「共 N 個行程」，其後為事件列表
+  const bodyContents = [
+    { type: 'text', text: `共 ${events.length} 個行程`, size: 'sm', color: '#8A8680', weight: 'bold' },
+  ];
+
+  events.forEach((event, idx) => {
+    const isAllDay = !!event.allDay || /^\d{4}-\d{2}-\d{2}$/.test(String(event.start || '').trim());
+    let timeStr = '全天';
+    if (!isAllDay) {
+      const date = new Date(event.start);
+      timeStr = date.toLocaleTimeString('zh-TW', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Taipei',
+        hour12: false,
+      });
+    }
+    const typeLabel = (event.type && String(event.type).trim()) ? event.type.trim() : '活動';
+    const typeColor = SHARE_CARD_TYPE_COLOR[typeLabel] || SHARE_CARD_TYPE_COLOR['活動'];
+    const eventUri = baseUrl ? `${baseUrl}/event/${event.id || ''}` : calendarUrl;
+
+    bodyContents.push({
+      type: 'box',
+      layout: 'horizontal',
+      margin: 'md',
+      spacing: 'md',
+      paddingAll: '12px',
+      cornerRadius: 'lg',
+      borderWidth: '1px',
+      borderColor: '#E2DED8',
+      backgroundColor: '#FFFFFF',
+      action: { type: 'uri', uri: eventUri },
+      contents: [
+        // 圓形 dot（8x8，依類型色）— 體現 DESIGN_SYSTEM 「圓形主視覺」
+        {
+          type: 'box',
+          layout: 'vertical',
+          width: '8px',
+          height: '8px',
+          cornerRadius: '4px',
+          backgroundColor: typeColor,
+          margin: 'xs', // 對齊第一行文字中央
+          contents: [{ type: 'filler' }],
+        },
+        {
+          type: 'box',
+          layout: 'vertical',
+          flex: 1,
+          spacing: 'xs',
+          contents: [
+            // 第一行：時間 + 膠囊 type badge
+            {
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                { type: 'text', text: timeStr, size: 'sm', color: '#8A8680', flex: 0 },
+                {
+                  type: 'box',
+                  layout: 'vertical',
+                  cornerRadius: 'xxl',
+                  backgroundColor: '#E8F0EB',
+                  paddingStart: '10px',
+                  paddingEnd: '10px',
+                  paddingTop: '2px',
+                  paddingBottom: '2px',
+                  flex: 0,
+                  contents: [
+                    { type: 'text', text: typeLabel, size: 'xxs', color: typeColor, weight: 'bold', align: 'center' },
+                  ],
+                },
+              ],
+              spacing: 'sm',
+              justifyContent: 'space-between',
+            },
+            // 第二行：行程標題
+            { type: 'text', text: event.title || '未命名行程', size: 'md', color: '#2C2C2C', weight: 'bold', wrap: true },
+          ],
+        },
+      ],
+    });
+  });
+
+  return {
+    type: 'bubble',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        { type: 'text', text: '明日行程預報', size: 'lg', weight: 'bold', color: '#FFFFFF' },
+        { type: 'text', text: dateStr, size: 'sm', color: '#FFFFFF', margin: 'xs' },
+      ],
+      backgroundColor: '#4A7C59', // Warm Minimal accent
+      paddingAll: '16px',
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: bodyContents,
+      spacing: 'none',
+      paddingAll: '16px',
+      backgroundColor: '#F7F5F2', // Warm Minimal bg，讓白色 event row 卡片浮出
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'button',
+          action: { type: 'uri', label: '開啟行事曆', uri: calendarUrl },
+          style: 'primary',
+          height: 'sm',
+          color: '#2C2C2C', // Warm Minimal 主要按鈕深炭灰
+        },
+      ],
+      paddingAll: '12px',
+    },
+  };
+};
+
 module.exports = {
   generateShareMessage,
   generateShareFlexMessage,
   generateMonthShareMessage,
+  generateDailyAgendaFlexMessage,
   generateInviteMessage,
   generateInviteFlexMessage,
   generateInviteFlexMessageMinimal,
