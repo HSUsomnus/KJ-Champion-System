@@ -145,13 +145,14 @@ git push --tags
 |---|---|---|
 | `git push --tags` / `git push origin <tag>` | `refs/tags/*` 新增 | ❌ 403 |
 | `git push origin --delete <branch>` | `... → 0000...`（刪除） | ❌ 403 |
-| `git push -f` / `--force-with-lease`（推測） | 強制覆寫 | ❌ 預期 403 |
 
-**合法操作**（不受限）：
+**已驗證的合法操作**（不受限）：
 
 - Push commit 到既有分支（含 main、dev、m_b_*、hotfix/*）
 - 建立新分支（`refs/heads/*` 新增）
 - Fetch / pull
+- **`git push origin <branch> --force-with-lease`**（branch ref force update）— 2026-04-13 執行 dev 格式化驗證通過，**不會 403**。推測 `--force` 同樣通過，但非破壞性場景仍優先用 `--force-with-lease`
+- `git push origin <new-branch>`（建立新分支）
 
 ### 遇到 403 時的 Claude 行為規則
 
@@ -176,5 +177,5 @@ git push --tags
 tag 與 ref 刪除是典型的「release / 破壞性」寫入，沙箱封鎖是為避免：
 - AI 誤觸發下游 release pipeline（CI/CD 綁 tag 事件）
 - AI 誤刪使用者的 feature 分支導致工作遺失
-- AI 強制覆寫歷史
-這是刻意的安全設計，不是 bug，不要嘗試繞過。
+
+branch force update **未被封鎖**，推測理由：force push 本身不觸發 release pipeline，且「格式化 dev」這類合理場景需要它。這是刻意的安全設計，不是 bug，不要嘗試繞過被封鎖的部分。
