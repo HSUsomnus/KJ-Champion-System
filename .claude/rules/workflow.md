@@ -10,6 +10,7 @@
 | **「修 bug」** | 從 main 切 hotfix，視情況開 change |
 | **「測試功能」** | merge 功能分支到 dev，push |
 | **「功能上線」** | merge 到 main，關 change，刪分支 |
+| **「格式化 dev」** | dev force-reset 至 main + 盤點確認 + 重寫 dev README（見下方） |
 
 ---
 
@@ -112,6 +113,72 @@
 2. 執行 deploy.md 的推送流程
 3. 將 STATUS.md 的 change 標為 DONE
 4. 刪除功能分支
+
+---
+
+## 「格式化 dev」流程
+
+> **哲學**：dev 是測試環境，壞掉很正常。不修復、不深究，直接重置最快。
+> dev 的歷史本來就是拋棄式的（規則已禁止 dev merge 回 main），所以歸零無損失。
+
+### Claude 主動觸發條件
+
+偵測到以下任一情況時，**Claude 必須主動建議使用者**執行「格式化 dev」，不要浪費時間 debug：
+
+- dev 上出現可能導致整個專案崩潰的錯誤（白屏、React Router ErrorBoundary 連環觸發、PWA Service Worker 快取錯配等）
+- dev 累積大量 hotfix merge 殘留 / debug commit / 已廢棄實驗歷史
+- bundle chunk 新舊錯配（某 API 方法「理論上存在但執行時找不到」這類徵兆）
+- 功能分支 merge 後 dev 出現無關領域的壞掉（幾乎必定是歷史污染）
+
+**不要嘗試在 dev 上修復這類問題** — 所有 dev 專屬的修復都是丟棄物，正確的修復應該在對應的 `m_b_*` 或 `hotfix` 分支上做。
+
+### 執行流程
+
+```bash
+# 0. 先盤點（確認無資料損失）
+git fetch origin --prune
+git log origin/main..origin/dev --no-merges --oneline
+# 對每個領先 commit 確認：
+#   - 存在於某個 m_b_* 分支（安全） ✅
+#   - 內容已合進 main（安全，只是歷史訊息會消失） ✅
+#   - 僅活在 dev 且 main 無等價檔案 → ⚠️ 停下，cherry-pick 到新分支保留再繼續
+
+# 1. 格式化
+git checkout dev
+git fetch origin
+git reset --hard origin/main
+git push origin dev --force-with-lease
+
+# 2. 更新 dev 專屬 README（功能分支總表歸零）
+#    依 .claude/rules/readme.md 的 dev 分支格式撰寫
+
+# 3. 更新 NOW.md — 記錄格式化原因、HEAD SHA、待重新合入的 m_b_* 清單
+
+# 4. 普通 commit + push dev
+```
+
+### 盤點檢查清單（Claude 執行格式化前必跑）
+
+對每個 `origin/main..origin/dev` 的非 merge commit 驗證：
+
+```bash
+for h in <commit-hashes>; do
+  git branch -r --contains $h
+done
+```
+
+| 狀態 | 判定 | 行動 |
+|---|---|---|
+| 活在 `m_b_*` 遠端分支 | ✅ 安全 | 格式化後重新 merge |
+| 活在 `main`（透過其他路徑已進去） | ✅ 安全 | 無需處理 |
+| 僅在 dev 且 main 無等價檔案 | ⚠️ 會遺失 | **停下告知使用者**，決定是否保留 |
+
+### 格式化後回報使用者
+
+1. dev 新 HEAD SHA
+2. 所有 `m_b_*` 分支的去留清單（全部保留）
+3. Cloudflare Pages 預期會觸發新 deployment（解掉 SW 快取問題）
+4. 提醒使用者清 Service Worker 驗證
 
 ---
 
