@@ -8,9 +8,9 @@
 
 ## ⚠️ 此分支狀態
 
-- 目前 HEAD 完全等於 `main`（v2.0.4）
-- 尚未合入任何功能分支
-- 所有功能分支保持獨立，待重新依序 merge 進來測試
+- 基底等於 `main`（v2.0.4）
+- **已合入**：`m_b_每日行程推播_backend`（2026-04-14，待測試）
+- 其他功能分支待依序 merge
 
 ---
 
@@ -32,19 +32,19 @@
 
 | 分支名稱 | 功能說明 | 狀態 | 對應 OpenSpec |
 |---------|---------|------|--------------|
-| `m_b_每日行程推播_backend` | 每日行程 LINE Bot 推播 — 後端 | ⬜ 待合入 | 07-daily-event-push |
-| `m_b_每日行程推播_frontend` | 每日行程推播 — 前端設定頁 | ⬜ 待合入 | 07-daily-event-push |
-| `m_b_eruda除錯工具` | React 前端整合 Eruda 手機除錯 | ⬜ 待合入 | — |
+| `m_b_每日行程推播_backend` | 每日行程 LINE Bot 推播 — 後端（含 cron 排程 + system_settings 自動 migration） | ✅ 已合入（2026-04-14，待 Zeabur DEV 部署驗證） | 09-每日行程推播 |
+| `m_b_每日行程推播_frontend` | 每日行程推播 — 前端設定頁（含 Eruda toggle） | ⬜ 待合入（等後端驗證通過） | 09-每日行程推播 |
+| `m_b_eruda除錯工具` | React 前端整合 Eruda 手機除錯 | ⚠️ 建議廢棄（功能已被 `推播_frontend` 的 `42a843b` 吸收並擴充） | — |
 | `m_b_pwa_upgrade` | PWA 全平台升級（Android + iOS + Desktop 最新標準） | ⬜ 待合入 | 08-pwa-upgrade |
-| `m_b_tag_database` | 標籤系統 — DB migration | ⬜ 待合入 | 09-tag-system |
-| `m_b_tag_backend` | 標籤系統 — 後端 API | ⬜ 待合入 | 09-tag-system |
-| `m_b_tag_frontend` | 標籤系統 — 前端 UI（TagBadge + TagSelector） | ⬜ 待合入 | 09-tag-system |
+| `m_b_tag_database` | 標籤系統 — DB migration | ⬜ 待合入 | ❓ 無 OpenSpec change（需補） |
+| `m_b_tag_backend` | 標籤系統 — 後端 API | ⬜ 待合入 | ❓ 無 OpenSpec change（需補） |
+| `m_b_tag_frontend` | 標籤系統 — 前端 UI（TagBadge + TagSelector） | ⬜ 待合入 | ❓ 無 OpenSpec change（需補） |
 
-### ⚠️ 已知分支混亂
+### 分支補充說明（2026-04-14 盤點）
 
-- `m_b_每日行程推播_backend` 內含前端改動（event row 卡片化、字卡修時區 bug）
-- `m_b_每日行程推播_frontend` 內含後端相關的「開發者設定頁」
-- 需在重新 merge 前釐清分支職責，或直接依 commit 內容拆分成新分支
+- **推播 backend/frontend 分支內容**：之前誤判為「commit 內容對調」，實際驗證後**沒有對調**。backend 分支純 `server/`，frontend 分支純 `frontend/`，commit message 因語境造成誤解（「event row 卡片化」指的是 LINE Bot Flex Message 的卡片樣式，是後端改動）
+- **`m_b_eruda除錯工具` 建議廢棄**：其 `4e39f65` 的 Eruda 載入機制（僅 URL `?eruda=1`）已被 `m_b_每日行程推播_frontend` 的 `42a843b` 整個取代為超集版本（URL 參數 + localStorage toggle + try/catch 保護）。若 merge 此分支會在 `frontend/index.html` 衝突
+- **標籤系統缺 OpenSpec change**：三個 `m_b_tag_*` 分支未建立對應 OpenSpec 目錄，違反「新增功能 = 開 OpenSpec change」規則，需在 merge 前補齊（建議編號 `10-tag-system`）
 
 ---
 

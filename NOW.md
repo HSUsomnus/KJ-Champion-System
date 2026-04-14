@@ -6,7 +6,7 @@
 
 ## 功能範圍
 
-**2026-04-13：dev 分支格式化**。重置 dev 歷史為 main（v2.0.4），清除 PWA Service Worker 快取錯配造成的 `Qi.getTags is not a function` 錯誤與大量殘留歷史。所有 `m_b_*` 功能分支內容無損失，待重新依序 merge 測試。
+**2026-04-14：每日行程推播後端 merge 到 dev**（change 09 後端部分）。基底為格式化後的 dev（= main v2.0.4）。待 Zeabur DEV 後端部署 + LINE Bot 推播驗證通過後，再 merge 前端。
 
 ## 設計決策
 
@@ -21,15 +21,47 @@
 
 ## 目前進度
 
-- **目前分支**：`dev`（剛格式化）
+- **目前分支**：`dev`
 - **main HEAD**：`045cbf9` chore: 補同步規則
-- **dev HEAD**：`045cbf9`（= main，2026-04-13 force push 重置）
+- **dev HEAD**：`12b8646` Merge m_b_每日行程推播_backend → dev（2026-04-14）
 - **tag 狀態（遠端）**：v2.0.0 ~ v2.0.4 完整
-- **遠端 m_b_\* 分支**（全部尚未合入新 dev，等待重新測試）：
-  - `m_b_每日行程推播_backend` / `m_b_每日行程推播_frontend`（⚠️ 分支職責混亂，commit 內容對調，需釐清）
-  - `m_b_eruda除錯工具`
-  - `m_b_pwa_upgrade`
-  - `m_b_tag_database` / `m_b_tag_backend` / `m_b_tag_frontend`
+- **已合入 dev**：
+  - ✅ `m_b_每日行程推播_backend`（2026-04-14，待 Zeabur DEV 部署驗證）
+- **遠端 m_b_\* 分支（未合入）**：
+  - ⬜ `m_b_每日行程推播_frontend`（等後端驗證通過再合）
+  - ⚠️ `m_b_eruda除錯工具`（建議廢棄 — 功能被 `推播_frontend/42a843b` 吸收）
+  - ⬜ `m_b_pwa_upgrade`
+  - ⬜ `m_b_tag_database` / `m_b_tag_backend` / `m_b_tag_frontend`（⚠️ 缺 OpenSpec change，需補 10-tag-system）
+
+### 2026-04-14 推播後端 merge 紀錄
+
+**本次 merge 的實質 commit**：
+1. `7c9eed9` feat: 每日行程推播 LINE Bot 後端（node-cron + agendaService + scheduler + 3 個 API）
+2. `fa3b1a3` chore: OpenSpec 08→09（讓號給 pwa-upgrade）
+3. `59bc1f8` fix: 字卡 DESIGN_SYSTEM + 時區 bug + 導向前端詳情頁
+4. `1c792a1` style: event row 卡片化（LINE Bot Flex Message，**非前端 UI**）
+
+**關鍵檢查點**：
+- `server/server.js:145-179` 已有 inline 自動 migration（建 `system_settings` 表 + 3 筆初始設定）→ **不需要獨立 SQL migration 檔案**
+- 新增依賴：`node-cron@^4.2.1`（Zeabur 部署時自動 npm install）
+- 無新增環境變數（只用既有的 `FRONTEND_URL` / `GROUP_CALENDAR_ID`）
+
+**後端驗證清單**（OpenSpec 09 tasks.md 5.x 已勾，本次 merge 重跑驗證 5.6.4）：
+- [ ] Zeabur DEV 後端部署成功，log 出現 `✅ 資料庫 migration 完成（system_settings）`
+- [ ] log 出現 `📅 每日行程推播：已排程 21:00`
+- [ ] `GET /api/line/agenda-settings` 讀取設定正常
+- [ ] `POST /api/line/push-daily-agenda` 手動觸發推播成功
+- [ ] 手機收到 LINE Flex 字卡，event row 為獨立卡片樣式（task 5.6.4）
+
+### dev 格式化紀錄（2026-04-13）
+
+**原因**：
+- `kjcs-dev.pages.dev` 出現 `Qi.getTags is not a function`（PWA Service Worker 快取錯配）
+- dev 累積大量 v1.5.x 以降未上線實驗歷史
+
+**執行**：`git reset --hard origin/main` + `git push origin dev --force-with-lease` ✅ 成功
+
+**關鍵發現**：CCR 沙箱允許 branch ref 的 force push（已同步修正 `.claude/rules/deploy.md`）
 
 ### dev 格式化紀錄（2026-04-13）
 
