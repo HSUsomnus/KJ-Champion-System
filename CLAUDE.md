@@ -24,6 +24,9 @@
 | **「修 bug」** | 從 main 切 hotfix → 修復 → merge main → 刪 hotfix → 同步所有分支 |
 | **「測試功能」** | merge 到 dev |
 | **「功能上線」** | merge 到 main，關 change |
+| **「格式化 dev」** | dev force-reset 至 main + 盤點 + 重寫 dev README（dev 壞掉正常，直接重置最快） |
+
+> **dev 壞掉正常**：偵測到 dev 上可能導致專案崩潰的重大 bug（白屏、ErrorBoundary 連環、SW 快取錯配等），Claude 必須**主動建議格式化**而非嘗試修復。dev 是拋棄式測試環境，所有修復應在 `m_b_*` 或 `hotfix` 做。
 
 詳細規則：`.claude/rules/workflow.md`
 
