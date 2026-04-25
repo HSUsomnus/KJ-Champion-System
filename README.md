@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.0.6** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
+> **版本 v2.0.7** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
@@ -44,7 +44,7 @@
 | 行程儲存 UX | FAB「確認/儲存」明確按鈕語意，必填欄位 alert 提示，離開守衛使用 ref 避免時序競態（v2.0.4） | — |
 | 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
 | 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
-| 首次登入流程 | LINE OAuth 登入後若 member 不存在引導至 `/profile/edit` 完成資料建立（v2.0.5 + v2.0.6 雙修補完成） | 所有人 |
+| 首次登入流程 | LINE OAuth 登入後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用，未完成不得進其他頁（v2.0.5 / v2.0.6 / v2.0.7 三修補完成） | 所有人 |
 | 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
 | LINE Login | OAuth 2.0，後端動態偵測前端 origin 編入 OAuth state，callback 後 redirect 回原前端 | 所有人 |
 | PWA | 可安裝至手機桌面（Vite PWA Plugin） | 所有人 |
