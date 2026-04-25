@@ -24,14 +24,20 @@
 
 ### Zeabur 服務拓樸
 
-dev 專案內現有：
-- `kj-champion-system-dev`（Node.js 後端）
-- `postgresql`（目前 dev 後端連的，實際是正式 DB 的同一條 connection string）
+實際結構：所有服務在**同一個** Zeabur 專案 `kj-champion` 內：
 
-調整後 dev 專案內：
-- `kj-champion-system-dev`（Node.js 後端）
-- `postgresql-test`（**新建**，dev 專屬）
-- `kj-champion-system-dev` 的 `DATABASE_URL` 改指向 `postgresql-test`
+調整前（4 服務）：
+- `postgresql`（正式 DB，被 dev 與正式後端**共用**）
+- `kj-champion-system`（正式後端）
+- `kj-champion-system-dev`（dev 後端，DATABASE_URL 指向 `postgresql`）
+
+調整後（4 服務，新增 `postgresql-test`）：
+- `postgresql`（正式 DB，**只**被正式後端用）
+- `postgresql-test`（**新建**，dev 後端專用）
+- `kj-champion-system`（正式後端，DATABASE_URL 不變）
+- `kj-champion-system-dev`（dev 後端，DATABASE_URL 改指向 `postgresql-test`）
+
+> **注意**：因為兩個後端服務同專案，08.5 修改 `DATABASE_URL` 時務必確認在 `kj-champion-system-dev` 服務頁面，不要改錯到 `kj-champion-system`（正式後端）。
 
 ### Schema 灌入策略
 

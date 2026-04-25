@@ -2,34 +2,43 @@
 
 ## 進度
 
-`░░░░░░░░░░░░░` 0% — 完成 0 / 7 個子任務
+`██░░░░░░░░░░░` 14% — 完成 1 / 7 個子任務
+
+---
+
+## ✅ 已完成
+
+- [x] **08.1 Zeabur 建立測試 PostgreSQL 服務**（使用者手動 — Zeabur Dashboard）
+  - ✅ 服務名稱：`postgresql-test`
+  - ✅ 位於 `kj-champion` 專案內（與 `postgresql`、`kj-champion-system`、`kj-champion-system-dev` 同專案）
+  - ✅ 服務狀態正常運作
+  - 完成時間：2026-04-25
 
 ---
 
 ## ⬜ 待完成
 
-- [ ] **08.1 Zeabur 建立測試 PostgreSQL 服務**（使用者手動 — Zeabur Dashboard）
-  1. 進入 dev 專案（`kj-champion-system-dev` 所在的 project）
-  2. Add Service → Marketplace → PostgreSQL
-  3. 服務名稱建議：`postgresql-test`
-  4. 等待服務啟動，記下內網 connection string（`DATABASE_URL`）
-
 - [ ] **08.2 取得正式 DB schema dump**（使用者本機執行）
-  1. 在本機執行（替換 `$PROD_DATABASE_URL` 為正式 DB 連線字串）：
+  1. 至 Zeabur → `postgresql` 服務（**正式 DB**）→ 環境變數 / 連線資訊，複製**公網**連線字串
+  2. 在本機執行（替換 `$PROD_DATABASE_URL`）：
      ```bash
      pg_dump --schema-only --no-owner --no-privileges \
        "$PROD_DATABASE_URL" > schema.sql
      ```
-  2. 檢查 `schema.sql` 內容（不應包含真實資料）
-  3. 暫存於本機，**勿 commit**（含 DB 結構資訊）
+  3. 檢查 `schema.sql` 開頭幾行 `CREATE TABLE`，確認**沒有 INSERT 語句**（schema-only 不應有資料）
+  4. 暫存於本機，**勿 commit**（含 DB 結構資訊）
 
 - [ ] **08.3 套用 schema 到測試 DB**（使用者本機執行）
-  1. 取得 08.1 的測試 DB 公網 connection string（Zeabur Dashboard → 服務 → Networking）
+  1. 至 Zeabur → `postgresql-test` 服務 → 連線資訊，複製**公網**連線字串
   2. 執行：
      ```bash
      psql "$TEST_DATABASE_URL" -f schema.sql
      ```
-  3. 確認所有 table 建立成功（`\dt` 列出所有表）
+  3. 確認所有 table 建立成功：
+     ```bash
+     psql "$TEST_DATABASE_URL" -c "\dt"
+     ```
+     比對 table 數量應與正式 DB 相同
 
 - [ ] **08.4 建立假資料 seed**（Claude 程式碼 + 使用者執行）
   1. Claude 建立 `scripts/seed-test-db.sql`（手寫假資料）：
