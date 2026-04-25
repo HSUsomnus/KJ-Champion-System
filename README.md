@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.2.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
+> **版本 v2.3.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-26
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -50,8 +50,9 @@
 | 首次登入流程 | LINE OAuth 登入後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用，未完成不得進其他頁（v2.0.5 / v2.0.6 / v2.0.7 / v2.0.8 四修補完成） | 所有人 |
 | 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
 | LINE Login | OAuth 2.0，後端動態偵測前端 origin 編入 OAuth state，callback 後 redirect 回原前端 | 所有人 |
-| **每日行程推播 LINE Bot**（v2.2.0 新增） | node-cron 每日定時（預設 21:00 Asia/Taipei）讀取隔日行程 → 依對象（all / manager_above / developer）篩選 → 推送 Flex 字卡（Warm Minimal 風格、event row 卡片化、可點進前端詳情） | 推播：依 `daily_agenda_target` 設定；設定 API：僅開發者 |
-| PWA | 可安裝至手機桌面（Vite PWA Plugin） | 所有人 |
+| **每日行程推播 LINE Bot**（v2.2.0 後端 / v2.3.0 前端） | node-cron 每日定時（預設 21:00 Asia/Taipei）讀取隔日行程 → 依對象（all / manager_above / developer）篩選 → 推送 Flex 字卡（Warm Minimal 風格、event row 卡片化、可點進前端詳情） | 推播：依 `daily_agenda_target` 設定 |
+| **開發者設定頁** `/agenda-settings`（v2.3.0 新增） | 推播啟用 toggle / 時間 picker / 對象下拉 / 立即推播按鈕；同頁含 Eruda 手機除錯面板開關 | 僅開發者 |
+| PWA | 可安裝至手機桌面（v2.3.0 補 `mobile-web-app-capable` meta，Chrome / iOS Safari 雙吃） | 所有人 |
 
 ---
 
@@ -99,6 +100,32 @@
 
 ---
 
+## 開發者設定頁（v2.3.0 新增）
+
+路徑：`/agenda-settings` — 僅 `role === '開發者'` 可進入。FabNav 左下黑色按鈕展開後，最上方齒輪 icon 即入口。
+
+### 三大區塊
+
+| 區塊 | 內容 |
+|---|---|
+| 除錯工具 | Eruda 手機除錯面板 toggle（讀寫 `localStorage.erudaEnabled`，重整後生效） |
+| 每日行程推播 | 啟用 toggle / 推播時間 picker（HH:MM）/ 對象下拉（all / manager_above / developer）/「儲存設定」按鈕 |
+| 測試 | 「立即推播」按鈕 — 不受時間設定影響，直接以當前對象推播一次（手動驗證用） |
+
+### 權限控制（雙重防護）
+
+- 前端：`AgendaSettings.jsx` 檢查 `user?.role === '開發者'`，否則顯示「無存取權限」+「回首頁」
+- 後端：`requireDeveloper` middleware 驗證 LINE userId 對應 member 的 `role` 欄位，非開發者直接 403
+
+### Eruda 載入策略
+
+`frontend/index.html` inline script 在頁面載入時檢查兩條件，**任一**為真即從 `cdn.jsdelivr.net/npm/eruda` 載入：
+
+1. URL `?eruda=1`（急救：手機現場 debug 不用先進設定頁）
+2. `localStorage.erudaEnabled === 'true'`（常駐：在設定頁切 toggle 後每次開都載）
+
+---
+
 ## 本機開發
 
 ### 後端
@@ -133,13 +160,14 @@ npm run dev
 │   │   ├── favicon.svg
 │   │   ├── icons.svg
 │   │   └── icons/               # PWA 圖示（icon-192 / icon-512）
+│   ├── index.html               # Eruda inline loader（v2.3.0）+ apple-mobile-web-app-capable / mobile-web-app-capable meta
 │   ├── src/
-│   │   ├── App.jsx              # React Router 主入口（含 ProtectedRoute auth guard）
+│   │   ├── App.jsx              # React Router 主入口（含 ProtectedRoute auth guard）+ /agenda-settings 路由
 │   │   ├── main.jsx             # Vite 進入點
-│   │   ├── pages/               # 頁面元件（Home / Calendar / AddEvent / EventDetail / Members / Profile / Financial / UserStats 等）
-│   │   ├── components/          # Header / FabNav / FabAction / ConfirmLeaveDialog
+│   │   ├── pages/               # 頁面元件（Home / Calendar / AddEvent / EventDetail / Members / Profile / Financial / UserStats / AgendaSettings v2.3.0 等）
+│   │   ├── components/          # Header / FabNav（含開發者入口 v2.3.0）/ FabAction / ConfirmLeaveDialog
 │   │   ├── contexts/AuthContext.jsx
-│   │   ├── services/api.js
+│   │   ├── services/api.js      # 含 v2.3.0 推播設定 3 個 API 方法
 │   │   └── utils/shareEvent.js
 │   ├── vite.config.js
 │   └── package.json
@@ -164,7 +192,7 @@ npm run dev
 │   ├── middleware/              # auth middleware
 │   └── migrations/              # SQL migrations
 ├── openspec/                    # OpenSpec 功能規格文件（含 STATUS.md 路線圖）
-├── scripts/                     # 工具腳本（seed、sync、backup、migration、smoke test）
+├── scripts/                     # 工具腳本（seed、sync、backup、migration、smoke test、v2.3.0 dev seed for agenda）
 ├── api/                         # （legacy）Vercel serverless 入口（已轉址，保留供回滾）
 ├── database/                    # （legacy）Supabase 時期 SQL 腳本
 ├── .claude/                     # Claude Code 規則 + context

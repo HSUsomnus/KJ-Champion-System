@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.3.0] - 2026-04-26
+
+git tag: v2.3.0
+摘要：OpenSpec change 09「每日行程推播」收尾 — 前端開發者設定頁 + Eruda 整合 + PWA meta tag 補正。新建 `frontend/src/pages/AgendaSettings.jsx`（toggle / 時間 picker / 對象下拉 / 立即推播按鈕 / Eruda toggle 三大區塊，僅 `role === '開發者'` 可進入），`frontend/src/components/FabNav.jsx` 加 `DEVELOPER_ITEMS`（齒輪入口），`frontend/src/services/api.js` 加 3 個 API 方法（`getAgendaSettings` / `updateAgendaSettings` / `pushDailyAgenda`），`frontend/src/App.jsx` 註冊 `/agenda-settings` 路由（在 `ProtectedRoute` 下）。`frontend/index.html` 加 Eruda inline loader（URL `?eruda=1` 或 `localStorage.erudaEnabled='true'` 任一觸發）+ `mobile-web-app-capable` meta tag（補 `apple-mobile-web-app-capable` deprecated 警告，新舊並存）。新增 `scripts/seed-dev-agenda-test.js` dev DB seed 工具（developer 帳號 + 一般人測試帳號 + 明日 event，全 idempotent，已存在帳號只更新 role 不覆寫 onboarding 資料）。dev 實機驗證 8.1 ~ 8.5 全通過。本版上線後 09 整個 change 在 STATUS.md 標為 ✅ DONE。
+
+---
+
 ## [v2.2.1] - 2026-04-25
 
 git tag: v2.2.1
