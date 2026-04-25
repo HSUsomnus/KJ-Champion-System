@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.7] - 2026-04-25
+
+git tag: v2.0.7
+摘要：hotfix — 新用戶 onboarding 強制流程修補。原設計要求新用戶照「用戶資料 → 用戶數據 → 主應用」順序完成，但程式碼缺少 guard，新用戶可帶半套資料進主應用。修法：(1) AuthContext 新增 `isProfileComplete()` 與 `isStatsComplete()` helper，前者要求 realName / email / phone / birthday 四欄都不為空，後者要求 courseRecord 至少 1 筆。(2) `ProtectedRoute` 加二級判斷：未完成資料強制導 `/profile/edit`、未完成數據強制導 `/user-stats/edit`。(3) ProfileEdit 四欄全 required + 個別 alert + 新用戶完成後接續導 `/user-stats/edit`。(4) UserStatsEdit 課程紀錄至少 1 筆驗證 + 紅星標示。兩個編輯頁加新用戶 banner 提示。
+
+---
+
 ## [v2.0.6] - 2026-04-25
 
 git tag: v2.0.6
