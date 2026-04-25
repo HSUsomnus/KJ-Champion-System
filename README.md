@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統 — DEV 測試分支
 
-> **分支：`dev`** | 基底版本：v2.0.4（與 `main` 同步）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-13
+> **分支：`dev`** | 基底版本：v2.0.6（與 `main` 同步）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-25
 
 此分支為 QA 測試環境，**已於 2026-04-13 格式化重置為 main**，歷史清空，重新累積功能分支合入。
 
@@ -8,8 +8,12 @@
 
 ## ⚠️ 此分支狀態
 
-- 基底等於 `main`（v2.0.4）
-- **已合入**：`m_b_每日行程推播_backend`（2026-04-14，待測試）
+- 基底等於 `main`（v2.0.6）
+- **已合入**：
+  - `m_b_每日行程推播_backend`（2026-04-14，待測試）
+  - `m_b_zeabur_projects_split`（2026-04-25，OpenSpec change 10 — Zeabur 專案分離，dev 後端 URL 已切換至 `kj-champion-dev.zeabur.app`）
+  - hotfix v2.0.5（2026-04-25，Login.jsx 首次登入「建立資料」死循環修復，從 main 同步進來）
+  - hotfix v2.0.6（2026-04-25，Login.jsx useEffect 與 handleConfirm 的 navigate race condition 修復，接續 v2.0.5）
 - 其他功能分支待依序 merge
 
 ---
