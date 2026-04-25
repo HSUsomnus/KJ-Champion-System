@@ -6,7 +6,9 @@
 
 ## 功能範圍
 
-**v2.1.0 上線**：OpenSpec change 10「Zeabur 專案分離」完成 + 連帶 v2.0.5/2.0.6/2.0.7/2.0.8 四個 hotfix 修補首次登入 onboarding 流程。dev 與 prod 環境完全物理隔離，prod DB 公網路關閉、密碼旋轉。
+**v2.1.0 已上線（PC 收工）**：OpenSpec change 10「Zeabur 專案分離」完成 + 連帶 v2.0.5/2.0.6/2.0.7/2.0.8 四個 hotfix 修補首次登入 onboarding 流程。dev 與 prod 環境完全物理隔離，prod DB 公網路關閉、密碼旋轉。`.claude/rules/workflow.md` 規則更新（修 bug 加判斷決策樹）已直推 main。
+
+→ **PC 此次 session 結束，交班給手機 Claude Code Web 接手 m_b_\* 分支進度**。
 
 主要里程碑：
 - dev 環境搬到獨立 Zeabur 專案 `kj-champion-dev`，內網與 prod 完全隔絕
@@ -77,6 +79,32 @@
 - **prod DB 公網預設關閉**（v2.1.0 起）：日常 PC 連不到 prod DB。需要維護時去 Zeabur Dashboard 暫時開「連線埠轉送」toggle，做完立刻關
 - **新用戶在 dev 站登入會走完整 onboarding**：因為 dev DB 為空。要測新 UI 流程很方便；要測既有用戶行為要先在 dev DB 寫一筆完整的 member 記錄（PC psql `INSERT INTO members ...`）
 
-## 下一步
+## 下一步（手機 Claude Code Web 接手）
 
-10.14 推完進 main = v2.1.0 功能上線完成 → 接著做題外話的 `.claude/rules/workflow.md` 規則更新（補「先判斷 bug 來自哪裡」決策樹）。
+### PC 已完成 — 交班檢查清單
+- [x] OpenSpec 10 全部 14 個 task 完成 + v2.1.0 上線
+- [x] v2.0.5 ~ v2.0.8 四個 hotfix 已 merge main
+- [x] dev DB 與 prod DB 物理隔離（跨 Zeabur 專案）
+- [x] prod DB 公網關閉 + 密碼旋轉
+- [x] `.claude/rules/workflow.md` 加「修 bug 判斷決策樹」直推 main
+- [x] dev 已同步 v2.1.0
+- [x] 砍 `m_b_zeabur_projects_split` + `m_b_dev_test_database`
+
+### 手機端要做的事（按優先順序）
+
+1. **同步 main → 7 條 m_b_\* 分支**（拿到 v2.1.0 + 新規則）
+   - `m_b_eruda除錯工具`、`m_b_pwa_upgrade`、`m_b_tag_backend/database/frontend`、`m_b_每日行程推播_backend/frontend`
+   - 衝突採 `-X theirs`（按 deploy.md 慣例），記下被覆蓋的 dep
+2. **m_b_每日行程推播_backend** 已合進 dev，可繼續驗證後上 main
+3. **m_b_tag_database → m_b_tag_backend → m_b_tag_frontend** 依序合（標籤系統三段式）
+4. **m_b_pwa_upgrade**（PWA 升級，需實機測 install）
+5. **m_b_eruda除錯工具**（依手機端 commit message 看是否可廢，已被 `_推播_frontend` 的 `42a843b` 吸收）
+
+### 環境變數提醒
+- 本機 `.env` 內 `DATABASE_URL`（prod 公網）日常無效（v2.1.0 起公網關閉）。要做 prod DB 維護需先去 Zeabur 暫開公網
+- `DEV_DATABASE_URL`（dev 公網）正常可用
+- prod 新密碼存在使用者本機 `.env` 內，未在任何文件 commit
+
+### Cloudflare Pages prod 部署狀態
+- main push 後自動觸發 build，30-60 秒完成
+- 使用者待驗證 `https://kj-champion-system.pages.dev` 登入正常（onboarding guard 不會觸發 prod 既有用戶）
