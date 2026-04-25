@@ -14,9 +14,9 @@ graph LR
   025["✅ 025\nhtml-production-deploy"]
   06["✅ 06\n新UI前端開發"]
   07["✅ 07\noauth動態redirect"]
-  08["⏸️ 08\ndev-test-database\n(superseded by 10)"]
+  08["🗄️ 08\ndev-test-database\n(superseded by 10)"]
   09["🔄 09\n每日行程推播"]
-  10["🔄 10\nzeabur-projects-split\n← PC CURRENT"]
+  10["✅ 10\nzeabur-projects-split\n(v2.1.0)"]
 
   01 --> 02 --> 025 --> 06 --> 07 --> 08 --> 09 --> 10
 
@@ -27,7 +27,7 @@ graph LR
   style 07 fill:#d4edda,stroke:#28a745,color:#155724
   style 08 fill:#e2e3e5,stroke:#6c757d,color:#495057
   style 09 fill:#fff3cd,stroke:#ffc107,color:#856404
-  style 10 fill:#fff3cd,stroke:#ffc107,color:#856404
+  style 10 fill:#d4edda,stroke:#28a745,color:#155724
 ```
 
 | # | Change | 狀態 | 說明 |
@@ -40,57 +40,64 @@ graph LR
 | 05 | [production-cutover](changes/05-production-cutover/tasks.md) | ✅ SUPERSEDED | React 版正式切換 — 由 06 + v2.0 系列完成 |
 | 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，合併 main（v2.0.0） |
 | 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | OAuth redirect 自動偵測 origin（v1.6.0） |
-| 08 | [dev-test-database](changes/08-dev-test-database/tasks.md) | ⏸️ ON HOLD | dev 測試 DB 獨立化 — **被 10 取代**，10 完成後 archive |
-| 09 | [每日行程推播](changes/09-每日行程推播/tasks.md) | 🔄 IN PROGRESS | LINE Bot 每日定時推送明日行程（手機端維護） |
-| 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | 🔄 **PC CURRENT** | Zeabur 專案分離 — dev 與 prod 完全物理隔離（PC 維護） |
+| 08 | dev-test-database（在 `m_b_dev_test_database` 分支上） | 🗄️ SUPERSEDED | **被 10 取代並 archive**。資料夾未進 main，10 上線後可砍 `m_b_dev_test_database` 分支 |
+| 09 | 每日行程推播（在 `m_b_每日行程推播_*` 分支上，手機端維護） | 🔄 IN PROGRESS | LINE Bot 每日定時推送明日行程 |
+| 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0 上線） |
 
 ---
 
-## 當前 Change：10-zeabur-projects-split
+## 當前 Change：10-zeabur-projects-split — ✅ 已完成
 
-`███░░░░░░░░░░` 21% — 完成 3 / 14 個子任務
+`█████████████` 100% — 完成 14 / 14 個子任務（v2.1.0 上線）
 
 ### 進行分支
 
-`m_b_zeabur_projects_split`（PC 本地 + 使用者手動 Zeabur Dashboard 並行）
+`m_b_zeabur_projects_split` → 即將 merge main 走 v2.1.0「功能上線」流程
 
-### ✅ 已完成（階段一）
+### ✅ 全部完成（14/14）
+
+#### 階段一：建立新 Zeabur 環境
 - [x] 10.1 新建 Zeabur 專案 `kj-champion-dev`
-- [x] 10.2 新專案建 `postgresql-test`（公網 30967）
+- [x] 10.2 新專案建 `postgresql-dev`（公網 30967）
 - [x] 10.3 PC schema dump → 套到新 dev DB（5 tables 與 prod 一致）
 
-### 待完成（依依賴順序）
-
 #### 階段二：建立新 dev 後端
-- [x] 10.4 新專案建 `kj-champion-system-dev` 後端（使用者）— 完成於本輪 session
-- [x] 10.5 新 dev 後端環境變數（使用者）— DATABASE_URL + APP_URL 已正確設定
-- [x] 10.6 取得新 dev 後端 URL（使用者）— `kj-champion-dev.zeabur.app`
+- [x] 10.4 新專案建 `kj-champion-system-dev` 後端（連 dev branch）
+- [x] 10.5 新 dev 後端環境變數（DATABASE_URL = 內網、APP_URL = 新公網）
+- [x] 10.6 取得新後端 URL `kj-champion-dev.zeabur.app`
 
 #### 階段三：前端與外部設定
-- [x] 10.7 修改 `_worker.js` 指向新 URL（Claude）— commit 2d7b08b
-- [ ] 10.8 LINE Console 加新 callback URL（使用者）
-- [ ] 10.9 Cloudflare Pages preview build 確認（使用者）
+- [x] 10.7 修改 `_worker.js` 指向新 URL
+- [x] 10.8 LINE Console 加新 callback URL
+- [x] 10.9 Cloudflare Pages preview build 確認
 
 #### 階段四：驗證與切換
-- [ ] 10.10 dev 全鏈路驗證（使用者）
-- [ ] 10.11 砍掉舊 dev 服務（kj-champion 專案內）（使用者）
+- [x] 10.10 dev 全鏈路驗證（讀寫雙向 + DB 隔離 24 vs 0）
+- [x] 10.11 砍舊 `kj-champion` 專案內的 `postgresql-test` 與 `kj-champion-system-dev`
 
 #### 階段五：prod DB 安全強化
-- [ ] 10.12 prod DB 密碼旋轉（Claude + 使用者）
-- [ ] 10.13 關 prod DB 公網路（兩步驗證）（使用者）
+- [x] 10.12 prod DB 密碼旋轉（PC ALTER USER + Zeabur env var 同步 + 重啟 prod 後端）
+- [x] 10.13 關 prod DB 公網路（兩步驗證後 toggle 關，prod 站續正常）
 
 #### 階段六：收尾
-- [ ] 10.14 文件更新 + archive 08（Claude）
+- [x] 10.14 文件更新（NOW.md / README / database.md / deploy.md）+ STATUS.md 更新
+
+### 連帶完成的 hotfix（dev DB cold-start 觸發的 main 設計-實作落差）
+
+- v2.0.5 — Login.jsx no-profile 死循環
+- v2.0.6 — useEffect / handleConfirm navigate race condition
+- v2.0.7 — 新用戶 onboarding 強制流程（4 檔修補）
+- v2.0.8 — onboarding 完成後導主頁
 
 ---
 
 ## 並行 Change：09-每日行程推播
 
-由手機 Claude Code 維護，PC 不主動接手。詳見該 change 自身的 tasks.md。
+由手機 Claude Code 維護於 `m_b_每日行程推播_backend` / `m_b_每日行程推播_frontend` 分支，**PC 不主動接手**。後端已合進 dev 待測試。
 
 ---
 
-> **目前等待**：使用者完成 10.8（LINE Console 加 callback URL）+ PC merge `m_b_zeabur_projects_split` 到 dev 觸發 Cloudflare Pages preview build
+> **下一步**：m_b_zeabur_projects_split → main 走 v2.1.0「功能上線」流程，砍分支、同步、archive `m_b_dev_test_database`。
 
 ---
 

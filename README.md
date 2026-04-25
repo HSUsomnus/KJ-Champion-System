@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統 — DEV 測試分支
 
-> **分支：`dev`** | 基底版本：v2.0.8（與 `main` 同步）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-25
+> **分支：`dev`** | 基底版本：v2.1.0（與 `main` 同步）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-25
 
 此分支為 QA 測試環境，**已於 2026-04-13 格式化重置為 main**，歷史清空，重新累積功能分支合入。
 
@@ -8,15 +8,13 @@
 
 ## ⚠️ 此分支狀態
 
-- 基底等於 `main`（v2.0.8）
-- **已合入**：
+- 基底等於 `main`（**v2.1.0 — Zeabur 專案分離 + dev/prod 物理隔離已上線**）
+- **已合入 main 的內容**（透過 v2.1.0 整合）：
+  - OpenSpec change 10 — Zeabur 專案分離（dev 後端搬到 `kj-champion-dev.zeabur.app`、dev DB 獨立、prod DB 公網關閉、prod 密碼旋轉）
+  - hotfix v2.0.5 ~ v2.0.8（首次登入 onboarding 流程修補完整串）
+- **dev 分支獨有（尚未上 main）**：
   - `m_b_每日行程推播_backend`（2026-04-14，待測試）
-  - `m_b_zeabur_projects_split`（2026-04-25，OpenSpec change 10 — Zeabur 專案分離，dev 後端 URL 已切換至 `kj-champion-dev.zeabur.app`）
-  - hotfix v2.0.5（2026-04-25，Login.jsx 首次登入「建立資料」死循環修復，從 main 同步進來）
-  - hotfix v2.0.6（2026-04-25，Login.jsx useEffect 與 handleConfirm 的 navigate race condition 修復，接續 v2.0.5）
-  - hotfix v2.0.7（2026-04-25，新用戶 onboarding 強制流程修補：用戶資料 4 欄全必填 + 用戶數據課程紀錄 ≥ 1 筆 + ProtectedRoute guard）
-  - hotfix v2.0.8（2026-04-25，UserStatsEdit 完成 onboarding 後導主頁，新用戶/既有用戶導向區分）
-- 其他功能分支待依序 merge
+- 其他功能分支待依序 merge（`m_b_每日行程推播_frontend` / `m_b_pwa_upgrade` / `m_b_tag_*` / `m_b_eruda除錯工具`）
 
 ---
 
