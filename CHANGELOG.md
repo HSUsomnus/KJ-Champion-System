@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.6] - 2026-04-25
+
+git tag: v2.0.6
+摘要：hotfix — Login.jsx useEffect 與 handleConfirm 的 navigate race condition。v2.0.5 修了 `'no-profile'` 分支沒呼叫 `login(userData)` 的問題後，新發現第二層 bug：`handleConfirm` 呼叫 `login(userData)` 設 user state → 觸發 `useEffect` 「已登入跳首頁」邏輯 `navigate('/')`，蓋掉同步呼叫的 `navigate('/profile/edit')`，首次登入仍無法進編輯頁。修法：useEffect 加 `authState === 'idle'` 條件，確保只在「已登入但直接訪問 /login」時才跳首頁，OAuth callback 流程交給 `handleConfirm` 自行決定 navigate。
+
+---
+
 ## [v2.0.5] - 2026-04-25
 
 git tag: v2.0.5
