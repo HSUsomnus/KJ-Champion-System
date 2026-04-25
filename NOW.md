@@ -6,15 +6,14 @@
 
 ## 功能範圍
 
-**v2.1.0 已上線（PC 收工）**：OpenSpec change 10「Zeabur 專案分離」完成 + 連帶 v2.0.5/2.0.6/2.0.7/2.0.8 四個 hotfix 修補首次登入 onboarding 流程。dev 與 prod 環境完全物理隔離，prod DB 公網路關閉、密碼旋轉。`.claude/rules/workflow.md` 規則更新（修 bug 加判斷決策樹）已直推 main。
+**v2.2.0 後端已上線（手機 CCR 推完，交班 PC）**：OpenSpec change 09「每日行程推播」後端完成 — LINE Bot 每日定時推送隔日行程 Flex 字卡（`Asia/Taipei` `node-cron` + `system_settings` 表動態設定 + 開發者專用 API + Warm Minimal 風格字卡點進前端詳情）。前端設定頁（`m_b_每日行程推播_frontend`）待開發。
 
-→ **PC 此次 session 結束，交班給手機 Claude Code Web 接手 m_b_\* 分支進度**。
+→ **手機 CCR 此次 session 結束，交班給 PC 接手**：補建 `v2.2.0` tag、prod 上線驗證、後續 m_b_* 分支進度。
 
 主要里程碑：
-- dev 環境搬到獨立 Zeabur 專案 `kj-champion-dev`，內網與 prod 完全隔絕
-- prod DB 公網路關閉，僅內網存取
-- prod DB 密碼旋轉（舊密碼曾在 web Claude Code chat 紀錄暴露）
-- 新用戶 onboarding 強制流程：用戶資料 → 用戶數據 → 主應用，未完成不得進其他頁
+- v2.2.0 後端：`server/scheduler/dailyAgenda.js` + `server/services/agendaService.js` + `server/services/lineService.js` Flex 生成 + 3 個 API
+- system_settings 表自動 migration（server.js 啟動時 idempotent INSERT 種子值：`time=21:00` / `enabled=true` / `target=developer`）
+- 全部 7 條 m_b_* 分支 + dev 同步至 v2.2.0 完成
 
 ## 設計決策
 
@@ -36,37 +35,41 @@
   - stats 完整 = courseRecord 至少 1 筆
   - ProtectedRoute 二級判斷：未完成 profile → 強制 `/profile/edit`、未完成 stats → 強制 `/user-stats/edit`
   - 完成 onboarding 最後一步 → 導 `/`（主頁）
+- **每日行程推播 v2.2.0**：
+  - **時區固定 `Asia/Taipei`**（`node-cron` `timezone` 選項，不依賴容器 TZ）
+  - **system_settings 表三個 key**：`daily_agenda_time` / `daily_agenda_enabled` / `daily_agenda_target`（`all` / `manager_above` / `developer`）
+  - 種子值只用於首次建表，前端設定 UI 上線後一律以 DB 為準（不視為「行為預設」，視為「初始 placeholder」）
+  - **target 不寫死**：透過 `PUT /api/line/agenda-settings` 即時改寫 + 觸發 scheduler 重排（無需重啟後端）
+  - Flex 字卡：Header `#4A7C59` accent / Body `#F7F5F2` 米白底 / 每個 event 為白底卡片 / 點擊 → `${FRONTEND_URL}/event/${id}` / Footer 按鈕 → `${FRONTEND_URL}/calendar`
+  - 設定 API 限 `developer` 角色（`requireDeveloper` middleware）
 
 ## 目前進度
 
-- **目前分支**：`m_b_zeabur_projects_split`（待 10.14 完成 → merge main 走 v2.1.0 功能上線）
-- **OpenSpec change 10 進度**：13 / 14 完成（剩 10.14 文件更新 + archive 08）
-- **已上 main 的版本**：v2.0.5 / v2.0.6 / v2.0.7 / v2.0.8（4 個 hotfix）
-- **dev 已驗證**：dev 站走新 dev 後端 `kj-champion-dev.zeabur.app` + 走獨立 dev DB（5 tables 與 prod 對齊、空資料）+ 新用戶 onboarding 完整流程順跑
+- **目前分支**：`main`（v2.2.0 已上線，HEAD `9f18745`）
+- **手機 CCR 剛完成**：09 後端 merge → main push → 全分支同步
+- **dev 已同步**：dev HEAD `53281ae`，v2.2.0 完整內容（README 衝突手動解，保留 dev 專屬「功能分支總表」結構）
+- **m_b_每日行程推播_backend 保留**：依使用者決議，**等 `m_b_每日行程推播_frontend` 上線後一起砍**
 
-### change 10 已完成的 task
-- 10.1 新建 Zeabur 專案 `kj-champion-dev`
-- 10.2 新專案建 `postgresql-test`（後改名 `postgresql-dev`）
-- 10.3 PC schema dump → 套到新 dev DB
-- 10.4 新專案建 `kj-champion-system-dev` 後端（連 dev branch）
-- 10.5 新 dev 後端環境變數（`DATABASE_URL` 走 `postgresql.zeabur.internal:5432` 內網）
-- 10.6 取得新 dev 後端 URL `kj-champion-dev.zeabur.app`
-- 10.7 修改 `_worker.js` 的 `resolveBackend()` 指向新 URL
-- 10.8 LINE Console 加新 callback URL（保留舊 URL）
-- 10.9 Cloudflare Pages preview build 確認
-- 10.10 dev 全鏈路驗證（讀寫雙向 + 資料隔離 24 vs 0）
-- 10.11 砍舊 `kj-champion` 專案內的 `postgresql-test` 與 `kj-champion-system-dev`
-- 10.12 prod DB 密碼旋轉（用 PC ALTER USER + Zeabur env var 同步 + 重啟 prod 後端）
-- 10.13 關 prod DB 公網路（兩步驗證後 toggle 關，prod 站續正常）
+### change 09 已完成（後端段）
+- 1.x ~ 4.x 後端 scheduler + service + API + Flex 字卡
+- 5.x dev 整合 + Cloudflare Pages preview 驗證
+- 5.6.4 v2.2.0 上線準備（CHANGELOG / README / context / STATUS / tasks）
 
-### change 10 待完成
-- 10.14 文件更新 + archive 08（**進行中 — 此次提交範圍**）
+### change 09 待完成（前端段，下次接手 m_b_每日行程推播_frontend）
+- 6.x 前端設定頁（讀寫 `/api/line/agenda-settings`，含 enabled toggle / 時間 picker / 對象 radio）
+- 7.x Eruda 手機除錯工具整合（URL `?eruda=1` + localStorage toggle）
+- 8.x 前端 v2.3.0 上線
 
-### v2.0.5 ~ v2.0.8 hotfix 串
-- v2.0.5 — Login.jsx no-profile 點建立資料死循環（profile.edit 沒先 login(userData) 導致被 ProtectedRoute 踢回）
-- v2.0.6 — Login.jsx useEffect 跟 handleConfirm 的 navigate race condition（user 變更觸發 useEffect 蓋掉 navigate）
-- v2.0.7 — 新用戶 onboarding 強制流程（4 個檔案 + ProtectedRoute guard + 編輯頁必填）
-- v2.0.8 — UserStatsEdit 完成 onboarding 後導主頁（onboarding=true → '/'）
+### 全部 m_b_* 分支同步狀態（v2.2.0 後）
+| 分支 | merge 結果 | 備註 |
+|---|---|---|
+| `m_b_eruda除錯工具` | ✅ 乾淨 merge | 仍建議廢棄（已被 `_推播_frontend` 的 `42a843b` 吸收）|
+| `m_b_pwa_upgrade` | ⚠️ **`-X theirs`** | 衝突檔 `openspec/STATUS.md`（採 main 版本，分支自己的 STATUS 改動被覆蓋）— 下次接手該分支時對照 commit `7abb8d2` 補回 |
+| `m_b_tag_backend` | ✅ 乾淨 merge | — |
+| `m_b_tag_database` | ✅ 乾淨 merge | — |
+| `m_b_tag_frontend` | ✅ 乾淨 merge | — |
+| `m_b_每日行程推播_backend` | ✅ 乾淨 merge | **保留不刪**，等 frontend 一起砍 |
+| `m_b_每日行程推播_frontend` | ✅ 乾淨 merge | 後端 API 已就緒，可開始接 |
 
 ## 已知地雷
 
@@ -78,33 +81,48 @@
 - **Zeabur PostgreSQL connection string 模板**：`postgresql` 服務的 `${POSTGRES_CONNECTION_STRING}` 引用 `${PASSWORD}` env var，**不是** `${POSTGRES_PASSWORD}`。改密碼時兩個都改，並重啟使用該 template 的後端服務（例如 `kj-champion-system`）讓 connection pool 拿到新值
 - **prod DB 公網預設關閉**（v2.1.0 起）：日常 PC 連不到 prod DB。需要維護時去 Zeabur Dashboard 暫時開「連線埠轉送」toggle，做完立刻關
 - **新用戶在 dev 站登入會走完整 onboarding**：因為 dev DB 為空。要測新 UI 流程很方便；要測既有用戶行為要先在 dev DB 寫一筆完整的 member 記錄（PC psql `INSERT INTO members ...`）
+- **m_b_pwa_upgrade 的 STATUS.md 被覆蓋**（v2.2.0 同步副作用）：下次接手 PWA 分支時，需先 `git diff 7abb8d2~1 7abb8d2 -- openspec/STATUS.md` 看分支自己加的 STATUS 段落，手動補回
 
-## 下一步（手機 Claude Code Web 接手）
+## 下一步（PC 接手）
 
-### PC 已完成 — 交班檢查清單
-- [x] OpenSpec 10 全部 14 個 task 完成 + v2.1.0 上線
-- [x] v2.0.5 ~ v2.0.8 四個 hotfix 已 merge main
-- [x] dev DB 與 prod DB 物理隔離（跨 Zeabur 專案）
-- [x] prod DB 公網關閉 + 密碼旋轉
-- [x] `.claude/rules/workflow.md` 加「修 bug 判斷決策樹」直推 main
-- [x] dev 已同步 v2.1.0
-- [x] 砍 `m_b_zeabur_projects_split` + `m_b_dev_test_database`
+### 手機 CCR 已完成 — 交班檢查清單
+- [x] v2.2.0 後端 merge → main + push（HEAD `9f18745`）
+- [x] CHANGELOG / README / `.claude/context/v2.2.0.md` / OpenSpec STATUS 全更新
+- [x] dev 同步 v2.2.0（HEAD `53281ae`，README 衝突手解）
+- [x] 7 條 m_b_* 分支同步 main（其中 `m_b_pwa_upgrade` 用 `-X theirs`）
+- [x] 機密檢查通過
 
-### 手機端要做的事（按優先順序）
+### PC 端要做的事（按優先順序）
 
-1. **同步 main → 7 條 m_b_\* 分支**（拿到 v2.1.0 + 新規則）
-   - `m_b_eruda除錯工具`、`m_b_pwa_upgrade`、`m_b_tag_backend/database/frontend`、`m_b_每日行程推播_backend/frontend`
-   - 衝突採 `-X theirs`（按 deploy.md 慣例），記下被覆蓋的 dep
-2. **m_b_每日行程推播_backend** 已合進 dev，可繼續驗證後上 main
-3. **m_b_tag_database → m_b_tag_backend → m_b_tag_frontend** 依序合（標籤系統三段式）
-4. **m_b_pwa_upgrade**（PWA 升級，需實機測 install）
-5. **m_b_eruda除錯工具**（依手機端 commit message 看是否可廢，已被 `_推播_frontend` 的 `42a843b` 吸收）
+1. **🔥 補建 v2.2.0 tag**（CCR 沙箱拒絕 tag push 403）
+   ```bash
+   git fetch origin
+   git tag v2.2.0 9f18745
+   git push origin v2.2.0
+   ```
+   或 GitHub Web UI：https://github.com/HSUsomnus/KJ-Champion-System/releases/new → Choose tag `v2.2.0` → Target `main` → Publish release
+
+2. **prod 上線驗證**
+   - Zeabur Logs 看啟動：預期出現 `system_settings 表已建立 / 已存在` + `每日行程推播 scheduler 已啟動 — time=21:00 / target=developer / enabled=true / TZ=Asia/Taipei`
+   - 手動觸發 push（你是 developer，登入正式站後 DevTools fetch）：
+     ```js
+     fetch('/api/line/push-daily-agenda', {method:'POST',headers:{'x-line-userid':'你的userId'}})
+     ```
+   - 21:00 自動推播：今晚看你 LINE 是否收到隔日（4/26）行程字卡
+   - 若想對齊 dev 行為（23:30 / all），用 `PUT /api/line/agenda-settings` 改設定（**不需開 prod DB 公網**）
+
+3. **後續開發**：`m_b_每日行程推播_frontend`（後端 API 已就緒，前端可接）
+   - frontend 上線後一起砍 `m_b_每日行程推播_backend` + `m_b_每日行程推播_frontend`
+4. **`m_b_tag_*` 三段式合**（database → backend → frontend）— 但缺 OpenSpec change，建議補 `11-tag-system`
+5. **`m_b_pwa_upgrade`** PWA 升級（需實機測 install）— 接手時注意 STATUS.md 被覆蓋的問題（見已知地雷）
+6. **`m_b_eruda除錯工具`** 確認是否廢棄（功能已被 `_推播_frontend` 的 `42a843b` 吸收）
 
 ### 環境變數提醒
 - 本機 `.env` 內 `DATABASE_URL`（prod 公網）日常無效（v2.1.0 起公網關閉）。要做 prod DB 維護需先去 Zeabur 暫開公網
 - `DEV_DATABASE_URL`（dev 公網）正常可用
 - prod 新密碼存在使用者本機 `.env` 內，未在任何文件 commit
+- v2.2.0 不需要新增環境變數；`LINE_CHANNEL_ACCESS_TOKEN` 必須有 push messages 權限（既有 LINE Bot token 已具備）
 
 ### Cloudflare Pages prod 部署狀態
-- main push 後自動觸發 build，30-60 秒完成
-- 使用者待驗證 `https://kj-champion-system.pages.dev` 登入正常（onboarding guard 不會觸發 prod 既有用戶）
+- main push（`9f18745`）後自動觸發 build，30-60 秒完成
+- PC 待驗證 `https://kj-champion-system.pages.dev` 登入正常 + 推播鏈路通
