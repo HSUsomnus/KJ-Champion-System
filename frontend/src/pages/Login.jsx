@@ -10,9 +10,14 @@ export default function Login() {
   const [userData, setUserData] = useState(null)
 
   // 已登入狀態直接跳轉
+  // [設計決策] 只在 authState === 'idle' 時觸發
+  // 原因：OAuth callback 回來後 handleConfirm 會呼叫 login(userData) + navigate('/profile/edit')，
+  //       若此 useEffect 不限制 authState 條件，user 變更會 race condition 觸發 navigate('/')，
+  //       覆蓋掉 handleConfirm 的 navigate('/profile/edit')，導致首次登入無法進編輯頁。
+  // 若要修改：請先確認 handleConfirm 的 navigate 流程不會被影響
   useEffect(() => {
-    if (user) navigate('/', { replace: true })
-  }, [user, navigate])
+    if (user && authState === 'idle') navigate('/', { replace: true })
+  }, [user, navigate, authState])
 
   // 檢查 URL 是否帶有 OAuth 回調參數
   useEffect(() => {
