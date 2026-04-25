@@ -10,9 +10,14 @@ export default function Login() {
   const [userData, setUserData] = useState(null)
 
   // 已登入狀態直接跳轉
+  // [設計決策] 只在 authState === 'idle' 時觸發
+  // 原因：OAuth callback 回來後 handleConfirm 會呼叫 login(userData) + navigate('/profile/edit')，
+  //       若此 useEffect 不限制 authState 條件，user 變更會 race condition 觸發 navigate('/')，
+  //       覆蓋掉 handleConfirm 的 navigate('/profile/edit')，導致首次登入無法進編輯頁。
+  // 若要修改：請先確認 handleConfirm 的 navigate 流程不會被影響
   useEffect(() => {
-    if (user) navigate('/', { replace: true })
-  }, [user, navigate])
+    if (user && authState === 'idle') navigate('/', { replace: true })
+  }, [user, navigate, authState])
 
   // 檢查 URL 是否帶有 OAuth 回調參數
   useEffect(() => {
@@ -56,6 +61,12 @@ export default function Login() {
         api.syncAvatar(userData.pictureUrl).catch(() => {})
       }
       navigate('/')
+    } else if (authState === 'no-profile' && userData) {
+      // [設計決策] 首次登入也要先 login(userData) 把 user state 設起來
+      // 原因：/profile/edit 在 ProtectedRoute 下，user 為 null 會被踢回 /login 形成死循環
+      // 若要修改：請先確認 ProtectedRoute 的 auth guard 與 AuthContext 行為
+      login(userData)
+      navigate('/profile/edit')
     } else {
       navigate('/profile/edit')
     }

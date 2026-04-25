@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -18,7 +18,8 @@ import Management from './pages/Management'
 import MemberDetail from './pages/MemberDetail'
 
 function ProtectedRoute() {
-  const { user, loading } = useAuth()
+  const { user, loading, isProfileComplete, isStatsComplete } = useAuth()
+  const location = useLocation()
 
   if (loading) {
     return (
@@ -30,6 +31,22 @@ function ProtectedRoute() {
 
   if (!user) {
     return <Navigate to="/login" replace />
+  }
+
+  // [設計決策] onboarding 強制流程：新用戶必須完成 用戶資料 → 用戶數據 順序
+  // 原因：避免新用戶帶半套資料進主應用，違反業務邏輯
+  // 若要修改：請先確認 isProfileComplete / isStatsComplete 判斷準則
+  const path = location.pathname
+  const profileComplete = isProfileComplete(user)
+  const statsComplete = isStatsComplete(user)
+
+  // 階段 1：未完成用戶資料 → 強制 /profile/edit
+  if (!profileComplete && path !== '/profile/edit') {
+    return <Navigate to="/profile/edit" replace />
+  }
+  // 階段 2：用戶資料完成，但用戶數據未完成 → 強制 /user-stats/edit（允許回頭改 /profile/edit）
+  if (profileComplete && !statsComplete && path !== '/user-stats/edit' && path !== '/profile/edit') {
+    return <Navigate to="/user-stats/edit" replace />
   }
 
   return <Outlet />

@@ -1,5 +1,18 @@
 # Deploy Rules — git 操作或觸碰設定檔時注入
 
+## Zeabur 雙專案部署架構（v2.1.0 起）
+
+| 環境 | Zeabur 專案 | 服務 | 公網 |
+|---|---|---|---|
+| **prod** | `kj-champion` | `postgresql`（內網 only）+ `kj-champion-system`（後端，main branch） | DB 公網**關閉**、後端公網開（Cloudflare Pages 走後端公網入口） |
+| **dev** | `kj-champion-dev` | `postgresql-dev`（公網開）+ `kj-champion-system-dev`（後端，dev branch） | 全部開（PC + Cloudflare Pages preview 都連得到） |
+
+dev 後端 URL：`kj-champion-dev.zeabur.app`（v2.1.0 起，舊 `kj-champion-system-dev.zeabur.app` 已廢棄）
+
+→ 前端 `_worker.js` 的 `resolveBackend()` 依 hostname 判斷 prod / dev 後端入口。
+
+---
+
 ## 所有分支共用（必做）
 
 ### 推送前必做
