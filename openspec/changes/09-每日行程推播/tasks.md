@@ -69,11 +69,11 @@
 - [x] 7.5 `frontend/index.html` 加 `mobile-web-app-capable` meta tag（補 `apple-` deprecated 警告，新舊並存）
 
 ### 8. 驗證（後端 OK 後才開始）
-- [ ] 8.1 merge 到 dev 並 push
-- [ ] 8.2 開發者帳號登入，FabNav 顯示「開發者設定」入口（role gate 正確）
-- [ ] 8.3 設定頁讀寫、手動推播、權限控制全部正確
-- [ ] 8.4 Eruda toggle 開關 + 重整後右下角綠色按鈕出現
-- [ ] 8.5 非開發者帳號訪問 `/agenda-settings` 顯示「無存取權限」
+- [x] 8.1 merge 到 dev 並 push
+- [x] 8.2 開發者帳號登入，FabNav 顯示「開發者設定」入口（role gate 正確）
+- [x] 8.3 設定頁讀寫、手動推播、權限控制全部正確（dev DB seed 後實機驗證通過）
+- [x] 8.4 Eruda toggle 開關 + 重整後右下角綠色按鈕出現
+- [x] 8.5 非開發者帳號訪問 `/agenda-settings` 顯示「無存取權限」（用 localStorage swap lineUserId 驗證）
 
 ## 完成條件
 
