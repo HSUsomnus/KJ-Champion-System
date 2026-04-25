@@ -56,6 +56,12 @@ export default function Login() {
         api.syncAvatar(userData.pictureUrl).catch(() => {})
       }
       navigate('/')
+    } else if (authState === 'no-profile' && userData) {
+      // [設計決策] 首次登入也要先 login(userData) 把 user state 設起來
+      // 原因：/profile/edit 在 ProtectedRoute 下，user 為 null 會被踢回 /login 形成死循環
+      // 若要修改：請先確認 ProtectedRoute 的 auth guard 與 AuthContext 行為
+      login(userData)
+      navigate('/profile/edit')
     } else {
       navigate('/profile/edit')
     }

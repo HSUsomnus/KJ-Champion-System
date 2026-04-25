@@ -17,7 +17,8 @@
 ## 測試站
 
 - **網址**：[https://kjcs-dev.pages.dev](https://kjcs-dev.pages.dev)
-- **後端**：`kj-champion-system-dev.zeabur.app`（DEV 專用）
+- **後端**：`kj-champion-dev.zeabur.app`（DEV 專用，2026-04-25 起搬到獨立 Zeabur 專案 `kj-champion-dev`，舊 `kj-champion-system-dev.zeabur.app` 將於 OpenSpec 10.11 砍除）
+- **資料庫**：dev 後端連 `postgresql.zeabur.internal`（位於 `kj-champion-dev` 專案內，與 prod DB 物理隔離）
 - **路由**：`frontend/public/_worker.js` 內 `resolveBackend()` 依 hostname 判斷，`kjcs-dev.pages.dev` → DEV 後端
 
 ### 測試注意事項
