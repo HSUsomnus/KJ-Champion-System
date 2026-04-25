@@ -93,8 +93,6 @@
 - **prod DB 公網預設關閉**（v2.1.0 起）：日常 PC 連不到 prod DB。需要維護時去 Zeabur Dashboard 暫時開「連線埠轉送」toggle，做完立刻關
 - **新用戶在 dev 站登入會走完整 onboarding**：因為 dev DB 為空。要測新 UI 流程很方便；要測既有用戶行為要先在 dev DB 寫一筆完整的 member 記錄（PC psql `INSERT INTO members ...`）
 - **m_b_pwa_upgrade 的 STATUS.md 被覆蓋**（v2.2.0 同步副作用）：下次接手 PWA 分支時，需先 `git diff 7abb8d2~1 7abb8d2 -- openspec/STATUS.md` 看分支自己加的 STATUS 段落，手動補回
-- **本機 PC node_modules 損壞**（v2.3.0 PC session 發現）：所有 packages 都只解出最上層檔案（README/LICENSE/package.json），缺 `lib/` 等子目錄，導致 `node` 跑專案內任何依賴庫的腳本都會 `Cannot find module .../lib/main.js`。`npm install` 看資料夾存在會跳過，無法自修。修法：`rm -rf node_modules && npm install` 全砍重裝。**v2.3.0 prep 時改走 psql 直連 dev DB 繞過此問題，未影響上線**
-- **PC scoop nodejs-lts shim 缺失**（v2.3.0 PC session 發現）：scoop 顯示 `nodejs-lts (24.15.0) is already installed` 但 `~/scoop/shims/` 沒 node 檔，PowerShell 找不到 `node` 指令。修法：`scoop reset nodejs-lts`（會把 `~/scoop/apps/nodejs-lts/current/bin` 加進 USER PATH，舊 terminal 須關閉重開才生效）
 
 ## 下一步
 
@@ -102,9 +100,6 @@
 - `m_b_tag_*` 三段式合（database → backend → frontend），建議補 OpenSpec change `11-tag-system`
 - `m_b_pwa_upgrade`（需實機測 install）— 接手時對照 commit `7abb8d2` 補回兩次 -X theirs 蓋掉的 STATUS.md
 - `m_b_eruda除錯工具` 評估砍除（功能已併入 v2.3.0 設定頁）
-
-### 本機環境待修
-- node_modules 損壞 → `rm -rf node_modules && npm install`（不急，下次要跑 Node 腳本前處理）
 
 ### 環境變數
 - 本機 `.env` 內 `DATABASE_URL`（prod 公網）日常無效（v2.1.0 起公網關閉）。維護需 Zeabur 暫開公網
