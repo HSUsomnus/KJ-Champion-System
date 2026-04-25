@@ -36,7 +36,8 @@ function parseVolunteers(str) {
 
 export default function UserStatsEdit() {
   const navigate = useNavigate()
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, isStatsComplete } = useAuth()
+  const onboarding = !isStatsComplete(user)
   const [activeFab, setActiveFab] = useState(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
@@ -78,6 +79,9 @@ export default function UserStatsEdit() {
   const [blocker, setSaved] = useLeaveGuard()
 
   const handleConfirm = async () => {
+    // [設計決策] 課程紀錄必填，至少勾 1 個
+    // 原因：新用戶 onboarding 強制流程要求課程資料不得為空
+    if (form.courseList.length === 0) { alert('請至少勾選一個課程紀錄'); return }
     setSaving(true)
     try {
       await api.updateProfile({
@@ -89,7 +93,9 @@ export default function UserStatsEdit() {
       })
       await refreshUser()
       setSaved()
-      setTimeout(() => navigate('/user-stats'), 0)
+      // [設計決策] 新用戶完成 onboarding 最後一步 → 導主頁；既有用戶從 /user-stats 進來編輯 → 回 /user-stats
+      // 原因：onboarding 完成是進入主應用的時機，使用者預期看到主頁而非數據頁
+      setTimeout(() => navigate(onboarding ? '/' : '/user-stats'), 0)
     } catch (err) {
       alert(err.message)
     } finally {
@@ -119,6 +125,12 @@ export default function UserStatsEdit() {
       <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>編輯數據</h1>
 
+        {onboarding && (
+          <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: '#FFF3E0', border: '1px solid #FFB74D', color: '#7B5800' }}>
+            ⚠️ 新用戶請至少勾選一個課程紀錄（必填）。完成後即可進入其他頁面。
+          </div>
+        )}
+
         <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
           {/* 星等 */}
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
@@ -135,7 +147,7 @@ export default function UserStatsEdit() {
 
           {/* 課程紀錄 */}
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
-            <p className="text-xs mb-2" style={{ color: '#8A8680' }}>課程紀錄</p>
+            <p className="text-xs mb-2" style={{ color: '#8A8680' }}>課程紀錄 <span style={{ color: '#C0392B' }}>*</span></p>
             <div className="flex flex-col gap-2">
               {COURSE_OPTIONS.map(course => (
                 <label key={course} className="flex items-center gap-2.5 cursor-pointer">

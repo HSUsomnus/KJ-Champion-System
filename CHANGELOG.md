@@ -6,6 +6,41 @@
 
 ---
 
+## [v2.1.0] - 2026-04-25
+
+git tag: v2.1.0
+摘要：基礎建設升級 — OpenSpec change 10「Zeabur 專案分離」完整上線。dev 環境搬到獨立 Zeabur 專案 `kj-champion-dev`（含獨立 `postgresql-dev` DB + dev 後端 `kj-champion-dev.zeabur.app`），與 prod 環境（`kj-champion` 專案）跨專案內網完全隔絕，dev 任何錯誤無法物理觸碰 prod DB。同時關閉 prod DB 公網路（僅內網存取）+ 旋轉 prod DB 密碼（舊密碼曾在 web Claude Code chat 暴露）。`_worker.js` 的 `resolveBackend()` dev URL 從 `kj-champion-system-dev.zeabur.app` 改為 `kj-champion-dev.zeabur.app`。本版整合 v2.0.5 ~ v2.0.8 四個 hotfix（首次登入 onboarding 流程修補：no-profile 死循環、useEffect race condition、強制資料 + 數據填寫 guard、完成後導主頁），並 archive 被 superseded 的 OpenSpec change 08。
+
+---
+
+## [v2.0.8] - 2026-04-25
+
+git tag: v2.0.8
+摘要：hotfix — UserStatsEdit 完成 onboarding 後應導主頁。v2.0.7 onboarding guard 完成後，新用戶填完用戶數據按「確認/儲存」會導去 `/user-stats`，但使用者預期是進入主應用。修法：navigate 三元式判斷 — 新用戶（onboarding=true）→ `'/'`、既有用戶從 `/user-stats` 進來編輯 → `'/user-stats'` 保留原行為。
+
+---
+
+## [v2.0.7] - 2026-04-25
+
+git tag: v2.0.7
+摘要：hotfix — 新用戶 onboarding 強制流程修補。原設計要求新用戶照「用戶資料 → 用戶數據 → 主應用」順序完成，但程式碼缺少 guard，新用戶可帶半套資料進主應用。修法：(1) AuthContext 新增 `isProfileComplete()` 與 `isStatsComplete()` helper，前者要求 realName / email / phone / birthday 四欄都不為空，後者要求 courseRecord 至少 1 筆。(2) `ProtectedRoute` 加二級判斷：未完成資料強制導 `/profile/edit`、未完成數據強制導 `/user-stats/edit`。(3) ProfileEdit 四欄全 required + 個別 alert + 新用戶完成後接續導 `/user-stats/edit`。(4) UserStatsEdit 課程紀錄至少 1 筆驗證 + 紅星標示。兩個編輯頁加新用戶 banner 提示。
+
+---
+
+## [v2.0.6] - 2026-04-25
+
+git tag: v2.0.6
+摘要：hotfix — Login.jsx useEffect 與 handleConfirm 的 navigate race condition。v2.0.5 修了 `'no-profile'` 分支沒呼叫 `login(userData)` 的問題後，新發現第二層 bug：`handleConfirm` 呼叫 `login(userData)` 設 user state → 觸發 `useEffect` 「已登入跳首頁」邏輯 `navigate('/')`，蓋掉同步呼叫的 `navigate('/profile/edit')`，首次登入仍無法進編輯頁。修法：useEffect 加 `authState === 'idle'` 條件，確保只在「已登入但直接訪問 /login」時才跳首頁，OAuth callback 流程交給 `handleConfirm` 自行決定 navigate。
+
+---
+
+## [v2.0.5] - 2026-04-25
+
+git tag: v2.0.5
+摘要：hotfix — Login.jsx 修首次登入「建立資料」死循環。`handleConfirm` 的 `'no-profile'` 分支原直接 `navigate('/profile/edit')` 但沒先呼叫 `login(userData)` 把 user state 設起來，導致 `ProtectedRoute` 看到 user 為 null 把人踢回 `/login`。bug 從 v2.0.0 React 前端建立時就存在於 main，但 prod DB 永遠有 member 記錄所以從未被觸發；OpenSpec change 10 完成 dev DB 物理隔離後 dev DB 變空，邊界 case 才暴露。
+
+---
+
 ## [v2.0.4] - 2026-04-13
 
 git tag: v2.0.4

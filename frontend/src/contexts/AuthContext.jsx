@@ -53,8 +53,22 @@ export function AuthProvider({ children }) {
     return res
   }, [])
 
+  // [設計決策] onboarding 強制流程的完整度判斷
+  // 用戶資料完整 = realName / email / phone / birthday 四欄都不為空
+  const isProfileComplete = useCallback((u) => {
+    if (!u) return false
+    return !!(u.realName?.trim() && u.email?.trim() && u.phone?.trim() && u.birthday)
+  }, [])
+
+  // 用戶數據完整 = courseRecord 至少一筆（comma-separated 字串）
+  const isStatsComplete = useCallback((u) => {
+    if (!u || !u.courseRecord) return false
+    const courses = u.courseRecord.split(',').map(c => c.trim()).filter(c => c)
+    return courses.length > 0
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, isProfileComplete, isStatsComplete }}>
       {children}
     </AuthContext.Provider>
   )
