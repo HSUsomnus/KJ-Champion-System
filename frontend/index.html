@@ -5,9 +5,24 @@
     <link rel="icon" href="/康九_logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#F7F5F2" />
     <title>KJ Champion System</title>
+    <!-- Eruda 手機除錯工具：網址 ?eruda=1 或 localStorage.erudaEnabled === 'true' 任一為真即載入 -->
+    <script>
+      (function () {
+        var p = new URLSearchParams(location.search).get('eruda');
+        var ls = false;
+        try { ls = localStorage.getItem('erudaEnabled') === 'true'; } catch (e) { /* noop */ }
+        if (p === '1' || ls) {
+          var s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+          s.onload = function () { window.eruda && window.eruda.init(); };
+          document.head.appendChild(s);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
