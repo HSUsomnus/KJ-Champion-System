@@ -11,93 +11,102 @@
 graph LR
   01["✅ 01\nzeabur-infra-and-db"]
   02["✅ 02\ncloudflare-pages-validate"]
-  025["🔄 025\nhtml-production-deploy\n← CURRENT"]
-  03["⬜ 03\npencil-ui-design"]
-  04["⬜ 04\nreact-vite-pwa-frontend"]
-  05["⬜ 05\nproduction-cutover"]
+  025["✅ 025\nhtml-production-deploy"]
+  06["✅ 06\n新UI前端開發"]
+  07["✅ 07\noauth動態redirect"]
+  08["🗄️ 08\ndev-test-database\n(superseded by 10)"]
+  09["🔄 09\n每日行程推播\n後端 v2.2.0 / 前端待做"]
+  10["✅ 10\nzeabur-projects-split\n(v2.1.0)"]
 
-  01 --> 02 --> 025 --> 03 --> 04 --> 05
-  025 --> 06
+  01 --> 02 --> 025 --> 06 --> 07 --> 08 --> 09 --> 10
 
   style 01 fill:#d4edda,stroke:#28a745,color:#155724
   style 02 fill:#d4edda,stroke:#28a745,color:#155724
-  style 025 fill:#fff3cd,stroke:#ffc107,color:#856404
-  style 03 fill:#f8f9fa,stroke:#adb5bd,color:#6c757d
-  style 04 fill:#f8f9fa,stroke:#adb5bd,color:#6c757d
-  style 05 fill:#f8f9fa,stroke:#adb5bd,color:#6c757d
-  style 06 fill:#cce5ff,stroke:#004085,color:#004085
+  style 025 fill:#d4edda,stroke:#28a745,color:#155724
+  style 06 fill:#d4edda,stroke:#28a745,color:#155724
+  style 07 fill:#d4edda,stroke:#28a745,color:#155724
+  style 08 fill:#e2e3e5,stroke:#6c757d,color:#495057
+  style 09 fill:#fff3cd,stroke:#ffc107,color:#856404
+  style 10 fill:#d4edda,stroke:#28a745,color:#155724
 ```
 
 | # | Change | 狀態 | 說明 |
 | --- | --- | --- | --- |
 | 01 | [zeabur-infra-and-db](changes/01-zeabur-infra-and-db/tasks.md) | ✅ ARCHIVED | Zeabur DB + 後端部署，全完成 |
-| 02 | [cloudflare-pages-validate](changes/02-cloudflare-pages-validate/tasks.md) | ✅ DONE | Cloudflare Pages 前後端串接驗證，全部通過 |
-| 025 | [html-production-deploy](changes/025-html-production-deploy/tasks.md) | 🔄 **CURRENT** | staging HTML 版部署 main + 驗證 + 清空 staging |
-| 03 | [pencil-ui-design](changes/03-pencil-ui-design/tasks.md) | ⬜ NEXT | 設計稿（Pencil），進入前提：025 完成 |
-| 04 | [react-vite-pwa-frontend](changes/04-react-vite-pwa-frontend/tasks.md) | ⬜ FUTURE | React 重構，進入前提：03 完成 |
-| 05 | [production-cutover](changes/05-production-cutover/tasks.md) | ⬜ FUTURE | React 版正式切換，進入前提：04 通過 |
-| 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，已合併 main（v2.0.0） |
-| 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | 後端 OAuth redirect 自動偵測前端 origin，已合併 main（v1.6.0） |
-| 08 | [pwa-upgrade](changes/08-pwa-upgrade/tasks.md) | 🔄 **IN PROGRESS** | PWA 全平台升級（Android + iOS + Desktop），分支 `m_b_pwa_upgrade` |
+| 02 | [cloudflare-pages-validate](changes/02-cloudflare-pages-validate/tasks.md) | ✅ DONE | Cloudflare Pages 前後端串接驗證 |
+| 025 | [html-production-deploy](changes/025-html-production-deploy/tasks.md) | ✅ DONE | staging HTML 版部署 main 完成 |
+| 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，合併 main（v2.0.0） |
+| 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | OAuth redirect 自動偵測 origin（v1.6.0） |
+| 08 | dev-test-database（在 `m_b_dev_test_database` 分支上） | 🗄️ SUPERSEDED | **被 10 取代並 archive**。資料夾未進 main，10 上線後可砍 `m_b_dev_test_database` 分支 |
+| 09 | [每日行程推播](changes/09-每日行程推播/tasks.md) | 🔄 IN PROGRESS | 後端已上 main（v2.2.0）— LINE Bot 每日定時推送明日行程；前端設定頁 6.x ~ 8.x 待做 |
+| 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0 上線） |
 
 ---
 
-## 當前 Change：025-html-production-deploy
+## 當前 Change：09-每日行程推播 — 🔄 後端已上 main / 前端待做
 
-`████░░░░░░░░░` 31% — 完成 4 / 13 個子任務
+`████████░░░░░` 後端 20 / 20 ✅、前端 0 / 8 ⬜
 
-### ✅ 已完成
+### 進行分支
 
-- [x] **025.3 Zeabur 建立正式後端服務**（`kj-champion-system.zeabur.app`，Branch: main）
-- [x] **025.4 設定正式環境變數**（含 FRONTEND_URL 改為 Cloudflare Pages URL）
-- [x] **025.5 LINE Console 新增正式 Callback URL**
-- [x] **025.12 更新 `_worker.js`**（ZEABUR_BACKEND 已改為正式後端 URL）
+- 後端：`m_b_每日行程推播_backend`（已上 main，v2.2.0）
+- 前端：`m_b_每日行程推播_frontend`（待開發，6.x ~ 8.x 全未動）
 
-### ⬜ 待完成
+### ✅ 後端已完成（20/20，v2.2.0）
+
+#### 1. 依賴與 DB
+- [x] 1.1 `package.json` 新增 `node-cron` 依賴
+- [x] 1.2 `server/server.js` 新增 `system_settings` 表自動 migration（time=21:00 / enabled=true / target=developer）
+
+#### 2. 核心服務
+- [x] 2.1 `server/services/agendaService.js`（讀寫設定、過濾對象、推播主流程）
+- [x] 2.2 `server/services/lineService.js` 新增 `generateDailyAgendaFlexMessage()`
+- [x] 2.3 `server/scheduler/dailyAgenda.js`（start / stop / reschedule，timezone 固定 Asia/Taipei）
+
+#### 3. API
+- [x] 3.1 `GET /api/line/agenda-settings`（僅開發者）
+- [x] 3.2 `PUT /api/line/agenda-settings`（僅開發者）
+- [x] 3.3 `POST /api/line/push-daily-agenda`（手動觸發，僅開發者）
+
+#### 4. 整合
+- [x] 4.1 `server/server.js` 啟動 scheduler、掛 graceful shutdown
+
+#### 5. 驗證 + 視覺迭代（dev 上連續多日 23:30 推播驗證）
+- [x] 5.1 ~ 5.3 dev 後端排程啟動 + 手動 push API + 設定 API 讀寫
+- [x] 5.5.1 ~ 5.5.4 字卡 v1：時區 bug 修復、移除 emoji、加 dot bullet、類型膠囊 badge、Header accent 色、可點進 event 詳情
+- [x] 5.6.1 ~ 5.6.4 字卡 v2：body 改米白底、event row 卡片化（白底 + 邊框 + 圓角 + padding）、移除多餘 separator、連續多日 23:30 收推視為已驗證
+
+### ⬜ 前端待做（0/8）
+
+#### 6. 設定頁面
+- [ ] 6.1 `frontend/src/pages/AgendaSettings.jsx`（toggle / 時間 / 對象下拉 / 儲存 / 立即推播 / 權限檢查）
+
+#### 7. 前端整合
+- [ ] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法
+- [ ] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口
+- [ ] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由
+
+#### 8. 驗證
+- [ ] 8.1 merge frontend 分支到 dev 並 push
+- [ ] 8.2 開發者帳號登入，FabNav 顯示「推播設定」
+- [ ] 8.3 設定頁讀寫、手動推播、權限控制全部正確
+
+### 已完成的 v2.1.0 / v2.0.5 ~ v2.0.8（archived，詳見 .claude/context/）
+
+- v2.1.0 — Zeabur 專案分離 + dev/prod 物理隔離（OpenSpec change 10）
+- v2.0.5 ~ v2.0.8 — onboarding 流程四連 hotfix
 
 ---
 
-- [ ] **025.4 設定正式環境變數**（使用者手動 — Zeabur Dashboard）
-  - `DATABASE_URL`（Zeabur PostgreSQL 內網連線字串）
-  - `LINE_CHANNEL_ID`、`LINE_CHANNEL_SECRET`
-  - `GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET` 等 Google 相關
-  - `FRONTEND_URL=https://kj-champion-system.pages.dev`
-  - `NODE_ENV=production`
-
-- [ ] **025.1 建立 PR staging → main**（Claude git）
-  - 025.12 程式碼更新後由 Claude 協助建 PR
-
-- [ ] **025.2 確認 Cloudflare Pages main build 成功**（使用者驗證）
-  - merge PR 後，Cloudflare Pages 自動觸發 main branch build
-  - 確認 build log 無錯誤
-
-- [ ] **025.6 Cloudflare Pages Production branch 切換**（使用者手動 — Cloudflare Dashboard）
-  1. Cloudflare Pages → `kj-champion-system` → Settings → Builds & deployments
-  2. Production branch 改為 `main`
-  3. 觸發重新部署
-
-- [ ] **025.7 確認 Production 部署成功**（使用者驗證）
-  - 開啟 `https://kj-champion-system.pages.dev`，確認頁面正常
-
-- [ ] **025.8 API 溝通驗證**（使用者驗證）
-  - 確認 `/api/members`、`/api/calendar/events` 回應正確
-
-- [ ] **025.9 資料庫連線驗證**（使用者驗證）
-  - 新增 / 刪除測試行程，確認資料落在 Zeabur PostgreSQL
-
-- [ ] **025.10 LINE Login 完整流程**（使用者驗證）
-  - 清除 localStorage → 登入 → 確認回跳並正常使用
-
-- [ ] **025.11 停止 Zeabur staging 後端服務**（使用者手動 — Zeabur Dashboard）
-  - Zeabur → 原 staging 服務 → Suspend 或 Delete
-
-- [ ] **025.13 ✅ 完成**（Claude 更新文件）
-  - archive 此 change，STATUS.md 切換至 03-pencil-ui-design
+> **下一步**：開發 `m_b_每日行程推播_frontend` 分支（6.x ~ 7.x 實作），完成後依序 dev 驗證 → main 上線。
 
 ---
 
-> **進入下一階段條件**：025.13 通過
-> **目前等待**：025.4 環境變數設定完成 + 025.5 LINE Console 設定後，由 Claude 建 PR（025.1）
+## 編號讓號紀錄
+
+- 09-zeabur-projects-split → **10-zeabur-projects-split**（2026-04-25）
+- 原因：手機端在 dev 上已用 09 = 每日行程推播。PC 後到，禮讓編號。
+- commit history 內 `chore(09)` message 保留（不可改），但所有檔案內容已更新為 10。
 
 ---
 
@@ -112,4 +121,4 @@ graph LR
 
 ---
 
-*最後更新：2026-04-04*
+*最後更新：2026-04-25（v2.2.0 上線：09 後端 main 完成）*
