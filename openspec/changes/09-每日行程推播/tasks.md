@@ -56,19 +56,24 @@
 ## 前端（分支 `m_b_每日行程推播_frontend`）
 
 ### 6. 設定頁面
-- [ ] 6.1 新建 `frontend/src/pages/AgendaSettings.jsx`
+- [x] 6.1 新建 `frontend/src/pages/AgendaSettings.jsx`
   - 啟用 toggle、時間選擇、對象下拉、儲存、立即推播
   - 權限檢查（非開發者顯示無權限）
+  - 加碼：頁面內整合 Eruda 切換 toggle（讀寫 `localStorage.erudaEnabled`，提示「重新整理後生效」）
 
 ### 7. 前端整合
-- [ ] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法
-- [ ] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口
-- [ ] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由
+- [x] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法（`getAgendaSettings` / `updateAgendaSettings` / `pushDailyAgenda`）
+- [x] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口（`DEVELOPER_ITEMS`，role gate）
+- [x] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由（在 `ProtectedRoute` 下）
+- [x] 7.4 `frontend/index.html` 加 Eruda inline script loader（URL `?eruda=1` 或 localStorage 任一觸發）
+- [x] 7.5 `frontend/index.html` 加 `mobile-web-app-capable` meta tag（補 `apple-` deprecated 警告，新舊並存）
 
 ### 8. 驗證（後端 OK 後才開始）
-- [ ] 8.1 merge 到 dev 並 push
-- [ ] 8.2 開發者帳號登入，FabNav 顯示「推播設定」
-- [ ] 8.3 設定頁讀寫、手動推播、權限控制全部正確
+- [x] 8.1 merge 到 dev 並 push
+- [x] 8.2 開發者帳號登入，FabNav 顯示「開發者設定」入口（role gate 正確）
+- [x] 8.3 設定頁讀寫、手動推播、權限控制全部正確（dev DB seed 後實機驗證通過）
+- [x] 8.4 Eruda toggle 開關 + 重整後右下角綠色按鈕出現
+- [x] 8.5 非開發者帳號訪問 `/agenda-settings` 顯示「無存取權限」（用 localStorage swap lineUserId 驗證）
 
 ## 完成條件
 
