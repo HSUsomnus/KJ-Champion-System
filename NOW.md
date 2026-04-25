@@ -54,12 +54,13 @@
 
 ## 目前進度
 
-- **目前分支**：`main`（v2.3.0 已上線，HEAD `bc84023`）
-- **dev HEAD**：`2e2e6e4`（main 同步進來，dev 專屬 README 保留）
-- **5 條 m_b_*** 全部 behind main = 0
+- **目前分支**：`main`（v2.3.0 已上線，HEAD `f241b3c`）
+- **dev HEAD**：跟 main 同步（含 dev 專屬 README）
+- **4 條 m_b_*** 全部 behind main = 0（`m_b_eruda除錯工具` 已刪除，sharp dep cherry-pick 到 `m_b_pwa_upgrade`）
 - **v2.2.1 + v2.3.0 tag 都在遠端**
 - **`hotfix/event-detail-delete-fab`** 已被刪
 - **prod 推播時間** 已用 v2.3.0 GUI 從 23:30 改回 21:00
+- **本機 npm 環境** 已修復（node_modules + lockfile 重灌、Node.js 官網版裝好）
 
 ### change 09 已完成
 - 1.x ~ 5.x 後端 scheduler + service + API + Flex 字卡（v2.2.0 上線）
@@ -98,8 +99,7 @@
 
 ### 尚未動工的功能分支
 - `m_b_tag_*` 三段式合（database → backend → frontend），建議補 OpenSpec change `11-tag-system`
-- `m_b_pwa_upgrade`（需實機測 install）— 接手時對照 commit `7abb8d2` 補回兩次 -X theirs 蓋掉的 STATUS.md
-- `m_b_eruda除錯工具` 評估砍除（功能已併入 v2.3.0 設定頁）
+- `m_b_pwa_upgrade`（需實機測 install）— 接手時對照 commit `7abb8d2` 補回兩次 -X theirs 蓋掉的 STATUS.md。**已 cherry-pick `a976e41` 取得 sharp dep + generate-icons.js**，PWA icon 工具鏈完整可用
 
 ### 環境變數
 - 本機 `.env` 內 `DATABASE_URL`（prod 公網）日常無效（v2.1.0 起公網關閉）。維護需 Zeabur 暫開公網
