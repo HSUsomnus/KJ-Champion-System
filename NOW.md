@@ -6,9 +6,9 @@
 
 ## 功能範圍
 
-**v2.3.0 上線準備完成（PC session）**：OpenSpec change 09「每日行程推播」整個收尾 — 前端開發者設定頁（`/agenda-settings` toggle / 時間 / 對象 / 立即推播 + Eruda toggle）、FabNav 開發者入口、PWA `mobile-web-app-capable` meta tag 補正、scripts/seed-dev-agenda-test.js（dev DB seed 工具）。dev 全鏈路驗證 8.1 ~ 8.5 全通過。**本 commit 推到 `m_b_每日行程推播_frontend` 分支，待使用者確認後 merge main + tag v2.3.0**。
+**v2.3.0 已上線（PC session 完整收尾）**：OpenSpec change 09「每日行程推播」整個 DONE — 前端開發者設定頁（`/agenda-settings` toggle / 時間 / 對象 / 立即推播 + Eruda toggle）、FabNav 開發者入口、PWA `mobile-web-app-capable` meta tag 補正、scripts/seed-dev-agenda-test.js（dev DB seed 工具）。main HEAD `bc84023`，tag `v2.3.0` 已推。dev + 5 條 m_b_* 全部同步完成（pwa_upgrade 第二次 -X theirs 蓋 STATUS.md，需接手時補回）。`m_b_每日行程推播_backend` + `_frontend` 兩條 feature 分支已從遠端與本機刪除。
 
-→ **PC 接手已完成事項**：v2.2.0 prod 驗證（手動 push API + LINE 字卡實收）、v2.2.1 / v2.3.0 上線準備、dev 9 全鏈路驗證、本機 Node + scoop 環境修復、psql 直連 dev DB 寫入測試資料。
+→ **PC 接手已完成事項**：v2.2.0 prod 驗證（手動 push API + LINE 字卡實收）、v2.3.0 上線（CHANGELOG / context / README / NOW / STATUS / tasks 全到位）、dev 全鏈路驗證 8.1~8.5、本機 Node + scoop 環境修復、psql 直連 dev DB 寫入測試資料、prod GUI 把推播時間 23:30 改回 21:00。
 
 主要里程碑：
 - v2.2.0 後端：`server/scheduler/dailyAgenda.js` + `server/services/agendaService.js` + `server/services/lineService.js` Flex 生成 + 3 個 API
@@ -54,12 +54,12 @@
 
 ## 目前進度
 
-- **目前分支**：`m_b_每日行程推播_frontend`（v2.3.0 prep 完成，待 push main）
-- **main HEAD**：`5bc2de1`（v2.2.1）
-- **dev HEAD**：`8db32fb`（已含 v2.2.0 後端 + v2.2.1 hotfix + v2.3.0 前端，PC 已 merge + push 完成）
-- **v2.3.0 prep commit 內容**：tasks.md 8.x → ✅、STATUS.md 09 DONE、CHANGELOG v2.3.0 entry、`.claude/context/v2.3.0.md`、README v2.3.0 重寫、scripts/seed-dev-agenda-test.js 新建、index.html mobile-web-app-capable meta
-- **m_b_每日行程推播_backend 保留**：依使用者決議，**v2.3.0 上線後一起砍**
-- **PC 待補的 v2.2.1 收尾**：v2.2.1 tag 未建（CCR 403）、`hotfix/event-detail-delete-fab` 遠端分支未刪（CCR 403）— 與 v2.3.0 push 一起順手處理
+- **目前分支**：`main`（v2.3.0 已上線，HEAD `bc84023`）
+- **dev HEAD**：`2e2e6e4`（main 同步進來，dev 專屬 README 保留）
+- **5 條 m_b_*** 全部 behind main = 0
+- **v2.2.1 + v2.3.0 tag 都在遠端**
+- **`hotfix/event-detail-delete-fab`** 已被刪
+- **prod 推播時間** 已用 v2.3.0 GUI 從 23:30 改回 21:00
 
 ### change 09 已完成
 - 1.x ~ 5.x 後端 scheduler + service + API + Flex 字卡（v2.2.0 上線）
@@ -98,37 +98,15 @@
 
 ## 下一步
 
-### v2.3.0 上線執行清單（待使用者確認後執行）
-
-1. **push `m_b_每日行程推播_frontend`** 含本次 prep commit
-2. **switch main → merge frontend**（無衝突預期，frontend 已基於 main 最新）
-3. **push main**（含 v2.3.0 + 自動觸發 Cloudflare Pages build）
-4. **建立並 push tag `v2.3.0`**（PC 不受 CCR 403 限制）
-5. **順手補建 v2.2.1 tag**（CCR 之前 403 漏掉的）：`git tag v2.2.1 5bc2de1 && git push origin v2.2.1`
-6. **順手刪除遠端 `hotfix/event-detail-delete-fab` 分支**（CCR 之前 403 漏掉的）
-7. **同步 main → dev + 6 條 m_b_* 分支**（包括 m_b_pwa_upgrade 的 -X theirs 已知風險）
-8. **刪除 `m_b_每日行程推播_backend` + `m_b_每日行程推播_frontend`**（本機 + 遠端）
-
-### Prod v2.3.0 上線後驗證
-- 清 SW → 重新登入（你是 developer）
-- FabNav 應出現「開發者設定」齒輪入口
-- 進設定頁 → **把推播時間改回 21:00**（v2.2.0 prod 驗證時被 PUT 成 23:30）
-- 確認儲存成功（綠字「設定已儲存」）
-- 點「立即推播」應實收明日 LINE Flex 字卡（若 prod 明日有 event）
-
-### 後續尚未動工的功能分支（v2.3.0 後）
+### 尚未動工的功能分支
 - `m_b_tag_*` 三段式合（database → backend → frontend），建議補 OpenSpec change `11-tag-system`
-- `m_b_pwa_upgrade`（需實機測 install）— 接手時注意 STATUS.md 被覆蓋的問題（見已知地雷）
-- `m_b_eruda除錯工具` 確認砍除（功能已併入 v2.3.0 設定頁）
-
-### 環境變數提醒
-- 本機 `.env` 內 `DATABASE_URL`（prod 公網）日常無效（v2.1.0 起公網關閉）。要做 prod DB 維護需先去 Zeabur 暫開公網
-- `DEV_DATABASE_URL`（dev 公網）正常可用 — v2.3.0 dev seed 透過此連線寫入
-- prod 新密碼存在使用者本機 `.env` 內，未在任何文件 commit
-- v2.3.0 不需新增環境變數
+- `m_b_pwa_upgrade`（需實機測 install）— 接手時對照 commit `7abb8d2` 補回兩次 -X theirs 蓋掉的 STATUS.md
+- `m_b_eruda除錯工具` 評估砍除（功能已併入 v2.3.0 設定頁）
 
 ### 本機環境待修
-- node_modules 損壞 → `rm -rf node_modules && npm install`（不急，v2.3.0 上線後再做）
+- node_modules 損壞 → `rm -rf node_modules && npm install`（不急，下次要跑 Node 腳本前處理）
 
-### Cloudflare Pages prod 部署
-- main push 後自動觸發 build，30-60 秒完成
+### 環境變數
+- 本機 `.env` 內 `DATABASE_URL`（prod 公網）日常無效（v2.1.0 起公網關閉）。維護需 Zeabur 暫開公網
+- `DEV_DATABASE_URL`（dev 公網）正常可用
+- prod 新密碼存在使用者本機 `.env`，未在任何文件 commit
