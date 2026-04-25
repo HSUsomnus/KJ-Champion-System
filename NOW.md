@@ -6,15 +6,17 @@
 
 ## 功能範圍
 
-**v2.2.1 hotfix 已上線（手機 CCR 推完，交班 PC）**：在 v2.2.0「每日行程推播 LINE Bot 後端」之上多推了一個 hotfix — `EventDetail.jsx` 右下 FAB 加紅色「刪除」按鈕（label 文字 / label 邊框 / icon / icon 邊框統一 `#dc2626`，白底配色，confirm 二次確認，刪除成功 redirect `/calendar`，生日事件不顯示刪除）。後端 `DELETE /api/calendar/events/:eventId` 與 `api.deleteEvent` 既有，純粹是前端 UX 缺漏修補。
+**v2.3.0 上線準備完成（PC session）**：OpenSpec change 09「每日行程推播」整個收尾 — 前端開發者設定頁（`/agenda-settings` toggle / 時間 / 對象 / 立即推播 + Eruda toggle）、FabNav 開發者入口、PWA `mobile-web-app-capable` meta tag 補正、scripts/seed-dev-agenda-test.js（dev DB seed 工具）。dev 全鏈路驗證 8.1 ~ 8.5 全通過。**本 commit 推到 `m_b_每日行程推播_frontend` 分支，待使用者確認後 merge main + tag v2.3.0**。
 
-→ **手機 CCR 此次 session 結束，交班給 PC 接手**：補建 `v2.2.1` tag、刪 hotfix 遠端分支、prod 上線驗證、後續 m_b_* 分支進度。
+→ **PC 接手已完成事項**：v2.2.0 prod 驗證（手動 push API + LINE 字卡實收）、v2.2.1 / v2.3.0 上線準備、dev 9 全鏈路驗證、本機 Node + scoop 環境修復、psql 直連 dev DB 寫入測試資料。
 
 主要里程碑：
 - v2.2.0 後端：`server/scheduler/dailyAgenda.js` + `server/services/agendaService.js` + `server/services/lineService.js` Flex 生成 + 3 個 API
 - system_settings 表自動 migration（server.js 啟動時 idempotent INSERT 種子值：`time=21:00` / `enabled=true` / `target=developer`）
 - v2.2.1 hotfix：EventDetail FAB 紅色刪除按鈕（main HEAD `5bc2de1`）
-- 全部 7 條 m_b_* 分支 + dev 同步至 v2.2.1 完成（dev README 因 `-X theirs` 結構錯亂已重寫）
+- v2.3.0 前端：`AgendaSettings.jsx`（298 行）+ FabNav role gate + api.js 3 方法 + `/agenda-settings` 路由 + Eruda inline loader + PWA meta（commit pending push）
+- prod v2.2.0 驗證：手動 push API（`totalMembers: 1, sent: 1, failed: 0, eventCount: 1`）+ 使用者實收 4/27 Flex 字卡
+- dev 全鏈路驗證：seed 開發者帳號 + 一般人帳號 + 4/27 event → 推播 / Eruda / 權限 gate 全通
 
 ## 設計決策
 
@@ -43,24 +45,26 @@
   - **target 不寫死**：透過 `PUT /api/line/agenda-settings` 即時改寫 + 觸發 scheduler 重排（無需重啟後端）
   - Flex 字卡：Header `#4A7C59` accent / Body `#F7F5F2` 米白底 / 每個 event 為白底卡片 / 點擊 → `${FRONTEND_URL}/event/${id}` / Footer 按鈕 → `${FRONTEND_URL}/calendar`
   - 設定 API 限 `developer` 角色（`requireDeveloper` middleware）
+- **v2.3.0 開發者設定頁**：
+  - 路徑 `/agenda-settings`，FabNav 開發者專屬入口（齒輪 icon），role gate 雙重防護（前端隱藏 + 後端 403）
+  - **Toggle inline style 不用 Tailwind class**：JIT 在動態 class 名（如 `translate-x-${on?'5':'0'}`）會漏掃，production build 沒對應 class，knob 不會動。改用 `style={{ transform: ... }}` 直接寫值
+  - **Eruda 載入策略**：URL `?eruda=1` 或 `localStorage.erudaEnabled='true'` 任一為真即從 cdn.jsdelivr.net/npm/eruda 載入。前者急救（手機現場 debug），後者常駐
+  - **「立即推播」無 confirm dialog**：依使用者明確需求，與 DevTools 手動 fetch 一致 — 跳過時間設定，直接以 UI 當前選的對象推播。誤觸風險使用者自控
+  - **PWA meta tag 雙寫**：`apple-mobile-web-app-capable`（舊 iOS）+ `mobile-web-app-capable`（新 Chrome），兩個並列雙吃
 
 ## 目前進度
 
-- **目前分支**：`main`（v2.2.1 已上線，HEAD `5bc2de1`）
-- **手機 CCR 剛完成**：09 後端 v2.2.0 上線 → v2.2.1 hotfix 上線 → 全分支同步
-- **dev 已同步**：dev HEAD `2cf551a`，v2.2.1 完整內容（README 因 v2.2.1 同步時 `-X theirs` 結構錯亂，已重寫為 dev 專屬格式）
-- **m_b_每日行程推播_backend 保留**：依使用者決議，**等 `m_b_每日行程推播_frontend` 上線後一起砍**
-- **遠端 hotfix 分支殘留**：`hotfix/event-detail-delete-fab` (`2d8eafc`) 在遠端，CCR 拒刪，待 PC 補刪
+- **目前分支**：`m_b_每日行程推播_frontend`（v2.3.0 prep 完成，待 push main）
+- **main HEAD**：`5bc2de1`（v2.2.1）
+- **dev HEAD**：`8db32fb`（已含 v2.2.0 後端 + v2.2.1 hotfix + v2.3.0 前端，PC 已 merge + push 完成）
+- **v2.3.0 prep commit 內容**：tasks.md 8.x → ✅、STATUS.md 09 DONE、CHANGELOG v2.3.0 entry、`.claude/context/v2.3.0.md`、README v2.3.0 重寫、scripts/seed-dev-agenda-test.js 新建、index.html mobile-web-app-capable meta
+- **m_b_每日行程推播_backend 保留**：依使用者決議，**v2.3.0 上線後一起砍**
+- **PC 待補的 v2.2.1 收尾**：v2.2.1 tag 未建（CCR 403）、`hotfix/event-detail-delete-fab` 遠端分支未刪（CCR 403）— 與 v2.3.0 push 一起順手處理
 
-### change 09 已完成（後端段）
-- 1.x ~ 4.x 後端 scheduler + service + API + Flex 字卡
-- 5.x dev 整合 + Cloudflare Pages preview 驗證
-- 5.6.4 v2.2.0 上線準備（CHANGELOG / README / context / STATUS / tasks）
-
-### change 09 待完成（前端段，下次接手 m_b_每日行程推播_frontend）
-- 6.x 前端設定頁（讀寫 `/api/line/agenda-settings`，含 enabled toggle / 時間 picker / 對象 radio）
-- 7.x Eruda 手機除錯工具整合（URL `?eruda=1` + localStorage toggle）
-- 8.x 前端 v2.3.0 上線
+### change 09 已完成
+- 1.x ~ 5.x 後端 scheduler + service + API + Flex 字卡（v2.2.0 上線）
+- 6.x ~ 7.x 前端設定頁 + Eruda + PWA meta（v2.3.0 待上線）
+- 8.x dev 全鏈路驗證（developer / 一般人雙帳號 + 4/27 event seed）
 
 ### v2.2.1 hotfix（已上線）
 - main HEAD `5bc2de1`
@@ -68,17 +72,15 @@
 - 內容：fabItems 第三項加「刪除」（`#dc2626` label / icon / 邊框紅、白底），confirm 二次確認，成功 redirect `/calendar`，失敗顯示後端錯誤不 fallback，生日事件不顯示刪除
 - 不開 OpenSpec change（單一 UX 修補無架構變動）
 
-### 全部 m_b_* 分支同步狀態（v2.2.1 後）
-| 分支 | merge 結果 | 備註 |
+### 全部 m_b_* 分支同步狀態（v2.2.1 後 / v2.3.0 push 前）
+| 分支 | 狀態 | 備註 |
 |---|---|---|
-| `m_b_eruda除錯工具` | ✅ 乾淨 merge | 仍建議廢棄（已被 `_推播_frontend` 的 `42a843b` 吸收）|
-| `m_b_pwa_upgrade` | ✅ 乾淨 merge | **但**：v2.2.0 同步時曾用 `-X theirs` 蓋掉 `openspec/STATUS.md`（commit `7abb8d2`），下次接手 PWA 分支需對照補回 |
-| `m_b_tag_backend` | ✅ 乾淨 merge | — |
-| `m_b_tag_database` | ✅ 乾淨 merge | — |
-| `m_b_tag_frontend` | ✅ 乾淨 merge | — |
-| `m_b_每日行程推播_backend` | ✅ 乾淨 merge | **保留不刪**，等 frontend 一起砍 |
-| `m_b_每日行程推播_frontend` | ✅ 乾淨 merge | 後端 API 已就緒，可開始接 |
-| `dev` | ⚠️ `-X theirs`（v2.2.1 同步時）| README 結構錯亂（dev 標題 + main 章節 leak），已手動重寫成 dev 專屬格式（commit `2cf551a`）|
+| `m_b_eruda除錯工具` | 已同步 | 廢棄（功能已併入 v2.3.0 設定頁），v2.3.0 上線後評估砍除 |
+| `m_b_pwa_upgrade` | 已同步 | v2.2.0 sync 時 `-X theirs` 蓋掉 STATUS.md（commit `7abb8d2`），接手時需補回 |
+| `m_b_tag_backend / database / frontend` | 已同步 | — |
+| `m_b_每日行程推播_backend` | 保留 | 待 v2.3.0 上線後與 frontend 一起砍 |
+| `m_b_每日行程推播_frontend` | **本次 push 來源** | 上線後砍 |
+| `dev` | 已 merge frontend（HEAD `8db32fb`）| v2.2.1 sync 時用 `-X theirs`，README 已重寫修復 |
 
 ## 已知地雷
 
@@ -91,58 +93,42 @@
 - **prod DB 公網預設關閉**（v2.1.0 起）：日常 PC 連不到 prod DB。需要維護時去 Zeabur Dashboard 暫時開「連線埠轉送」toggle，做完立刻關
 - **新用戶在 dev 站登入會走完整 onboarding**：因為 dev DB 為空。要測新 UI 流程很方便；要測既有用戶行為要先在 dev DB 寫一筆完整的 member 記錄（PC psql `INSERT INTO members ...`）
 - **m_b_pwa_upgrade 的 STATUS.md 被覆蓋**（v2.2.0 同步副作用）：下次接手 PWA 分支時，需先 `git diff 7abb8d2~1 7abb8d2 -- openspec/STATUS.md` 看分支自己加的 STATUS 段落，手動補回
+- **本機 PC node_modules 損壞**（v2.3.0 PC session 發現）：所有 packages 都只解出最上層檔案（README/LICENSE/package.json），缺 `lib/` 等子目錄，導致 `node` 跑專案內任何依賴庫的腳本都會 `Cannot find module .../lib/main.js`。`npm install` 看資料夾存在會跳過，無法自修。修法：`rm -rf node_modules && npm install` 全砍重裝。**v2.3.0 prep 時改走 psql 直連 dev DB 繞過此問題，未影響上線**
+- **PC scoop nodejs-lts shim 缺失**（v2.3.0 PC session 發現）：scoop 顯示 `nodejs-lts (24.15.0) is already installed` 但 `~/scoop/shims/` 沒 node 檔，PowerShell 找不到 `node` 指令。修法：`scoop reset nodejs-lts`（會把 `~/scoop/apps/nodejs-lts/current/bin` 加進 USER PATH，舊 terminal 須關閉重開才生效）
 
-## 下一步（PC 接手）
+## 下一步
 
-### 手機 CCR 已完成 — 交班檢查清單
-- [x] v2.2.0 後端 merge → main + push（commit `9f18745`）
-- [x] v2.2.1 hotfix merge → main + push（main HEAD `5bc2de1`）
-- [x] CHANGELOG / README / `.claude/context/v2.2.0.md` / `v2.2.1.md` / OpenSpec STATUS 全更新
-- [x] dev 同步 v2.2.1（HEAD `2cf551a`，README 重寫修復 -X theirs 錯亂）
-- [x] 7 條 m_b_* 分支同步 main
-- [x] 機密檢查通過
-- [x] v2.2.0 tag 已在遠端（PC 之前已補）
-- [x] 本機 hotfix/event-detail-delete-fab 分支已刪
+### v2.3.0 上線執行清單（待使用者確認後執行）
 
-### PC 端要做的事（按優先順序）
+1. **push `m_b_每日行程推播_frontend`** 含本次 prep commit
+2. **switch main → merge frontend**（無衝突預期，frontend 已基於 main 最新）
+3. **push main**（含 v2.3.0 + 自動觸發 Cloudflare Pages build）
+4. **建立並 push tag `v2.3.0`**（PC 不受 CCR 403 限制）
+5. **順手補建 v2.2.1 tag**（CCR 之前 403 漏掉的）：`git tag v2.2.1 5bc2de1 && git push origin v2.2.1`
+6. **順手刪除遠端 `hotfix/event-detail-delete-fab` 分支**（CCR 之前 403 漏掉的）
+7. **同步 main → dev + 6 條 m_b_* 分支**（包括 m_b_pwa_upgrade 的 -X theirs 已知風險）
+8. **刪除 `m_b_每日行程推播_backend` + `m_b_每日行程推播_frontend`**（本機 + 遠端）
 
-1. **🔥 補建 v2.2.1 tag**（CCR 沙箱拒絕 tag push 403）
-   ```bash
-   git fetch origin
-   git tag v2.2.1 5bc2de1
-   git push origin v2.2.1
-   ```
-   或 GitHub Web UI：https://github.com/HSUsomnus/KJ-Champion-System/releases/new → Choose tag `v2.2.1` → Target `main` → Publish release
+### Prod v2.3.0 上線後驗證
+- 清 SW → 重新登入（你是 developer）
+- FabNav 應出現「開發者設定」齒輪入口
+- 進設定頁 → **把推播時間改回 21:00**（v2.2.0 prod 驗證時被 PUT 成 23:30）
+- 確認儲存成功（綠字「設定已儲存」）
+- 點「立即推播」應實收明日 LINE Flex 字卡（若 prod 明日有 event）
 
-2. **🔥 刪 hotfix 遠端分支**（CCR 拒絕 branch delete 403）
-   ```bash
-   git push origin --delete hotfix/event-detail-delete-fab
-   ```
-   或 GitHub Web UI：https://github.com/HSUsomnus/KJ-Champion-System/branches → 找 `hotfix/event-detail-delete-fab` → 點 🗑️
-
-3. **prod 上線驗證**
-   - **v2.2.1 刪除按鈕驗證**：清 SW → 進任一行程詳情頁 → FAB 展開 → 應出現第三顆紅色「刪除」按鈕；點刪除 → confirm → 取消留原頁 / 確認後 redirect `/calendar` 行程消失；進生日詳情頁 → 只有「分享」無刪除
-   - **v2.2.0 推播驗證**：
-     - Zeabur Logs 看啟動：預期 `system_settings 表已建立 / 已存在` + `每日行程推播 scheduler 已啟動 — time=21:00 / target=developer / enabled=true / TZ=Asia/Taipei`
-     - 手動觸發（你是 developer，登入正式站後 DevTools fetch）：
-       ```js
-       fetch('/api/line/push-daily-agenda', {method:'POST',headers:{'x-line-userid':'你的userId'}})
-       ```
-     - 21:00 自動推播：看你 LINE 是否收到隔日行程字卡
-     - 若想對齊 dev 行為（23:30 / all），用 `PUT /api/line/agenda-settings` 改設定（**不需開 prod DB 公網**）
-
-4. **後續開發**：`m_b_每日行程推播_frontend`（後端 API 已就緒，前端可接）
-   - frontend 上線後一起砍 `m_b_每日行程推播_backend` + `m_b_每日行程推播_frontend`
-5. **`m_b_tag_*` 三段式合**（database → backend → frontend）— 但缺 OpenSpec change，建議補 `11-tag-system`
-6. **`m_b_pwa_upgrade`** PWA 升級（需實機測 install）— 接手時注意 STATUS.md 被覆蓋的問題（見已知地雷）
-7. **`m_b_eruda除錯工具`** 確認是否廢棄（功能已被 `_推播_frontend` 的 `42a843b` 吸收）
+### 後續尚未動工的功能分支（v2.3.0 後）
+- `m_b_tag_*` 三段式合（database → backend → frontend），建議補 OpenSpec change `11-tag-system`
+- `m_b_pwa_upgrade`（需實機測 install）— 接手時注意 STATUS.md 被覆蓋的問題（見已知地雷）
+- `m_b_eruda除錯工具` 確認砍除（功能已併入 v2.3.0 設定頁）
 
 ### 環境變數提醒
 - 本機 `.env` 內 `DATABASE_URL`（prod 公網）日常無效（v2.1.0 起公網關閉）。要做 prod DB 維護需先去 Zeabur 暫開公網
-- `DEV_DATABASE_URL`（dev 公網）正常可用
+- `DEV_DATABASE_URL`（dev 公網）正常可用 — v2.3.0 dev seed 透過此連線寫入
 - prod 新密碼存在使用者本機 `.env` 內，未在任何文件 commit
-- v2.2.0 / v2.2.1 不需要新增環境變數；`LINE_CHANNEL_ACCESS_TOKEN` 必須有 push messages 權限（既有 LINE Bot token 已具備）
+- v2.3.0 不需新增環境變數
 
-### Cloudflare Pages prod 部署狀態
-- main push（`5bc2de1`）後自動觸發 build，30-60 秒完成
-- PC 待驗證 `https://kj-champion-system.pages.dev` 登入正常 + 推播鏈路通 + EventDetail 紅色刪除按鈕生效
+### 本機環境待修
+- node_modules 損壞 → `rm -rf node_modules && npm install`（不急，v2.3.0 上線後再做）
+
+### Cloudflare Pages prod 部署
+- main push 後自動觸發 build，30-60 秒完成
