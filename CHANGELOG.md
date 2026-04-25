@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.2.1] - 2026-04-25
+
+git tag: v2.2.1
+摘要：hotfix — EventDetail 行程詳情頁右下 FAB 加紅色「刪除」按鈕。v2.2.0 之前 FAB 只有「編輯」與「分享」，缺刪除入口（後端 `DELETE /api/calendar/events/:eventId` 與 `api.deleteEvent` 早已就緒，純前端 UX 缺漏）。修法：fabItems 第三項加「刪除」，label 文字 / label 邊框 / icon / icon 邊框統一 `#dc2626` 紅；點擊先 `window.confirm` 防誤觸，刪除成功 redirect 到 `/calendar`，失敗顯示後端 error / message 不 fallback；生日事件（`isBirthdayEvent`）為動態生成，不顯示刪除按鈕。
+
+---
+
 ## [v2.2.0] - 2026-04-25
 
 git tag: v2.2.0
