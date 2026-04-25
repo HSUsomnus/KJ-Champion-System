@@ -42,18 +42,18 @@ graph LR
 
 ## 當前 Change：09-zeabur-projects-split
 
-`░░░░░░░░░░░░░` 0% — 完成 0 / 14 個子任務
+`███░░░░░░░░░░` 21% — 完成 3 / 14 個子任務
 
 ### 進行分支
 
 `m_b_zeabur_projects_split`（PC 本地 + 使用者手動 Zeabur Dashboard 並行）
 
-### 待完成（依依賴順序）
+### ✅ 已完成（階段一）
+- [x] 9.1 新建 Zeabur 專案 `kj-champion-dev`
+- [x] 9.2 新專案建 `postgresql-test`（公網 30967）
+- [x] 9.3 PC schema dump → 套到新 dev DB（5 tables 與 prod 一致）
 
-#### 階段一：建立新 Zeabur 環境
-- [ ] 9.1 新建 Zeabur 專案 `kj-champion-dev`（使用者）
-- [ ] 9.2 新專案建 `postgresql-test`（使用者）
-- [ ] 9.3 PC schema dump → 套到新 test DB（Claude）
+### 待完成（依依賴順序）
 
 #### 階段二：建立新 dev 後端
 - [ ] 9.4 新專案建 `kj-champion-system-dev` 後端（使用者）
@@ -78,7 +78,7 @@ graph LR
 
 ---
 
-> **目前等待**：使用者開始 9.1（在 Zeabur dashboard 新建 `kj-champion-dev` 專案）
+> **目前等待**：使用者執行 9.4（在 `kj-champion-dev` 專案新建 `kj-champion-system-dev` 後端服務，連 dev branch）
 
 ---
 

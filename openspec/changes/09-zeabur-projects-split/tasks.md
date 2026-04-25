@@ -2,35 +2,32 @@
 
 ## 進度
 
-`░░░░░░░░░░░░░` 0% — 完成 0 / 14 個子任務
+`███░░░░░░░░░░` 21% — 完成 3 / 14 個子任務
+
+---
+
+## ✅ 已完成
+
+- [x] **9.1 新建 Zeabur 專案 `kj-champion-dev`**（使用者手動 — Zeabur Dashboard）
+  - 完成時間：2026-04-25
+  - 建立於 sin1 region（與 kj-champion 同區）
+
+- [x] **9.2 在新專案建立 `postgresql-test` 服務**（使用者手動 — Zeabur Dashboard）
+  - 完成時間：2026-04-25
+  - 公網路：`43.163.196.8:30967`
+  - 內網主機：`postgresql.zeabur.internal:5432`（注意 service 名為 postgresql-dev，但 Zeabur 內網仍用 `postgresql.zeabur.internal`）
+  - 本機 `.env` 變數命名為 `DEV_DATABASE_URL`（取代原舊命名 `TEST_DATABASE_URL`）
+
+- [x] **9.3 PC 跑 schema dump → 套到新 dev DB**（Claude 程式碼）
+  - 完成時間：2026-04-25
+  - `pg_dump --schema-only` prod → `/tmp/schema.sql`（8689 bytes）
+  - `psql "$DEV_DATABASE_URL" -f /tmp/schema.sql` exit 0、無 ERROR
+  - 驗證：prod 5 tables ↔ new dev 5 tables ✅
+  - Tables：`calendar_watches`、`events`、`financial_documents`、`members`、`system_settings`
 
 ---
 
 ## ⬜ 待完成
-
-### 階段一：建立新 Zeabur 環境
-
-- [ ] **9.1 新建 Zeabur 專案 `kj-champion-dev`**（使用者手動 — Zeabur Dashboard）
-  1. Zeabur Dashboard → 右上「+ New Project」
-  2. 名稱：`kj-champion-dev`
-  3. Region：選與 `kj-champion` 相同（推測為 `sin1` 新加坡）
-  4. 確認專案建立後可看到空白 services 列表
-
-- [ ] **9.2 在新專案建立 `postgresql-test` 服務**（使用者手動 — Zeabur Dashboard）
-  1. 進入 `kj-champion-dev` 專案 → 「+ Build with Compute」或「Add Service」→ 選 PostgreSQL
-  2. 服務名稱：`postgresql-test`
-  3. 等待服務狀態轉為 Running
-  4. 進入該服務 → 網路 → 開啟「公有網路」→ 取得公網 IP 與 port
-  5. 記下：
-     - 內網主機名（會是 `postgresql-test.zeabur.internal:5432`）
-     - 公網連線字串（從「資料庫」分頁複製）
-  6. **更新本機 `.env`**：把 `TEST_DATABASE_URL` 換成新 test DB 公網字串（舊的廢棄）
-
-- [ ] **9.3 PC 跑 schema dump → 套到新 test DB**（Claude 程式碼）
-  > 前置：9.2 完成、`.env` 已更新 TEST_DATABASE_URL
-  1. PC 端 Claude 直接重跑 `pg_dump --schema-only "$DATABASE_URL"` → `/tmp/schema.sql`
-  2. 套用：`psql "$TEST_DATABASE_URL" -f /tmp/schema.sql`
-  3. 驗證：`psql "$TEST_DATABASE_URL" -c "\dt"` → 5 個 table（與 prod 一致）
 
 ### 階段二：建立新 dev 後端
 
@@ -87,7 +84,7 @@
   5. 在 dev 站新增一筆測試事件
   6. 用 PC psql 確認該事件**只在新 test DB**：
      ```bash
-     psql "$TEST_DATABASE_URL" -c "SELECT id, title FROM events ORDER BY created_at DESC LIMIT 3;"
+     psql "$DEV_DATABASE_URL" -c "SELECT id, title FROM events ORDER BY created_at DESC LIMIT 3;"
      ```
   7. 開 `https://kj-champion-system.pages.dev`（prod）→ 確認看不到那筆 dev 事件
 
