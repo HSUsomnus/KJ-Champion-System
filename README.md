@@ -1,14 +1,14 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.1.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
+> **版本 v2.2.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
 
-專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
+專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
 > **舊 Vercel 網址已全站 301 轉址至 Cloudflare Pages**，團隊成員無需更改書籤。
 
 ---
 
-## 部署架構（v2.1.0：Zeabur 雙專案物理隔離）
+## 部署架構（v2.1.0 起：Zeabur 雙專案物理隔離）
 
 | 層級 | prod 環境 | dev 環境 |
 |---|---|---|
@@ -50,6 +50,7 @@
 | 首次登入流程 | LINE OAuth 登入後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用，未完成不得進其他頁（v2.0.5 / v2.0.6 / v2.0.7 / v2.0.8 四修補完成） | 所有人 |
 | 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
 | LINE Login | OAuth 2.0，後端動態偵測前端 origin 編入 OAuth state，callback 後 redirect 回原前端 | 所有人 |
+| **每日行程推播 LINE Bot**（v2.2.0 新增） | node-cron 每日定時（預設 21:00 Asia/Taipei）讀取隔日行程 → 依對象（all / manager_above / developer）篩選 → 推送 Flex 字卡（Warm Minimal 風格、event row 卡片化、可點進前端詳情） | 推播：依 `daily_agenda_target` 設定；設定 API：僅開發者 |
 | PWA | 可安裝至手機桌面（Vite PWA Plugin） | 所有人 |
 
 ---
@@ -60,14 +61,41 @@
 |---------|------|------|
 | `LINE_CHANNEL_ID` | LINE Channel ID | 是 |
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret | 是 |
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token | 是 |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token（含 push messages 權限，每日推播必需） | 是 |
 | `DATABASE_URL` | Zeabur PostgreSQL 連線字串（後端走內網 `postgresql.zeabur.internal:5432`） | 是 |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Service Account JSON | 是 |
 | `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
-| `FRONTEND_URL` | 前端公開網址（OAuth redirect fallback） | 是 |
+| `FRONTEND_URL` | 前端公開網址（OAuth redirect fallback + Flex 字卡按鈕指回前端） | 是 |
 | `APP_URL` | 後端公開網址 | 是 |
 | `NODE_ENV` | 環境（`production` / `development`） | 是 |
-| `CRON_SECRET` | 排程 API 驗證密鑰 | 是 |
+| `CRON_SECRET` | 排程 API 驗證密鑰（保留給日後外部 trigger 使用，目前 node-cron 內排不需） | 否 |
+
+---
+
+## 每日行程推播（v2.2.0 新增）
+
+### 排程行為
+
+- **時區**：固定 `Asia/Taipei`（由 `node-cron` `timezone` 選項保證，不受容器 TZ 影響）
+- **預設時間**：21:00（首次 boot 從 `system_settings` 寫入預設）
+- **預設對象**：`developer`（首次 boot 預設值）
+- **可調整三個值**：透過 API 或直改 `system_settings` 表（`daily_agenda_time` / `daily_agenda_enabled` / `daily_agenda_target`）
+
+### API（僅開發者，需 LINE userId 認證）
+
+| Method | Path | 說明 |
+|---|---|---|
+| `GET` | `/api/line/agenda-settings` | 讀取目前設定 |
+| `PUT` | `/api/line/agenda-settings` | 更新（body: `{time?, enabled?, target?}`，自動觸發 scheduler 重排） |
+| `POST` | `/api/line/push-daily-agenda` | 手動觸發推播（測試用） |
+
+### Flex 字卡設計
+
+- Warm Minimal 風格，無 emoji
+- Header `#4A7C59` accent 底白字日期
+- Body `#F7F5F2` 米白底，每個 event 為 `#FFFFFF` 白底卡片（邊框 + 圓角 + padding）
+- Event row 點擊 → `${FRONTEND_URL}/event/${id}`
+- Footer「開啟行事曆」按鈕 → `${FRONTEND_URL}/calendar`
 
 ---
 
@@ -79,6 +107,7 @@
 npm install
 npm run dev
 # 後端啟動於 http://localhost:8080
+# 啟動時自動建 system_settings 表 + 啟動每日推播 scheduler
 ```
 
 ### 前端
@@ -107,46 +136,30 @@ npm run dev
 │   ├── src/
 │   │   ├── App.jsx              # React Router 主入口（含 ProtectedRoute auth guard）
 │   │   ├── main.jsx             # Vite 進入點
-│   │   ├── pages/               # 頁面元件
-│   │   │   ├── Home.jsx
-│   │   │   ├── Calendar.jsx
-│   │   │   ├── AddEvent.jsx
-│   │   │   ├── EventDetail.jsx
-│   │   │   ├── Members.jsx
-│   │   │   ├── MemberDetail.jsx
-│   │   │   ├── Profile.jsx
-│   │   │   ├── ProfileEdit.jsx
-│   │   │   ├── Management.jsx
-│   │   │   ├── Financial.jsx           # 財力主頁（選取 / 編輯模式 + 離開守衛）
-│   │   │   ├── FinancialEdit.jsx       # 財力編輯（單筆）
-│   │   │   ├── FinancialUpload.jsx     # 財力上傳
-│   │   │   ├── FinancialPreview.jsx    # 試算表網頁預覽
-│   │   │   ├── Login.jsx               # 登入頁（含首次登入引導）
-│   │   │   ├── UserStats.jsx
-│   │   │   └── UserStatsEdit.jsx
-│   │   ├── components/          # 共用元件
-│   │   │   ├── Header.jsx
-│   │   │   ├── FabNav.jsx              # 左下黑色導覽 FAB
-│   │   │   ├── FabAction.jsx           # 右下綠色行動 FAB（編輯模式紅色）
-│   │   │   └── ConfirmLeaveDialog.jsx  # 離開守衛 + useLeaveGuard hook（useRef 版本）
-│   │   ├── contexts/
-│   │   │   └── AuthContext.jsx
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   └── utils/
-│   │       └── shareEvent.js
-│   ├── vite.config.js           # Vite + PWA 設定
+│   │   ├── pages/               # 頁面元件（Home / Calendar / AddEvent / EventDetail / Members / Profile / Financial / UserStats 等）
+│   │   ├── components/          # Header / FabNav / FabAction / ConfirmLeaveDialog
+│   │   ├── contexts/AuthContext.jsx
+│   │   ├── services/api.js
+│   │   └── utils/shareEvent.js
+│   ├── vite.config.js
 │   └── package.json
 ├── server/                      # 後端
-│   ├── server.js                # Express 主入口
+│   ├── server.js                # Express 主入口 + system_settings auto-migration + scheduler 啟停
 │   ├── routes/
 │   │   ├── auth.js              # LINE OAuth（含動態 origin 偵測 + 白名單）
 │   │   ├── calendar.js          # 行事曆 CRUD（同步 Google Calendar）
 │   │   ├── member.js            # 成員管理
 │   │   ├── profile.js           # 個人資料 + sync-avatar
-│   │   ├── line.js              # LINE BOT 整合
+│   │   ├── line.js              # LINE BOT 整合（含 v2.2.0 每日推播 3 個 API）
 │   │   └── financial.js         # 財務（限 manager）
-│   ├── services/                # 業務邏輯（calendarService、memberDbService 等）
+│   ├── services/
+│   │   ├── calendarService.js
+│   │   ├── eventDbService.js
+│   │   ├── memberDbService.js
+│   │   ├── lineService.js       # 含 v2.2.0 generateDailyAgendaFlexMessage()
+│   │   └── agendaService.js     # v2.2.0 — 推播主流程 + 設定讀寫
+│   ├── scheduler/
+│   │   └── dailyAgenda.js       # v2.2.0 — node-cron 排程器（Asia/Taipei，動態重排）
 │   ├── config/                  # DB（pg pool）、Google Auth、LINE 設定
 │   ├── middleware/              # auth middleware
 │   └── migrations/              # SQL migrations
@@ -157,7 +170,7 @@ npm run dev
 ├── .claude/                     # Claude Code 規則 + context
 ├── CHANGELOG.md                 # 版本記錄
 ├── CLAUDE.md                    # Claude Code 對話啟動規則 + 工作流摘要
-└── package.json                 # 後端 dependencies
+└── package.json                 # 後端 dependencies（含 node-cron）
 ```
 
 ---
@@ -174,7 +187,8 @@ npm run dev
 ### 後端（Zeabur）
 
 - 連接 GitHub `main` branch，自動部署 Node.js 容器
-- 設定環境變數（`DATABASE_URL` 走 Zeabur 內網、`LINE_*`、`GOOGLE_SERVICE_ACCOUNT_JSON` 等）
+- 設定環境變數（見上方環境變數表）
+- 啟動時自動建 `system_settings` 表（idempotent）+ 啟動每日推播 scheduler
 
 ---
 

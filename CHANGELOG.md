@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.2.0] - 2026-04-25
+
+git tag: v2.2.0
+摘要：新增功能 — 每日行程推播 LINE Bot 後端（OpenSpec change 09 後端部分）。新增 `system_settings` 表自動 migration（key/value/updated_at），用 `node-cron` 排程每日 21:00（Asia/Taipei）讀取 prod DB 隔日（次日）行程後依對象（all / manager_above / developer）篩選成員 LINE userId 推送 Flex 字卡（Warm Minimal 風格：accent 色 Header、移除 emoji、event row 白底卡片化、可點進前端 `/event/:id`）。新增 3 個僅開發者可呼叫的 API（GET/PUT `/api/line/agenda-settings` 讀寫設定、POST `/api/line/push-daily-agenda` 手動觸發）。dev 環境連續多日 23:30 推播驗證通過，視覺與時區行為正確。前端設定頁（OpenSpec 09 之 6.x ~ 8.x）尚未開發 — 目前只能透過 API / 直改 system_settings 表調整，不影響後端排程運作。
+
+---
+
 ## [v2.1.0] - 2026-04-25
 
 git tag: v2.1.0

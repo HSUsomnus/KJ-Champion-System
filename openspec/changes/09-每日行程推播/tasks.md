@@ -51,7 +51,7 @@
   - `cornerRadius: 'lg'`（12px）
   - `paddingAll: '12px'`
 - [x] 5.6.3 移除 event 間 separator（卡片本身已有邊框，多餘）
-- [ ] 5.6.4 merge 到 dev 並 push，手機測試：event row 可見為獨立卡片
+- [x] 5.6.4 merge 到 dev 並 push，手機測試：event row 可見為獨立卡片（連續多日 23:30 收到推播且滿意，視為已驗證）
 
 ## 前端（分支 `m_b_每日行程推播_frontend`）
 
