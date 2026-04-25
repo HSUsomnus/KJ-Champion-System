@@ -93,7 +93,9 @@ export default function UserStatsEdit() {
       })
       await refreshUser()
       setSaved()
-      setTimeout(() => navigate('/user-stats'), 0)
+      // [設計決策] 新用戶完成 onboarding 最後一步 → 導主頁；既有用戶從 /user-stats 進來編輯 → 回 /user-stats
+      // 原因：onboarding 完成是進入主應用的時機，使用者預期看到主頁而非數據頁
+      setTimeout(() => navigate(onboarding ? '/' : '/user-stats'), 0)
     } catch (err) {
       alert(err.message)
     } finally {
