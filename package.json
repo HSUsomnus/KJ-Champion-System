@@ -33,6 +33,7 @@
     "express-rate-limit": "^7.1.5",
     "googleapis": "^126.0.1",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "pg": "^8.18.0",
     "uuid": "^13.0.0"
   },

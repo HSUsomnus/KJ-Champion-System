@@ -20,6 +20,9 @@ const lineRoutes = require('./routes/line');
 const financialRoutes = require('./routes/financial');
 const authRoutes = require('./routes/auth');
 
+// 引入排程
+const dailyAgendaScheduler = require('./scheduler/dailyAgenda');
+
 // 建立 Express 應用程式
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -148,6 +151,28 @@ app.use((err, req, res, next) => {
       ADD COLUMN IF NOT EXISTS financial_amount VARCHAR(50) DEFAULT ''
     `);
     console.log('✅ 資料庫 migration 完成（financial_amount）');
+
+    // 新增 system_settings 表（每日行程推播設定）
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        key VARCHAR(100) PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await db.query(`
+      INSERT INTO system_settings (key, value) VALUES ('daily_agenda_time', '21:00')
+      ON CONFLICT (key) DO NOTHING
+    `);
+    await db.query(`
+      INSERT INTO system_settings (key, value) VALUES ('daily_agenda_enabled', 'true')
+      ON CONFLICT (key) DO NOTHING
+    `);
+    await db.query(`
+      INSERT INTO system_settings (key, value) VALUES ('daily_agenda_target', 'developer')
+      ON CONFLICT (key) DO NOTHING
+    `);
+    console.log('✅ 資料庫 migration 完成（system_settings）');
   } catch (error) {
     console.error('⚠️ 資料庫 migration 錯誤（非致命）:', error.message);
   }
@@ -161,16 +186,20 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🚀 伺服器已啟動在 http://localhost:${PORT}`);
     console.log(`📅 環境: ${process.env.NODE_ENV || 'development'}`);
+    // 啟動每日行程推播排程（僅在長駐程式中啟動）
+    dailyAgendaScheduler.start();
   });
 
   // 優雅關閉處理
   process.on('SIGTERM', () => {
     console.log('收到 SIGTERM 訊號，正在關閉伺服器...');
+    dailyAgendaScheduler.stop();
     process.exit(0);
   });
 
   process.on('SIGINT', () => {
     console.log('收到 SIGINT 訊號，正在關閉伺服器...');
+    dailyAgendaScheduler.stop();
     process.exit(0);
   });
 }

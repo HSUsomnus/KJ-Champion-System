@@ -78,6 +78,26 @@
 
 ## 「修 bug」流程（hotfix）
 
+### ⚠️ 第一步永遠是「判斷 bug 來源」— 決定走哪條路徑
+
+**hotfix 只用於修 main 上的 bug**（main 已上線出問題）。dev 上發現的問題**不要修 dev**，要追溯到引入 bug 的 m_b_* 分支去修，再 merge 回 dev 重測。**理由：m_b_* 分支的 bug 沒修就 merge main 會出大事，必須在源頭修才能確保 dev → main 路徑安全**。
+
+#### 判斷決策樹
+
+收到 bug 報告或在 dev 看到問題時，先做這個檢查：
+
+```
+1. git diff origin/main..origin/dev -- <出問題的檔案>
+   → 兩邊一樣？                    → bug 在 main，走 A 路徑（hotfix）
+   → 不一樣？dev 比 main 新？      → bug 來自某個合進 dev 的 m_b_*，走 B 路徑（修 m_b_*）
+
+2. 若 dev 比 main 新：用 git log / git blame 找到 bug 從哪個 m_b_* 進來的：
+   git log --oneline origin/main..origin/dev -- <檔案>
+   → 看哪個 m_b_*_* 分支的 commit 引入了 bug
+```
+
+#### A 路徑：bug 來自 main → hotfix
+
 1. 從 main 切出 hotfix 分支：
    ```bash
    git checkout main
@@ -85,12 +105,7 @@
    git push origin hotfix/描述
    ```
 2. 在 hotfix 分支上修復 bug（可能多次 commit）
-3. 修復完成後，merge 到 main 並 push：
-   ```bash
-   git checkout main
-   git merge hotfix/描述
-   git push origin main
-   ```
+3. 修復完成後走 deploy.md 的「推送到 main」完整流程（CHANGELOG / context / README / 機密檢查 / 使用者確認 / merge / tag）
 4. 刪除 hotfix 分支（本機 + 遠端）：
    ```bash
    git branch -d hotfix/描述
@@ -104,6 +119,34 @@
    ```
 
 > **注意**：步驟 3～5 是連續動作，hotfix 合併 main → 刪除 hotfix → main 同步到其他分支。不要在 hotfix 尚未刪除時就開始同步。
+
+#### B 路徑：bug 來自 m_b_*（dev 上發現的）→ 修對應 m_b_* 分支
+
+1. 找到引入 bug 的 m_b_* 分支：
+   ```bash
+   git log --oneline origin/main..origin/dev -- <檔案> | head
+   # 看哪個 m_b_*_*  的 commit 引入問題
+   ```
+2. 切到該 m_b_* 分支修復：
+   ```bash
+   git checkout m_b_有bug的功能分支
+   git pull
+   # 修 → commit → push
+   ```
+3. 重新 merge m_b_* 到 dev 重測：
+   ```bash
+   git checkout dev
+   git merge m_b_有bug的功能分支
+   git push origin dev
+   ```
+4. dev 重新驗證
+5. **完全不要動 main、不要切 hotfix**，因為這個 bug 還沒進 main，只在 dev/m_b_* 範圍
+
+#### ⛔ 嚴禁
+
+- ❌ 在 dev 上直接修（dev 是測試環境，修了沒同步回 m_b_*，下次 m_b_* merge 會把 bug 再帶回來）
+- ❌ 用 hotfix 修 m_b_* 引入的 bug（hotfix 是給 main 的）
+- ❌ 沒判斷 bug 來源就動手
 
 ---
 

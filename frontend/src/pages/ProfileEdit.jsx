@@ -9,7 +9,8 @@ import { api, mapMember } from '../services/api'
 
 export default function ProfileEdit() {
   const navigate = useNavigate()
-  const { user, refreshUser, login } = useAuth()
+  const { user, refreshUser, login, isProfileComplete } = useAuth()
+  const onboarding = !isProfileComplete(user)
   const [activeFab, setActiveFab] = useState(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
@@ -25,7 +26,12 @@ export default function ProfileEdit() {
   }
 
   const handleConfirm = async () => {
-    if (!form.realName) return
+    // [設計決策] 四欄必填驗證 + 明確 alert 哪欄漏填
+    // 原因：新用戶 onboarding 強制流程要求所有欄位都不為空，靜默 return 會讓使用者卡住不知原因
+    if (!form.realName?.trim()) { alert('請輸入真實姓名'); return }
+    if (!form.email?.trim()) { alert('請輸入 Email'); return }
+    if (!form.phone?.trim()) { alert('請輸入電話號碼'); return }
+    if (!form.birthday) { alert('請選擇生日'); return }
     setSaving(true)
     try {
       const isNewUser = !user?.realName
@@ -54,7 +60,8 @@ export default function ProfileEdit() {
       }
 
       setSaved()
-      setTimeout(() => navigate(isNewUser ? '/' : '/profile'), 0)
+      // 新用戶完成資料後接著去填數據頁；既有用戶回個人資料頁
+      setTimeout(() => navigate(isNewUser ? '/user-stats/edit' : '/profile'), 0)
     } catch (err) {
       alert(err.message)
     } finally {
@@ -79,9 +86,9 @@ export default function ProfileEdit() {
 
   const fields = [
     { label: '真實姓名', key: 'realName', type: 'text', required: true },
-    { label: 'Email', key: 'email', type: 'email' },
-    { label: '電話號碼', key: 'phone', type: 'tel' },
-    { label: '生日', key: 'birthday', type: 'date' },
+    { label: 'Email', key: 'email', type: 'email', required: true },
+    { label: '電話號碼', key: 'phone', type: 'tel', required: true },
+    { label: '生日', key: 'birthday', type: 'date', required: true },
   ]
 
   return (
@@ -89,6 +96,11 @@ export default function ProfileEdit() {
       <Header user={user} />
       <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>編輯資料</h1>
+        {onboarding && (
+          <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: '#FFF3E0', border: '1px solid #FFB74D', color: '#7B5800' }}>
+            ⚠️ 新用戶請完成所有欄位（皆為必填），完成後將引導至下一步「編輯數據」。完成全部資料前無法進入其他頁面。
+          </div>
+        )}
         <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
           {fields.map((field, idx) => (
             <div key={field.key} className="px-4 py-3.5" style={{ borderBottom: idx < fields.length - 1 ? '1px solid #E2DED8' : 'none' }}>
