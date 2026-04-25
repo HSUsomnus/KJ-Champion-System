@@ -15,7 +15,7 @@ graph LR
   06["✅ 06\n新UI前端開發"]
   07["✅ 07\noauth動態redirect"]
   08["🗄️ 08\ndev-test-database\n(superseded by 10)"]
-  09["🔄 09\n每日行程推播"]
+  09["🔄 09\n每日行程推播\n後端 v2.2.0 / 前端待做"]
   10["✅ 10\nzeabur-projects-split\n(v2.1.0)"]
 
   01 --> 02 --> 025 --> 06 --> 07 --> 08 --> 09 --> 10
@@ -38,63 +38,67 @@ graph LR
 | 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，合併 main（v2.0.0） |
 | 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | OAuth redirect 自動偵測 origin（v1.6.0） |
 | 08 | dev-test-database（在 `m_b_dev_test_database` 分支上） | 🗄️ SUPERSEDED | **被 10 取代並 archive**。資料夾未進 main，10 上線後可砍 `m_b_dev_test_database` 分支 |
-| 09 | 每日行程推播（在 `m_b_每日行程推播_*` 分支上，手機端維護） | 🔄 IN PROGRESS | LINE Bot 每日定時推送明日行程 |
+| 09 | [每日行程推播](changes/09-每日行程推播/tasks.md) | 🔄 IN PROGRESS | 後端已上 main（v2.2.0）— LINE Bot 每日定時推送明日行程；前端設定頁 6.x ~ 8.x 待做 |
 | 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0 上線） |
 
 ---
 
-## 當前 Change：10-zeabur-projects-split — ✅ 已完成
+## 當前 Change：09-每日行程推播 — 🔄 後端已上 main / 前端待做
 
-`█████████████` 100% — 完成 14 / 14 個子任務（v2.1.0 上線）
+`████████░░░░░` 後端 20 / 20 ✅、前端 0 / 8 ⬜
 
 ### 進行分支
 
-`m_b_zeabur_projects_split` → 即將 merge main 走 v2.1.0「功能上線」流程
+- 後端：`m_b_每日行程推播_backend`（已上 main，v2.2.0）
+- 前端：`m_b_每日行程推播_frontend`（待開發，6.x ~ 8.x 全未動）
 
-### ✅ 全部完成（14/14）
+### ✅ 後端已完成（20/20，v2.2.0）
 
-#### 階段一：建立新 Zeabur 環境
-- [x] 10.1 新建 Zeabur 專案 `kj-champion-dev`
-- [x] 10.2 新專案建 `postgresql-dev`（公網 30967）
-- [x] 10.3 PC schema dump → 套到新 dev DB（5 tables 與 prod 一致）
+#### 1. 依賴與 DB
+- [x] 1.1 `package.json` 新增 `node-cron` 依賴
+- [x] 1.2 `server/server.js` 新增 `system_settings` 表自動 migration（time=21:00 / enabled=true / target=developer）
 
-#### 階段二：建立新 dev 後端
-- [x] 10.4 新專案建 `kj-champion-system-dev` 後端（連 dev branch）
-- [x] 10.5 新 dev 後端環境變數（DATABASE_URL = 內網、APP_URL = 新公網）
-- [x] 10.6 取得新後端 URL `kj-champion-dev.zeabur.app`
+#### 2. 核心服務
+- [x] 2.1 `server/services/agendaService.js`（讀寫設定、過濾對象、推播主流程）
+- [x] 2.2 `server/services/lineService.js` 新增 `generateDailyAgendaFlexMessage()`
+- [x] 2.3 `server/scheduler/dailyAgenda.js`（start / stop / reschedule，timezone 固定 Asia/Taipei）
 
-#### 階段三：前端與外部設定
-- [x] 10.7 修改 `_worker.js` 指向新 URL
-- [x] 10.8 LINE Console 加新 callback URL
-- [x] 10.9 Cloudflare Pages preview build 確認
+#### 3. API
+- [x] 3.1 `GET /api/line/agenda-settings`（僅開發者）
+- [x] 3.2 `PUT /api/line/agenda-settings`（僅開發者）
+- [x] 3.3 `POST /api/line/push-daily-agenda`（手動觸發，僅開發者）
 
-#### 階段四：驗證與切換
-- [x] 10.10 dev 全鏈路驗證（讀寫雙向 + DB 隔離 24 vs 0）
-- [x] 10.11 砍舊 `kj-champion` 專案內的 `postgresql-test` 與 `kj-champion-system-dev`
+#### 4. 整合
+- [x] 4.1 `server/server.js` 啟動 scheduler、掛 graceful shutdown
 
-#### 階段五：prod DB 安全強化
-- [x] 10.12 prod DB 密碼旋轉（PC ALTER USER + Zeabur env var 同步 + 重啟 prod 後端）
-- [x] 10.13 關 prod DB 公網路（兩步驗證後 toggle 關，prod 站續正常）
+#### 5. 驗證 + 視覺迭代（dev 上連續多日 23:30 推播驗證）
+- [x] 5.1 ~ 5.3 dev 後端排程啟動 + 手動 push API + 設定 API 讀寫
+- [x] 5.5.1 ~ 5.5.4 字卡 v1：時區 bug 修復、移除 emoji、加 dot bullet、類型膠囊 badge、Header accent 色、可點進 event 詳情
+- [x] 5.6.1 ~ 5.6.4 字卡 v2：body 改米白底、event row 卡片化（白底 + 邊框 + 圓角 + padding）、移除多餘 separator、連續多日 23:30 收推視為已驗證
 
-#### 階段六：收尾
-- [x] 10.14 文件更新（NOW.md / README / database.md / deploy.md）+ STATUS.md 更新
+### ⬜ 前端待做（0/8）
 
-### 連帶完成的 hotfix（dev DB cold-start 觸發的 main 設計-實作落差）
+#### 6. 設定頁面
+- [ ] 6.1 `frontend/src/pages/AgendaSettings.jsx`（toggle / 時間 / 對象下拉 / 儲存 / 立即推播 / 權限檢查）
 
-- v2.0.5 — Login.jsx no-profile 死循環
-- v2.0.6 — useEffect / handleConfirm navigate race condition
-- v2.0.7 — 新用戶 onboarding 強制流程（4 檔修補）
-- v2.0.8 — onboarding 完成後導主頁
+#### 7. 前端整合
+- [ ] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法
+- [ ] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口
+- [ ] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由
+
+#### 8. 驗證
+- [ ] 8.1 merge frontend 分支到 dev 並 push
+- [ ] 8.2 開發者帳號登入，FabNav 顯示「推播設定」
+- [ ] 8.3 設定頁讀寫、手動推播、權限控制全部正確
+
+### 已完成的 v2.1.0 / v2.0.5 ~ v2.0.8（archived，詳見 .claude/context/）
+
+- v2.1.0 — Zeabur 專案分離 + dev/prod 物理隔離（OpenSpec change 10）
+- v2.0.5 ~ v2.0.8 — onboarding 流程四連 hotfix
 
 ---
 
-## 並行 Change：09-每日行程推播
-
-由手機 Claude Code 維護於 `m_b_每日行程推播_backend` / `m_b_每日行程推播_frontend` 分支，**PC 不主動接手**。後端已合進 dev 待測試。
-
----
-
-> **下一步**：m_b_zeabur_projects_split → main 走 v2.1.0「功能上線」流程，砍分支、同步、archive `m_b_dev_test_database`。
+> **下一步**：開發 `m_b_每日行程推播_frontend` 分支（6.x ~ 7.x 實作），完成後依序 dev 驗證 → main 上線。
 
 ---
 
@@ -117,4 +121,4 @@ graph LR
 
 ---
 
-*最後更新：2026-04-25*
+*最後更新：2026-04-25（v2.2.0 上線：09 後端 main 完成）*
