@@ -1,4 +1,4 @@
-# Design — 09 Zeabur 專案分離
+# Design — 10 Zeabur 專案分離
 
 ## 目標架構
 
@@ -31,7 +31,7 @@ Zeabur 沒有 namespace 概念，**內網是 per-project 的單一平面網路**
 - LINE Console 加一條 callback URL（保留舊條以利回滾）
 - Cloudflare Pages 環境變數（若有）
 
-### D3：prod DB 公網路關閉時機 — 9.13 切兩步驗證後再關
+### D3：prod DB 公網路關閉時機 — 10.13 切兩步驗證後再關
 
 舊路徑（直接關）的風險：若 prod 後端 `DATABASE_URL` 正好是公網字串（不是內網），關掉公網後 prod 站立即斷線。
 
@@ -39,9 +39,9 @@ Zeabur 沒有 namespace 概念，**內網是 per-project 的單一平面網路**
 1. **驗證階段**：去 Zeabur prod 後端 → Variables 看 `DATABASE_URL` 起頭。若是 `postgresql://root:...@postgresql.zeabur.internal:5432/...` → ✅ 走內網
 2. **切換階段**：toggle 關公網 → 立刻開 prod 站 `https://kj-champion-system.pages.dev` 登入測試 → 失敗 → 立刻 toggle 開回來
 
-### D4：prod 密碼旋轉合併進 9.12
+### D4：prod 密碼旋轉合併進 10.12
 
-原 08.8 為獨立 task，但時機與 9.13（關公網）強相關：
+原 08.8 為獨立 task，但時機與 10.13（關公網）強相關：
 
 - 公網關閉前：密碼是唯一防線且已暴露 → 立即旋轉
 - 公網關閉後：即使舊密碼洩漏也無公網存取點
@@ -72,14 +72,14 @@ dev 開發 → Cloudflare Pages（kjcs-dev.pages.dev）
 
 兩條路徑在 Zeabur 內部沒有任何網路連通點。
 
-## 驗證 checklist（9.10）
+## 驗證 checklist（10.10）
 
 | 項目 | 預期結果 |
 |---|---|
 | 開 `kjcs-dev.pages.dev` | dev 站正常顯示 |
 | dev 站 LINE 登入 | 跳轉到新 callback URL，登入成功 |
 | dev 站新增一筆事件 | 寫入新 test DB |
-| 連入舊 postgresql-test 看資料 | 確認 9.11 砍掉前那筆事件**不在**舊 DB |
+| 連入舊 postgresql-test 看資料 | 確認 10.11 砍掉前那筆事件**不在**舊 DB |
 | 連入新 postgresql-test 看資料 | 那筆事件在新 DB 內 |
 | 開 `kj-champion-system.pages.dev`（prod） | 完全正常，與 dev 行為獨立 |
 | 在 dev 站做寫入 → 切去 prod 站 | prod 站完全看不到 dev 寫的資料 |
@@ -88,11 +88,11 @@ dev 開發 → Cloudflare Pages（kjcs-dev.pages.dev）
 
 | 階段 | 失敗如何回滾 |
 |---|---|
-| 9.4 新後端建立失敗 | 砍掉新 dev 後端服務，重建 |
-| 9.7 _worker.js 改錯 dev 連不到 | git revert _worker.js commit |
-| 9.10 驗證失敗 | 暫不刪舊服務（9.11），舊 dev URL 仍可回退 |
-| 9.13 prod 公網關掉後 prod 站炸 | 立刻 toggle 開回公網（< 30 秒回復）|
-| 9.12 密碼旋轉後 prod 站炸 | 用舊密碼登入 Zeabur dashboard 改回（前提舊密碼還記得）→ 此 task 前必須**寫好回滾草稿**|
+| 10.4 新後端建立失敗 | 砍掉新 dev 後端服務，重建 |
+| 10.7 _worker.js 改錯 dev 連不到 | git revert _worker.js commit |
+| 10.10 驗證失敗 | 暫不刪舊服務（10.11），舊 dev URL 仍可回退 |
+| 10.13 prod 公網關掉後 prod 站炸 | 立刻 toggle 開回公網（< 30 秒回復）|
+| 10.12 密碼旋轉後 prod 站炸 | 用舊密碼登入 Zeabur dashboard 改回（前提舊密碼還記得）→ 此 task 前必須**寫好回滾草稿**|
 
 ---
 

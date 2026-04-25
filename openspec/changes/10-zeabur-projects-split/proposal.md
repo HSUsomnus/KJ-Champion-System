@@ -1,4 +1,4 @@
-# Proposal — 09 Zeabur 專案分離（dev 環境完全隔離）
+# Proposal — 10 Zeabur 專案分離（dev 環境完全隔離）
 
 ## 問題
 
@@ -74,21 +74,21 @@ Zeabur project: kj-champion-dev（測試環境，新建）
 
 08 已完成 08.1（建舊 postgresql-test）+ 08.2（pg_dump）+ 08.3（套 schema）。
 09 完成後 08 的範圍會被取代：
-- 08.1 建立的舊 postgresql-test → 9.11 砍掉
+- 08.1 建立的舊 postgresql-test → 10.11 砍掉
 - 08.2 dump 出的 schema.sql → 流程可重用，但目標換成新 test DB
 - 08.3 套用結果 → 隨舊 postgresql-test 一起廢棄
 
 09 完成後，**08 整個 archive 標記「superseded by 09」**，08 的目標（dev 與 prod DB 隔離）由 09 以更徹底的物理隔離方式達成。
 
-08.8（prod 密碼旋轉）合併進 09 的 9.12，因為時機與 prod 公網關閉強相關。
+08.8（prod 密碼旋轉）合併進 09 的 10.12，因為時機與 prod 公網關閉強相關。
 
 ## 風險
 
 | 風險 | 緩解 |
 |---|---|
 | 新 dev 後端 URL 變動，導致 LINE OAuth 跳錯 callback | LINE Console 同時保留新舊 callback URL，驗證通過再刪舊的 |
-| Cloudflare Pages worker 仍指舊 dev URL 導致 dev 站打不開 | 9.7 修改 _worker.js 後立即驗證 dev 站 |
-| prod DB 公網關掉後 prod 後端連不到 | 9.13 前先確認 prod 後端 env 是否為 internal hostname；先關 toggle 後立即測 prod 站 |
+| Cloudflare Pages worker 仍指舊 dev URL 導致 dev 站打不開 | 10.7 修改 _worker.js 後立即驗證 dev 站 |
+| prod DB 公網關掉後 prod 後端連不到 | 10.13 前先確認 prod 後端 env 是否為 internal hostname；先關 toggle 後立即測 prod 站 |
 | 舊 dev 服務刪除前 dev branch 還在用 | 確認新 dev 後端跑通後再刪舊的 |
 
 ---
