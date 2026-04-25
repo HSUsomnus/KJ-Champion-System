@@ -2,7 +2,7 @@
 
 ## 進度
 
-`██░░░░░░░░░░░` 14% — 完成 1 / 7 個子任務
+`█░░░░░░░░░░░░` 12% — 完成 1 / 8 個子任務
 
 ---
 
@@ -18,7 +18,9 @@
 
 ## ⬜ 待完成
 
-- [ ] **08.2 取得正式 DB schema dump**（使用者本機執行）
+> **⚠️ 執行環境限制**：08.2 與 08.3 涉及連線到 Zeabur 公網 PostgreSQL。Claude Code Web 沙箱有 outbound host 白名單（`zeabur.com` 不在內、TCP 直連也 timeout），**必須由 PC 本地 Claude Code 或使用者親自執行**。Web 版接手只會卡在這兩步逾時。詳見 NOW.md 已知地雷「CCR 沙箱 outbound host 白名單」。
+
+- [ ] **08.2 取得正式 DB schema dump**（**PC 本地** Claude 或使用者執行）
   1. 至 Zeabur → `postgresql` 服務（**正式 DB**）→ 環境變數 / 連線資訊，複製**公網**連線字串
   2. 在本機執行（替換 `$PROD_DATABASE_URL`）：
      ```bash
@@ -28,7 +30,7 @@
   3. 檢查 `schema.sql` 開頭幾行 `CREATE TABLE`，確認**沒有 INSERT 語句**（schema-only 不應有資料）
   4. 暫存於本機，**勿 commit**（含 DB 結構資訊）
 
-- [ ] **08.3 套用 schema 到測試 DB**（使用者本機執行）
+- [ ] **08.3 套用 schema 到測試 DB**（**PC 本地** Claude 或使用者執行）
   1. 至 Zeabur → `postgresql-test` 服務 → 連線資訊，複製**公網**連線字串
   2. 執行：
      ```bash
@@ -66,6 +68,24 @@
   - 更新 dev 分支 README：標明測試 DB 連線位址（不含密碼）與假資料說明
   - 更新 `.claude/rules/database.md`：標註「dev 已建立測試 DB」狀態，第一閘門可實際執行
 
+- [ ] **08.8 旋轉正式 DB 密碼**（**PC 本地** Claude 或使用者執行）
+  > **計畫外新增**：原 design.md 沒列，但 08.2 過程中 prod `DATABASE_URL`（含明文密碼）曾貼到 Web 版 chat 對話紀錄，因此這次必須做一次密碼旋轉做為善後。
+  1. PC 本地或 Web Claude（Web 不能連 DB，只能下指令給使用者跑）：產生新隨機密碼
+     ```bash
+     # 例：用 openssl 產生
+     openssl rand -base64 24
+     ```
+  2. PC 本地執行 ALTER USER（不要用 Zeabur 改 env var，postgres 容器只在 init 時讀 `POSTGRES_PASSWORD`）：
+     ```bash
+     psql "$PROD_DATABASE_URL_OLD" -c "ALTER USER root WITH PASSWORD '新密碼';"
+     ```
+  3. 同步更新：
+     - Zeabur → `postgresql` 服務 → 環境變數 → `PASSWORD` 改新值
+     - Zeabur → `postgresql` 服務 → 環境變數 → `POSTGRES_PASSWORD` 也填新值（順便修掉空白模板 bug）
+     - Zeabur → `kj-champion-system` 後端服務 → 重啟（讓 `${POSTGRES_CONNECTION_STRING}` 重新解析）
+     - 本機 `.env` 同步改
+  4. 驗證 prod 站還能正常運作（登入 + 看月曆）
+
 ---
 
 ## 切分支備註
@@ -79,6 +99,6 @@
 
 ---
 
-> **下一步**：08.1（使用者去 Zeabur Dashboard 建立 PostgreSQL 服務）。完成後告知 Claude。
+> **下一步**：PC 本地 Claude Code 接手 08.2（Web 沙箱無法連 Zeabur，詳見上方執行環境限制）。
 
 最後更新：2026-04-25

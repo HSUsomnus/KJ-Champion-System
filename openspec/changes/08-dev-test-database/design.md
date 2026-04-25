@@ -94,6 +94,18 @@ psql "$TEST_DATABASE_URL" -f /tmp/seed-fake.sql
 - LINE Console：不需改（OAuth 不依賴 DB）
 - Cloudflare Pages：不需改（前端不直接操作 DB）
 
+## 計畫外納入：08.8 旋轉正式 DB 密碼
+
+原規劃不含密碼旋轉，但 08.2 執行過程中：
+
+1. Web 版 Claude Code 沙箱無法連 Zeabur 公網（白名單擋）
+2. 為了讓 Web Claude 嘗試代跑 pg_dump，使用者把 prod `DATABASE_URL`（含密碼明文）貼到 chat
+3. 雖然沙箱本身無法外連，但 chat 紀錄會留存（可能進入未來壓縮上下文 / Web 對話歷史）
+
+為消除暴露風險，新增 08.8 task：旋轉 prod DB 密碼。**用 SQL `ALTER USER`，不要改 Zeabur env var**（postgres 容器只在 init 時讀 `POSTGRES_PASSWORD`，已存在的 data volume 不會重新套用 env var → 改了會造成 env var 與實際 DB 不一致 → 後端用新 env var 連舊 DB → 服務當機）。
+
+詳細步驟見 tasks.md 08.8。
+
 ## 後續延伸（不在本 change 範圍）
 
 - 自動化 schema migration 工具（讓 schema 變動同步到兩個 DB）
