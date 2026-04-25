@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const NAV_ITEMS = [
   {
@@ -62,6 +63,20 @@ const NAV_ITEMS = [
   },
 ]
 
+// 開發者限定項目（僅 role === '開發者' 可見）
+const DEVELOPER_ITEMS = [
+  {
+    label: '開發者設定',
+    path: '/agenda-settings',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    ),
+  },
+]
+
 const ITEM_SIZE = 44
 const ITEM_GAP = 10
 const FAB_SIZE = 56
@@ -69,6 +84,12 @@ const FAB_SIZE = 56
 export default function FabNav({ onOpen }) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const { user } = useAuth()
+
+  // 開發者才能看到推播設定等開發者限定項目
+  const items = user?.role === '開發者'
+    ? [...NAV_ITEMS, ...DEVELOPER_ITEMS]
+    : NAV_ITEMS
 
   const toggle = () => {
     const next = !open
@@ -87,7 +108,7 @@ export default function FabNav({ onOpen }) {
 
       <div style={{ position: 'fixed', bottom: 24, left: 16, width: FAB_SIZE, height: FAB_SIZE, zIndex: 50 }}>
         {/* 子項：absolute 從主按鈕往上展開，不影響主按鈕位置 */}
-        {NAV_ITEMS.map((item, i) => {
+        {items.map((item, i) => {
           const bottomOffset = FAB_SIZE + ITEM_GAP + i * (ITEM_SIZE + ITEM_GAP)
           return (
             <div
@@ -102,7 +123,7 @@ export default function FabNav({ onOpen }) {
                 opacity: open ? 1 : 0,
                 transform: open ? 'translateY(0)' : 'translateY(12px)',
                 transition: 'opacity 0.2s ease, transform 0.2s ease',
-                transitionDelay: open ? `${i * 40}ms` : `${(NAV_ITEMS.length - 1 - i) * 25}ms`,
+                transitionDelay: open ? `${i * 40}ms` : `${(items.length - 1 - i) * 25}ms`,
                 pointerEvents: open ? 'auto' : 'none',
                 whiteSpace: 'nowrap',
               }}

@@ -46,14 +46,14 @@ graph LR
 
 ---
 
-## 當前 Change：09-每日行程推播 — 🔄 後端已上 main / 前端待做
+## 當前 Change：09-每日行程推播 — 🔄 後端已上 main / 前端程式完成待驗證
 
-`████████░░░░░` 後端 20 / 20 ✅、前端 0 / 8 ⬜
+`████████████░░` 後端 20 / 20 ✅、前端 6 / 11 ✅（剩 8.x 驗證 5 task）
 
 ### 進行分支
 
 - 後端：`m_b_每日行程推播_backend`（已上 main，v2.2.0）
-- 前端：`m_b_每日行程推播_frontend`（待開發，6.x ~ 8.x 全未動）
+- 前端：`m_b_每日行程推播_frontend`（程式碼已完成 6.x + 7.x，剩 8.x 驗證）
 
 ### ✅ 後端已完成（20/20，v2.2.0）
 
@@ -79,20 +79,24 @@ graph LR
 - [x] 5.5.1 ~ 5.5.4 字卡 v1：時區 bug 修復、移除 emoji、加 dot bullet、類型膠囊 badge、Header accent 色、可點進 event 詳情
 - [x] 5.6.1 ~ 5.6.4 字卡 v2：body 改米白底、event row 卡片化（白底 + 邊框 + 圓角 + padding）、移除多餘 separator、連續多日 23:30 收推視為已驗證
 
-### ⬜ 前端待做（0/8）
+### ✅ 前端程式碼完成（6/11，剩 8.x 驗證）
 
 #### 6. 設定頁面
-- [ ] 6.1 `frontend/src/pages/AgendaSettings.jsx`（toggle / 時間 / 對象下拉 / 儲存 / 立即推播 / 權限檢查）
+- [x] 6.1 `frontend/src/pages/AgendaSettings.jsx`（toggle / 時間 / 對象下拉 / 儲存 / 立即推播 / 權限檢查 + 加碼 Eruda toggle）
 
 #### 7. 前端整合
-- [ ] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法
-- [ ] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口
-- [ ] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由
+- [x] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法
+- [x] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口（role gate）
+- [x] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由
+- [x] 7.4 `frontend/index.html` 加 Eruda inline script loader
+- [x] 7.5 `frontend/index.html` 加 `mobile-web-app-capable` meta tag（PWA deprecated 警告補正）
 
-#### 8. 驗證
+#### 8. 驗證待做
 - [ ] 8.1 merge frontend 分支到 dev 並 push
-- [ ] 8.2 開發者帳號登入，FabNav 顯示「推播設定」
+- [ ] 8.2 開發者帳號登入，FabNav 顯示「開發者設定」入口
 - [ ] 8.3 設定頁讀寫、手動推播、權限控制全部正確
+- [ ] 8.4 Eruda toggle 開關 + 重整後右下角綠色按鈕出現
+- [ ] 8.5 非開發者帳號訪問 `/agenda-settings` 顯示「無存取權限」
 
 ### 已完成的 v2.1.0 / v2.0.5 ~ v2.0.8（archived，詳見 .claude/context/）
 
@@ -124,4 +128,4 @@ graph LR
 
 ---
 
-*最後更新：2026-04-25（v2.2.0 上線：09 後端 main 完成）*
+*最後更新：2026-04-26（09 前端程式碼盤點 — 6.x + 7.x 已完成於 m_b_每日行程推播_frontend，剩 8.x 驗證）*
