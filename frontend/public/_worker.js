@@ -6,7 +6,7 @@
  */
 
 const ZEABUR_BACKEND_PROD = 'https://kj-champion-system.zeabur.app';
-const ZEABUR_BACKEND_DEV = 'https://kj-champion-system-dev.zeabur.app';
+const ZEABUR_BACKEND_DEV = 'https://kj-champion-dev.zeabur.app';
 
 // 依 Pages 網址判斷要 proxy 到哪個後端
 // - kjcs-dev.pages.dev → dev 後端

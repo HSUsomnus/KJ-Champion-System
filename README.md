@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.0.8** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
+> **版本 v2.1.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
 
@@ -8,14 +8,17 @@
 
 ---
 
-## 部署架構
+## 部署架構（v2.1.0：Zeabur 雙專案物理隔離）
 
-| 層級 | 技術 | 服務 |
-|------|------|------|
-| 前端 | React 18 + Vite 5 + Tailwind CSS（`frontend/`） | Cloudflare Pages（`kj-champion-system.pages.dev`） |
-| API Proxy | Cloudflare Worker（`frontend/public/_worker.js`） | 攔截 `/api/*` 依 Pages hostname 自動 proxy 至 prod / dev 後端 |
-| 後端 | Node.js + Express.js（`server/`） | Zeabur（`kj-champion-system.zeabur.app`） |
-| 資料庫 | PostgreSQL | Zeabur PostgreSQL |
+| 層級 | prod 環境 | dev 環境 |
+|---|---|---|
+| **前端** | Cloudflare Pages `kj-champion-system.pages.dev` | Cloudflare Pages `kjcs-dev.pages.dev`（preview） |
+| **API Proxy** | `_worker.js` `resolveBackend()` 依 hostname 分流 | 同左 |
+| **後端** | Zeabur `kj-champion` 專案 → `kj-champion-system.zeabur.app` | Zeabur `kj-champion-dev` 專案 → `kj-champion-dev.zeabur.app` |
+| **DB** | `postgresql.zeabur.internal:5432`（**公網關閉**） | `postgresql.zeabur.internal:5432`（不同專案）+ 公網開放給 PC 維護 |
+| **DB 連線** | 後端走內網 only | 後端走內網、PC 走公網（schema dump 等） |
+
+→ **跨專案內網不通**：dev 任何錯誤 / 寫入都不會觸碰 prod DB。
 
 ### 請求流程
 

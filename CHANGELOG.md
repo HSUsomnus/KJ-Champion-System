@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.1.0] - 2026-04-25
+
+git tag: v2.1.0
+摘要：基礎建設升級 — OpenSpec change 10「Zeabur 專案分離」完整上線。dev 環境搬到獨立 Zeabur 專案 `kj-champion-dev`（含獨立 `postgresql-dev` DB + dev 後端 `kj-champion-dev.zeabur.app`），與 prod 環境（`kj-champion` 專案）跨專案內網完全隔絕，dev 任何錯誤無法物理觸碰 prod DB。同時關閉 prod DB 公網路（僅內網存取）+ 旋轉 prod DB 密碼（舊密碼曾在 web Claude Code chat 暴露）。`_worker.js` 的 `resolveBackend()` dev URL 從 `kj-champion-system-dev.zeabur.app` 改為 `kj-champion-dev.zeabur.app`。本版整合 v2.0.5 ~ v2.0.8 四個 hotfix（首次登入 onboarding 流程修補：no-profile 死循環、useEffect race condition、強制資料 + 數據填寫 guard、完成後導主頁），並 archive 被 superseded 的 OpenSpec change 08。
+
+---
+
 ## [v2.0.8] - 2026-04-25
 
 git tag: v2.0.8
