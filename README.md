@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統 — DEV 測試分支
 
-> **分支：`dev`** | 基底版本：v2.2.0（與 `main` 同步）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-25
+> **版本 v2.2.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
 
 此分支為 QA 測試環境，**已於 2026-04-13 格式化重置為 main**，歷史清空，重新累積功能分支合入。
 
@@ -67,6 +67,79 @@ git merge origin/m_b_功能名稱
 # 推送觸發 Cloudflare Pages 部署
 git push origin dev
 ```
+瀏覽器（React SPA）
+  └─ /api/* → Cloudflare Worker (_worker.js) → Zeabur 後端 (內網連線 PostgreSQL)
+  └─ 靜態資源 → Cloudflare Pages (Vite build output)
+```
+
+### 前端路由分流（_worker.js）
+
+`_worker.js` 的 `resolveBackend(hostname)`：
+
+- `kjcs-dev.pages.dev`（含 preview 子網域）→ dev 後端
+- 其他（含 `kj-champion-system.pages.dev` 與自訂網域）→ 正式後端
+
+---
+
+## 主要功能
+
+| 功能 | 說明 | 角色限制 |
+|------|------|---------|
+| 月曆視圖 | 團體行事曆，依事件類型標色 | 所有人 |
+| 行程列表 | 清單模式瀏覽行程 | 所有人 |
+| 行程管理 | 新增 / 編輯 / 刪除（同步 Google Calendar）— 詳情頁 FAB 含紅色刪除按鈕（v2.2.1） | admin / manager |
+| 行程儲存 UX | FAB「確認/儲存」明確按鈕語意，必填欄位 alert 提示，離開守衛使用 ref 避免時序競態（v2.0.4） | — |
+| 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
+| 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
+| 首次登入流程 | LINE OAuth 登入後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用，未完成不得進其他頁（v2.0.5 / v2.0.6 / v2.0.7 / v2.0.8 四修補完成） | 所有人 |
+| 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
+| LINE Login | OAuth 2.0，後端動態偵測前端 origin 編入 OAuth state，callback 後 redirect 回原前端 | 所有人 |
+| **每日行程推播 LINE Bot**（v2.2.0 新增） | node-cron 每日定時（預設 21:00 Asia/Taipei）讀取隔日行程 → 依對象（all / manager_above / developer）篩選 → 推送 Flex 字卡（Warm Minimal 風格、event row 卡片化、可點進前端詳情） | 推播：依 `daily_agenda_target` 設定；設定 API：僅開發者 |
+| PWA | 可安裝至手機桌面（Vite PWA Plugin） | 所有人 |
+
+---
+
+## 環境變數
+
+| 變數名稱 | 說明 | 必填 |
+|---------|------|------|
+| `LINE_CHANNEL_ID` | LINE Channel ID | 是 |
+| `LINE_CHANNEL_SECRET` | LINE Channel Secret | 是 |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token（含 push messages 權限，每日推播必需） | 是 |
+| `DATABASE_URL` | Zeabur PostgreSQL 連線字串（後端走內網 `postgresql.zeabur.internal:5432`） | 是 |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Service Account JSON | 是 |
+| `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
+| `FRONTEND_URL` | 前端公開網址（OAuth redirect fallback + Flex 字卡按鈕指回前端） | 是 |
+| `APP_URL` | 後端公開網址 | 是 |
+| `NODE_ENV` | 環境（`production` / `development`） | 是 |
+| `CRON_SECRET` | 排程 API 驗證密鑰（保留給日後外部 trigger 使用，目前 node-cron 內排不需） | 否 |
+
+---
+
+## 每日行程推播（v2.2.0 新增）
+
+### 排程行為
+
+- **時區**：固定 `Asia/Taipei`（由 `node-cron` `timezone` 選項保證，不受容器 TZ 影響）
+- **預設時間**：21:00（首次 boot 從 `system_settings` 寫入預設）
+- **預設對象**：`developer`（首次 boot 預設值）
+- **可調整三個值**：透過 API 或直改 `system_settings` 表（`daily_agenda_time` / `daily_agenda_enabled` / `daily_agenda_target`）
+
+### API（僅開發者，需 LINE userId 認證）
+
+| Method | Path | 說明 |
+|---|---|---|
+| `GET` | `/api/line/agenda-settings` | 讀取目前設定 |
+| `PUT` | `/api/line/agenda-settings` | 更新（body: `{time?, enabled?, target?}`，自動觸發 scheduler 重排） |
+| `POST` | `/api/line/push-daily-agenda` | 手動觸發推播（測試用） |
+
+### Flex 字卡設計
+
+- Warm Minimal 風格，無 emoji
+- Header `#4A7C59` accent 底白字日期
+- Body `#F7F5F2` 米白底，每個 event 為 `#FFFFFF` 白底卡片（邊框 + 圓角 + padding）
+- Event row 點擊 → `${FRONTEND_URL}/event/${id}`
+- Footer「開啟行事曆」按鈕 → `${FRONTEND_URL}/calendar`
 
 ---
 
