@@ -1,161 +1,83 @@
-# 康九冠軍夥伴系統
+# 康九冠軍夥伴系統 — `m_b_dev_test_database`
 
-> **版本 v2.0.4** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-13
+> **分支**：`m_b_dev_test_database` | **基底**：`main` v2.0.4 | **OpenSpec**：[08-dev-test-database](./openspec/changes/08-dev-test-database/tasks.md)
 
-專為團隊設計的行事曆與成員管理系統，整合 LINE Login、Google Calendar 與 PostgreSQL。
-
-> **舊 Vercel 網址已全站 301 轉址至 Cloudflare Pages**，團隊成員無需更改書籤。
+此分支用於規劃並執行 **dev 後端切換到獨立測試 PostgreSQL** 的工作。完成後 dev 站任何寫入都不會影響正式資料。
 
 ---
 
-## 部署架構
+## 此分支正在做什麼
 
-| 層級 | 技術 | 服務 |
-|------|------|------|
-| 前端 | React 18 + Vite 5 + Tailwind CSS（`frontend/`） | Cloudflare Pages（`kj-champion-system.pages.dev`） |
-| API Proxy | Cloudflare Worker（`frontend/public/_worker.js`） | 攔截 `/api/*` 轉發至 Zeabur 後端 |
-| 後端 | Node.js + Express.js（`server/`） | Zeabur（`kj-champion-system.zeabur.app`） |
-| 資料庫 | PostgreSQL | Zeabur PostgreSQL |
+**問題**：dev 後端（`kj-champion-system-dev.zeabur.app`）目前的 `DATABASE_URL` 與正式後端共用同一個 Zeabur PostgreSQL 實例，導致：
 
-### 請求流程
+- dev 上跑 migration / 寫入測試會污染正式資料
+- 違反 `.claude/rules/database.md` 第一閘門（寫入操作必須先確認使用測試 DB）
+- QA 無法安全跑「刪除 / 批次更新」這類破壞性測試
 
-```
-瀏覽器（React SPA）
-  └─ /api/* → Cloudflare Worker (_worker.js) → Zeabur 後端
-  └─ 靜態資源 → Cloudflare Pages (Vite build output)
-```
+**目標**：dev 後端只連測試 DB，正式後端只連正式 DB，兩者完全隔離。
 
----
+**做法**：
 
-## 主要功能
+1. 在 Zeabur dev 專案新增獨立 PostgreSQL（`postgresql-test`）
+2. 把正式 DB 的 schema dump 套到測試 DB
+3. 灌入手寫假資料（5 個假成員、5 個假行程，無真實資料 anonymize）
+4. 修改 dev 後端 Zeabur 服務的 `DATABASE_URL` 指向測試 DB
+5. 驗證 dev 寫入不影響正式資料
 
-| 功能 | 說明 | 角色限制 |
-|------|------|---------|
-| 月曆視圖 | 團體行事曆，依類型標色 | 所有人 |
-| 行程列表 | 清單模式瀏覽行程 | 所有人 |
-| 行程管理 | 新增、編輯、刪除行程（同步 Google Calendar） | admin / manager |
-| 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
-| 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
-| 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
-| LINE Login | OAuth 2.0 登入，動態偵測前端 origin 自動 redirect | 所有人 |
-| PWA | 可安裝至手機桌面（Vite PWA Plugin） | 所有人 |
+詳細步驟見 [`openspec/changes/08-dev-test-database/tasks.md`](./openspec/changes/08-dev-test-database/tasks.md)。
 
 ---
 
-## 環境變數
+## 與 `main` 的差異
 
-| 變數名稱 | 說明 | 必填 |
-|---------|------|------|
-| `LINE_CHANNEL_ID` | LINE Channel ID | 是 |
-| `LINE_CHANNEL_SECRET` | LINE Channel Secret | 是 |
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token | 是 |
-| `DATABASE_URL` | Zeabur PostgreSQL 連線字串 | 是 |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Service Account JSON | 是 |
-| `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
-| `FRONTEND_URL` | 前端公開網址（OAuth redirect fallback） | 是 |
-| `APP_URL` | 後端公開網址 | 是 |
-| `NODE_ENV` | 環境（production / development） | 是 |
-| `CRON_SECRET` | 排程 API 驗證密鑰 | 是 |
+| 項目 | `main` | `m_b_dev_test_database` |
+|------|--------|-------------------------|
+| 程式碼 | — | **不變**（`server/config/db.js` 不動） |
+| OpenSpec | 無 change 08 | 新增 `08-dev-test-database/`（proposal + design + tasks） |
+| STATUS.md | 無 #08 | 列入 #08 OPEN |
+| 文件 | — | 本 README 改寫為 m_b_ 分支說明 |
+| Zeabur 部署 | 不影響 | dev 後端環境變數待 08.5 切換 |
+
+> 本 change **不修改任何 `server/` 程式碼**。所有變更發生在部署層（Zeabur 環境變數）與文件，因此可由使用者在 Zeabur Dashboard 手動執行，Claude 負責文件與假資料 seed 腳本。
 
 ---
 
-## 本機開發
+## 如何在本機推進此 change
 
-### 後端
+依 `tasks.md` 順序執行。Claude 端會做的事：
 
-```bash
-npm install
-npm run dev
-# 後端啟動於 http://localhost:8080
-```
+- **08.4** 建立 `scripts/seed-test-db.sql`（假資料）
+- **08.7** 更新 NOW.md / dev README / `.claude/rules/database.md`
 
-### 前端
+使用者端會做的事（皆在 Zeabur Dashboard / 本機 terminal）：
 
-```bash
-cd frontend
-npm install
-npm run dev
-# 前端啟動於 http://localhost:5173（Vite dev server）
-```
-
-開發模式下 URL 帶 `?dev=1` 可自動模擬 LINE 登入。
+- **08.1** Zeabur 新增 PostgreSQL 服務
+- **08.2** 本機 `pg_dump` 取得正式 DB schema
+- **08.3** 本機 `psql` 套用 schema 到測試 DB
+- **08.5** Zeabur 改 dev 後端的 `DATABASE_URL`
+- **08.6** dev 站功能驗證
 
 ---
 
-## 專案結構
+## 完成定義
 
-```text
-├── frontend/                    # 前端（React 18 + Vite 5 + Tailwind CSS）
-│   ├── public/
-│   │   └── _worker.js           # Cloudflare Worker（/api/* proxy）
-│   ├── src/
-│   │   ├── App.jsx              # React Router 主入口
-│   │   ├── main.jsx             # Vite 進入點
-│   │   ├── pages/               # 頁面元件
-│   │   │   ├── Home.jsx         # 首頁
-│   │   │   ├── Calendar.jsx     # 月曆
-│   │   │   ├── AddEvent.jsx     # 新增/編輯行程
-│   │   │   ├── EventDetail.jsx  # 行程詳情
-│   │   │   ├── Members.jsx      # 成員列表
-│   │   │   ├── MemberDetail.jsx # 成員詳情
-│   │   │   ├── Profile.jsx      # 個人資料
-│   │   │   ├── Management.jsx   # 管理後台
-│   │   │   ├── Financial.jsx    # 財力頁（選取/編輯模式 + 離開守衛）
-│   │   │   ├── FinancialUpload.jsx  # 財力上傳
-│   │   │   ├── FinancialPreview.jsx # 試算表網頁預覽
-│   │   │   ├── Login.jsx        # 登入頁
-│   │   │   └── UserStats.jsx    # 使用者統計
-│   │   ├── components/          # 共用元件（Header, FabNav, FabAction, ConfirmLeaveDialog）
-│   │   ├── contexts/            # React Context（Auth、User）
-│   │   ├── services/            # API 呼叫服務
-│   │   └── utils/               # 工具函式
-│   ├── vite.config.js           # Vite + PWA 設定
-│   └── package.json
-├── server/                      # 後端
-│   ├── server.js                # Express 主入口
-│   ├── routes/
-│   │   ├── auth.js              # LINE OAuth（含動態 origin 偵測 + 白名單）
-│   │   ├── calendar.js          # 行事曆 CRUD
-│   │   ├── member.js            # 成員管理
-│   │   ├── profile.js           # 個人資料
-│   │   ├── line.js              # LINE BOT
-│   │   └── financial.js         # 財務（限 manager）
-│   ├── services/                # 業務邏輯
-│   └── config/                  # DB、LINE 設定
-├── openspec/                    # 功能規格文件
-├── CHANGELOG.md                 # 版本記錄
-└── package.json                 # 後端 dependencies
-```
+當以下三件事都成立時，本 change 可標 DONE 並 merge：
+
+1. `kjcs-dev.pages.dev` 寫入完全不影響 `kj-champion-system.pages.dev`（08.6 驗證通過）
+2. NOW.md「設計決策」記錄「dev 後端使用獨立測試 DB」
+3. `.claude/rules/database.md` 第一閘門狀態更新為「測試 DB 已建立」
 
 ---
 
-## 部署
+## 預設指令
 
-### 前端（Cloudflare Pages）
-
-- 連接 GitHub `main` branch，自動部署
-- Build command：`cd frontend && npm install && npm run build`
-- Output directory：`frontend/dist`
-- `_worker.js` 自動被 Cloudflare Pages 載入為 Advanced Mode Worker
-
-### 後端（Zeabur）
-
-- 連接 GitHub `main` branch，自動部署 Node.js 容器
-- 設定環境變數（`DATABASE_URL`、`LINE_*`、`GOOGLE_SERVICE_ACCOUNT_JSON` 等）
+| 你說 | Claude 做 |
+|------|-----------|
+| 「執行計畫」 | 從 `tasks.md` 找下一個未完成的 `[ ]` task 推進 |
+| 「修改計畫」 | 確認在此分支 → 動 `proposal.md` → `design.md` → `tasks.md` |
+| 「測試功能」 | 此 change 不適用（沒程式碼變更，直接在 Zeabur 切換） |
+| 「功能上線」 | 確認 08.6 通過後，merge 此分支到 main |
 
 ---
 
-## UI 風格（Warm Minimal）
-
-| 屬性 | 值 |
-|------|------|
-| 背景色 | `#F7F5F2` |
-| 強調色 | `#4A7C59` |
-| 文字色 | `#2C2C2C` |
-| 圓角 | `rounded-xl` |
-
----
-
-## 版本記錄
-
-詳見 [CHANGELOG.md](./CHANGELOG.md)。
+> 完整正式版部署架構、環境變數、本機開發流程請見 `main` 分支的 README。
