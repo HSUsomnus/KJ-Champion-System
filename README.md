@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.2.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
+> **版本 v2.2.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-25
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -43,7 +43,7 @@
 |------|------|---------|
 | 月曆視圖 | 團體行事曆，依事件類型標色 | 所有人 |
 | 行程列表 | 清單模式瀏覽行程 | 所有人 |
-| 行程管理 | 新增 / 編輯 / 刪除（同步 Google Calendar） | admin / manager |
+| 行程管理 | 新增 / 編輯 / 刪除（同步 Google Calendar）— 詳情頁 FAB 含紅色刪除按鈕（v2.2.1） | admin / manager |
 | 行程儲存 UX | FAB「確認/儲存」明確按鈕語意，必填欄位 alert 提示，離開守衛使用 ref 避免時序競態（v2.0.4） | — |
 | 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
 | 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
