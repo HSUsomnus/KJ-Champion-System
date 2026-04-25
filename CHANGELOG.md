@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.5] - 2026-04-25
+
+git tag: v2.0.5
+摘要：hotfix — Login.jsx 修首次登入「建立資料」死循環。`handleConfirm` 的 `'no-profile'` 分支原直接 `navigate('/profile/edit')` 但沒先呼叫 `login(userData)` 把 user state 設起來，導致 `ProtectedRoute` 看到 user 為 null 把人踢回 `/login`。bug 從 v2.0.0 React 前端建立時就存在於 main，但 prod DB 永遠有 member 記錄所以從未被觸發；OpenSpec change 10 完成 dev DB 物理隔離後 dev DB 變空，邊界 case 才暴露。
+
+---
+
 ## [v2.0.4] - 2026-04-13
 
 git tag: v2.0.4
