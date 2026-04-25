@@ -4,10 +4,35 @@
 
 const express = require('express');
 const router = express.Router();
-const { optionalLineUser } = require('../middleware/auth');
+const { optionalLineUser, verifyLineUser } = require('../middleware/auth');
 const { isValidLineUserId, isValidLineTargetId } = require('../config/lineConfig');
 const lineService = require('../services/lineService');
 const calendarService = require('../services/calendarService');
+const agendaService = require('../services/agendaService');
+const memberDbService = require('../services/memberDbService');
+
+/**
+ * 驗證請求者是否為開發者（用於每日行程推播設定 API）
+ */
+const requireDeveloper = async (req, res, next) => {
+  try {
+    const lineId = req.lineUserId;
+    const member = await memberDbService.getMemberByLineId(lineId);
+    if (!member || member.role !== '開發者') {
+      return res.status(403).json({
+        success: false,
+        message: '僅開發者可存取此資源',
+      });
+    }
+    next();
+  } catch (error) {
+    console.error('❌ 開發者權限檢查失敗:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || '權限驗證失敗',
+    });
+  }
+};
 
 /**
  * GET /api/line/liff-id
@@ -494,6 +519,59 @@ router.get('/app-download', (req, res) => {
   if (isAndroid) return res.redirect(302, androidUrl);
   if (isIOS) return res.redirect(302, iosUrl);
   res.redirect(302, androidUrl);
+});
+
+/**
+ * GET /api/line/agenda-settings
+ * 讀取每日行程推播設定（僅開發者）
+ */
+router.get('/agenda-settings', verifyLineUser, requireDeveloper, async (req, res) => {
+  try {
+    const settings = await agendaService.getAgendaSettings();
+    res.json({ success: true, data: settings });
+  } catch (error) {
+    console.error('❌ 讀取推播設定失敗:', error);
+    res.status(500).json({ success: false, message: error.message || '讀取設定失敗' });
+  }
+});
+
+/**
+ * PUT /api/line/agenda-settings
+ * 更新每日行程推播設定（僅開發者）
+ * Body: { time?: "HH:MM", enabled?: boolean, target?: "all" | "manager_above" | "developer" }
+ */
+router.put('/agenda-settings', verifyLineUser, requireDeveloper, async (req, res) => {
+  try {
+    const { time, enabled, target } = req.body || {};
+    const updates = {};
+    if (time !== undefined) updates.time = time;
+    if (enabled !== undefined) updates.enabled = !!enabled;
+    if (target !== undefined) updates.target = target;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ success: false, message: '沒有可更新的欄位' });
+    }
+
+    const latest = await agendaService.updateAgendaSettings(updates);
+    res.json({ success: true, data: latest });
+  } catch (error) {
+    console.error('❌ 更新推播設定失敗:', error);
+    res.status(400).json({ success: false, message: error.message || '更新設定失敗' });
+  }
+});
+
+/**
+ * POST /api/line/push-daily-agenda
+ * 手動觸發推播明日行程（測試用，僅開發者）
+ */
+router.post('/push-daily-agenda', verifyLineUser, requireDeveloper, async (req, res) => {
+  try {
+    const result = await agendaService.sendDailyAgenda();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('❌ 手動推播失敗:', error);
+    res.status(500).json({ success: false, message: error.message || '推播失敗' });
+  }
 });
 
 module.exports = router;
