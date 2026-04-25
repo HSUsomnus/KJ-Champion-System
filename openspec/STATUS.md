@@ -15,7 +15,7 @@ graph LR
   06["✅ 06\n新UI前端開發"]
   07["✅ 07\noauth動態redirect"]
   08["🗄️ 08\ndev-test-database\n(superseded by 10)"]
-  09["🔄 09\n每日行程推播\n後端 v2.2.0 / 前端待做"]
+  09["✅ 09\n每日行程推播\n(v2.2.0 後端 + v2.3.0 前端)"]
   10["✅ 10\nzeabur-projects-split\n(v2.1.0)"]
 
   01 --> 02 --> 025 --> 06 --> 07 --> 08 --> 09 --> 10
@@ -26,7 +26,7 @@ graph LR
   style 06 fill:#d4edda,stroke:#28a745,color:#155724
   style 07 fill:#d4edda,stroke:#28a745,color:#155724
   style 08 fill:#e2e3e5,stroke:#6c757d,color:#495057
-  style 09 fill:#fff3cd,stroke:#ffc107,color:#856404
+  style 09 fill:#d4edda,stroke:#28a745,color:#155724
   style 10 fill:#d4edda,stroke:#28a745,color:#155724
 ```
 
@@ -38,19 +38,24 @@ graph LR
 | 06 | [新UI前端開發](changes/06-新UI前端開發/tasks.md) | ✅ DONE | React+Vite+PWA 新UI，合併 main（v2.0.0） |
 | 07 | [oauth動態redirect](changes/07-oauth動態redirect/tasks.md) | ✅ DONE | OAuth redirect 自動偵測 origin（v1.6.0） |
 | 08 | dev-test-database（在 `m_b_dev_test_database` 分支上） | 🗄️ SUPERSEDED | **被 10 取代並 archive**。資料夾未進 main，10 上線後可砍 `m_b_dev_test_database` 分支 |
-| 09 | [每日行程推播](changes/09-每日行程推播/tasks.md) | 🔄 IN PROGRESS | 後端已上 main（v2.2.0）— LINE Bot 每日定時推送明日行程；前端設定頁 6.x ~ 8.x 待做 |
+| 09 | [每日行程推播](changes/09-每日行程推播/tasks.md) | ✅ DONE | 後端 v2.2.0 + 前端 v2.3.0 全部上線 — LINE Bot 每日定時推送 + 開發者設定頁（含 Eruda toggle）|
 | 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0 上線） |
 
 ---
 
-## 當前 Change：09-每日行程推播 — 🔄 後端已上 main / 前端待做
+## 當前 Change：09-每日行程推播 — ✅ DONE（v2.2.0 後端 + v2.3.0 前端）
 
-`████████░░░░░` 後端 20 / 20 ✅、前端 0 / 8 ⬜
+`██████████████` 後端 20 / 20 ✅、前端 11 / 11 ✅
 
-### 進行分支
+### 上線版本
 
-- 後端：`m_b_每日行程推播_backend`（已上 main，v2.2.0）
-- 前端：`m_b_每日行程推播_frontend`（待開發，6.x ~ 8.x 全未動）
+- 後端 v2.2.0（main commit `9f18745`，2026-04-25）
+- 前端 v2.3.0（main commit 待 push，2026-04-26）
+
+### 即將砍除的分支
+
+- `m_b_每日行程推播_backend`（v2.3.0 上線後一起砍）
+- `m_b_每日行程推播_frontend`（v2.3.0 上線後砍）
 
 ### ✅ 後端已完成（20/20，v2.2.0）
 
@@ -76,20 +81,24 @@ graph LR
 - [x] 5.5.1 ~ 5.5.4 字卡 v1：時區 bug 修復、移除 emoji、加 dot bullet、類型膠囊 badge、Header accent 色、可點進 event 詳情
 - [x] 5.6.1 ~ 5.6.4 字卡 v2：body 改米白底、event row 卡片化（白底 + 邊框 + 圓角 + padding）、移除多餘 separator、連續多日 23:30 收推視為已驗證
 
-### ⬜ 前端待做（0/8）
+### ✅ 前端完成（11/11，v2.3.0 上線）
 
 #### 6. 設定頁面
-- [ ] 6.1 `frontend/src/pages/AgendaSettings.jsx`（toggle / 時間 / 對象下拉 / 儲存 / 立即推播 / 權限檢查）
+- [x] 6.1 `frontend/src/pages/AgendaSettings.jsx`（toggle / 時間 / 對象下拉 / 儲存 / 立即推播 / 權限檢查 + 加碼 Eruda toggle）
 
 #### 7. 前端整合
-- [ ] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法
-- [ ] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口
-- [ ] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由
+- [x] 7.1 `frontend/src/services/api.js` 新增 3 個 API 方法
+- [x] 7.2 `frontend/src/components/FabNav.jsx` 新增開發者入口（role gate）
+- [x] 7.3 `frontend/src/App.jsx` 新增 `/agenda-settings` 路由
+- [x] 7.4 `frontend/index.html` 加 Eruda inline script loader
+- [x] 7.5 `frontend/index.html` 加 `mobile-web-app-capable` meta tag（PWA deprecated 警告補正）
 
 #### 8. 驗證
-- [ ] 8.1 merge frontend 分支到 dev 並 push
-- [ ] 8.2 開發者帳號登入，FabNav 顯示「推播設定」
-- [ ] 8.3 設定頁讀寫、手動推播、權限控制全部正確
+- [x] 8.1 merge frontend 分支到 dev 並 push
+- [x] 8.2 開發者帳號登入，FabNav 顯示「開發者設定」入口
+- [x] 8.3 設定頁讀寫、手動推播、權限控制全部正確（dev DB 用 `scripts/seed-dev-agenda-test.js` 寫入 developer + 4/27 event 後實機驗證通過）
+- [x] 8.4 Eruda toggle 開關 + 重整後右下角綠色按鈕出現
+- [x] 8.5 非開發者帳號訪問 `/agenda-settings` 顯示「無存取權限」（用 localStorage swap lineUserId 驗證）
 
 ### 已完成的 v2.1.0 / v2.0.5 ~ v2.0.8（archived，詳見 .claude/context/）
 
@@ -98,7 +107,7 @@ graph LR
 
 ---
 
-> **下一步**：開發 `m_b_每日行程推播_frontend` 分支（6.x ~ 7.x 實作），完成後依序 dev 驗證 → main 上線。
+> **下一步**：09 已 DONE，下一個目標 — `m_b_tag_*` 三段式合（建議補 OpenSpec change `11-tag-system`），或 `m_b_pwa_upgrade`。
 
 ---
 
@@ -121,4 +130,4 @@ graph LR
 
 ---
 
-*最後更新：2026-04-25（v2.2.0 上線：09 後端 main 完成）*
+*最後更新：2026-04-26（09 ✅ DONE — v2.3.0 前端上線完成，整個 change 收尾）*

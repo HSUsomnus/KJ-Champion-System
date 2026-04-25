@@ -16,6 +16,7 @@ import FinancialUpload from './pages/FinancialUpload'
 import FinancialPreview from './pages/FinancialPreview'
 import Management from './pages/Management'
 import MemberDetail from './pages/MemberDetail'
+import AgendaSettings from './pages/AgendaSettings'
 
 function ProtectedRoute() {
   const { user, loading, isProfileComplete, isStatsComplete } = useAuth()
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
       { path: '/financial-preview', element: <FinancialPreview /> },
       { path: '/management', element: <Management /> },
       { path: '/member/:id', element: <MemberDetail /> },
+      { path: '/agenda-settings', element: <AgendaSettings /> },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },
