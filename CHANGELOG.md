@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.0.8] - 2026-04-25
+
+git tag: v2.0.8
+摘要：hotfix — UserStatsEdit 完成 onboarding 後應導主頁。v2.0.7 onboarding guard 完成後，新用戶填完用戶數據按「確認/儲存」會導去 `/user-stats`，但使用者預期是進入主應用。修法：navigate 三元式判斷 — 新用戶（onboarding=true）→ `'/'`、既有用戶從 `/user-stats` 進來編輯 → `'/user-stats'` 保留原行為。
+
+---
+
 ## [v2.0.7] - 2026-04-25
 
 git tag: v2.0.7
