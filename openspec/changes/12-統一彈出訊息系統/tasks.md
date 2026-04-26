@@ -4,14 +4,14 @@
 
 ## 1. 基礎元件 — feedback 套件
 
-- [ ] 1.1 新建 `frontend/src/components/feedback/Dialog.jsx`（遮罩 + 卡片容器 base，符合 DESIGN_SYSTEM）
-- [ ] 1.2 新建 `frontend/src/components/feedback/ConfirmDialog.jsx`（消費 Dialog，支援 `default` / `danger` variant）
-- [ ] 1.3 新建 `frontend/src/components/feedback/Toast.jsx` + `ToastContainer.jsx`（左側色條 + 自動消失 + 堆疊）
-- [ ] 1.4 新建 `frontend/src/components/feedback/BottomSheet.jsx`（底部抽屜 base）
-- [ ] 1.5 新建 `frontend/src/components/feedback/FieldError.jsx`（紅字 + dot bullet）
-- [ ] 1.6 新建 `frontend/src/components/feedback/FeedbackProvider.jsx`（context + portal mount）
-- [ ] 1.7 新建 `frontend/src/components/feedback/index.js`（export `useToast` / `useConfirm` / `useBottomSheet` 與元件）
-- [ ] 1.8 `frontend/src/App.jsx` 最外層包 `<FeedbackProvider>`
+- [x] 1.1 新建 `frontend/src/components/feedback/Dialog.jsx`（遮罩 + 卡片容器 base，符合 UIDESIGN.md）
+- [x] 1.2 新建 `frontend/src/components/feedback/ConfirmDialog.jsx`（消費 Dialog，支援 `default` / `danger` variant）
+- [x] 1.3 新建 `frontend/src/components/feedback/Toast.jsx` + `ToastContainer.jsx`（左側色條 + 自動消失 + 堆疊）
+- [x] 1.4 新建 `frontend/src/components/feedback/BottomSheet.jsx`（底部抽屜 base）
+- [x] 1.5 新建 `frontend/src/components/feedback/FieldError.jsx`（紅字 + dot bullet）
+- [x] 1.6 新建 `frontend/src/components/feedback/FeedbackProvider.jsx`（context + portal mount）
+- [x] 1.7 新建 `frontend/src/components/feedback/index.js`（export `useToast` / `useConfirm` / `useBottomSheet` 與元件）
+- [x] 1.8 `frontend/src/App.jsx` 最外層包 `<FeedbackProvider>`
 
 ## 2. 既有彈出元件遷移
 

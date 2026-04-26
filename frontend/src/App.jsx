@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+import { FeedbackProvider } from './components/feedback'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Calendar from './pages/Calendar'
@@ -80,5 +81,9 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <FeedbackProvider>
+      <RouterProvider router={router} />
+    </FeedbackProvider>
+  )
 }

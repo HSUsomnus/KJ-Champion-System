@@ -49,7 +49,7 @@ graph LR
 
 ## 當前 Change：12-統一彈出訊息系統 — 🛠 IN PROGRESS
 
-`░░░░░░░░░░░░░░` 0 / 33（基礎元件 8 + 元件遷移 3 + 替換 10 + 規範 2 + 驗證 6 + 上線 9 — 上線階段不計入實作完成度）
+`████░░░░░░░░░░` 8 / 33（基礎元件 8 + 元件遷移 3 + 替換 10 + 規範 2 + 驗證 6 + 上線 9 — 上線階段不計入實作完成度）
 
 ### 分支
 - `m_b_統一彈出訊息系統`（純前端，已從 main 切出並推遠端）
@@ -61,8 +61,18 @@ graph LR
 - 規範寫進 `.claude/rules/frontend.md` 與根目錄 `UIDESIGN.md`
 - 上線版本：v2.4.0
 
+### ✅ 已完成（1.x feedback 套件 + App 包 Provider）
+- [x] 1.1 `Dialog.jsx` base
+- [x] 1.2 `ConfirmDialog.jsx`（消費 Dialog，default / danger variant）
+- [x] 1.3 `Toast.jsx` + `ToastContainer.jsx`（左側色條 + 自動消失 + 堆疊 + z-[70]）
+- [x] 1.4 `BottomSheet.jsx`（底部抽屜 + 把手）
+- [x] 1.5 `FieldError.jsx`（紅字 + dot bullet）
+- [x] 1.6 `FeedbackProvider.jsx`（context + Promise API for confirm/sheet）
+- [x] 1.7 `index.js`（barrel export）
+- [x] 1.8 `App.jsx` 最外層包 `<FeedbackProvider>`
+
 ### 下一步
-從 tasks.md 的 1.1（建 `Dialog.jsx` base）開始實作。
+2.x 既有元件遷移（ConfirmLeaveDialog / ShareConfirmDialog / AmountPicker）
 
 ---
 
