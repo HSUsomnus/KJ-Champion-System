@@ -6,7 +6,14 @@
 
 ## 功能範圍
 
-**v2.3.0 已上線（PC session 完整收尾）**：OpenSpec change 09「每日行程推播」整個 DONE — 前端開發者設定頁（`/agenda-settings` toggle / 時間 / 對象 / 立即推播 + Eruda toggle）、FabNav 開發者入口、PWA `mobile-web-app-capable` meta tag 補正、scripts/seed-dev-agenda-test.js（dev DB seed 工具）。main HEAD `bc84023`，tag `v2.3.0` 已推。dev + 5 條 m_b_* 全部同步完成（pwa_upgrade 第二次 -X theirs 蓋 STATUS.md，需接手時補回）。`m_b_每日行程推播_backend` + `_frontend` 兩條 feature 分支已從遠端與本機刪除。
+**v2.3.0 已上線**：OpenSpec change 09「每日行程推播」整個 DONE — 前端開發者設定頁（`/agenda-settings` toggle / 時間 / 對象 / 立即推播 + Eruda toggle）、FabNav 開發者入口、PWA `mobile-web-app-capable` meta tag 補正、scripts/seed-dev-agenda-test.js（dev DB seed 工具）。tag `v2.3.0` 已推。
+
+**2026-04-26 規則類補丁（本 commit 後 main HEAD 將前進一個）**：
+- `UIDESIGN.md` 升格至根目錄（從 `frontend/DESIGN_SYSTEM.md` 搬遷），補 Feedback 元件規範 + 彈出訊息決策樹，禁止 `alert/confirm/prompt`、第三方通知套件
+- `CLAUDE.md` 加「前端 UI 規範」獨立區塊 + 關鍵檔案表加列 UIDESIGN.md
+- `.claude/rules/deploy.md` + `CLAUDE.md` 加「**推 main 前必須更新 NOW.md**」強制規則（多次糾正後成文）
+- 開立 OpenSpec change 12-統一彈出訊息系統（v2.4.0 目標，分支 `m_b_統一彈出訊息系統`）
+- 規則類 + UIDESIGN 升格 commit 為 `bb0c14f`；本 NOW.md / 規則修訂 commit 為新 HEAD（push 後可從 `git ls-remote` 查得）
 
 → **PC 接手已完成事項**：v2.2.0 prod 驗證（手動 push API + LINE 字卡實收）、v2.3.0 上線（CHANGELOG / context / README / NOW / STATUS / tasks 全到位）、dev 全鏈路驗證 8.1~8.5、本機 Node + scoop 環境修復、psql 直連 dev DB 寫入測試資料、prod GUI 把推播時間 23:30 改回 21:00。
 
@@ -54,9 +61,10 @@
 
 ## 目前進度
 
-- **目前分支**：`main`（v2.3.0 已上線，HEAD `f241b3c`）
-- **dev HEAD**：跟 main 同步（含 dev 專屬 README）
-- **4 條 m_b_*** 全部 behind main = 0（`m_b_eruda除錯工具` 已刪除，sharp dep cherry-pick 到 `m_b_pwa_upgrade`）
+- **目前分支**：`main`（HEAD `bb0c14f` 為 UIDESIGN.md 升格 + CLAUDE.md 加索引；本 commit 後將前進）
+- **進行中 change**：12-統一彈出訊息系統（分支 `m_b_統一彈出訊息系統`，OpenSpec 三件套就緒，0/33 task，等「執行計畫」開始實作 1.1 `Dialog.jsx` base，目標 v2.4.0）
+- **dev HEAD**：跟 main 同步
+- **5 條 m_b_*** 全部 behind main = 0（含新增的 `m_b_統一彈出訊息系統`；`m_b_eruda除錯工具` 已刪除，sharp dep cherry-pick 到 `m_b_pwa_upgrade`）
 - **v2.2.1 + v2.3.0 tag 都在遠端**
 - **`hotfix/event-detail-delete-fab`** 已被刪
 - **prod 推播時間** 已用 v2.3.0 GUI 從 23:30 改回 21:00

@@ -16,15 +16,20 @@ dev 後端 URL：`kj-champion-dev.zeabur.app`（v2.1.0 起，舊 `kj-champion-sy
 ## 所有分支共用（必做）
 
 ### 推送前必做
-1. **完整重寫 `README.md`**（每次推送必做，不是選擇性）：
+1. **更新 `NOW.md`**（推 main 前強制 — 不論完整版本上線、hotfix、或規則類直推都適用）：
+   - 「目前進度」段落寫本次推送內容摘要（一兩句）
+   - 「目前分支」 / 「main HEAD」hash 改成即將 push 的 commit 之**前**那個 HEAD（接受 NOW.md 自身那個 commit 後 hash 會「落後一個」，補註「本 commit 為 NOW.md / 規則同步」即可）
+   - NOW.md 變更與本次推送變更同一個 commit（不要分兩個 commit），避免 main 上 NOW.md 永遠落後
+   - **此規則的存在原因**：使用者反覆糾正過「main HEAD 變了 NOW.md 沒跟上」，下次新對話一開啟讀到落後的 NOW.md 會誤判進度
+2. **完整重寫 `README.md`**（每次「功能上線到 main」必做，不是選擇性。規則類直推 main 不需要）：
    - 重新撰寫技術架構、功能清單、專案結構、部署說明
    - 頂部版本號更新為本次版本
    - 確保反映目前程式碼實際狀態，刪除過時資訊
-2. **機密檢查**：
+3. **機密檢查**：
    - 確認 `.gitignore` 包含：`.env`、`.env.backup`、`Key/`、金鑰 `*.json`
    - 執行 `git status`，確認機密檔案不在清單中
    - 搜尋：長 Token、`-----BEGIN PRIVATE KEY-----`、寫死帳號密碼
-3. **列出推送項目清單給使用者確認**，未確認不得執行 `git push`
+4. **列出推送項目清單給使用者確認**，未確認不得執行 `git push`
 
 ### git 指令規範
 
@@ -83,6 +88,7 @@ git checkout <回到原分支>
 
 README 重寫、CHANGELOG 更新：**不需要**（規則類更新不影響產品功能）。
 機密檢查：仍然必做。
+**`NOW.md` 更新：仍然必做**（main HEAD 變了就要更新，與本次規則變更同一個 commit）。
 
 ### main 推送後同步規則
 
@@ -139,12 +145,13 @@ git push --tags
 
 **全部必做：**
 
-1. 更新 `CHANGELOG.md`（最上方加入新版本，舊版保留）
-2. 建立 `.claude/context/vX.Y.Z.md`（本版詳細上下文）
-3. README 完整重寫
-4. 機密檢查
-5. 使用者**明確確認**後才執行（最高確認要求）
-6. `git tag X.Y.Z && git push --tags`
+1. **更新 `NOW.md`**（main HEAD + 本版重點，與本次推送同 commit）
+2. 更新 `CHANGELOG.md`（最上方加入新版本，舊版保留）
+3. 建立 `.claude/context/vX.Y.Z.md`（本版詳細上下文）
+4. README 完整重寫
+5. 機密檢查
+6. 使用者**明確確認**後才執行（最高確認要求）
+7. `git tag X.Y.Z && git push --tags`
 
 ---
 
