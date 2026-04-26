@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
+import { useToast } from '../components/feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapEvent } from '../services/api'
 
@@ -42,13 +43,24 @@ function buildShareText(events, label) {
   return `${label}\n${lines.join('\n')}`
 }
 
-async function handleShare(text) {
+/**
+ * 純粹的分享 helper（檔級函式，無法用 hook）
+ * 回傳 { ok, copied?, cancelled? }，由 component 內呼叫者決定是否觸發 toast
+ */
+async function shareTextHelper(text) {
   if (navigator.share) {
-    try { await navigator.share({ text }) } catch { /* 使用者取消 */ }
-  } else if (navigator.clipboard) {
-    await navigator.clipboard.writeText(text)
-    alert('已複製到剪貼簿')
+    try {
+      await navigator.share({ text })
+      return { ok: true }
+    } catch {
+      return { ok: false, cancelled: true }
+    }
   }
+  if (navigator.clipboard) {
+    await navigator.clipboard.writeText(text)
+    return { ok: true, copied: true }
+  }
+  return { ok: false }
 }
 
 const SHARE_ICON = (
@@ -61,7 +73,14 @@ const SHARE_ICON = (
 export default function Calendar() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const today = new Date()
+
+  const handleShare = async (text) => {
+    const r = await shareTextHelper(text)
+    if (r.copied) toast.success('已複製到剪貼簿')
+  }
+
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDate, setSelectedDate] = useState(dateStr(today.getFullYear(), today.getMonth(), today.getDate()))

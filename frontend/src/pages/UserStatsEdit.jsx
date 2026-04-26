@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
+import { useToast, FieldError } from '../components/feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
 
@@ -37,9 +38,12 @@ function parseVolunteers(str) {
 export default function UserStatsEdit() {
   const navigate = useNavigate()
   const { user, refreshUser, isStatsComplete } = useAuth()
+  const toast = useToast()
   const onboarding = !isStatsComplete(user)
   const [activeFab, setActiveFab] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [courseError, setCourseError] = useState(null)
+  const courseSectionRef = useRef(null)
   const [form, setForm] = useState({
     starLevel: user?.starLevel || '白星',
     courseList: parseCourses(user?.courseRecord),
@@ -57,6 +61,7 @@ export default function UserStatsEdit() {
         ? prev.courseList.filter(c => c !== course)
         : [...prev.courseList, course],
     }))
+    if (courseError) setCourseError(null)
   }
 
   const addVolunteer = () => {
@@ -79,9 +84,14 @@ export default function UserStatsEdit() {
   const [blocker, setSaved] = useLeaveGuard()
 
   const handleConfirm = async () => {
-    // [設計決策] 課程紀錄必填，至少勾 1 個
+    // [設計決策] 課程紀錄必填 — inline FieldError + 滾動聚焦
     // 原因：新用戶 onboarding 強制流程要求課程資料不得為空
-    if (form.courseList.length === 0) { alert('請至少勾選一個課程紀錄'); return }
+    if (form.courseList.length === 0) {
+      setCourseError('請至少勾選一個課程紀錄')
+      courseSectionRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      return
+    }
+    setCourseError(null)
     setSaving(true)
     try {
       await api.updateProfile({
@@ -97,7 +107,7 @@ export default function UserStatsEdit() {
       // 原因：onboarding 完成是進入主應用的時機，使用者預期看到主頁而非數據頁
       setTimeout(() => navigate(onboarding ? '/' : '/user-stats'), 0)
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || '儲存失敗')
     } finally {
       setSaving(false)
     }
@@ -146,7 +156,7 @@ export default function UserStatsEdit() {
           </div>
 
           {/* 課程紀錄 */}
-          <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
+          <div ref={courseSectionRef} className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
             <p className="text-xs mb-2" style={{ color: '#8A8680' }}>課程紀錄 <span style={{ color: '#C0392B' }}>*</span></p>
             <div className="flex flex-col gap-2">
               {COURSE_OPTIONS.map(course => (
@@ -161,6 +171,7 @@ export default function UserStatsEdit() {
                 </label>
               ))}
             </div>
+            {courseError && <FieldError>{courseError}</FieldError>}
           </div>
 
           {/* 特斯拉加盟主 */}

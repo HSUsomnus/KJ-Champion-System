@@ -4,12 +4,14 @@ import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
+import { useToast } from '../components/feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
 
 export default function FinancialUpload() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const fileInputRef = useRef(null)
   const [activeFab, setActiveFab] = useState(null)
   const [file, setFile] = useState(null)
@@ -43,7 +45,7 @@ export default function FinancialUpload() {
       setSaved()
       setTimeout(() => navigate('/financial'), 0)
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || '上傳失敗')
     } finally {
       setUploading(false)
     }

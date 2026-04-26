@@ -4,7 +4,7 @@ import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
-import { BottomSheet } from '../components/feedback'
+import { BottomSheet, useToast } from '../components/feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
 
@@ -14,6 +14,7 @@ AMOUNT_OPTIONS.push('10億')
 export default function FinancialEdit() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const [searchParams] = useSearchParams()
   const targetUserId = searchParams.get('userId')
   const targetUserName = searchParams.get('name')
@@ -63,7 +64,7 @@ export default function FinancialEdit() {
       await api.updateFinancialAmount(user.lineId, viewUserId, amount)
       setFinancialAmount(amount)
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || '更新財力金額失敗')
     }
   }
 
@@ -82,7 +83,7 @@ export default function FinancialEdit() {
       try {
         await api.deleteFinancial(id, viewUserId)
       } catch (err) {
-        alert(err.message)
+        toast.error(err.message || '刪除失敗')
         return
       }
     }

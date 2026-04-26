@@ -1,18 +1,22 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
+import { useToast, FieldError } from '../components/feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapMember } from '../services/api'
 
 export default function ProfileEdit() {
   const navigate = useNavigate()
   const { user, refreshUser, login, isProfileComplete } = useAuth()
+  const toast = useToast()
   const onboarding = !isProfileComplete(user)
   const [activeFab, setActiveFab] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState({})
+  const inputRefs = useRef({})
   const [form, setForm] = useState({
     realName: user?.realName || '',
     email: user?.email || '',
@@ -23,15 +27,34 @@ export default function ProfileEdit() {
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => {
+        const next = { ...prev }
+        delete next[field]
+        return next
+      })
+    }
   }
 
   const handleConfirm = async () => {
-    // [設計決策] 四欄必填驗證 + 明確 alert 哪欄漏填
-    // 原因：新用戶 onboarding 強制流程要求所有欄位都不為空，靜默 return 會讓使用者卡住不知原因
-    if (!form.realName?.trim()) { alert('請輸入真實姓名'); return }
-    if (!form.email?.trim()) { alert('請輸入 Email'); return }
-    if (!form.phone?.trim()) { alert('請輸入電話號碼'); return }
-    if (!form.birthday) { alert('請選擇生日'); return }
+    // [設計決策] 四欄必填驗證 — inline FieldError + 焦點導引
+    // 原因：新用戶 onboarding 強制流程要求所有欄位都不為空，inline 紅字比 alert 更精準指出位置
+    const newErrors = {}
+    if (!form.realName?.trim()) newErrors.realName = '請輸入真實姓名'
+    if (!form.email?.trim()) newErrors.email = '請輸入 Email'
+    if (!form.phone?.trim()) newErrors.phone = '請輸入電話號碼'
+    if (!form.birthday) newErrors.birthday = '請選擇生日'
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      const firstKey = Object.keys(newErrors)[0]
+      const el = inputRefs.current[firstKey]
+      if (el) {
+        el.focus()
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }
+      return
+    }
+    setErrors({})
     setSaving(true)
     try {
       const isNewUser = !user?.realName
@@ -63,7 +86,7 @@ export default function ProfileEdit() {
       // 新用戶完成資料後接著去填數據頁；既有用戶回個人資料頁
       setTimeout(() => navigate(isNewUser ? '/user-stats/edit' : '/profile'), 0)
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || '儲存失敗')
     } finally {
       setSaving(false)
     }
@@ -106,12 +129,14 @@ export default function ProfileEdit() {
             <div key={field.key} className="px-4 py-3.5" style={{ borderBottom: idx < fields.length - 1 ? '1px solid #E2DED8' : 'none' }}>
               <label className="block text-xs mb-1.5" style={{ color: '#8A8680' }}>{field.label}</label>
               <input
+                ref={el => { inputRefs.current[field.key] = el }}
                 type={field.type} value={form[field.key]}
                 onChange={e => handleChange(field.key, e.target.value)}
                 required={field.required}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: '#F7F5F2', border: '1px solid #E2DED8', color: '#2C2C2C' }}
+                style={{ background: '#F7F5F2', border: errors[field.key] ? '1px solid #C0392B' : '1px solid #E2DED8', color: '#2C2C2C' }}
               />
+              {errors[field.key] && <FieldError>{errors[field.key]}</FieldError>}
             </div>
           ))}
         </div>

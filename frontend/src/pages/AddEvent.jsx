@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
-import { Dialog } from '../components/feedback'
+import { Dialog, useToast, FieldError } from '../components/feedback'
 import shareEvent from '../utils/shareEvent'
 import { useAuth } from '../contexts/AuthContext'
 import { api, formToEventPayload } from '../services/api'
@@ -22,8 +22,11 @@ export default function AddEvent() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const toast = useToast()
   const [activeFab, setActiveFab] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState({})
+  const inputRefs = useRef({})
 
   const existingEvent = location.state?.event || null
   const isEdit = !!existingEvent
@@ -39,14 +42,35 @@ export default function AddEvent() {
     description: existingEvent?.description || '',
   })
 
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+  const set = (k, v) => {
+    setForm(p => ({ ...p, [k]: v }))
+    if (errors[k]) {
+      setErrors(prev => {
+        const next = { ...prev }
+        delete next[k]
+        return next
+      })
+    }
+  }
 
   const [blocker, setSaved] = useLeaveGuard()
   const [showShareDialog, setShowShareDialog] = useState(false)
 
   const handleConfirm = async () => {
-    if (!form.title?.trim()) { alert('請輸入標題'); return }
-    if (!form.date) { alert('請選擇開始日期'); return }
+    const newErrors = {}
+    if (!form.title?.trim()) newErrors.title = '請輸入標題'
+    if (!form.date) newErrors.date = '請選擇開始日期'
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      const firstKey = Object.keys(newErrors)[0]
+      const el = inputRefs.current[firstKey]
+      if (el) {
+        el.focus()
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }
+      return
+    }
+    setErrors({})
     setSaving(true)
     try {
       const payload = formToEventPayload(form)
@@ -58,7 +82,7 @@ export default function AddEvent() {
       setSaved()
       setShowShareDialog(true)
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || '儲存失敗')
     } finally {
       setSaving(false)
     }
@@ -66,7 +90,8 @@ export default function AddEvent() {
 
   const handleShare = async () => {
     setShowShareDialog(false)
-    await shareEvent(form)
+    const r = await shareEvent(form)
+    if (r.copied) toast.success('已複製到剪貼簿')
     navigate(-1)
   }
 
@@ -101,7 +126,15 @@ export default function AddEvent() {
         <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
             <label className="block text-xs mb-1.5" style={{ color: '#8A8680' }}>標題</label>
-            <input type="text" value={form.title} onChange={e => set('title', e.target.value)} required placeholder="輸入行程名稱" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+            <input
+              ref={el => { inputRefs.current.title = el }}
+              type="text" value={form.title}
+              onChange={e => set('title', e.target.value)}
+              required placeholder="輸入行程名稱"
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ ...inputStyle, border: errors.title ? '1px solid #C0392B' : inputStyle.border }}
+            />
+            {errors.title && <FieldError>{errors.title}</FieldError>}
             {TITLE_PLACEHOLDERS[form.type] && (
               <p className="mt-1.5 text-xs leading-relaxed" style={{ color: '#8A8680' }}>{TITLE_PLACEHOLDERS[form.type]}</p>
             )}
@@ -128,7 +161,15 @@ export default function AddEvent() {
 
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
             <label className="block text-xs mb-1.5" style={{ color: '#8A8680' }}>開始日期</label>
-            <input type="date" value={form.date} onChange={e => set('date', e.target.value)} required className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+            <input
+              ref={el => { inputRefs.current.date = el }}
+              type="date" value={form.date}
+              onChange={e => set('date', e.target.value)}
+              required
+              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+              style={{ ...inputStyle, border: errors.date ? '1px solid #C0392B' : inputStyle.border }}
+            />
+            {errors.date && <FieldError>{errors.date}</FieldError>}
           </div>
 
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid #E2DED8' }}>
