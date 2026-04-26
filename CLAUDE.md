@@ -27,8 +27,8 @@
 
 ## 推送原則（詳細：[`.claude/rules/deploy.md`](.claude/rules/deploy.md)）
 
-- **推 main 前必做**：機密檢查 + README 重寫 + CHANGELOG / `.claude/context/vX.Y.Z.md` / 使用者確認
-- **可直推 main**：`.claude/`、`CLAUDE.md`、`scripts/` 工具腳本、`.gitignore`、`CHANGELOG.md`、`NOW.md`（規則 / 文件類）
+- **推 main 前必做**：**更新 `NOW.md`**（main HEAD + 本次內容，同 commit）+ 機密檢查 + 使用者確認；完整版本上線額外要 README 重寫 / CHANGELOG / `.claude/context/vX.Y.Z.md`
+- **可直推 main**：`.claude/`、`CLAUDE.md`、`UIDESIGN.md`、`scripts/` 工具腳本、`.gitignore`、`CHANGELOG.md`、`NOW.md`（規則 / 文件類）
 - **禁止直推 main**：`server/`、`frontend/`、`public/`、migrations、`package.json`、部署設定（`_worker.js` 等）
 - **main push 後必須同步全分支**（dev + 所有 m_b_*）
 
