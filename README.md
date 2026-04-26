@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統 — DEV 測試分支
 
-> **分支：`dev`** | 基底版本：v2.2.1（與 `main` 同步）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-25
+> **分支：`dev`** | 基底版本：v2.3.0（含 v2.4.0-dev change 12）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-26
 
 此分支為 QA 測試環境，**已於 2026-04-13 格式化重置為 main**，歷史清空，重新累積功能分支合入。
 
@@ -8,15 +8,16 @@
 
 ## ⚠️ 此分支狀態
 
-- 基底等於 `main`（**v2.2.1 — EventDetail 紅色刪除按鈕 hotfix 已上線**）
+- 基底等於 `main`（**v2.3.0 — 每日行程推播前端設定頁 + UIDESIGN.md 升格 + 推 main 前強制更新 NOW.md 規則**）
 - **已合入 main 的內容**：
   - OpenSpec change 10 — Zeabur 專案分離（v2.1.0，dev/prod 物理隔離）
-  - OpenSpec change 09 — 每日行程推播後端（v2.2.0，cron 排程 + system_settings 自動 migration + Flex 字卡）
+  - OpenSpec change 09 — 每日行程推播（v2.2.0 後端 + v2.3.0 前端）
   - hotfix v2.0.5 ~ v2.0.8（首次登入 onboarding 流程修補完整串）
   - hotfix v2.2.1 — EventDetail FAB 紅色刪除按鈕
+  - 規則類補丁（2026-04-26）：UIDESIGN.md 升格根目錄、CLAUDE.md 加 UI 規範索引、deploy.md 加「推 main 前強制更新 NOW.md」
 - **dev 分支獨有（尚未上 main）**：
-  - 無（v2.2.1 推送後 dev 與 main 同步，等下次 merge `m_b_*` 才會再次領先）
-- 待依序 merge 的功能分支：`m_b_每日行程推播_frontend` / `m_b_pwa_upgrade` / `m_b_tag_*` / `m_b_eruda除錯工具`
+  - **change 12-統一彈出訊息系統** — 替換 14 處原生 alert/confirm 為 Warm Minimal 風格 Toast / ConfirmDialog / FieldError / BottomSheet（v2.4.0 目標，dev 驗證中）
+- 待依序 merge 的功能分支：`m_b_pwa_upgrade` / `m_b_tag_*`
 
 ---
 
@@ -39,9 +40,7 @@
 
 | 分支名稱 | 功能說明 | 狀態 | 對應 OpenSpec |
 |---------|---------|------|--------------|
-| `m_b_每日行程推播_backend` | 每日行程 LINE Bot 推播 — 後端（cron 排程 + system_settings + Flex 字卡） | ✅ 已上 main（v2.2.0，2026-04-25）— 分支保留至 frontend 上線後一起砍 | 09-每日行程推播 |
-| `m_b_每日行程推播_frontend` | 每日行程推播 — 前端設定頁（含 Eruda toggle） | ⬜ 待合入（後端 v2.2.0 已上 main，前端可開始接 API） | 09-每日行程推播 |
-| `m_b_eruda除錯工具` | React 前端整合 Eruda 手機除錯 | ⚠️ 建議廢棄（功能已被 `推播_frontend` 的 `42a843b` 吸收並擴充） | — |
+| `m_b_統一彈出訊息系統` | Warm Minimal 風格 Feedback 元件（Toast / ConfirmDialog / BottomSheet / FieldError / Dialog base）+ 替換 14 處 alert/confirm + 既有 ConfirmLeaveDialog/ShareConfirmDialog/AmountPicker 遷移 | 🛠 **本次合入 dev 驗證中**（v2.4.0 目標） | 12-統一彈出訊息系統 |
 | `m_b_pwa_upgrade` | PWA 全平台升級（Android + iOS + Desktop 最新標準） | ⬜ 待合入 | 08-pwa-upgrade |
 | `m_b_tag_database` | 標籤系統 — DB migration | ⬜ 待合入 | ❓ 無 OpenSpec change（需補） |
 | `m_b_tag_backend` | 標籤系統 — 後端 API | ⬜ 待合入 | ❓ 無 OpenSpec change（需補） |
@@ -49,8 +48,12 @@
 
 ### 分支補充說明
 
-- **`m_b_每日行程推播_backend` 暫不砍除**：依使用者決議，等 `m_b_每日行程推播_frontend` 也驗證上線後一起刪除
-- **`m_b_eruda除錯工具` 建議廢棄**：其 `4e39f65` 的 Eruda 載入機制（僅 URL `?eruda=1`）已被 `m_b_每日行程推播_frontend` 的 `42a843b` 整個取代為超集版本（URL 參數 + localStorage toggle + try/catch 保護）。若 merge 此分支會在 `frontend/index.html` 衝突
+- **`m_b_統一彈出訊息系統` dev 驗證重點**（依 [`tasks.md`](openspec/changes/12-統一彈出訊息系統/tasks.md) 5.x）：
+  - 5.2 掃過 8 個 page，確認原 alert / confirm 點位都換成新 UI 且行為正確
+  - 5.3 表單錯誤情境：ProfileEdit 四欄都空送出 → 4 個 inline 紅字同時顯示，第一個欄位自動 focus + scrollIntoView
+  - 5.4 toast 同時觸發三個 → 堆疊正確、success 2s / info 3s / error 4s 自動消失時長正確
+  - 5.5 confirm danger 樣式：EventDetail 刪除按鈕 → 紅色「刪除」按鈕視覺
+  - 5.6 PWA install 後再驗一次（避免 SW 快取舊 bundle）
 - **`m_b_pwa_upgrade` STATUS.md 被覆蓋**：v2.2.0 同步時用了 `-X theirs`，分支自己的 STATUS 改動被 main 蓋掉，下次接手時對照 commit `7abb8d2` 補回
 - **標籤系統缺 OpenSpec change**：三個 `m_b_tag_*` 分支未建立對應 OpenSpec 目錄，違反「新增功能 = 開 OpenSpec change」規則，需在 merge 前補齊（建議編號 `11-tag-system`）
 
