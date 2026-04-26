@@ -21,26 +21,26 @@
 
 ## 3. 替換 14 處 alert / confirm
 
-- [ ] 3.1 `ProfileEdit.jsx`：4 個必填驗證 → `<FieldError>` inline；API 失敗 → `toast.error()`
-- [ ] 3.2 `AddEvent.jsx`：title / date 驗證 → `<FieldError>` inline；API 失敗 → `toast.error()`
-- [ ] 3.3 `EventDetail.jsx`：刪除 confirm → `useConfirm({ variant:'danger' })`；API 失敗 → `toast.error()`
-- [ ] 3.4 `FinancialEdit.jsx`：兩處 API 失敗 → `toast.error()`
-- [ ] 3.5 `FinancialUpload.jsx`：API 失敗 → `toast.error()`
-- [ ] 3.6 `UserStatsEdit.jsx`：courseList 驗證 → `<FieldError>` 或 banner；API 失敗 → `toast.error()`
-- [ ] 3.7 `Management.jsx`：API 失敗 → `toast.error()`
-- [ ] 3.8 `frontend/src/utils/shareEvent.js`：複製成功 → `toast.success()`（注意：utility 不能用 hook，需改為呼叫端 page 觸發 toast，或改 shareEvent 簽名回傳 result，由 page 處理 toast）
-- [ ] 3.9 `Calendar.jsx`：複製成功 → `toast.success()`
-- [ ] 3.10 全專案 grep 確認 `alert(` / `confirm(` 在 `frontend/src/` 內 0 命中（排除註解、字串 literal、變數名）
+- [x] 3.1 `ProfileEdit.jsx`：4 個必填驗證 → `<FieldError>` inline + 焦點導引；API 失敗 → `toast.error()`
+- [x] 3.2 `AddEvent.jsx`：title / date 驗證 → `<FieldError>` inline + 焦點；API 失敗 → `toast.error()`；分享成功 → `toast.success()`
+- [x] 3.3 `EventDetail.jsx`：刪除 confirm → `useConfirm({ variant:'danger' })`；API 失敗 → `toast.error()`；分享成功 → `toast.success()`
+- [x] 3.4 `FinancialEdit.jsx`：兩處 API 失敗 → `toast.error()`
+- [x] 3.5 `FinancialUpload.jsx`：API 失敗 → `toast.error()`
+- [x] 3.6 `UserStatsEdit.jsx`：courseList 驗證 → `<FieldError>` + 滾動聚焦；API 失敗 → `toast.error()`
+- [x] 3.7 `Management.jsx`：API 失敗 → `toast.error()`
+- [x] 3.8 `frontend/src/utils/shareEvent.js`：改回傳 `{ ok, copied?, cancelled? }`，由呼叫端 page 處理 toast
+- [x] 3.9 `Calendar.jsx`：抽 `shareTextHelper()` 回傳 result，component 內 toast.success
+- [x] 3.10 全專案 grep 驗證 `frontend/src/` 內 `alert(` / `confirm(` / `prompt(` 0 命中（命中的兩處皆為新 useConfirm API，非原生）
 
 ## 4. 規範文件
 
-- [ ] 4.1 `.claude/rules/frontend.md` 新增「彈出訊息規範」章節：
+- [x] 4.1 `.claude/rules/frontend.md` 新增「彈出訊息規範」章節（順帶把整檔過時的 `public/` 描述更新為 `frontend/`）：
   - 何時用 toast（成功 / 失敗反饋、輕量提示）
   - 何時用 ConfirmDialog（破壞性動作二次確認）
   - 何時用 FieldError（表單欄位驗證）
   - 何時用 BottomSheet（多選一的選擇器）
   - 禁止使用 `window.alert / confirm / prompt`
-- [ ] 4.2 `UIDESIGN.md` 補「Feedback 元件」章節（Toast / ConfirmDialog / BottomSheet 視覺規格）
+- [x] 4.2 `UIDESIGN.md` 補「Feedback 元件」章節（已於前次 UIDESIGN.md 升格 commit `bb0c14f` 同步完成）
 
 ## 5. 驗證（dev 環境）
 
