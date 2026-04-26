@@ -42,8 +42,9 @@
 
 | 檔案 | 說明 |
 |---|---|
-| `NOW.md` | 當前執行狀態（每次對話必讀） |
+| `NOW.md` | 當前執行狀態（每次新對話必讀） |
 | `openspec/STATUS.md` | OpenSpec 狀態儀表板 |
+| `UIDESIGN.md` | **前端 UI 規範總入口**（動到任何 UI 元件 / 新增彈窗 / 改視覺前必讀） |
 | `frontend/src/App.jsx` | React Router 主入口（含 onboarding guard） |
 | `frontend/src/contexts/AuthContext.jsx` | 認證 + `isProfileComplete` / `isStatsComplete` |
 | `frontend/public/_worker.js` | Cloudflare Worker（`/api/*` proxy + dev/prod 分流） |
@@ -62,6 +63,19 @@
 - 進度 / 地雷：Claude 自由更新
 - 設計決策：有變動才更新，需告知使用者
 - 功能範圍：使用者確認後才能改
+
+## 前端 UI 規範
+
+**動到任何前端 UI 元件 / 新增彈窗 / 修改視覺前必讀：[`UIDESIGN.md`](UIDESIGN.md)**
+
+涵蓋：
+
+- **Warm Minimal 設計系統**：色板（`#F7F5F2` bg / `#4A7C59` accent / `#2C2C2C` text）、排版、圓形元素、卡片、按鈕、FAB、SVG icon、間距、動畫
+- **Feedback 元件規範**（v2.4.0）：Toast / ConfirmDialog / BottomSheet / FieldError 視覺與 API
+- **彈出訊息決策樹**：何時用 toast、何時用 dialog、何時用 inline error
+- **禁止事項**：emoji icon、漸層、純黑、外部 icon library、原生 `alert / confirm / prompt`、第三方通知套件
+
+> 若需新增 UI 規範請更新 `UIDESIGN.md` 而非分散在各處註解。
 
 ## 程式碼決策註解規範
 
