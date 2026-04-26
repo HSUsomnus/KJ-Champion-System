@@ -17,8 +17,9 @@ graph LR
   08["🗄️ 08\ndev-test-database\n(superseded by 10)"]
   09["✅ 09\n每日行程推播\n(v2.2.0 後端 + v2.3.0 前端)"]
   10["✅ 10\nzeabur-projects-split\n(v2.1.0)"]
+  12["🛠 12\n統一彈出訊息系統\n(進行中)"]
 
-  01 --> 02 --> 025 --> 06 --> 07 --> 08 --> 09 --> 10
+  01 --> 02 --> 025 --> 06 --> 07 --> 08 --> 09 --> 10 --> 12
 
   style 01 fill:#d4edda,stroke:#28a745,color:#155724
   style 02 fill:#d4edda,stroke:#28a745,color:#155724
@@ -28,6 +29,7 @@ graph LR
   style 08 fill:#e2e3e5,stroke:#6c757d,color:#495057
   style 09 fill:#d4edda,stroke:#28a745,color:#155724
   style 10 fill:#d4edda,stroke:#28a745,color:#155724
+  style 12 fill:#fff3cd,stroke:#856404,color:#856404
 ```
 
 | # | Change | 狀態 | 說明 |
@@ -40,10 +42,31 @@ graph LR
 | 08 | dev-test-database（在 `m_b_dev_test_database` 分支上） | 🗄️ SUPERSEDED | **被 10 取代並 archive**。資料夾未進 main，10 上線後可砍 `m_b_dev_test_database` 分支 |
 | 09 | [每日行程推播](changes/09-每日行程推播/tasks.md) | ✅ DONE | 後端 v2.2.0 + 前端 v2.3.0 全部上線 — LINE Bot 每日定時推送 + 開發者設定頁（含 Eruda toggle）|
 | 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0 上線） |
+| 11 | （預留） tag-system | ⬜ PENDING | 尚未動工，編號預留給 `m_b_tag_*` 三段式合 |
+| 12 | [統一彈出訊息系統](changes/12-統一彈出訊息系統/tasks.md) | 🛠 IN PROGRESS | 替換 14 處 `alert/confirm` 為 Warm Minimal 風格 Toast / Dialog / FieldError（分支 `m_b_統一彈出訊息系統`） |
 
 ---
 
-## 當前 Change：09-每日行程推播 — ✅ DONE（v2.2.0 後端 + v2.3.0 前端）
+## 當前 Change：12-統一彈出訊息系統 — 🛠 IN PROGRESS
+
+`░░░░░░░░░░░░░░` 0 / 33（基礎元件 8 + 元件遷移 3 + 替換 10 + 規範 2 + 驗證 6 + 上線 9 — 上線階段不計入實作完成度）
+
+### 分支
+- `m_b_統一彈出訊息系統`（純前端，已從 main 切出並推遠端）
+
+### 範圍速覽
+- 新建 `frontend/src/components/feedback/` 套件：`Dialog` / `ConfirmDialog` / `Toast` / `BottomSheet` / `FieldError` / `FeedbackProvider`
+- 替換 14 處瀏覽器原生 `alert/confirm`（散落 8 個檔案）
+- 既有自製元件遷移：`ConfirmLeaveDialog` / `ShareConfirmDialog` / `AmountPicker` 改用統一 base
+- 規範寫進 `.claude/rules/frontend.md` 與根目錄 `UIDESIGN.md`
+- 上線版本：v2.4.0
+
+### 下一步
+從 tasks.md 的 1.1（建 `Dialog.jsx` base）開始實作。
+
+---
+
+## 已完成 Change：09-每日行程推播 — ✅ DONE（v2.2.0 後端 + v2.3.0 前端）
 
 `██████████████` 後端 20 / 20 ✅、前端 11 / 11 ✅
 
@@ -107,7 +130,8 @@ graph LR
 
 ---
 
-> **下一步**：09 已 DONE，下一個目標 — `m_b_tag_*` 三段式合（建議補 OpenSpec change `11-tag-system`），或 `m_b_pwa_upgrade`。
+> **進行中**：12-統一彈出訊息系統（v2.4.0 目標）
+> **後續排隊**：`m_b_tag_*` 三段式合（11-tag-system）、`m_b_pwa_upgrade`
 
 ---
 
@@ -130,4 +154,4 @@ graph LR
 
 ---
 
-*最後更新：2026-04-26（09 ✅ DONE — v2.3.0 前端上線完成，整個 change 收尾）*
+*最後更新：2026-04-26（12 開立 — 統一彈出訊息系統，分支 `m_b_統一彈出訊息系統` 已切，OpenSpec change 三件套就緒，等候「執行計畫」）*

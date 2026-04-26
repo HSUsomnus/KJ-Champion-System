@@ -54,9 +54,13 @@
 
 ## 目前進度
 
-- **目前分支**：`main`（v2.3.0 已上線，HEAD `f241b3c`）
+- **目前分支**：`m_b_統一彈出訊息系統`（從 main `f241b3c` 切出，已 push 遠端）
+- **進行中 change**：12-統一彈出訊息系統（OpenSpec 三件套就緒，0/33 task，等「執行計畫」開始實作 1.1 `Dialog.jsx` base）
+  - 範圍：抽 `frontend/src/components/feedback/` 套件（Dialog / ConfirmDialog / Toast / BottomSheet / FieldError / FeedbackProvider）+ 替換 14 處 `alert/confirm`（散落 8 檔）+ 規範寫進 `.claude/rules/frontend.md`
+  - 上線目標版本：v2.4.0
+- **main HEAD**：`f241b3c`（v2.3.0）
 - **dev HEAD**：跟 main 同步（含 dev 專屬 README）
-- **4 條 m_b_*** 全部 behind main = 0（`m_b_eruda除錯工具` 已刪除，sharp dep cherry-pick 到 `m_b_pwa_upgrade`）
+- **5 條 m_b_*** 全部 behind main = 0（含新增的 `m_b_統一彈出訊息系統`；`m_b_eruda除錯工具` 已刪除，sharp dep cherry-pick 到 `m_b_pwa_upgrade`）
 - **v2.2.1 + v2.3.0 tag 都在遠端**
 - **`hotfix/event-detail-delete-fab`** 已被刪
 - **prod 推播時間** 已用 v2.3.0 GUI 從 23:30 改回 21:00
