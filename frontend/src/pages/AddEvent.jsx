@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
+import { Dialog } from '../components/feedback'
 import shareEvent from '../utils/shareEvent'
 import { useAuth } from '../contexts/AuthContext'
 import { api, formToEventPayload } from '../services/api'
@@ -16,32 +16,6 @@ const TITLE_PLACEHOLDERS = {
   '活動': '時間(選)+名稱+(財商/加盟)(選)，ex:13台北組聚(財商)、醫美茶會',
   '諮詢簽約': '時間+名字+保單諮詢/財物諮詢/保單簽約/天耀簽約，ex:13小陞財務諮詢',
   '紫星行程聊聊': '時間+名字+聊聊or其他',
-}
-
-function ShareConfirmDialog({ open, onShare, onCancel, isEdit }) {
-  if (!open) return null
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center"
-      style={{ background: 'rgba(44,44,44,0.4)' }}
-      onClick={onCancel}
-    >
-      <div
-        className="mx-6 w-full max-w-xs rounded-2xl p-6 shadow-lg"
-        style={{ background: '#fff' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <p className="text-sm font-medium text-center mb-6" style={{ color: '#2C2C2C' }}>
-          {isEdit ? '行程更新成功，是否分享？' : '行程建立成功，是否分享？'}
-        </p>
-        <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95" style={{ background: '#EFEDE9', color: '#8A8680' }}>取消</button>
-          <button onClick={onShare} className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95" style={{ background: '#4A7C59', color: '#fff' }}>確認分享</button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  )
 }
 
 export default function AddEvent() {
@@ -185,7 +159,29 @@ export default function AddEvent() {
       <FabNav onOpen={() => setActiveFab('nav')} />
       <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
       <ConfirmLeaveDialog blocker={blocker} />
-      <ShareConfirmDialog open={showShareDialog} isEdit={isEdit} onShare={handleShare} onCancel={handleSkipShare} />
+      <Dialog open={showShareDialog} onClose={handleSkipShare}>
+        <p className="text-sm font-medium text-center mb-6" style={{ color: '#2C2C2C' }}>
+          {isEdit ? '行程更新成功，是否分享？' : '行程建立成功，是否分享？'}
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={handleSkipShare}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95"
+            style={{ background: '#EFEDE9', color: '#8A8680' }}
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95"
+            style={{ background: '#4A7C59', color: '#fff' }}
+          >
+            確認分享
+          </button>
+        </div>
+      </Dialog>
     </div>
   )
 }

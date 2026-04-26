@@ -15,9 +15,9 @@
 
 ## 2. 既有彈出元件遷移
 
-- [ ] 2.1 `ConfirmLeaveDialog.jsx` 改為消費 `Dialog` base，邏輯（`useLeaveGuard`）保留
-- [ ] 2.2 `AddEvent.jsx` 內聯的 `ShareConfirmDialog` 抽掉，改用通用 `<Dialog>` 自寫內容
-- [ ] 2.3 `FinancialEdit.jsx` 內聯的 `AmountPicker` 改為消費 `BottomSheet` base
+- [x] 2.1 `ConfirmLeaveDialog.jsx` 改為消費 `ConfirmDialog`（含 danger variant），邏輯（`useLeaveGuard`）保留
+- [x] 2.2 `AddEvent.jsx` 內聯的 `ShareConfirmDialog` 抽掉，改用通用 `<Dialog>` 自寫內容
+- [x] 2.3 `FinancialEdit.jsx` 內聯的 `AmountPicker` 改為消費 `BottomSheet` base
 
 ## 3. 替換 14 處 alert / confirm
 

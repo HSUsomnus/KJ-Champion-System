@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { useBlocker } from 'react-router-dom'
+import ConfirmDialog from './feedback/ConfirmDialog'
 
 /**
  * 編輯頁離開守衛
@@ -31,41 +31,21 @@ export function useLeaveGuard() {
   return [blocker, useCallback(() => { savedRef.current = true }, [])]
 }
 
+/**
+ * 離開守衛對話框
+ * 重構：改為消費統一的 ConfirmDialog（含 danger variant），不再自寫 modal
+ */
 export default function ConfirmLeaveDialog({ blocker }) {
-  if (!blocker || blocker.state !== 'blocked') return null
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center"
-      style={{ background: 'rgba(44,44,44,0.4)' }}
-      onClick={() => blocker.reset()}
-    >
-      <div
-        className="mx-6 w-full max-w-xs rounded-2xl p-6 shadow-lg"
-        style={{ background: '#fff' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <p className="text-sm font-medium text-center mb-6" style={{ color: '#2C2C2C' }}>
-          尚未儲存資料，確認離開？
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={() => blocker.reset()}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95"
-            style={{ background: '#EFEDE9', color: '#8A8680' }}
-          >
-            取消
-          </button>
-          <button
-            onClick={() => blocker.proceed()}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95"
-            style={{ background: '#FDECEA', color: '#C0392B', border: '1px solid #C0392B' }}
-          >
-            確認離開
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
+  if (!blocker) return null
+  return (
+    <ConfirmDialog
+      open={blocker.state === 'blocked'}
+      message="尚未儲存資料，確認離開？"
+      confirmText="確認離開"
+      cancelText="取消"
+      variant="danger"
+      onConfirm={() => blocker.proceed()}
+      onCancel={() => blocker.reset()}
+    />
   )
 }
