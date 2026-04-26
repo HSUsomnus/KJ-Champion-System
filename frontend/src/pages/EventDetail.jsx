@@ -4,6 +4,7 @@ import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import shareEvent from '../utils/shareEvent'
+import { useToast, useConfirm } from '../components/feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapEvent } from '../services/api'
 
@@ -18,6 +19,8 @@ export default function EventDetail() {
   const { user } = useAuth()
   const { id } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
+  const confirm = useConfirm()
   const [activeFab, setActiveFab] = useState(null)
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -63,24 +66,36 @@ export default function EventDetail() {
   const typeColor = TYPE_COLORS[event.type] || '#4A7C59'
 
   const handleDelete = async () => {
-    if (!window.confirm(`確定要刪除「${event.title}」？此操作無法復原。`)) return
+    const ok = await confirm({
+      title: '確認刪除',
+      message: `確定刪除「${event.title}」？\n此操作無法復原。`,
+      confirmText: '刪除',
+      variant: 'danger',
+    })
+    if (!ok) return
     try {
       const res = await api.deleteEvent(event.id)
       if (res.success) {
+        toast.success('已刪除')
         navigate('/calendar')
       } else {
-        alert(res.error || res.message || '刪除失敗')
+        toast.error(res.error || res.message || '刪除失敗')
       }
     } catch (err) {
-      alert(err.message || '刪除失敗')
+      toast.error(err.message || '刪除失敗')
     }
+  }
+
+  const handleShareEvent = async () => {
+    const r = await shareEvent(event)
+    if (r.copied) toast.success('已複製到剪貼簿')
   }
 
   const fabItems = event.isBirthdayEvent
     ? [
         {
           label: '分享',
-          onClick: () => shareEvent(event),
+          onClick: handleShareEvent,
           icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
         },
       ]
@@ -92,7 +107,7 @@ export default function EventDetail() {
         },
         {
           label: '分享',
-          onClick: () => shareEvent(event),
+          onClick: handleShareEvent,
           icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
         },
         {

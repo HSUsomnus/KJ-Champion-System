@@ -4,6 +4,7 @@ import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
+import { BottomSheet, useToast } from '../components/feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
 
@@ -13,6 +14,7 @@ AMOUNT_OPTIONS.push('10億')
 export default function FinancialEdit() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const [searchParams] = useSearchParams()
   const targetUserId = searchParams.get('userId')
   const targetUserName = searchParams.get('name')
@@ -62,7 +64,7 @@ export default function FinancialEdit() {
       await api.updateFinancialAmount(user.lineId, viewUserId, amount)
       setFinancialAmount(amount)
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || '更新財力金額失敗')
     }
   }
 
@@ -81,7 +83,7 @@ export default function FinancialEdit() {
       try {
         await api.deleteFinancial(id, viewUserId)
       } catch (err) {
-        alert(err.message)
+        toast.error(err.message || '刪除失敗')
         return
       }
     }
@@ -161,35 +163,37 @@ export default function FinancialEdit() {
           </div>
         </section>
 
-        {/* 金額選擇器 */}
-        {showAmountPicker && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowAmountPicker(false)}>
-            <div className="w-full max-w-md rounded-t-2xl" style={{ background: '#fff' }} onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: '#E2DED8' }}>
-                <button className="text-sm" style={{ color: '#8A8680' }} onClick={() => setShowAmountPicker(false)}>取消</button>
-                <span className="text-sm font-semibold" style={{ color: '#2C2C2C' }}>選擇財力金額</span>
-                <button className="text-sm font-medium" style={{ color: '#4A7C59' }} onClick={() => handleAmountSelect('')}>清除</button>
-              </div>
-              <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
-                {AMOUNT_OPTIONS.map(amount => (
-                  <button
-                    key={amount}
-                    onClick={() => handleAmountSelect(amount)}
-                    className="w-full text-left px-6 py-3.5 text-sm transition-colors active:bg-gray-50 flex items-center justify-between"
-                    style={{ color: '#2C2C2C', borderBottom: '1px solid #F0EDE9' }}
-                  >
-                    <span>{amount}</span>
-                    {financialAmount === amount && (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A7C59" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* 金額選擇器 — 消費 BottomSheet base */}
+        <BottomSheet
+          open={showAmountPicker}
+          onClose={() => setShowAmountPicker(false)}
+          title="選擇財力金額"
+        >
+          <button
+            type="button"
+            onClick={() => handleAmountSelect('')}
+            className="w-full text-left px-2 py-3 text-sm font-medium transition-colors active:opacity-60"
+            style={{ color: '#4A7C59', borderBottom: '1px solid #F0EDE9' }}
+          >
+            清除（設為無資料）
+          </button>
+          {AMOUNT_OPTIONS.map(amount => (
+            <button
+              key={amount}
+              type="button"
+              onClick={() => handleAmountSelect(amount)}
+              className="w-full text-left px-2 py-3.5 text-sm transition-colors active:opacity-60 flex items-center justify-between"
+              style={{ color: '#2C2C2C', borderBottom: '1px solid #F0EDE9' }}
+            >
+              <span>{amount}</span>
+              {financialAmount === amount && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A7C59" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              )}
+            </button>
+          ))}
+        </BottomSheet>
 
         {/* 歷史上傳記錄 */}
         <section>

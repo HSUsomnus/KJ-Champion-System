@@ -4,6 +4,7 @@ import Header from '../components/Header'
 import FabNav from '../components/FabNav'
 import FabAction from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../components/feedback'
 import { api, mapMember } from '../services/api'
 
 const TABS = ['數據', '財力', '權限']
@@ -28,6 +29,7 @@ const STAR_COLORS = {
 export default function Management() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const [activeFab, setActiveFab] = useState(null)
   const [tab, setTab] = useState('數據')
   const [members, setMembers] = useState([])
@@ -54,7 +56,7 @@ export default function Management() {
     try {
       await api.updateRoles(user.lineId, [{ lineId, role: newRole }])
     } catch (err) {
-      alert(err.message)
+      toast.error(err.message || '角色變更失敗')
       // 還原
       setPermissions(prev => prev.map(m => m.lineId === lineId ? { ...m, role: members.find(mb => mb.lineId === lineId)?.role || '一般人' } : m))
     }
