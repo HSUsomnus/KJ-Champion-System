@@ -8,12 +8,17 @@
 
 **v2.3.0 已上線**：OpenSpec change 09「每日行程推播」整個 DONE — 前端開發者設定頁（`/agenda-settings` toggle / 時間 / 對象 / 立即推播 + Eruda toggle）、FabNav 開發者入口、PWA `mobile-web-app-capable` meta tag 補正、scripts/seed-dev-agenda-test.js（dev DB seed 工具）。tag `v2.3.0` 已推。
 
-**2026-04-26 規則類補丁（本 commit 後 main HEAD 將前進一個）**：
-- `UIDESIGN.md` 升格至根目錄（從 `frontend/DESIGN_SYSTEM.md` 搬遷），補 Feedback 元件規範 + 彈出訊息決策樹，禁止 `alert/confirm/prompt`、第三方通知套件
+**2026-04-26 ~ 27 規則類補丁累積**：
+- `UIDESIGN.md` 升格至根目錄（從 `frontend/DESIGN_SYSTEM.md` 搬遷），補 Feedback 元件規範 + 彈出訊息決策樹，禁止 `alert/confirm/prompt`、第三方通知套件（commit `bb0c14f`）
 - `CLAUDE.md` 加「前端 UI 規範」獨立區塊 + 關鍵檔案表加列 UIDESIGN.md
-- `.claude/rules/deploy.md` + `CLAUDE.md` 加「**推 main 前必須更新 NOW.md**」強制規則（多次糾正後成文）
-- 開立 OpenSpec change 12-統一彈出訊息系統（v2.4.0 目標，分支 `m_b_統一彈出訊息系統`）
-- 規則類 + UIDESIGN 升格 commit 為 `bb0c14f`；本 NOW.md / 規則修訂 commit 為新 HEAD（push 後可從 `git ls-remote` 查得）
+- `.claude/rules/deploy.md` + `CLAUDE.md` 加「**推 main 前必須更新 NOW.md**」強制規則（多次糾正後成文，commit `04ebfcd`）
+- **2026-04-27 `.claude/rules/workflow.md` 大改**（本 commit）：
+  - 「執行計畫」加「**蓋一層測一層**」原則：每個 task source + 對應 test 一起做、跑該層測試、全綠才勾 [x] 進下一 task
+  - section milestone 跑全套 regression（vitest 全部 + e2e 全部）catch「單獨 OK、組合壞」整合衝突
+  - fail 排查策略：trigger 鎖定當前 task，**但仍要查整合點**（vite8+vitest4 案例佐證）
+  - 「測試功能」改為 **Claude 自動觸發**（task 全完成 + milestone 全綠後自動進入），不等使用者打關鍵字；merge dev push 前仍要使用者口頭 OK；dev 站手動只負責「自動化抓不到的」（PWA install / 真實 navigator.share / 視覺感受 / 跨裝置）
+- 開立 OpenSpec change 12-統一彈出訊息系統（v2.4.0 目標，分支 `m_b_統一彈出訊息系統`）— 7.x 測試自動化 已就緒（44 vitest + 2 e2e 全綠），等使用者 dev 站手動驗收 5.6 + 視覺後上線
+- 規則類 + workflow 大改 commit 為新 HEAD（push 後從 `git ls-remote` 查得；本 NOW.md commit 為自身同步）
 
 → **PC 接手已完成事項**：v2.2.0 prod 驗證（手動 push API + LINE 字卡實收）、v2.3.0 上線（CHANGELOG / context / README / NOW / STATUS / tasks 全到位）、dev 全鏈路驗證 8.1~8.5、本機 Node + scoop 環境修復、psql 直連 dev DB 寫入測試資料、prod GUI 把推播時間 23:30 改回 21:00。
 
