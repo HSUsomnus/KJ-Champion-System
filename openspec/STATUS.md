@@ -79,6 +79,12 @@ graph LR
 ### 下一步
 2.x 既有元件遷移（ConfirmLeaveDialog / ShareConfirmDialog / AmountPicker）
 
+### ✨ 額外 — 測試自動化（計畫外，2026-04-27 加入）
+- **Vitest 元件單元測試** 5 檔 / 44 test ✅ 全綠（Dialog / ConfirmDialog / Toast / FieldError / FeedbackProvider）
+- **Playwright E2E** 1 檔 / 2 test ✅ 全綠（ProfileEdit FieldError + ConfirmLeaveDialog danger 樣式）
+- 框架投資可給未來 11-tag-system / pwa_upgrade 等 change 重用
+- 詳見 [`tasks.md` Section 7](changes/12-統一彈出訊息系統/tasks.md)
+
 ---
 
 ## 已完成 Change：09-每日行程推播 — ✅ DONE（v2.2.0 後端 + v2.3.0 前端）

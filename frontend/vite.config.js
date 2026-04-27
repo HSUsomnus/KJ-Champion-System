@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -44,5 +44,18 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  // 讓 esbuild 在 vitest 處理 .jsx 時用 React 19 automatic runtime（vite plugin react 在 vitest 內不一定會掛）
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'react',
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    css: false,
+    // 排除 e2e（Playwright 跑），避免 vitest 把 .spec.js 撈進來
+    exclude: ['node_modules', 'dist', '.idea', '.git', 'e2e/**'],
   },
 })
