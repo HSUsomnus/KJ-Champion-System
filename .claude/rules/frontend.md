@@ -70,6 +70,52 @@
 
 ---
 
+## 自動化測試（v2.4.0 起，change 12）
+
+> **核心原則**：蓋一層測一層 — 每個 task source + 對應 test 一起寫，跑該層測試全綠才勾 [x] 進下一 task。詳細流程見 [`workflow.md`](workflow.md)「執行計畫」+「測試功能」。
+
+### 三軌分工
+
+| 軌道 | 範圍 | 跑法 |
+|---|---|---|
+| **Vitest 元件單元** | feedback 套件 / 純邏輯元件 / utility — 抓「這層自己對不對」 | `npm --prefix frontend run test:run` |
+| **Playwright E2E** | page 流程 / 表單驗證 / 彈窗互動 / 多步使用者旅程 | `npm --prefix frontend run test:e2e` |
+| **手動（dev 站）** | PWA install / 真實 `navigator.share` / 視覺感受 / 跨裝置 | 瀏覽器開 [kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) |
+
+### 寫測試的時機（task → test 對照）
+
+| task 類型 | 測試檔位置 | 測試類型 |
+|---|---|---|
+| 新元件 `frontend/src/components/<dir>/Foo.jsx` | `<dir>/__tests__/Foo.test.jsx` | vitest |
+| 新 utility `frontend/src/utils/Foo.js` | `frontend/src/utils/__tests__/Foo.test.js` | vitest |
+| 改 page 流程（表單 / 彈窗 / 跳轉） | `frontend/e2e/<spec>.spec.js`（新或補 case） | playwright |
+| 改既有元件 / utility | 跑既存 test 檔 + 必要時補 case | vitest |
+| 純文件 / 規則 / OpenSpec | — | 跳過 |
+
+### npm scripts
+
+```bash
+npm --prefix frontend test                  # vitest watch（改 source 自動重跑）
+npm --prefix frontend run test:run          # vitest 一次跑（每個 task 完成後跑這個）
+npm --prefix frontend run test:run -- <檔>  # vitest 指定檔加速
+npm --prefix frontend run test:e2e          # playwright（自動啟 vite dev）
+npm --prefix frontend run test:e2e:ui       # playwright 互動式 debug + 看 trace
+```
+
+### 寫測試的踩坑筆記（給未來 change 參考）
+
+- **vitest@4 與 vite@8 不相容** — 用 `vitest@^3.2`（v4 的 `describe` 會 throw 「Cannot read properties of undefined (reading 'config')」即便最簡 sanity test 也壞）
+- **vitest pipeline 不會自動掛 `plugin-react`** — vite.config.js 要明確設 `esbuild.jsx='automatic'` + `jsxImportSource='react'`，否則 jsx source 會 `ReferenceError: React is not defined`
+- **vite 8 build 用 oxc 取代 esbuild** — 會印 「esbuild options ignored」warning，但 vitest 仍用 esbuild，互不影響
+- **`@testing-library/react` v16 需要 peer dep `@testing-library/dom`** — 不裝會 「Cannot find module '@testing-library/dom'」
+- **vitest 4+ 的 setupFiles 不能直接用 `afterEach`** — testing-library v16 + globals 已自動 cleanup，setup.js 只需 `import '@testing-library/jest-dom/vitest'`
+
+### Fail 排查順序
+
+見 [`workflow.md`](workflow.md)「執行計畫」→「Fail 排查順序」（含 vite8+vitest4 整合衝突案例）。
+
+---
+
 ## 既有共用元件位置
 
 - `frontend/src/components/Header.jsx`、`FabNav.jsx`、`FabAction.jsx`
