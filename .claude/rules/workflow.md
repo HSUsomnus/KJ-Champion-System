@@ -6,9 +6,9 @@
 |--------|---------|
 | **「新增功能 [名稱]」** | 切分支 + 開 OpenSpec change（見下方） |
 | **「修改計畫」** | 確認分支 → 只動 OpenSpec 文件 |
-| **「執行計畫」** | 確認分支 → 照 tasks 實作程式碼 |
+| **「執行計畫」** | 確認分支 → 照 tasks 實作程式碼（**蓋一層測一層**：每個 task source + 對應 test 一起做、跑該層測試、全綠才勾 [x] 進下一 task；section milestone 跑全套 regression） |
 | **「修 bug」** | 從 main 切 hotfix，視情況開 change |
-| **「測試功能」** | merge 功能分支到 dev，push |
+| **「測試功能」** | **Claude 自動觸發**（m_b_* 實作 / 規範 task 全完成 + milestone regression 全綠後）→ merge dev → push → 使用者實機驗收。使用者打字為 fallback |
 | **「功能上線」** | merge 到 main，關 change，刪分支 |
 | **「格式化 dev」** | dev force-reset 至 main + 盤點確認 + 重寫 dev README（見下方） |
 
@@ -63,6 +63,7 @@
 ## 「執行計畫」流程
 
 > **第一步永遠是確認分支**
+> **核心原則**：蓋一層測一層 — 每個 task 完成必跑對應測試，全綠才勾 [x] 進下一 task，避免整棟蓋好才測時找不到問題在哪層
 
 1. 執行 `git branch --show-current`
 2. 若在 `main` 或 `dev` → **強制停止**：
@@ -72,7 +73,107 @@
    - 讀 `openspec/STATUS.md` 確認當前執行位置
    - 找到下一個未完成（`[ ]`）且前置已完成（`[x]`）的 task
    - **只實作當前 task，不跳躍、不超範圍**
-   - 完成後更新 `tasks.md`（勾 `[x]`）與 `STATUS.md`
+
+### 每個 task 的內部流程（蓋一層測一層）
+
+a. **寫 source code**（jsx / js / 後端 service 等，需要時可多輪 Edit）
+b. **同步寫 / 補對應測試**（依 task 類型，**Claude 主動，不等使用者要求**）：
+   | task 類型 | 測試檔位置 | 測試類型 |
+   |---|---|---|
+   | 新元件 `frontend/src/components/<dir>/Foo.jsx` | `<dir>/__tests__/Foo.test.jsx` | vitest unit |
+   | 新 utility `frontend/src/utils/Foo.js` | `frontend/src/utils/__tests__/Foo.test.js` | vitest unit |
+   | 改 page 流程（含表單、彈窗、跳轉等使用者互動） | `frontend/e2e/<spec>.spec.js`（新或補 case） | playwright e2e |
+   | 改既有元件 / utility | 跑既存 test 檔，必要時補 case | vitest |
+   | 純 OpenSpec 文件、規則檔、README | — | 跳過此步 |
+c. **跑該層測試**（**Claude 自動跑，不等使用者要求**）：
+   - vitest 全跑（3 秒）：`npm --prefix frontend run test:run`
+   - 或指定檔加速：`npm --prefix frontend run test:run -- <檔路徑>`
+   - 涉及 page 流程：`npm --prefix frontend run test:e2e`
+d. **全綠才勾 [x]、更新 STATUS.md、進下一 task**
+e. **fail 時不勾、不進下一 task** — 先修
+
+### Section milestone（一個 section 全勾後，如 1.x / 2.x / 3.x 完成）
+
+跑**全套** regression（**Claude 自動跑**）：
+- `npm --prefix frontend run test:run`（vitest 全部）
+- `npm --prefix frontend run test:e2e`（playwright 全部，視 change 性質）
+
+全綠 → 進下個 section；fail → 修。
+
+### 為什麼 milestone 不能省（整合衝突 catch）
+
+單檔測試只能驗「這層自己對」，**不能驗「這層 + 前面層」的組合對**。Section milestone 跑全套就是抓「**單獨 OK、組合壞**」的整合衝突。
+
+**真實案例（12 change 7.1 task）**：
+- 前面 vite@8 用了好幾個月 ✅
+- 7.1 task 加 `vitest@4` + 寫 3 行 sanity test
+- vitest run 立刻 fail：`Cannot read properties of undefined (reading 'config')`
+- 排查方向：sanity test 3 行不可能錯，問題在 **vitest@4 與 vite@8 整合不相容**
+- 修法：降 vitest 到 `v3.2.4`
+- 教訓：「前面驗過」≠「組合也驗過」
+
+### Fail 排查順序
+
+1. **先看 fail 訊號落在哪**（哪個 test 哪一行）
+2. **起點**：當前 task 引入了什麼新東西（新檔 / 新依賴 / 新設定）
+3. **不要排除前面層** — 看當前 task 跟前面有什麼接觸（依賴版本、設定相容、API 假設）
+4. **但範圍仍縮在「當前 task 接觸的鄰近結構」** — fail 訊號告訴你 trigger 是哪個，不必從頭排查整棟
+5. 修完該層 → 重跑該層測試 → 通過才繼續
+
+---
+
+## 「測試功能」流程
+
+> **觸發時機（自動為主）**：
+> - **自動**：Claude 偵測到 m_b_* 上實作 / 規範 task 全 [x]，且最後一個 section milestone 全綠 → 自動進入此流程，**不需使用者打「測試功能」**
+> - **手動**：使用者打「測試功能」明確要求（fallback）
+>
+> **核心分工**：m_b_* 跑**自動化測試**（Vitest + Playwright，邏輯 / 視覺 inline style 對錯）；dev 站做**真實環境手動驗收**（PWA install、視覺感受、跨裝置、真實 API）。兩軌互補。
+
+### 第一步：最終 regression（Claude 自動跑）
+
+```bash
+npm --prefix frontend run test:run     # vitest 全部
+npm --prefix frontend run test:e2e     # playwright 全部（純後端 change 可跳過）
+```
+
+執行計畫階段每個 task / milestone 已跑過了，這次是上 dev 前最後一道保險。
+
+任一 fail → **不繼續 merge dev**，回 m_b_* 修，重跑全套 → 通過才繼續。
+
+### 第二步：merge dev + push（push 前要使用者口頭 OK）
+
+```bash
+git checkout dev
+git pull origin dev
+git merge origin/m_b_功能名稱 --no-edit
+# 更新 dev README「dev 分支獨有」段落（依 .claude/rules/readme.md dev 分支格式）
+git push origin dev   # ← push 前 Claude 必須給使用者列改動清單，獲口頭 OK 才執行
+```
+
+merge dev 屬「可見動作」（Cloudflare Pages 會自動部署），依 CLAUDE.md「執行動作前確認」原則仍要授權。
+
+### 第三步：dev 站實機手動驗收（使用者執行）
+
+dev 站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev)
+
+**自動化抓不到、必須手動驗的項目**：
+- PWA install standalone 模式（Chrome 桌面右上 install icon）
+- 真實 `navigator.share` Web Share API（手機原生分享面板）
+- 視覺感受（顏色協調、字體渲染、動畫流暢度）
+- 跨裝置差異（手機 PWA / 桌面 Chrome / iOS Safari）
+- 真實 LINE OAuth 流程（`?dev=1` 模擬不能完整覆蓋）
+- 邊界 case（自動化漏寫的場景）
+
+**測試前必做**：DevTools → Application → Service Workers → Unregister，避免舊 SW 快取干擾。
+
+全項目 ✅ 才能進「功能上線」流程；任一 ❌ → 回 m_b_* 修 → 重跑自動化 → 重新 merge dev → 重新驗收。
+
+### ⛔ 嚴禁
+
+- 自動化測試 fail 時直接 merge dev
+- 跳過 dev 站手動驗收直接「功能上線」（自動化不能取代人眼）
+- 在 dev 上修問題（dev 是測試環境，修了沒同步回 m_b_* 下次合會把 bug 再帶回來。詳見「修 bug」流程 B 路徑）
 
 ---
 
