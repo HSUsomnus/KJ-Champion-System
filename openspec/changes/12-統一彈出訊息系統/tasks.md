@@ -63,8 +63,31 @@
 - [ ] 6.8 砍 `m_b_統一彈出訊息系統`（本機 + 遠端）
 - [ ] 6.9 STATUS.md 標 12 為 DONE
 
+## 7. 測試自動化（計畫外加入，2026-04-27）
+
+> **背景**：使用者於 dev 驗證階段提出「能否自動化」，決定三軌齊上（Vitest + Playwright + 手動）為長期投資 — 框架可給未來 11-tag-system / pwa_upgrade 等 change 重用。
+
+- [x] 7.1 Vitest setup（vite.config.js test block + setup.js + esbuild.jsx='automatic' 強制 React 19 runtime + 排除 e2e）
+- [x] 7.2 5 個元件單元測試 — 共 44 test 全綠：
+  - Dialog (7)、ConfirmDialog (11)、Toast (6)、FieldError (6)、FeedbackProvider (14)
+  - 涵蓋：portal、ESC、stopPropagation、variant 樣式、stack 上限、auto dismiss timer、useConfirm Promise resolve、no-Provider throw
+- [x] 7.3 Playwright setup（playwright.config.js + chromium + webServer auto-spawn vite dev + reuseExistingServer）
+- [x] 7.4 e2e/feedback.spec.js — 共 2 test 全綠：
+  - 5.3 ProfileEdit 4 欄空送出 → FieldError + focus + #C0392B 邊框 + 輸入後 error 消失
+  - 5.5 ConfirmLeaveDialog danger 樣式（按鈕 background / color / border 三色驗證）
+  - helper：setupAuth(page) 灌 localStorage + page.route mock /api/profile / clickFabAction(page, label)
+- [x] 7.5 npm scripts：test / test:run / test:e2e / test:e2e:ui
+- [x] 7.6 frontend/.gitignore 排除 test-results / playwright-report / playwright/.cache
+
+### 注意事項
+
+- vitest@4 與 vite@8 有相容問題（describe throws "Cannot read properties of undefined (reading 'config')"），降回 vitest@3.2.4 後正常
+- React 19 + vite 8 + vitest 3 的 JSX 處理：vitest pipeline 不會自動掛 plugin-react，需要 esbuild.jsx='automatic' + jsxImportSource='react'
+- vite 8 build 用 oxc 而非 esbuild（會 warning 「esbuild options ignored」），但 vitest 仍用 esbuild — 互不影響
+
 ## 完成條件
 
 - 1.x ~ 4.x 全部勾選
 - 5.x dev 驗證通過
 - 6.x 上線完成
+- 7.x 測試自動化（已全完成，bonus）
