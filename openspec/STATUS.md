@@ -40,6 +40,7 @@ graph LR
 | 08 | dev-test-database（在 `m_b_dev_test_database` 分支上） | 🗄️ SUPERSEDED | **被 10 取代並 archive**。資料夾未進 main，10 上線後可砍 `m_b_dev_test_database` 分支 |
 | 09 | [每日行程推播](changes/09-每日行程推播/tasks.md) | ✅ DONE | 後端 v2.2.0 + 前端 v2.3.0 全部上線 — LINE Bot 每日定時推送 + 開發者設定頁（含 Eruda toggle）|
 | 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0 上線） |
+| 13 | [桌機版面置中](changes/13-桌機版面置中/tasks.md) | 🚧 進行中 | 桌機 max-width 限寬置中 — 新增共用 Layout + 固定元素（Header/FAB）對齊置中欄（分支 `m_b_桌機版面置中`） |
 
 ---
 
