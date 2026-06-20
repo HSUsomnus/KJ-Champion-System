@@ -145,13 +145,16 @@ git push --tags
 
 **全部必做：**
 
-1. **更新 `NOW.md`**（main HEAD + 本版重點，與本次推送同 commit）
+1. **更新 `.claude/now.md`**（main HEAD + 本版重點，與本次推送同 commit）
 2. 更新 `CHANGELOG.md`（最上方加入新版本，舊版保留）
 3. 建立 `.claude/context/vX.Y.Z.md`（本版詳細上下文）
+   - **命名規則**：必須加 `v` 前綴（`v2.1.0.md`，不是 `2.1.0.md`）
+   - **強制同步**：`.claude/context/vX.Y.Z.md` 必須與 `git tag vX.Y.Z` **在同一次 push 前建立**，不得事後補建
+   - context 檔建立後加入 git add，與 CHANGELOG / NOW.md 合為同一個 commit，再 push → tag
 4. README 完整重寫
 5. 機密檢查
 6. 使用者**明確確認**後才執行（最高確認要求）
-7. `git tag X.Y.Z && git push --tags`
+7. `git tag vX.Y.Z && git push --tags`（注意：tag 名稱必須加 `v` 前綴）
 
 ---
 
