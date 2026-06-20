@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // [設計決策] 用 hook 環境繞過 Claude Code 插件 sandbox 限制
 // 原因：插件的 Bash tool 無法啟動外部程式，但 hook 的 child_process 可以
-// 若要修改：請先確認 NOW.md 的設計決策區塊
+// 若要修改：請先確認 .claude/now.md 的設計決策區塊
 
 const { exec } = require('child_process');
 const fs = require('fs');

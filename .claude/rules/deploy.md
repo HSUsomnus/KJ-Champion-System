@@ -16,11 +16,10 @@ dev 後端 URL：`kj-champion-dev.zeabur.app`（v2.1.0 起，舊 `kj-champion-sy
 ## 所有分支共用（必做）
 
 ### 推送前必做
-1. **更新 `NOW.md`**（推 main 前強制 — 不論完整版本上線、hotfix、或規則類直推都適用）：
-   - 「目前進度」段落寫本次推送內容摘要（一兩句）
-   - 「目前分支」 / 「main HEAD」hash 改成即將 push 的 commit 之**前**那個 HEAD（接受 NOW.md 自身那個 commit 後 hash 會「落後一個」，補註「本 commit 為 NOW.md / 規則同步」即可）
-   - NOW.md 變更與本次推送變更同一個 commit（不要分兩個 commit），避免 main 上 NOW.md 永遠落後
-   - **此規則的存在原因**：使用者反覆糾正過「main HEAD 變了 NOW.md 沒跟上」，下次新對話一開啟讀到落後的 NOW.md 會誤判進度
+1. **更新 `.claude/now.md`**（推 main 前強制 — 不論完整版本上線、hotfix、或規則類直推都適用）：
+   - 「最近推送」段落寫本次推送內容摘要（一兩句）
+   - `.claude/now.md` 變更與本次推送變更同一個 commit（不要分兩個 commit），避免 main 上 now.md 永遠落後
+   - **此規則的存在原因**：使用者反覆糾正過「main HEAD 變了 now.md 沒跟上」，下次新對話一開啟讀到落後的 now.md 會誤判進度
 2. **完整重寫 `README.md`**（每次「功能上線到 main」必做，不是選擇性。規則類直推 main 不需要）：
    - 重新撰寫技術架構、功能清單、專案結構、部署說明
    - 頂部版本號更新為本次版本
@@ -88,7 +87,7 @@ git checkout <回到原分支>
 
 README 重寫、CHANGELOG 更新：**不需要**（規則類更新不影響產品功能）。
 機密檢查：仍然必做。
-**`NOW.md` 更新：仍然必做**（main HEAD 變了就要更新，與本次規則變更同一個 commit）。
+**`.claude/now.md` 更新：仍然必做**（main HEAD 變了就要更新，與本次規則變更同一個 commit）。
 
 ### main 推送後同步規則
 
@@ -150,7 +149,7 @@ git push --tags
 3. 建立 `.claude/context/vX.Y.Z.md`（本版詳細上下文）
    - **命名規則**：必須加 `v` 前綴（`v2.1.0.md`，不是 `2.1.0.md`）
    - **強制同步**：`.claude/context/vX.Y.Z.md` 必須與 `git tag vX.Y.Z` **在同一次 push 前建立**，不得事後補建
-   - context 檔建立後加入 git add，與 CHANGELOG / NOW.md 合為同一個 commit，再 push → tag
+   - context 檔建立後加入 git add，與 CHANGELOG / `.claude/now.md` 合為同一個 commit，再 push → tag
 4. README 完整重寫
 5. 機密檢查
 6. 使用者**明確確認**後才執行（最高確認要求）
