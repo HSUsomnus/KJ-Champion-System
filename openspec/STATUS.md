@@ -47,6 +47,7 @@ graph LR
 | 10 | [zeabur-projects-split](changes/10-zeabur-projects-split/tasks.md) | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0 上線） |
 | 11 | （預留） tag-system | ⬜ PENDING | 尚未動工，編號預留給 `m_b_tag_*` 三段式合 |
 | 12 | [統一彈出訊息系統](changes/12-統一彈出訊息系統/tasks.md) | 🛠 IN PROGRESS | 替換 14 處 `alert/confirm` 為 Warm Minimal 風格 Toast / Dialog / FieldError（分支 `m_b_統一彈出訊息系統`） |
+| 13 | [定時同步Calendar](changes/13-定時同步Calendar/tasks.md) | 🔄 IN PROGRESS | 後端每分鐘自動同步 Google Calendar → DB（分支 `m_b_定時同步Calendar`） |
 
 ---
 

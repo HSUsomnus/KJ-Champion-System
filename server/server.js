@@ -22,6 +22,7 @@ const authRoutes = require('./routes/auth');
 
 // 引入排程
 const dailyAgendaScheduler = require('./scheduler/dailyAgenda');
+const calendarSyncScheduler = require('./scheduler/calendarSync');
 
 // 建立 Express 應用程式
 const app = express();
@@ -188,18 +189,22 @@ if (require.main === module) {
     console.log(`📅 環境: ${process.env.NODE_ENV || 'development'}`);
     // 啟動每日行程推播排程（僅在長駐程式中啟動）
     dailyAgendaScheduler.start();
+    // 啟動每分鐘 Google Calendar 同步排程
+    calendarSyncScheduler.start();
   });
 
   // 優雅關閉處理
   process.on('SIGTERM', () => {
     console.log('收到 SIGTERM 訊號，正在關閉伺服器...');
     dailyAgendaScheduler.stop();
+    calendarSyncScheduler.stop();
     process.exit(0);
   });
 
   process.on('SIGINT', () => {
     console.log('收到 SIGINT 訊號，正在關閉伺服器...');
     dailyAgendaScheduler.stop();
+    calendarSyncScheduler.stop();
     process.exit(0);
   });
 }
