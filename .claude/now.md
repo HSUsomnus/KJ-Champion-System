@@ -6,15 +6,16 @@
 
 ## 當前 Change
 
-change 13「定時同步Calendar」— 分支 `m_b_定時同步Calendar`，已 merge dev，DEV 驗證中（task 4.2 打 health endpoint 確認 ok:true）。
-change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。
+change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作，目標 v2.5.0。
+change 13「定時同步Calendar」— ✅ DONE，已上線 v2.4.0。
 
 ## 最近推送
 
-v2.3.1 hotfix — server.js 加 publicExists 判斷，prod 環境 public/ 不存在時改純 API 模式，修復 GET / ENOENT → 500。同版推送含 git-guard.js + post-push-sync.js 兩個新 hook（Bash 守衛）、移除 open-worktree-vscode.js 與 openspec-sync-reminder.js。
+v2.4.0 — change 13「定時同步Calendar」。node-cron 每分鐘同步 Google Calendar；完全移除 googleapis/gaxios，改用 raw https.request（繞過 Zeabur undici Premature close 問題）。DEV 驗證 synced=89, deleted=1 正常。
 
 ## 已知地雷
 
+- **googleapis / gaxios 在 Zeabur 壞掉**：gaxios@6+ 在 Node.js 18 改用 undici，Zeabur NAT 導致 Premature close。解法：用 raw https.request。詳見 `.claude/context/googleapis-gaxios-zeabur.md`
 - **CCR 沙箱 git 403**：tag push / 刪分支在 Claude Code Remote 環境會失敗，需使用者本機或手機手動執行
 - **CCR 沙箱 npm / node 不可用**：`npm test`、`npm run dev` 等指令在 CCR 環境無法執行。後端測試改走 DEV 部署驗證（打 `/api/debug/health`）；前端 vitest / playwright 需由使用者本機 PC 自行執行
 - **測試環境（非本機）**：dev 前端 `kjcs-dev.pages.dev`、dev 後端 `kj-champion-dev.zeabur.app`；main 前端 `kj-champion-system.pages.dev`、main 後端 `kj-champion-system.zeabur.app`

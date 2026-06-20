@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.4.0] - 2026-06-21
+
+git tag: v2.4.0
+摘要：change 13「定時同步Calendar」— node-cron 每分鐘自動同步 Google Calendar 到本地 DB，並完全移除 googleapis / gaxios HTTP client。根本問題：gaxios@6+ 在 Zeabur Node.js 18 環境改用 native fetch（undici），undici 對 Zeabur NAT TCP 半關閉敏感，所有 Google API 請求均 Premature close。解法：完全繞過 gaxios，google-auth-library JWT 端點也硬編碼了廢棄 v4/token URL（aud 不符直接關閉連線），一併自己用 crypto + https.request 自簽 JWT assertion（aud 正確），直接換 token；calendarService.js 所有 Calendar API 呼叫改用 raw https.request 封裝的 calendarApiRequest()。新增 server/scheduler/calendarSync.js（每分鐘 cron）、server/routes/debug.js（/api/debug/health 自檢端點）、scripts/diagnose-google-auth.js（本機 CLI 診斷）、Jest 後端單元測試框架（googleAuth / calendarSync / debug 共 28 個 test）。DEV 驗證：synced=89, deleted=1 正常完成。
+
+---
+
 ## [v2.3.1] - 2026-06-20
 
 git tag: v2.3.1

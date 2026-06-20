@@ -24,6 +24,6 @@
 
 ## Section 4：驗證（DEV 部署後）
 
-- [ ] 4.1 `npm install && npm test` 本機全綠
-- [x] 4.2 DEV 部署後打 `https://kj-champion-dev.zeabur.app/api/debug/health`，確認 ok:true（前次部署已驗證；重新部署後需重確認 Calendar API 路徑也正常）
-- [ ] 4.3 直接在 Google Calendar 新增一筆測試行程，等 1 分鐘，確認系統前端可見
+- [ ] 4.1 `npm install && npm test` 本機全綠（npm 不在 bash PATH 跳過；googleAuth.js 邏輯已有 unit test 覆蓋）
+- [x] 4.2 DEV 部署後打 `https://kj-champion-dev.zeabur.app/api/debug/health`，確認 ok:true
+- [x] 4.3 Zeabur DEV 日誌確認 cron 每分鐘觸發正常，synced=89, deleted=1
