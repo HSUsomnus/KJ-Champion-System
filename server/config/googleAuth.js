@@ -7,13 +7,25 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive',
 ];
 
-// google-auth-library 的 JWT 預設打已廢棄的 www.googleapis.com/oauth2/v4/token
-// 建立 JWT 後必須明確覆寫 tokenUrl，強制走正確端點
-const CORRECT_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+// google-auth-library@9.x 的 JWT.refreshTokenNoCache() 把 JWT_ACCESS_TOKEN_URL
+// 硬編碼為 'https://www.googleapis.com/oauth2/v4/token'（已廢棄，Google 開始拒絕連線）。
+// 設定 auth.tokenUrl 屬性沒有用，因為方法內部直接用常數，不讀屬性。
+// 唯一有效的做法：在 transporter 層攔截 HTTP 請求並替換 URL。
+const patchTransporter = (auth) => {
+  const orig = auth.transporter;
+  const origRequest = orig.request.bind(orig);
+  auth.transporter = {
+    request: async (opts) => {
+      if (opts.url === 'https://www.googleapis.com/oauth2/v4/token') {
+        opts.url = 'https://oauth2.googleapis.com/token';
+      }
+      return origRequest(opts);
+    },
+  };
+};
 
 const getServiceAccountAuth = () => {
   try {
-    // 方案 1：使用完整的 JSON 格式（推薦）
     const googleCredentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
 
     if (googleCredentialsJson) {
@@ -25,9 +37,7 @@ const getServiceAccountAuth = () => {
           scopes: SCOPES,
           keyId: credentials.private_key_id,
         });
-        // 強制覆寫：credentials.token_uri 可能是舊版 v4 URL，永遠用正確端點
-        auth.tokenUrl = CORRECT_TOKEN_URL;
-        console.log('🔍 [googleAuth] tokenUrl =', auth.tokenUrl);
+        patchTransporter(auth);
         console.log('✅ 使用 GOOGLE_SERVICE_ACCOUNT_JSON 認證成功');
         return auth;
       } catch (parseError) {
@@ -35,7 +45,6 @@ const getServiceAccountAuth = () => {
       }
     }
 
-    // 方案 2：使用分開的環境變數
     const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
@@ -54,7 +63,7 @@ const getServiceAccountAuth = () => {
       key: privateKey,
       scopes: SCOPES,
     });
-    auth.tokenUrl = CORRECT_TOKEN_URL;
+    patchTransporter(auth);
 
     console.log('✅ 使用分開的環境變數認證成功');
     return auth;
@@ -65,7 +74,6 @@ const getServiceAccountAuth = () => {
   }
 };
 
-// 取得已認證的 Calendar API 客戶端
 const getCalendarClient = async () => {
   const auth = getServiceAccountAuth();
   if (!auth) {
@@ -74,7 +82,6 @@ const getCalendarClient = async () => {
   return google.calendar({ version: 'v3', auth });
 };
 
-// 取得已認證的 Drive API 客戶端（用於上傳試算表並轉成唯讀 Google Sheet）
 const getDriveClient = async () => {
   const auth = getServiceAccountAuth();
   if (!auth) {
@@ -83,7 +90,6 @@ const getDriveClient = async () => {
   return google.drive({ version: 'v3', auth });
 };
 
-// 取得團體日曆 ID
 const getGroupCalendarId = () => {
   const calendarId = process.env.GROUP_CALENDAR_ID;
   if (!calendarId) {
