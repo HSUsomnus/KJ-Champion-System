@@ -25,7 +25,9 @@ const getServiceAccountAuth = () => {
           scopes: SCOPES,
           keyId: credentials.private_key_id,
         });
-        auth.tokenUrl = credentials.token_uri || CORRECT_TOKEN_URL;
+        // 強制覆寫：credentials.token_uri 可能是舊版 v4 URL，永遠用正確端點
+        auth.tokenUrl = CORRECT_TOKEN_URL;
+        console.log('🔍 [googleAuth] tokenUrl =', auth.tokenUrl);
         console.log('✅ 使用 GOOGLE_SERVICE_ACCOUNT_JSON 認證成功');
         return auth;
       } catch (parseError) {
