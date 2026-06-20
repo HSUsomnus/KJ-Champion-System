@@ -120,9 +120,12 @@ const parseCredentials = () => {
   return null;
 };
 
-// 建立 Google Auth 客戶端
-// 回傳標準 JWT 實例，但覆寫 getRequestHeaders 改用我們自己的 token 換取邏輯
-const getServiceAccountAuth = () => {
+// googleapis-common 呼叫 auth.request() → OAuth2Client 內部 refreshTokenNoCache()
+// → www.googleapis.com/oauth2/v4/token（舊廢棄端點，已 Premature close）。
+// 根本解法：不用 google.auth.JWT，改用 google.auth.OAuth2。
+// 我們先用自己的 JWT exchange 拿好 access_token，再 setCredentials 給 OAuth2。
+// googleapis 看到 credentials 有有效 access_token，直接取用，完全不走 JWT refresh。
+const getServiceAccountAuth = async () => {
   try {
     const credentials = parseCredentials();
     if (!credentials) {
@@ -130,32 +133,26 @@ const getServiceAccountAuth = () => {
       return null;
     }
 
-    const auth = new google.auth.JWT({
-      email: credentials.client_email,
-      key: credentials.private_key,
-      scopes: SCOPES,
-      keyId: credentials.private_key_id,
-      tokenUrl: TOKEN_URL,
+    const token = await getAccessToken(credentials);
+
+    const auth = new google.auth.OAuth2();
+    auth.setCredentials({
+      access_token: token,
+      expiry_date: Date.now() + 55 * 60 * 1000,
+      token_type: 'Bearer',
     });
 
-    // googleapis-common 可能走 getRequestHeaders 或 getAccessToken / authorize 取 token。
-    // 三個入口都覆寫，確保不論哪條路都走我們的自簽 JWT，不觸發套件內部舊端點。
-    const getToken = () => getAccessToken(credentials);
-
-    auth.getRequestHeaders = async () => {
-      const token = await getToken();
-      return { Authorization: `Bearer ${token}` };
-    };
-
-    auth.getAccessToken = async () => {
-      const token = await getToken();
-      auth.credentials = { access_token: token, expiry_date: Date.now() + 55 * 60 * 1000 };
-      return { token, res: null };
-    };
-
-    auth.authorize = async () => {
-      const token = await getToken();
-      auth.credentials = { access_token: token, expiry_date: Date.now() + 55 * 60 * 1000 };
+    // token 到期時 googleapis 呼叫 refreshAccessToken()，
+    // 覆寫改走我們自己的 JWT exchange，不走 OAuth2 的 refresh_token 流程。
+    auth.refreshAccessToken = async () => {
+      const newToken = await getAccessToken(credentials);
+      const creds = {
+        access_token: newToken,
+        expiry_date: Date.now() + 55 * 60 * 1000,
+        token_type: 'Bearer',
+      };
+      auth.setCredentials(creds);
+      return { credentials: creds, res: null };
     };
 
     console.log('✅ 使用 GOOGLE_SERVICE_ACCOUNT_JSON 認證成功');
@@ -168,13 +165,13 @@ const getServiceAccountAuth = () => {
 };
 
 const getCalendarClient = async () => {
-  const auth = getServiceAccountAuth();
+  const auth = await getServiceAccountAuth();
   if (!auth) return null;
   return google.calendar({ version: 'v3', auth });
 };
 
 const getDriveClient = async () => {
-  const auth = getServiceAccountAuth();
+  const auth = await getServiceAccountAuth();
   if (!auth) return null;
   return google.drive({ version: 'v3', auth });
 };
