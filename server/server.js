@@ -104,11 +104,9 @@ app.use('/api/line', lineRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/auth', authRoutes);
 
-// 自檢端點（僅非 production 開放，不對外暴露敏感 token）
-if (process.env.NODE_ENV !== 'production') {
-  app.use('/api/debug', debugRoutes);
-  console.log('🔧 [debug] /api/debug/health 已啟用（dev only）');
-}
+// 自檢端點（永遠開放 — 只回傳 ok/fail 狀態，不暴露 token 或私鑰）
+app.use('/api/debug', debugRoutes);
+console.log('🔧 [debug] /api/debug/health 已啟用');
 
 // 健康檢查端點（供 Cloud Run 使用）
 app.get('/health', (req, res) => {
