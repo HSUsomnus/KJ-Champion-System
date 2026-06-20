@@ -154,6 +154,39 @@ describe('googleAuth', () => {
       expect(payload.aud).toBe('https://oauth2.googleapis.com/token');
     });
 
+    test('JWT signature part is raw Buffer bytes, not JSON.stringify artefact', async () => {
+      // Regression: b64u(Buffer) must use the Buffer directly, not JSON.stringify(buffer).
+      // If JSON.stringify is used, the sig would start with base64 of '{"type":"Buffer"...' .
+      const { getServiceAccountAuth } = require('../googleAuth');
+      const auth = getServiceAccountAuth();
+
+      const FAKE_SIG_BUF = Buffer.from('fake-rsa-signature');
+      crypto.createSign.mockReturnValue({ update: jest.fn(), sign: jest.fn().mockReturnValue(FAKE_SIG_BUF) });
+
+      let writtenBody = '';
+      const res = new EventEmitter();
+      res.statusCode = 200;
+      const req = {
+        on: jest.fn().mockReturnThis(),
+        write: jest.fn((buf) => { writtenBody += buf.toString(); }),
+        end: jest.fn(), destroy: jest.fn(),
+      };
+      https.request.mockImplementation((opts, cb) => {
+        cb(res);
+        process.nextTick(() => { res.emit('data', JSON.stringify(SUCCESS_TOKEN)); res.emit('end'); });
+        return req;
+      });
+
+      await auth.getRequestHeaders();
+
+      const match = writtenBody.match(/assertion=([^&]+)/);
+      const assertion = decodeURIComponent(match[1]);
+      const sigPart = assertion.split('.')[2];
+      const expectedSig = FAKE_SIG_BUF.toString('base64')
+        .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      expect(sigPart).toBe(expectedSig);
+    });
+
     test('throws when server returns error (no access_token)', async () => {
       const { getServiceAccountAuth } = require('../googleAuth');
       const auth = getServiceAccountAuth();
