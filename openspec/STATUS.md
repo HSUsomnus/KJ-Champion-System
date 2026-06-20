@@ -21,6 +21,7 @@
 | 09 | 每日行程推播 | ✅ DONE | 後端 v2.2.0 + 前端 v2.3.0 全部上線 |
 | 10 | zeabur-projects-split | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0）|
 | 12 | 統一彈出訊息系統 | 🔄 IN PROGRESS | 分支 `m_b_統一彈出訊息系統`，0/33 task，目標 v2.4.0 |
+| 13 | 定時同步Calendar | 🔄 IN PROGRESS | 分支 `m_b_定時同步Calendar`，0/4 task |
 
 ---
 
