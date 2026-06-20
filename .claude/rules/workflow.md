@@ -361,7 +361,7 @@ git push origin dev --force-with-lease
 # 2. 更新 dev 專屬 README（功能分支總表歸零）
 #    依 .claude/rules/readme.md 的 dev 分支格式撰寫
 
-# 3. 更新 NOW.md — 記錄格式化原因、HEAD SHA、待重新合入的 m_b_* 清單
+# 3. 更新 .claude/now.md — 記錄格式化原因、HEAD SHA、待重新合入的 m_b_* 清單
 
 # 4. 普通 commit + push dev
 ```
