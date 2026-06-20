@@ -24,27 +24,12 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .claude/hooks/openspec-sync-reminder.js",
-            "timeout": 10
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "node .claude/hooks/post-push-sync.js",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "node .claude/hooks/open-worktree-vscode.js",
-            "timeout": 30
           }
         ]
       }
