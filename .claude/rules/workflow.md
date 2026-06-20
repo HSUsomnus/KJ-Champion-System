@@ -1,10 +1,22 @@
 # 工作流規則 — 所有分支共用，每次 Edit/Write 自動注入
 
+## OpenSpec 文件職責分工
+
+| 文件 | 職責 | 內容範圍 |
+|------|------|---------|
+| `openspec/STATUS.md` | **路線圖導航**，每次對話的起點 | 所有 change 的編號、名稱、狀態（DONE / IN PROGRESS / ARCHIVED）、一句話說明。**不含 task 細節** |
+| `openspec/changes/NN-名稱/spec.md` | 該 change 的需求 + 技術設計 | 使用者需求、技術方案、邊界定義 |
+| `openspec/changes/NN-名稱/tasks.md` | 該 change 的實作清單 | 可勾選的 task（`[ ]` / `[x]`），含測試 task，進度唯一來源 |
+
+> **原則**：task 進度只在 `tasks.md` 追蹤。STATUS.md 只更新 change 層級的狀態（整個 change 從 IN PROGRESS → DONE），不同步個別 task。
+
+---
+
 ## 關鍵字觸發一覽
 
 | 關鍵字 | 觸發動作 |
 |--------|---------|
-| **「新增功能 [名稱]」** | 切分支 + 開 OpenSpec change（見下方） |
+| **「新功能」** | 進入需求探索模式 → Claude 主動提問釐清需求 → 使用者說「完成」→ 生成計畫並切分支（見下方） |
 | **「修改計畫」** | 確認分支 → 只動 OpenSpec 文件 |
 | **「執行計畫」** | 確認分支 → 照 tasks 實作程式碼（**蓋一層測一層**：每個 task source + 對應 test 一起做、跑該層測試、全綠才勾 [x] 進下一 task；section milestone 跑全套 regression） |
 | **「修 bug」** | 從 main 切 hotfix，視情況開 change |
@@ -14,10 +26,25 @@
 
 ---
 
-## 「新增功能」完整流程
+## 「新功能」完整流程
 
-1. 詢問功能名稱（若未提供）
-2. 建立分支並推遠端：
+### 第一階段：需求探索（Explore）
+
+1. Claude 主動詢問功能名稱（若未提供）
+2. Claude 針對以下面向逐一提問，每次 **最多問 2～3 個問題**，不一次轟炸：
+   - **目標使用者**：誰會用這個功能？什麼角色？
+   - **核心情境**：使用者遇到什麼問題、想達成什麼？
+   - **功能邊界**：這個功能做什麼、不做什麼？
+   - **UI / 互動**：有沒有想像中的畫面或操作方式？
+   - **資料與 API**：需要新的資料表、欄位、或後端 API 嗎？
+   - **限制與例外**：角色限制、邊界 case、錯誤處理？
+3. 使用者回答後 Claude 繼續追問，直到需求足夠清晰
+4. Claude 最後整理**需求摘要**（條列式），問使用者：「需求是否完成？」
+5. 使用者回覆「完成」→ 進入第二階段
+
+### 第二階段：建立計畫與分支
+
+6. 建立分支並推遠端：
    ```bash
    git checkout main
    git checkout -b m_b_功能名稱
@@ -40,37 +67,44 @@
    > - 測試：各自 merge 到 dev 驗證，**後端先驗證，通過後才驗證前端**
    > - 上線：依序 merge 到 main（後端先於前端）
 
-3. 在 `openspec/` 建立新 change：`proposal.md` → `design.md` → `tasks.md` → `STATUS.md`
-4. 告知使用者：「分支 `m_b_功能名稱` 已建立，OpenSpec change 已開，說『執行計畫』開始實作」
+7. 在 `openspec/changes/` 建立新 change 資料夾，依序產生：
+   - `spec.md`（需求摘要 + 技術設計，從探索對話整理而來）
+   - `tasks.md`（可勾選實作清單，含測試 task）
+   - 更新 `openspec/STATUS.md`
+8. 告知使用者：「分支 `m_b_功能名稱` 已建立，spec 已產生，說『執行計畫』開始實作」
 
 ---
 
 ## 「修改計畫」流程
 
-> **第一步永遠是確認分支**
+> **第一步永遠是確認 change 與分支**
 
-1. 執行 `git branch --show-current`
-2. 若在 `main` 或 `dev` → **強制停止**：
+1. **若使用者未指定要修改哪個 change** → 讀 `openspec/STATUS.md`，列出所有 IN PROGRESS 的 change，詢問使用者：「請問要修改哪一個 change 計畫？」，等使用者回覆後才繼續
+2. 確認對應分支：執行 `git branch --show-current`
+3. 若在 `main` 或 `dev` → **強制停止**：
    > ⛔ 目前在 `[分支名]`，請先切換到對應功能分支（`m_b_*`）再修改計畫。
-3. 若在 `m_b_*` → 顯示：「目前在 `m_b_XXX`，確認繼續修改計畫？」
-4. 使用者確認後才繼續：
-   - 讀 `openspec/STATUS.md` 確認當前 change
-   - 依序更新：`proposal.md` → `design.md` → `tasks.md` → `STATUS.md`
-   - 禁止直接改 `tasks.md` 新增需求（需先改 `proposal.md`）
+4. 若在 `m_b_*` → 顯示：「目前在 `m_b_XXX`，確認繼續修改計畫？」
+5. 使用者確認後才繼續：
+   - 讀該 change 的 `spec.md` 與 `tasks.md`
+   - 依序更新：`spec.md` → `tasks.md`
+   - 若 change 整體狀態有變（如從 IN PROGRESS → DONE）→ 才更新 `STATUS.md` 路線圖那一行
+   - 禁止直接改 `tasks.md` 新增需求（需先改 `spec.md`）
+   - **禁止把 task 細節寫進 STATUS.md**（STATUS.md 只記 change 層級狀態）
 
 ---
 
 ## 「執行計畫」流程
 
-> **第一步永遠是確認分支**
+> **第一步永遠是確認 change 與分支**
 > **核心原則**：蓋一層測一層 — 每個 task 完成必跑對應測試，全綠才勾 [x] 進下一 task，避免整棟蓋好才測時找不到問題在哪層
 
-1. 執行 `git branch --show-current`
-2. 若在 `main` 或 `dev` → **強制停止**：
+1. **若使用者未指定要執行哪個 change** → 讀 `openspec/STATUS.md`，列出所有 IN PROGRESS 的 change，詢問使用者：「請問要執行哪一個 change 計畫？」，等使用者回覆後才繼續
+2. 確認對應分支：執行 `git branch --show-current`
+3. 若在 `main` 或 `dev` → **強制停止**：
    > ⛔ 目前在 `[分支名]`，請先切換到對應功能分支（`m_b_*`）再執行計畫。
-3. 若在 `m_b_*` → 顯示：「目前在 `m_b_XXX`，確認繼續實作？」
-4. 使用者確認後才繼續：
-   - 讀 `openspec/STATUS.md` 確認當前執行位置
+4. 若在 `m_b_*` → 顯示：「目前在 `m_b_XXX`，確認繼續實作？」
+5. 使用者確認後才繼續：
+   - 讀該 change 的 `tasks.md` 確認當前執行位置
    - 找到下一個未完成（`[ ]`）且前置已完成（`[x]`）的 task
    - **只實作當前 task，不跳躍、不超範圍**
 
@@ -89,7 +123,7 @@ c. **跑該層測試**（**Claude 自動跑，不等使用者要求**）：
    - vitest 全跑（3 秒）：`npm --prefix frontend run test:run`
    - 或指定檔加速：`npm --prefix frontend run test:run -- <檔路徑>`
    - 涉及 page 流程：`npm --prefix frontend run test:e2e`
-d. **全綠才勾 [x]、更新 STATUS.md、進下一 task**
+d. **全綠才勾 [x]、更新 `tasks.md`、進下一 task**（STATUS.md 不在此更新，只有 change 整體完成時才動）
 e. **fail 時不勾、不進下一 task** — 先修
 
 ### Section milestone（一個 section 全勾後，如 1.x / 2.x / 3.x 完成）
@@ -130,18 +164,57 @@ e. **fail 時不勾、不進下一 task** — 先修
 >
 > **核心分工**：m_b_* 跑**自動化測試**（Vitest + Playwright，邏輯 / 視覺 inline style 對錯）；dev 站做**真實環境手動驗收**（PWA install、視覺感受、跨裝置、真實 API）。兩軌互補。
 
-### 第一步：最終 regression（Claude 自動跑）
+### 第零步：確認 change（手動觸發時）
+
+**若使用者未指定要測試哪個 change** → 讀 `openspec/STATUS.md`，列出所有 IN PROGRESS 的 change，詢問使用者：「請問要測試哪一個 change？」，等使用者回覆後才繼續。
+
+### 第一步：自動化測試 + 產出測試報告（Claude 自動跑）
 
 ```bash
 npm --prefix frontend run test:run     # vitest 全部
 npm --prefix frontend run test:e2e     # playwright 全部（純後端 change 可跳過）
 ```
 
-執行計畫階段每個 task / milestone 已跑過了，這次是上 dev 前最後一道保險。
+執行完畢後，Claude **必須產出測試報告**，格式如下：
 
-任一 fail → **不繼續 merge dev**，回 m_b_* 修，重跑全套 → 通過才繼續。
+```
+## 測試報告 — [change 名稱]
 
-### 第二步：merge dev + push（push 前要使用者口頭 OK）
+### 自動化測試結果
+- ✅ vitest：X 個通過 / ❌ X 個失敗
+  - ❌ [失敗項目名稱]：[原因]
+- ✅ playwright e2e：X 個通過 / ❌ X 個失敗
+  - ❌ [失敗項目名稱]：[原因]
+
+### 需要人眼測試的項目（請依序操作）
+
+- [ ] **[項目名稱]**
+  - 測試環境：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev)
+  - 測試前準備：DevTools → Application → Service Workers → Unregister
+  - 測試步驟：
+    1. 開啟 [URL] 或操作 [動作]
+    2. 預期結果：[描述應該看到什麼]
+    3. 實際填寫：✅ 正常 / ❌ 異常（描述）
+
+- [ ] **[其他項目]**
+  ...
+
+### 自動化無法涵蓋的常見項目（視 change 性質勾選適用）
+- [ ] PWA install standalone 模式（Chrome 桌面右上 install icon → 點擊安裝 → 確認以獨立視窗開啟）
+- [ ] 真實 LINE OAuth（登出 → 重新登入 → 確認 redirect 正確）
+- [ ] Web Share API（手機點分享 → 確認原生分享面板出現）
+- [ ] 跨裝置視覺（手機 PWA / 桌面 Chrome / iOS Safari 各看一遍）
+- [ ] 視覺感受（顏色協調、字體渲染、動畫流暢度）
+```
+
+任一自動化 fail → **不繼續**，回 m_b_* 修，重跑全套 → 通過才繼續。
+
+### 第二步：詢問是否 merge dev
+
+Claude 產出測試報告後，**詢問使用者**：
+> 「自動化測試已通過，以上人眼測試清單請你依序完成。完成後告訴我，我再 merge dev 讓你到 [kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) 做最終驗收。是否現在 merge dev？」
+
+使用者確認後才執行：
 
 ```bash
 git checkout dev
@@ -151,19 +224,9 @@ git merge origin/m_b_功能名稱 --no-edit
 git push origin dev   # ← push 前 Claude 必須給使用者列改動清單，獲口頭 OK 才執行
 ```
 
-merge dev 屬「可見動作」（Cloudflare Pages 會自動部署），依 CLAUDE.md「執行動作前確認」原則仍要授權。
+### 第三步：dev 站最終手動驗收（使用者執行）
 
-### 第三步：dev 站實機手動驗收（使用者執行）
-
-dev 站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev)
-
-**自動化抓不到、必須手動驗的項目**：
-- PWA install standalone 模式（Chrome 桌面右上 install icon）
-- 真實 `navigator.share` Web Share API（手機原生分享面板）
-- 視覺感受（顏色協調、字體渲染、動畫流暢度）
-- 跨裝置差異（手機 PWA / 桌面 Chrome / iOS Safari）
-- 真實 LINE OAuth 流程（`?dev=1` 模擬不能完整覆蓋）
-- 邊界 case（自動化漏寫的場景）
+使用者依照測試報告的人眼清單，在 [kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) 逐項確認。
 
 **測試前必做**：DevTools → Application → Service Workers → Unregister，避免舊 SW 快取干擾。
 
@@ -253,10 +316,12 @@ dev 站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev)
 
 ## 「功能上線」流程
 
-1. 確認所有 tasks 皆為 `[x]`
-2. 執行 deploy.md 的推送流程
-3. 將 STATUS.md 的 change 標為 DONE
-4. 刪除功能分支
+1. **若使用者未指定要上線哪個 change** → 讀 `openspec/STATUS.md`，列出所有 IN PROGRESS 的 change，詢問使用者：「請問要上線哪一個 change？」，等使用者回覆後才繼續
+2. **再次確認測試狀態**：詢問使用者：「請確認你已完成 dev 站人眼驗收，所有測試項目皆 ✅？」，使用者明確回覆「完成」後才繼續
+3. 確認該 change 的所有 tasks 皆為 `[x]`
+4. 執行 deploy.md 的推送流程（CHANGELOG / context / README / 機密檢查 / 使用者明確確認 / merge main / tag）
+5. 將 `openspec/STATUS.md` 的 change 標為 DONE
+6. 刪除功能分支（本機 + 遠端）
 
 ---
 
@@ -328,7 +393,7 @@ done
 
 ## Change 範圍控制
 
-- **改 HOW**（方法變，範圍不變）：合法，更新 design.md + tasks.md，change 不擴大
+- **改 HOW**（方法變，範圍不變）：合法，更新 spec.md + tasks.md，change 不擴大
 - **改 WHAT**（範圍擴大）：修改計畫時若需新增超過 2 個 task → 停下詢問使用者是否開新 change
 
 ---
@@ -353,7 +418,7 @@ hotfix    ← 緊急修復，從 main 切出
 - ❌ 將 `dev` merge 回 `main`
 - ❌ 功能分支只建本機不 push 到遠端
 - ❌ 診斷問題時順手實作（診斷 ≠ 授權修改）
-- ❌ 只改程式碼不更新 `tasks.md` / `STATUS.md`
+- ❌ 只改程式碼不更新 `tasks.md`（STATUS.md 只在 change 整體狀態變動時才更新）
 - ❌ 使用 `git add -A`
 - ❌ 將 `.claude/` 修改與功能程式碼混在同一個 commit
 
@@ -411,3 +476,25 @@ git checkout <回到原分支>
 - [ ] **025.12 更新 _worker.js**（Claude 程式碼）
   - 等 025.3 完成，取得 URL 後由 Claude 修改
 ```
+
+---
+
+## 雙裝置工作流（PC + 手機 Claude Code Web）
+
+- **PC**：複雜重構、實機 UI 驗證、跑 `npm test` / `pg_dump`、tag 建立、刪分支（手機 CCR 沙箱會 403）
+- **手機**：駕駛等候時段主力產出、新功能 scaffolding、OpenSpec 文件、小修
+- **同步管道是 git**：兩裝置進度靠 GitHub 主分支 / `.claude/now.md` / OpenSpec STATUS 共享，不靠 Claude session 記憶
+
+---
+
+## 程式碼決策規範
+
+實作涉及非直覺選擇時，在程式碼上方加註：
+
+```js
+// [設計決策] 簡短描述這個選擇
+// 原因：為什麼不用更直覺的方式
+// 若要修改：請先確認 spec.md 的技術設計區塊
+```
+
+適用：繞過 library 預設行為、刻意不用更簡單方案、與一般慣例不同的實作。
