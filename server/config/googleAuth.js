@@ -1,8 +1,3 @@
-/**
- * Google API 認證設定檔
- * 負責初始化 Google Calendar 和 Sheets API 的認證
- */
-
 const { google } = require('googleapis');
 require('dotenv').config();
 
@@ -12,9 +7,10 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive',
 ];
 
-// 建立 Google Auth 客戶端（使用 Service Account）
-// 使用 GoogleAuth 而非 JWT，確保讀取 JSON 內的 token_uri（oauth2.googleapis.com/token）
-// 避免 JWT 預設打已廢棄的 www.googleapis.com/oauth2/v4/token 造成 Premature close
+// google-auth-library 的 JWT 預設打已廢棄的 www.googleapis.com/oauth2/v4/token
+// 建立 JWT 後必須明確覆寫 tokenUrl，強制走正確端點
+const CORRECT_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+
 const getServiceAccountAuth = () => {
   try {
     // 方案 1：使用完整的 JSON 格式（推薦）
@@ -23,11 +19,13 @@ const getServiceAccountAuth = () => {
     if (googleCredentialsJson) {
       try {
         const credentials = JSON.parse(googleCredentialsJson);
-        const auth = new google.auth.GoogleAuth({
-          credentials,
+        const auth = new google.auth.JWT({
+          email: credentials.client_email,
+          key: credentials.private_key,
           scopes: SCOPES,
-          projectId: credentials.project_id,
+          keyId: credentials.private_key_id,
         });
+        auth.tokenUrl = credentials.token_uri || CORRECT_TOKEN_URL;
         console.log('✅ 使用 GOOGLE_SERVICE_ACCOUNT_JSON 認證成功');
         return auth;
       } catch (parseError) {
@@ -38,9 +36,8 @@ const getServiceAccountAuth = () => {
     // 方案 2：使用分開的環境變數
     const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
-    const projectId = process.env.GOOGLE_PROJECT_ID;
 
-    if (!serviceAccountEmail || !privateKey || !projectId) {
+    if (!serviceAccountEmail || !privateKey) {
       console.warn('⚠️  Google API 環境變數未設定，將無法使用 Calendar/Sheets 功能');
       return null;
     }
@@ -50,14 +47,12 @@ const getServiceAccountAuth = () => {
       throw new Error('GOOGLE_PRIVATE_KEY 格式不正確');
     }
 
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: serviceAccountEmail,
-        private_key: privateKey,
-      },
+    const auth = new google.auth.JWT({
+      email: serviceAccountEmail,
+      key: privateKey,
       scopes: SCOPES,
-      projectId,
     });
+    auth.tokenUrl = CORRECT_TOKEN_URL;
 
     console.log('✅ 使用分開的環境變數認證成功');
     return auth;
