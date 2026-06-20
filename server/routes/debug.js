@@ -18,8 +18,9 @@ const db = require('../config/db');
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
 // ── JWT 自簽並換取 token（複製自 googleAuth.js 核心邏輯）────────────
+// signer.sign() 回傳 Buffer；Buffer.isBuffer 判斷避免走到 JSON.stringify(buffer)
 const b64u = (v) =>
-  Buffer.from(typeof v === 'string' ? v : JSON.stringify(v))
+  (Buffer.isBuffer(v) ? v : Buffer.from(typeof v === 'string' ? v : JSON.stringify(v)))
     .toString('base64')
     .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
