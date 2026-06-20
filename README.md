@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統 — DEV 測試分支
 
-> **分支：`dev`** | 基底版本：v2.3.0（含 v2.4.0-dev change 12）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-04-26
+> **分支：`dev`** | 基底版本：v2.3.0（含 v2.4.0-dev change 12）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-06-20
 
 此分支為 QA 測試環境，**已於 2026-04-13 格式化重置為 main**，歷史清空，重新累積功能分支合入。
 
@@ -17,6 +17,7 @@
   - 規則類補丁（2026-04-26）：UIDESIGN.md 升格根目錄、CLAUDE.md 加 UI 規範索引、deploy.md 加「推 main 前強制更新 NOW.md」
 - **dev 分支獨有（尚未上 main）**：
   - **change 12-統一彈出訊息系統** — 替換 14 處原生 alert/confirm 為 Warm Minimal 風格 Toast / ConfirmDialog / FieldError / BottomSheet（v2.4.0 目標，dev 驗證中）
+  - **change 13-定時同步Calendar** — 後端每分鐘 cron 同步 Google Calendar → DB；修正 JWT tokenUrl 覆寫解決 `v4/token Premature close`（dev 驗證中）
 - 待依序 merge 的功能分支：`m_b_pwa_upgrade` / `m_b_tag_*`
 
 ---
@@ -40,7 +41,8 @@
 
 | 分支名稱 | 功能說明 | 狀態 | 對應 OpenSpec |
 |---------|---------|------|--------------|
-| `m_b_統一彈出訊息系統` | Warm Minimal 風格 Feedback 元件（Toast / ConfirmDialog / BottomSheet / FieldError / Dialog base）+ 替換 14 處 alert/confirm + 既有 ConfirmLeaveDialog/ShareConfirmDialog/AmountPicker 遷移 | 🛠 **本次合入 dev 驗證中**（v2.4.0 目標） | 12-統一彈出訊息系統 |
+| `m_b_統一彈出訊息系統` | Warm Minimal 風格 Feedback 元件（Toast / ConfirmDialog / BottomSheet / FieldError / Dialog base）+ 替換 14 處 alert/confirm + 既有 ConfirmLeaveDialog/ShareConfirmDialog/AmountPicker 遷移 | 🛠 dev 驗證中（v2.4.0 目標） | 12-統一彈出訊息系統 |
+| `m_b_定時同步Calendar` | 後端每分鐘 cron 同步 Google Calendar → DB；JWT tokenUrl 覆寫修正 v4/token Premature close | 🛠 **本次合入 dev 驗證中** | 13-定時同步Calendar |
 | `m_b_pwa_upgrade` | PWA 全平台升級（Android + iOS + Desktop 最新標準） | ⬜ 待合入 | 08-pwa-upgrade |
 | `m_b_tag_database` | 標籤系統 — DB migration | ⬜ 待合入 | ❓ 無 OpenSpec change（需補） |
 | `m_b_tag_backend` | 標籤系統 — 後端 API | ⬜ 待合入 | ❓ 無 OpenSpec change（需補） |
