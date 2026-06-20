@@ -19,6 +19,7 @@ const profileRoutes = require('./routes/profile');
 const lineRoutes = require('./routes/line');
 const financialRoutes = require('./routes/financial');
 const authRoutes = require('./routes/auth');
+const debugRoutes = require('./routes/debug');
 
 // 引入排程
 const dailyAgendaScheduler = require('./scheduler/dailyAgenda');
@@ -102,6 +103,12 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/line', lineRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/auth', authRoutes);
+
+// 自檢端點（僅非 production 開放，不對外暴露敏感 token）
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/debug', debugRoutes);
+  console.log('🔧 [debug] /api/debug/health 已啟用（dev only）');
+}
 
 // 健康檢查端點（供 Cloud Run 使用）
 app.get('/health', (req, res) => {
