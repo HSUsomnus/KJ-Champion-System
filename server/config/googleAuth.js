@@ -135,12 +135,27 @@ const getServiceAccountAuth = () => {
       key: credentials.private_key,
       scopes: SCOPES,
       keyId: credentials.private_key_id,
+      tokenUrl: TOKEN_URL,
     });
 
-    // 覆寫 getRequestHeaders：googleapis-common 呼叫此方法取得 Authorization header
+    // googleapis-common 可能走 getRequestHeaders 或 getAccessToken / authorize 取 token。
+    // 三個入口都覆寫，確保不論哪條路都走我們的自簽 JWT，不觸發套件內部舊端點。
+    const getToken = () => getAccessToken(credentials);
+
     auth.getRequestHeaders = async () => {
-      const token = await getAccessToken(credentials);
+      const token = await getToken();
       return { Authorization: `Bearer ${token}` };
+    };
+
+    auth.getAccessToken = async () => {
+      const token = await getToken();
+      auth.credentials = { access_token: token, expiry_date: Date.now() + 55 * 60 * 1000 };
+      return { token, res: null };
+    };
+
+    auth.authorize = async () => {
+      const token = await getToken();
+      auth.credentials = { access_token: token, expiry_date: Date.now() + 55 * 60 * 1000 };
     };
 
     console.log('✅ 使用 GOOGLE_SERVICE_ACCOUNT_JSON 認證成功');
@@ -174,6 +189,7 @@ const getGroupCalendarId = () => {
 };
 
 module.exports = {
+  TOKEN_URL,
   getServiceAccountAuth,
   getCalendarClient,
   getDriveClient,

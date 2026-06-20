@@ -14,8 +14,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const https = require('https');
 const db = require('../config/db');
-
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const { TOKEN_URL } = require('../config/googleAuth');
 
 // ── JWT 自簽並換取 token（複製自 googleAuth.js 核心邏輯）────────────
 // signer.sign() 回傳 Buffer；Buffer.isBuffer 判斷避免走到 JSON.stringify(buffer)
