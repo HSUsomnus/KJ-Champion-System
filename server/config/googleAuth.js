@@ -6,35 +6,36 @@
 const { google } = require('googleapis');
 require('dotenv').config();
 
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive',
+];
+
 // 建立 Google Auth 客戶端（使用 Service Account）
-// Service Account 用於存取團體日曆和 Google Sheets
+// 使用 GoogleAuth 而非 JWT，確保讀取 JSON 內的 token_uri（oauth2.googleapis.com/token）
+// 避免 JWT 預設打已廢棄的 www.googleapis.com/oauth2/v4/token 造成 Premature close
 const getServiceAccountAuth = () => {
   try {
-    // 方案 1：使用完整的 JSON 格式（推薦，避免私鑰換行問題）
+    // 方案 1：使用完整的 JSON 格式（推薦）
     const googleCredentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-    
+
     if (googleCredentialsJson) {
       try {
         const credentials = JSON.parse(googleCredentialsJson);
-        const auth = new google.auth.JWT({
-          email: credentials.client_email,
-          key: credentials.private_key, // JSON 裡的 private_key 已經有正確的換行
-          scopes: [
-            'https://www.googleapis.com/auth/calendar',
-            'https://www.googleapis.com/auth/drive.file',
-            'https://www.googleapis.com/auth/drive', // 轉成 Google Sheet 並設「知道連結可檢視」需此範圍
-          ],
+        const auth = new google.auth.GoogleAuth({
+          credentials,
+          scopes: SCOPES,
           projectId: credentials.project_id,
         });
         console.log('✅ 使用 GOOGLE_SERVICE_ACCOUNT_JSON 認證成功');
         return auth;
       } catch (parseError) {
         console.error('❌ GOOGLE_SERVICE_ACCOUNT_JSON 格式錯誤:', parseError.message);
-        // 繼續嘗試方案 2
       }
     }
 
-    // 方案 2：使用分開的環境變數（舊方法，可能有換行符問題）
+    // 方案 2：使用分開的環境變數
     const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
     const projectId = process.env.GOOGLE_PROJECT_ID;
@@ -44,27 +45,18 @@ const getServiceAccountAuth = () => {
       return null;
     }
 
-    // 私鑰格式整理：Cloud Run / 環境變數常把換行存成 \n 或 \r\n，需還原成單一換行
-    privateKey = privateKey.trim();
-    // 還原「反斜線 + n」為換行（例如 .env 或 Console 裡填 \n）
-    privateKey = privateKey.replace(/\\n/g, '\n');
-    // 統一換行為 \n（避免 \r\n 或 \r 導致 DECODER 錯誤）
-    privateKey = privateKey.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    privateKey = privateKey.trim().replace(/\\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-      throw new Error('GOOGLE_PRIVATE_KEY 格式不正確，應為完整 PEM（含 -----BEGIN PRIVATE KEY-----），請檢查 Cloud Run 環境變數');
+      throw new Error('GOOGLE_PRIVATE_KEY 格式不正確');
     }
 
-    // 建立 JWT 認證客戶端
-    const auth = new google.auth.JWT({
-      email: serviceAccountEmail,
-      key: privateKey,
-      scopes: [
-        'https://www.googleapis.com/auth/calendar',
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive.file',
-        'https://www.googleapis.com/auth/drive',
-      ],
-      projectId: projectId,
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: serviceAccountEmail,
+        private_key: privateKey,
+      },
+      scopes: SCOPES,
+      projectId,
     });
 
     console.log('✅ 使用分開的環境變數認證成功');
