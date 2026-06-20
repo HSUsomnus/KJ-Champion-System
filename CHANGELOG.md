@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.3.1] - 2026-06-20
+
+git tag: v2.3.1
+摘要：hotfix — server.js `public/` 不存在時 ENOENT 500。v2.0.0 刪除 `public/` 後，prod Zeabur 環境 `USE_REACT_FRONTEND` 未設 1 且 `frontend/dist` 不在容器內，`publicPath` fallback 到已刪除的 `public/`，導致 `GET /` → `res.sendFile('public/index.html')` → `ENOENT stat '/src/public/index.html'` → 500。同時 `favicon.ico` hardcode 了同樣不存在的 fallback 路徑。修法：加 `publicExists = fs.existsSync(publicPath)` 判斷，`express.static` 只在目錄存在時掛載，favicon 只在檔案存在時送出，`GET /` 無前端目錄時回傳 `{ status: "ok", service: "kj-champion-api" }`（純 API 模式）。所有 `/api/*` 路由與 Cloudflare Pages 前端不受影響。
+
+---
+
 ## [v2.3.0] - 2026-04-26
 
 git tag: v2.3.0

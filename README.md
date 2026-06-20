@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統 — DEV 測試分支
 
-> **分支：`dev`** | 基底版本：v2.3.0（含 v2.4.0-dev change 12）| 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-06-20
+> **版本 v2.3.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-20
 
 此分支為 QA 測試環境，**已於 2026-04-13 格式化重置為 main**，歷史清空，重新累積功能分支合入。
 
@@ -100,7 +100,82 @@ npm run dev
 
 ## 專案結構
 
-與 `main` 相同，詳見 `main` 分支的 README.md。
+```text
+├── frontend/                    # 前端（React 18 + Vite 5 + Tailwind CSS）
+│   ├── public/
+│   │   ├── _worker.js           # Cloudflare Worker（/api/* proxy + dev/prod 分流）
+│   │   ├── favicon.svg
+│   │   ├── icons.svg
+│   │   └── icons/               # PWA 圖示（icon-192 / icon-512）
+│   ├── index.html               # Eruda inline loader（v2.3.0）+ apple-mobile-web-app-capable / mobile-web-app-capable meta
+│   ├── src/
+│   │   ├── App.jsx              # React Router 主入口（含 ProtectedRoute auth guard）+ /agenda-settings 路由
+│   │   ├── main.jsx             # Vite 進入點
+│   │   ├── pages/               # 頁面元件（Home / Calendar / AddEvent / EventDetail / Members / Profile / Financial / UserStats / AgendaSettings v2.3.0 等）
+│   │   ├── components/          # Header / FabNav（含開發者入口 v2.3.0）/ FabAction / ConfirmLeaveDialog
+│   │   ├── contexts/AuthContext.jsx
+│   │   ├── services/api.js      # 含 v2.3.0 推播設定 3 個 API 方法
+│   │   └── utils/shareEvent.js
+│   ├── vite.config.js
+│   └── package.json
+├── server/                      # 後端
+│   ├── server.js                # Express 主入口 + system_settings auto-migration + scheduler 啟停；v2.3.1 加 publicExists 判斷（純 API 模式）
+│   ├── routes/
+│   │   ├── auth.js              # LINE OAuth（含動態 origin 偵測 + 白名單）
+│   │   ├── calendar.js          # 行事曆 CRUD（同步 Google Calendar）
+│   │   ├── member.js            # 成員管理
+│   │   ├── profile.js           # 個人資料 + sync-avatar
+│   │   ├── line.js              # LINE BOT 整合（含 v2.2.0 每日推播 3 個 API）
+│   │   └── financial.js         # 財務（限 manager）
+│   ├── services/
+│   │   ├── calendarService.js
+│   │   ├── eventDbService.js
+│   │   ├── memberDbService.js
+│   │   ├── lineService.js       # 含 v2.2.0 generateDailyAgendaFlexMessage()
+│   │   └── agendaService.js     # v2.2.0 — 推播主流程 + 設定讀寫
+│   ├── scheduler/
+│   │   └── dailyAgenda.js       # v2.2.0 — node-cron 排程器（Asia/Taipei，動態重排）
+│   ├── config/                  # DB（pg pool）、Google Auth、LINE 設定
+│   ├── middleware/              # auth middleware
+│   └── migrations/              # SQL migrations
+├── openspec/                    # OpenSpec 功能規格文件（含 STATUS.md 路線圖）
+├── scripts/                     # 工具腳本（seed、sync、backup、migration、smoke test、v2.3.0 dev seed for agenda）
+├── api/                         # （legacy）Vercel serverless 入口（已轉址，保留供回滾）
+├── database/                    # （legacy）Supabase 時期 SQL 腳本
+├── .claude/                     # Claude Code 規則 + context
+├── CHANGELOG.md                 # 版本記錄
+├── CLAUDE.md                    # Claude Code 對話啟動規則 + 工作流摘要
+└── package.json                 # 後端 dependencies（含 node-cron）
+```
+
+---
+
+## 部署
+
+### 前端（Cloudflare Pages）
+
+- 連接 GitHub `main` branch，自動部署
+- Build command：`cd frontend && npm install && npm run build`
+- Output directory：`frontend/dist`
+- `_worker.js` 自動被 Cloudflare Pages 載入為 Advanced Mode Worker
+
+### 後端（Zeabur）
+
+- 連接 GitHub `main` branch，自動部署 Node.js 容器
+- 設定環境變數（見上方環境變數表）
+- 啟動時自動建 `system_settings` 表（idempotent）+ 啟動每日推播 scheduler
+
+---
+
+## UI 風格（Warm Minimal）
+
+| 屬性 | 值 |
+|------|------|
+| 背景色 | `#F7F5F2` |
+| 強調色 | `#4A7C59` |
+| 文字色 | `#2C2C2C` |
+| 圓角 | `rounded-xl` |
+| FAB 顏色 | 左下 `#2C2C2C` 黑、右下 `#4A7C59` 綠（編輯模式紅 `#dc2626`，文字統一「確認/儲存」） |
 
 ---
 

@@ -35,13 +35,15 @@ const distExists = fs.existsSync(reactDistPath);
 const useReactFrontend =
   process.env.USE_REACT_FRONTEND === '1' && distExists;
 const publicPath = useReactFrontend ? reactDistPath : path.join(__dirname, '../public');
+// v2.0.0 起 public/ 已刪除；prod 上 frontend/dist 不存在，後端純 API 模式
+const publicExists = fs.existsSync(publicPath);
 
 // 啟動時記錄前端使用狀態
 console.log('🔧 前端配置:');
 console.log('  USE_REACT_FRONTEND:', process.env.USE_REACT_FRONTEND);
 console.log('  frontend/dist 存在:', distExists);
-console.log('  使用前端:', useReactFrontend ? 'React (frontend/dist)' : 'HTML (public)');
-console.log('  路徑:', publicPath);
+console.log('  使用前端:', useReactFrontend ? 'React (frontend/dist)' : publicExists ? 'HTML (public)' : '無（純 API 模式）');
+console.log('  路徑:', publicPath, '| 存在:', publicExists);
 
 // 中介層設定
 // 允許跨來源請求（CORS）
@@ -83,17 +85,19 @@ if (process.env.NODE_ENV !== 'production') {
     next();
   });
 }
-app.use(express.static(publicPath));
+if (publicExists) {
+  app.use(express.static(publicPath));
+}
 
-// favicon：優先從當前 publicPath 取得 logo
+// favicon：目錄存在才嘗試送檔，否則 404
 const faviconPath = path.join(publicPath, 'images', 'logo.png');
-const fallbackFavicon = path.join(__dirname, '../public/images/logo.png');
 app.get('/favicon.ico', (req, res) => {
-  res.type('image/png');
-  const src = fs.existsSync(faviconPath) ? faviconPath : fallbackFavicon;
-  res.sendFile(src, (err) => {
-    if (err) res.status(404).end();
-  });
+  if (fs.existsSync(faviconPath)) {
+    res.type('image/png');
+    res.sendFile(faviconPath, (err) => { if (err) res.status(404).end(); });
+  } else {
+    res.status(404).end();
+  }
 });
 
 // API 路由
@@ -116,9 +120,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 根路徑：回傳前端主頁
+// 根路徑：有前端目錄才送 index.html，否則純 API 模式回傳 JSON
 app.get('/', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
+  const indexPath = path.join(publicPath, 'index.html');
+  if (publicExists && fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.json({ status: 'ok', service: 'kj-champion-api' });
+  }
 });
 
 // React SPA fallback：非 API、非實際檔案的 GET 請求都回傳 index.html
