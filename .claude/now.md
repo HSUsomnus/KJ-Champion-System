@@ -11,7 +11,7 @@ change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`
 
 ## 最近推送
 
-fix(change-13)：b64u Buffer 路徑修正（Invalid JWT Signature）— signer.sign() 回傳 Buffer，JSON.stringify 造成簽名錯誤；已加 Buffer.isBuffer 判斷，merge dev 觸發重新部署。
+v2.3.1 hotfix — server.js 加 publicExists 判斷，prod 環境 public/ 不存在時改純 API 模式，修復 GET / ENOENT → 500。同版推送含 git-guard.js + post-push-sync.js 兩個新 hook（Bash 守衛）、移除 open-worktree-vscode.js 與 openspec-sync-reminder.js。
 
 ## 已知地雷
 

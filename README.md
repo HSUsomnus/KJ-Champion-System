@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.3.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-04-26
+> **版本 v2.3.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-20
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -172,7 +172,7 @@ npm run dev
 │   ├── vite.config.js
 │   └── package.json
 ├── server/                      # 後端
-│   ├── server.js                # Express 主入口 + system_settings auto-migration + scheduler 啟停
+│   ├── server.js                # Express 主入口 + system_settings auto-migration + scheduler 啟停；v2.3.1 加 publicExists 判斷（純 API 模式）
 │   ├── routes/
 │   │   ├── auth.js              # LINE OAuth（含動態 origin 偵測 + 白名單）
 │   │   ├── calendar.js          # 行事曆 CRUD（同步 Google Calendar）
