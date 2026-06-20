@@ -4,6 +4,7 @@
 
 - [x] 1.1 新增 `server/scheduler/calendarSync.js`（node-cron 每分鐘，呼叫 syncRecentMonths）
 - [x] 1.2 修改 `server/server.js`：引入並啟動 calendarSyncScheduler
+- [x] 1.3 修正 `server/config/googleAuth.js`：JWT 建立後明確覆寫 `auth.tokenUrl`，強制打 `oauth2.googleapis.com/token`，解決 `v4/token Premature close`
 
 ## Section 2：驗證
 
