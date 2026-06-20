@@ -16,7 +16,7 @@ v2.4.0 — change 13「定時同步Calendar」。node-cron 每分鐘同步 Googl
 ## 已知地雷
 
 - **googleapis / gaxios 在 Zeabur 壞掉**：gaxios@6+ 在 Node.js 18 改用 undici，Zeabur NAT 導致 Premature close。解法：用 raw https.request。詳見 `.claude/context/v2.4.0.md`（學習日誌）
-- **CCR 沙箱 git 403**：tag push / 刪分支在 Claude Code Remote 環境會失敗，需使用者本機或手機手動執行
+- **CCR 沙箱 git 403**：tag push / 刪分支在 CCR 環境會 403；非 CCR（本機 desktop / VS Code extension）可直接執行。遇到 403 才請使用者補做，不要預先叫使用者手動
 - **CCR 沙箱 npm / node 不可用**：`npm test`、`npm run dev` 等指令在 CCR 環境無法執行。後端測試改走 DEV 部署驗證（打 `/api/debug/health`）；前端 vitest / playwright 需由使用者本機 PC 自行執行
 - **測試環境（非本機）**：dev 前端 `kjcs-dev.pages.dev`、dev 後端 `kj-champion-dev.zeabur.app`；main 前端 `kj-champion-system.pages.dev`、main 後端 `kj-champion-system.zeabur.app`
 - **prod DB 公網預設關閉**（v2.1.0 起）：日常無法直連 prod DB，維護需去 Zeabur Dashboard 暫開連線埠轉送，做完立刻關
