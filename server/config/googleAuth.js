@@ -27,12 +27,14 @@ let _tokenCache = { token: null, expiresAt: 0 };
 
 const exchangeJWTForToken = (credentials) =>
   new Promise((resolve, reject) => {
+    const tokenUrl = credentials._tokenUrl || TOKEN_URL;
+    const tokenUrlObj = new URL(tokenUrl);
     const now = Math.floor(Date.now() / 1000);
     const header = b64u({ alg: 'RS256', typ: 'JWT', kid: credentials.private_key_id });
     const payload = b64u({
       iss: credentials.client_email,
       scope: SCOPES.join(' '),
-      aud: TOKEN_URL,
+      aud: tokenUrl,
       iat: now,
       exp: now + 3600,
     });
@@ -49,9 +51,9 @@ const exchangeJWTForToken = (credentials) =>
 
     const req = https.request(
       {
-        hostname: 'oauth2.googleapis.com',
+        hostname: tokenUrlObj.hostname,
         port: 443,
-        path: '/token',
+        path: tokenUrlObj.pathname,
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -87,7 +89,9 @@ const getAccessToken = async (credentials) => {
   if (_tokenCache.token && now < _tokenCache.expiresAt) {
     return _tokenCache.token;
   }
-  const data = await exchangeJWTForToken(credentials);
+  // 優先用 JSON 裡的 token_uri，確保端點跟著金鑰走，不依賴硬編碼的 TOKEN_URL
+  const tokenUrl = credentials.token_uri || TOKEN_URL;
+  const data = await exchangeJWTForToken({ ...credentials, _tokenUrl: tokenUrl });
   _tokenCache = {
     token: data.access_token,
     expiresAt: now + (data.expires_in - 60) * 1000,
@@ -120,11 +124,60 @@ const parseCredentials = () => {
   return null;
 };
 
+// 對外開放：取得 access token（calendarService.js 用原生 HTTPS 呼叫 Calendar API 時使用）
+const getToken = async () => {
+  const creds = parseCredentials();
+  if (!creds) throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON 未設定或格式錯誤');
+  return getAccessToken(creds);
+};
+
+// 原生 HTTPS 呼叫 Google Calendar API（完全不走 gaxios / googleapis HTTP client）
+// 原因：gaxios@6+ 在 Zeabur 的 Node.js 18 環境使用 native fetch（undici），
+//        對 www.googleapis.com 連線 Premature close；raw https.request 正常。
+const calendarApiRequest = ({ method, path, body = null, token }) =>
+  new Promise((resolve, reject) => {
+    const bodyStr = body ? JSON.stringify(body) : null;
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
+    };
+    if (bodyStr) {
+      headers['Content-Type'] = 'application/json';
+      headers['Content-Length'] = Buffer.byteLength(bodyStr);
+    }
+    const req = https.request(
+      { hostname: 'www.googleapis.com', port: 443, path, method, headers, timeout: 15000 },
+      (res) => {
+        let raw = '';
+        res.on('data', (c) => (raw += c));
+        res.on('end', () => {
+          if (res.statusCode === 204) { resolve({ status: 204, data: null }); return; }
+          try {
+            const data = JSON.parse(raw);
+            if (res.statusCode >= 400) {
+              reject(new Error(`Calendar API ${res.statusCode}: ${data?.error?.message || raw}`));
+            } else {
+              resolve({ status: res.statusCode, data });
+            }
+          } catch {
+            reject(new Error(`Calendar API parse error (${res.statusCode}): ${raw}`));
+          }
+        });
+      }
+    );
+    req.on('timeout', () => { req.destroy(); reject(new Error('Calendar API timeout (15s)')); });
+    req.on('error', reject);
+    if (bodyStr) req.write(bodyStr);
+    req.end();
+  });
+
 // googleapis-common 呼叫 auth.request() → OAuth2Client 內部 refreshTokenNoCache()
 // → www.googleapis.com/oauth2/v4/token（舊廢棄端點，已 Premature close）。
 // 根本解法：不用 google.auth.JWT，改用 google.auth.OAuth2。
 // 我們先用自己的 JWT exchange 拿好 access_token，再 setCredentials 給 OAuth2。
 // googleapis 看到 credentials 有有效 access_token，直接取用，完全不走 JWT refresh。
+// （注意：getCalendarClient / getDriveClient 保留給需要 googleapis 物件的地方，
+//   calendarService.js 已改用 calendarApiRequest 完全繞過 gaxios。）
 const getServiceAccountAuth = async () => {
   try {
     const credentials = parseCredentials();
@@ -187,6 +240,8 @@ const getGroupCalendarId = () => {
 
 module.exports = {
   TOKEN_URL,
+  getToken,
+  calendarApiRequest,
   getServiceAccountAuth,
   getCalendarClient,
   getDriveClient,

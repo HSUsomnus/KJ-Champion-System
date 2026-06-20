@@ -4,7 +4,8 @@
 
 - [x] 1.1 新增 `server/scheduler/calendarSync.js`（node-cron 每分鐘，呼叫 syncRecentMonths）
 - [x] 1.2 修改 `server/server.js`：引入並啟動 calendarSyncScheduler
-- [x] 1.3 修正 `server/config/googleAuth.js`：完全跳過 `JWT.refreshTokenNoCache()`，改用 Node.js 原生 `crypto` + `https` 自簽 JWT（aud 正確），解決 `v4/token Premature close`
+- [x] 1.3 修正 `server/config/googleAuth.js`：完全跳過 `JWT.refreshTokenNoCache()`，改用 Node.js 原生 `crypto` + `https` 自簽 JWT（aud 正確），解決 `v4/token Premature close`；新增 `getToken()` 與 `calendarApiRequest()` helpers（讀 `token_uri` from JSON），供 calendarService.js 使用
+- [x] 1.4 改寫 `server/services/calendarService.js`：全面改用 `calendarApiRequest` + `getToken`（raw `https.request`），完全移除 `googleapis` / `gaxios` 呼叫，解決 Calendar API 呼叫 `Premature close`
 
 ## Section 2：自檢工具
 
@@ -24,5 +25,5 @@
 ## Section 4：驗證（DEV 部署後）
 
 - [ ] 4.1 `npm install && npm test` 本機全綠
-- [ ] 4.2 DEV 部署後打 `https://kj-champion-dev.zeabur.app/api/debug/health`，確認 ok:true
+- [x] 4.2 DEV 部署後打 `https://kj-champion-dev.zeabur.app/api/debug/health`，確認 ok:true（前次部署已驗證；重新部署後需重確認 Calendar API 路徑也正常）
 - [ ] 4.3 直接在 Google Calendar 新增一筆測試行程，等 1 分鐘，確認系統前端可見
