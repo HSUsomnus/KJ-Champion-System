@@ -9,10 +9,11 @@
 change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。dev 已有部分 feedback 元件（FeedbackProvider / useToast / useConfirm），merge main 時需留意衝突。
 change 13「定時同步Calendar」— ✅ DONE，已上線 v2.4.0。
 change 14「側邊欄導覽」— ✅ DONE，已上線 v2.5.0。
+change 15「用戶資料整合」— ✅ DONE，已上線 v2.6.0。
 
 ## 最近推送
 
-v2.5.0 — change 14「側邊欄導覽」。移除 Header + FabNav，新建 SidebarNav.jsx（左側抽屜）+ Layout.jsx（Outlet 包裹器），16 頁面批次清理。dev 站實機驗收通過。
+v2.6.0 — change 15「用戶資料整合」。Profile.jsx 三 tab pill 切換（個人資料/用戶數據/用戶財力），SidebarNav 移除獨立導覽項，MemberDetail 同步 pill 樣式 + 成員資料標題。
 
 ## 已知地雷
 

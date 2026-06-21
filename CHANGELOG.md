@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.6.0] - 2026-06-21
+
+git tag: v2.6.0
+摘要：change 15「用戶資料整合」— 將「個人資料」、「用戶數據」、「用戶財力」三頁合併為單一 `/profile` 頁面，以 pill tab 切換（container #EFEDE9，active #4A7C59）。Profile.jsx 全面改寫：共用頭像卡 + 星級 badge，各 tab 的 FabAction 隨之切換（個人資料：編輯+登出；數據：編輯數據；財力：上傳+選取編輯），財力 tab lazy 載入，三個隱藏 toggle（hideProfile / hideFinancial / hideDocuments）實際生效（原始版本 state 有但從未條件渲染）。SidebarNav.jsx 移除獨立的「用戶數據」「用戶財力」導覽項，底部用戶區 label 改為「用戶資料」。App.jsx 的 `/user-stats` 路由改 redirect 到 `/profile`，`/financial?userId=xxx` 保留 Financial.jsx 不動（成員詳情他人財力查看）。MemberDetail.jsx 同步更新 tab 樣式為 pill 並補「成員資料」頁面標題。
+
+---
+
 ## [v2.5.0] - 2026-06-21
 
 git tag: v2.5.0

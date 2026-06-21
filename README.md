@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.5.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
+> **版本 v2.6.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -45,12 +45,13 @@
 | 行程列表 | 清單模式瀏覽行程 | 所有人 |
 | 行程管理 | 新增 / 編輯 / 刪除（同步 Google Calendar）— 詳情頁 FAB 含紅色刪除按鈕（v2.2.1） | admin / manager |
 | 行程儲存 UX | FAB「確認/儲存」明確按鈕語意，必填欄位驗證，離開守衛防誤操作 | — |
-| 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
-| 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
+| 成員管理 | 成員列表、詳情（含「成員資料」標題 + pill tabs）、角色設定 | admin / manager |
+| **用戶資料**（v2.6.0） | `/profile` 三 tab 整合頁：個人資料 / 用戶數據 / 用戶財力；pill tab 切換（active #4A7C59）；各 tab FabAction 獨立；財力 lazy 載入；三層隱藏 toggle 生效 | 所有人 |
 | 首次登入流程 | LINE OAuth 登入後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用 | 所有人 |
-| 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
+| 財務功能（他人查看） | `/financial?userId=xxx` 查看特定成員財力（從成員詳情進入） | manager |
+| 財務功能（自身管理） | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
 | LINE Login | OAuth 2.0，後端動態偵測前端 origin 編入 OAuth state，callback 後 redirect 回原前端 | 所有人 |
-| **側邊欄導覽**（v2.5.0） | 左側抽屜式 SidebarNav 整合舊 Header + FabNav；漢堡 FAB 左上固定，點擊展開 220px 寬抽屜；底部顯示用戶頭像 + 姓名（點擊進個人資料）；role=開發者 額外顯示開發者設定入口 | 所有人 |
+| **側邊欄導覽**（v2.5.0） | 左側抽屜式 SidebarNav 整合舊 Header + FabNav；漢堡 FAB 左上固定，點擊展開 220px 寬抽屜；底部顯示用戶頭像 + 姓名（點擊進「用戶資料」頁）；role=開發者 額外顯示開發者設定入口 | 所有人 |
 | **每日行程推播 LINE Bot**（v2.2.0 後端 / v2.3.0 前端） | node-cron 每日定時（預設 21:00 Asia/Taipei）讀取隔日行程 → 依對象篩選 → 推送 Flex 字卡 | 推播：依 `daily_agenda_target` 設定 |
 | **開發者設定頁** `/agenda-settings`（v2.3.0） | 推播啟用 toggle / 時間 picker / 對象下拉 / 立即推播按鈕；同頁含 Eruda 手機除錯面板開關 | 僅開發者 |
 | **定時同步 Calendar**（v2.4.0） | node-cron 每分鐘自動同步 Google Calendar → 本地 DB，無須手動觸發；所有 Google API 改用 raw https.request（繞過 gaxios） | 後台自動 |
@@ -111,7 +112,7 @@ npm --prefix frontend run dev
 │   ├── index.html               # Eruda inline loader + PWA meta
 │   ├── src/
 │   │   ├── App.jsx              # React Router 主入口 + ProtectedRoute + Layout 三層巢狀
-│   │   ├── pages/               # 16 個頁面（Home / Calendar / AddEvent / EventDetail / Members / Profile / Financial / UserStats / Management / AgendaSettings 等）
+│   │   ├── pages/               # 15 個活躍頁面（Profile 整合 UserStats 功能，/user-stats → redirect /profile）
 │   │   ├── components/
 │   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（v2.5.0，取代 Header + FabNav）
 │   │   │   ├── Layout.jsx       # Outlet 包裹器，自動帶入 SidebarNav
@@ -184,6 +185,7 @@ npm --prefix frontend run dev
 | 強調色 | `#4A7C59` |
 | 文字色 | `#2C2C2C` |
 | 圓角 | `rounded-xl` |
+| Pill tab | container `#EFEDE9` / active `#4A7C59` 白字 / inactive `#8A8680` 透明底 |
 | 漢堡 FAB | 左上固定 `#2C2C2C` 黑（開啟側邊欄）；FabAction 右側 `#4A7C59` 綠（編輯模式紅 `#dc2626`） |
 
 ---
