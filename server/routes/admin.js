@@ -73,4 +73,29 @@ router.post('/sync-backup-to-dev', verifyAdmin, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/backup-status
+ * 查詢備份 DB 各 table 筆數
+ */
+router.get('/backup-status', verifyAdmin, async (req, res) => {
+  const backupUrl = process.env.BACKUP_DATABASE_URL;
+  if (!backupUrl) {
+    return res.status(500).json({ success: false, message: 'BACKUP_DATABASE_URL 未設定' });
+  }
+
+  const pool = new Pool({ connectionString: backupUrl, max: 2, connectionTimeoutMillis: 5000 });
+  try {
+    const counts = {};
+    for (const table of TABLES) {
+      const { rows } = await pool.query(`SELECT COUNT(*) AS n FROM ${table}`);
+      counts[table] = parseInt(rows[0].n, 10);
+    }
+    res.json({ success: true, backup_db: counts });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    await pool.end().catch(() => {});
+  }
+});
+
 module.exports = router;
