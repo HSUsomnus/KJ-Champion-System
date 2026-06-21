@@ -3,8 +3,6 @@ const router = express.Router();
 const { Pool } = require('pg');
 const { syncProdToBackup } = require('../services/backupSyncService');
 
-const TABLES = ['members', 'events', 'financial_documents'];
-
 const verifyAdmin = (req, res, next) => {
   const auth = req.headers['authorization'] || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
@@ -13,6 +11,13 @@ const verifyAdmin = (req, res, next) => {
   }
   next();
 };
+
+async function discoverTables(pool) {
+  const { rows } = await pool.query(
+    `SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`
+  );
+  return rows.map(r => r.tablename);
+}
 
 /**
  * POST /api/admin/sync-prod-to-backup
@@ -31,69 +36,60 @@ router.post('/sync-prod-to-backup', verifyAdmin, async (req, res) => {
   }
 });
 
-/**
- * POST /api/admin/sync-backup-to-dev
- * 把備份 DB 的資料全量覆蓋到 dev DB（per-table TRUNCATE + INSERT）
- */
-router.post('/sync-backup-to-dev', verifyAdmin, async (req, res) => {
-  const backupUrl = process.env.BACKUP_DATABASE_URL;
-  const devUrl = process.env.DEV_DATABASE_URL;
 
-  if (!backupUrl || !devUrl) {
-    return res.status(500).json({
-      success: false,
-      message: 'BACKUP_DATABASE_URL 或 DEV_DATABASE_URL 未設定',
-    });
+/**
+ * GET /api/admin/export-backup-csv?table=members
+ * 從 backup DB 匯出指定 table 為 CSV 下載（backup DB 走內網，不需開公網）
+ * 用途：手動下載後再用 import-csv-to-dev.js 匯入 dev DB
+ */
+router.get('/export-backup-csv', verifyAdmin, async (req, res) => {
+  const backupUrl = process.env.BACKUP_DATABASE_URL;
+  if (!backupUrl) {
+    return res.status(500).json({ success: false, message: 'BACKUP_DATABASE_URL 未設定' });
   }
 
-  const backupPool = new Pool({ connectionString: backupUrl, max: 3, connectionTimeoutMillis: 5000 });
-  const devPool = new Pool({ connectionString: devUrl, max: 3, connectionTimeoutMillis: 5000 });
-  const counts = {};
+  const table = req.query.table;
+  if (!table || !/^[a-z_]+$/.test(table)) {
+    return res.status(400).json({ success: false, message: '請提供合法的 table 名稱，例如 ?table=members' });
+  }
 
+  const pool = new Pool({ connectionString: backupUrl, max: 2, connectionTimeoutMillis: 5000 });
   try {
-    for (const table of TABLES) {
-      const { rows } = await backupPool.query(`SELECT * FROM ${table}`);
-      counts[table] = rows.length;
-
-      const devClient = await devPool.connect();
-      try {
-        await devClient.query('BEGIN');
-        await devClient.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
-
-        if (rows.length > 0) {
-          const cols = Object.keys(rows[0]);
-          const colList = cols.map(c => `"${c}"`).join(', ');
-          for (const row of rows) {
-            const vals = cols.map((_, i) => `$${i + 1}`).join(', ');
-            await devClient.query(
-              `INSERT INTO ${table} (${colList}) VALUES (${vals})`,
-              cols.map(c => row[c])
-            );
-          }
-        }
-
-        await devClient.query('COMMIT');
-      } catch (err) {
-        await devClient.query('ROLLBACK');
-        throw new Error(`同步 ${table} 失敗：${err.message}`);
-      } finally {
-        devClient.release();
-      }
+    const { rows } = await pool.query(`SELECT * FROM "${table}"`);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: `${table} 無資料` });
     }
 
-    res.json({ success: true, tables: counts });
+    const cols = Object.keys(rows[0]);
+
+    function toCSVField(value) {
+      if (value === null || value === undefined) return '';
+      const s = value instanceof Date ? value.toISOString() : String(value);
+      if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    const lines = [
+      cols.join(','),
+      ...rows.map(row => cols.map(c => toCSVField(row[c])).join(',')),
+    ];
+
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${table}-backup-${date}.csv"`);
+    res.send(lines.join('\n'));
   } catch (err) {
-    console.error('❌ sync-backup-to-dev 失敗:', err.message);
     res.status(500).json({ success: false, message: err.message });
   } finally {
-    await backupPool.end().catch(() => {});
-    await devPool.end().catch(() => {});
+    await pool.end().catch(() => {});
   }
 });
 
 /**
  * GET /api/admin/backup-status
- * 查詢備份 DB 各 table 筆數
+ * 查詢備份 DB 各 table 筆數（自動探索所有 public table）
  */
 router.get('/backup-status', verifyAdmin, async (req, res) => {
   const backupUrl = process.env.BACKUP_DATABASE_URL;
@@ -103,9 +99,10 @@ router.get('/backup-status', verifyAdmin, async (req, res) => {
 
   const pool = new Pool({ connectionString: backupUrl, max: 2, connectionTimeoutMillis: 5000 });
   try {
+    const tables = await discoverTables(pool);
     const counts = {};
-    for (const table of TABLES) {
-      const { rows } = await pool.query(`SELECT COUNT(*) AS n FROM ${table}`);
+    for (const table of tables) {
+      const { rows } = await pool.query(`SELECT COUNT(*) AS n FROM "${table}"`);
       counts[table] = parseInt(rows[0].n, 10);
     }
     res.json({ success: true, backup_db: counts });

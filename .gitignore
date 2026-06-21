@@ -67,3 +67,6 @@ temp/
 
 # 資料庫備份（含敏感資料，不推送）
 backups/
+
+# CSV 匯出（含真實用戶資料，絕不推送）
+scripts/csv-export/

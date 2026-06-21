@@ -1,7 +1,7 @@
 # UIDESIGN — KJ Champion System UI 設計總入口
 
-> **任何新增 / 修改前端 UI 元件前必讀本檔。** 包含 Warm Minimal 設計系統、Feedback 元件規範、彈出訊息決策樹、禁止事項。
-> 最後更新：2026-04-26（v2.4.0 新增 Feedback 元件規範 + 彈出訊息決策樹；檔案從 `frontend/DESIGN_SYSTEM.md` 升格至根目錄 `UIDESIGN.md`）
+> **任何新增 / 修改前端 UI 元件前必讀本檔。** 包含 Warm Minimal 設計系統、Pill Tab 規範、SidebarNav 規範、Feedback 元件規範、彈出訊息決策樹、禁止事項。
+> 最後更新：2026-06-21（v2.7.0 新增 Pill Tab 規範 + SidebarNav 規範）
 
 ---
 
@@ -262,6 +262,93 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 
 - 不需要桌面版 breakpoint（應用場景為手機）
 - 圓形元素尺寸固定，不隨螢幕縮放
+
+---
+
+## Pill Tab 規範（v2.7.0 起）
+
+適用於頁面內多視角切換（Profile 個人資料三 tab、Management 管理者後台三 tab）。
+
+### 結構
+
+```jsx
+<div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3 }}>
+  {TABS.map(tab => (
+    <button
+      key={tab.key}
+      onClick={() => setActiveTab(tab.key)}
+      style={{
+        flex: 1,
+        textAlign: 'center',
+        fontSize: 12,
+        fontWeight: activeTab === tab.key ? 500 : 400,
+        padding: '6px 4px',
+        borderRadius: 16,
+        border: 'none',
+        cursor: 'pointer',
+        background: activeTab === tab.key ? '#4A7C59' : 'transparent',
+        color: activeTab === tab.key ? '#fff' : '#2C2C2C',
+        transition: 'background 0.15s, color 0.15s',
+      }}
+    >{tab.label}</button>
+  ))}
+</div>
+```
+
+### 規格
+
+| 屬性 | 值 |
+|---|---|
+| 容器背景 | `#EFEDE9`（`surface-2`） |
+| 容器圓角 | `20px` |
+| 容器 padding | `3px` |
+| 作用中背景 | `#4A7C59`（`accent`） |
+| 作用中文字 | `#FFFFFF` / `12px` / `500` |
+| 非作用中背景 | `transparent` |
+| 非作用中文字 | `#2C2C2C` / `12px` / `400` |
+| 按鈕圓角 | `16px` |
+| 過渡動畫 | `background 0.15s, color 0.15s` |
+
+### 禁止
+
+- ❌ 使用獨立 pill button（有各自邊框那種），tab 切換統一用此容器風格
+- ❌ 作用中用 `#2C2C2C`（深炭灰）— tab 作用中固定用 `accent` 墨綠
+
+---
+
+## SidebarNav 規範（v2.7.0 起）
+
+左側抽屜式導覽，透過 React Portal 渲染至 `document.body`。
+
+### 頂部結構
+
+```
+[康九_logo.png] [康九冠軍 文字]          [重整按鈕]
+← 點擊導航 /  →← 15px/500/#2C2C2C  →← 32px 圓形 →
+```
+
+- Logo + 文字包在一個 `div` 中，統一負責點擊跳 `/`
+- 整個頂部容器：`display: flex; justify-content: space-between; align-items: center`
+
+### 導覽項目可見性規則
+
+| 角色 | 一般導覽（主頁/行事曆/成員列表） | 管理者後台 | 開發者設定 |
+|---|---|---|---|
+| 一般人 | ✅ | ❌ | ❌ |
+| 管理者 | ✅ | ✅ | ❌ |
+| 負責人 | ✅ | ✅ | ❌ |
+| 開發者 | ✅ | ✅ | ✅ |
+
+判斷邏輯：`isManager = role !== '一般人'`、`isDeveloper = role === '開發者'`
+
+### 底部用戶區
+
+固定在側欄最底部，點擊導航 `/profile`，顯示頭像 + 真實姓名。
+
+### 禁止
+
+- ❌ 在 SidebarNav 內直接處理路由保護（保護邏輯在 ProtectedRoute + 各頁面）
+- ❌ 新增第四個浮動元素（頂部 / 導覽 nav / 底部用戶區 三區已定，不再擴展）
 
 ---
 

@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.7.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
+> **版本 v2.8.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -8,7 +8,7 @@
 
 ---
 
-## 部署架構（v2.7.0：Zeabur 三 DB 架構）
+## 部署架構（v2.8.0：Zeabur 三 DB 架構）
 
 | 層級 | prod 環境 | dev 環境 |
 |---|---|---|
@@ -31,7 +31,7 @@ kj-champion-dev 專案（dev 後端）
   └── kj-champion-dev     ← dev 後端（從 dev branch 部署）→ 連 dev DB 公網
 ```
 
-→ **跨專案內網不通**：dev 任何錯誤 / 寫入都不會觸碰 prod DB。
+→ **跨專案內網不通**：dev 任何錯誤 / 寫入都不會物理觸碰 prod DB。
 
 ### 請求流程
 
@@ -40,13 +40,6 @@ kj-champion-dev 專案（dev 後端）
   └─ /api/* → Cloudflare Worker (_worker.js) → Zeabur 後端（內網連線 PostgreSQL）
   └─ 靜態資源 → Cloudflare Pages（Vite build output）
 ```
-
-### 前端路由分流（_worker.js）
-
-`_worker.js` 的 `resolveBackend(hostname)`：
-
-- `kjcs-dev.pages.dev`（含 preview 子網域）→ dev 後端
-- 其他（含 `kj-champion-system.pages.dev` 與自訂網域）→ 正式後端
 
 ---
 
@@ -62,12 +55,13 @@ kj-champion-dev 專案（dev 後端）
 | 首次登入流程 | LINE OAuth 後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用 | 所有人 |
 | 財務功能 | 上傳財務報表、選取/編輯模式、網頁預覽試算表；`/financial?userId=xxx` 查看他人 | manager |
 | LINE Login | OAuth 2.0，不依賴 LIFF SDK | 所有人 |
-| **側邊欄導覽**（v2.5.0） | 左側抽屜式 SidebarNav；底部用戶頭像 + 姓名（進用戶資料）；role=開發者 顯示開發設定 | 所有人 |
+| **側邊欄導覽**（v2.8.0） | 左側抽屜式 SidebarNav；頂部 logo + 品牌文字「康九冠軍」；管理者後台入口（role ≠ 一般人）；底部用戶頭像 + 姓名；role=開發者 顯示開發設定 | 所有人 |
+| **管理者後台**（v2.8.0） | `/management`：成員角色管理（負責人或開發者可操作）、pill tab 介面；SidebarNav 直接導覽 | 負責人 / 開發者 |
 | **每日行程推播**（v2.2.0） | node-cron 每日定時推送隔日行程 Flex 字卡到 LINE | 後台自動 |
 | **開發者設定** `/agenda-settings` | 推播啟用 / 時間 / 對象 / 立即推播；Eruda 除錯面板開關 | 僅開發者 |
 | **定時同步 Calendar**（v2.4.0） | node-cron 每分鐘自動同步 Google Calendar → 本地 DB；raw https.request 繞過 gaxios | 後台自動 |
 | **備份 DB 定時同步**（v2.7.0） | node-cron 每 8 小時全量覆蓋 prod → backup DB（0/8/16 點台北時間） | 後台自動 |
-| **Admin API**（v2.7.0） | `POST /api/admin/sync-prod-to-backup`（手動觸發）/ `POST /api/admin/sync-backup-to-dev`（備份→dev）/ `GET /api/admin/backup-status`（查筆數），Bearer token 保護 | ADMIN_SECRET |
+| **Admin API**（v2.8.0） | `POST /api/admin/sync-prod-to-backup`（手動觸發）/ `GET /api/admin/export-backup-csv?table=xxx`（backup→CSV 下載）/ `GET /api/admin/backup-status`（查筆數），Bearer token 保護 | ADMIN_SECRET |
 | PWA | 可安裝至手機桌面（Chrome / iOS Safari） | 所有人 |
 
 ---
@@ -81,7 +75,7 @@ kj-champion-dev 專案（dev 後端）
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE BOT Access Token | 是 |
 | `DATABASE_URL` | prod DB 內網連線字串（`postgresql.zeabur.internal:5432`） | 是 |
 | `BACKUP_DATABASE_URL` | 備份 DB 內網連線字串（`postgresql-backup.zeabur.internal:5432`） | prod only |
-| `DEV_DATABASE_URL` | dev DB 公網連線字串（admin sync-backup-to-dev API 用） | prod only |
+| `DEV_DATABASE_URL` | dev DB 公網連線字串（export-backup-csv + init-db 用） | prod only |
 | `ADMIN_SECRET` | Admin API Bearer token（32 字元以上） | prod only |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Service Account JSON（含 `token_uri`） | 是 |
 | `GROUP_CALENDAR_ID` | 團體 Google Calendar ID | 是 |
@@ -121,6 +115,18 @@ npm --prefix frontend run dev
 $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scripts/init-db.js
 ```
 
+### 手動複製 Backup DB → Dev DB
+
+```
+1. GET https://kj-champion-system.zeabur.app/api/admin/export-backup-csv?table=members
+   Header: Authorization: Bearer <ADMIN_SECRET>
+   → 下載 members-backup-YYYY-MM-DD.csv
+
+2. 放到 scripts/csv-export/members.csv
+
+3. DEV_DATABASE_URL="postgresql://..." node scripts/import-csv-to-dev.js members
+```
+
 ---
 
 ## 專案結構
@@ -135,7 +141,7 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   │   ├── App.jsx              # React Router + ProtectedRoute + Layout 三層巢狀
 │   │   ├── pages/               # 15 個活躍頁面
 │   │   ├── components/
-│   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（v2.5.0）
+│   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（logo + 品牌文字 + 管理者後台入口）
 │   │   │   ├── Layout.jsx       # Outlet 包裹器
 │   │   │   └── FabAction.jsx    # 浮動操作按鈕
 │   │   ├── contexts/AuthContext.jsx
@@ -147,12 +153,12 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   ├── routes/
 │   │   ├── auth.js              # LINE OAuth
 │   │   ├── calendar.js          # 行事曆 CRUD
-│   │   ├── member.js            # 成員管理
+│   │   ├── member.js            # 成員管理（update-roles：負責人或開發者可操作）
 │   │   ├── profile.js           # 個人資料 + sync-avatar
 │   │   ├── line.js              # LINE BOT + 每日推播 API
 │   │   ├── financial.js         # 財務（限 manager）
 │   │   ├── debug.js             # GET /api/debug/health 自檢
-│   │   └── admin.js             # Admin API（Bearer token，v2.7.0）
+│   │   └── admin.js             # Admin API（Bearer token，v2.8.0）
 │   ├── services/
 │   │   ├── calendarService.js
 │   │   ├── calendarSyncService.js
@@ -169,7 +175,8 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │       ├── googleAuth.js
 │       └── db.js
 ├── scripts/
-│   ├── init-db.js               # DB schema 初始化（v2.7.0）
+│   ├── init-db.js               # DB schema 初始化
+│   ├── import-csv-to-dev.js     # CSV → dev DB UPSERT 工具（v2.8.0）
 │   └── diagnose-google-auth.js
 ├── openspec/                    # OpenSpec 功能規格
 ├── jest.config.js
@@ -204,7 +211,7 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 | 背景色 | `#F7F5F2` |
 | 強調色 | `#4A7C59` |
 | 文字色 | `#2C2C2C` |
-| Pill tab | container `#EFEDE9` / active `#4A7C59` 白字 / inactive `#8A8680` 透明底 |
+| Pill tab | container `#EFEDE9` / active `#4A7C59` 白字 / inactive `#2C2C2C` 透明底 |
 | 漢堡 FAB | 左上固定黑（開側邊欄）；FabAction 右側綠（編輯模式紅） |
 
 ---
