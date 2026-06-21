@@ -5,7 +5,9 @@ export default function Layout() {
   return (
     <>
       <SidebarNav />
-      <Outlet />
+      <div className="max-w-md mx-auto">
+        <Outlet />
+      </div>
     </>
   )
 }

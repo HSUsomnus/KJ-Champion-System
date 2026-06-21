@@ -181,7 +181,7 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 
 ### 共用規則
 - 兩個 FAB 使用 React Portal 渲染到 `document.body`（避免 stacking context 問題）
-- 固定位置：`bottom: 24px`，左右各 `16px`
+- 固定位置：`bottom: 24px`，左 FAB `left: 16px`，右 FAB `right: max(16px, calc(50% - 208px))`（對齊 448px 欄右緣）
 - 展開時背景遮罩：`rgba(44,44,44,0.15)`，點擊收合
 
 ---
@@ -232,6 +232,18 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 - `min-height: 100svh`（支援手機動態工具列）
 - `overscroll-behavior: none`（避免 bounce 效果）
 - 主內容 `pb-28`（112px）確保不被 FAB 遮住
+
+### 版面寬度規範（v2.8.2 起）
+
+| 元素 | 規則 |
+|------|------|
+| 主要內容欄 | `max-w-md`（448px）置中，由 `Layout.jsx` 統一控制 |
+| Login 頁 | `w-full max-w-md` 內層 wrapper（不經 Layout，自行限寬） |
+| 右下角 FAB | `right: max(16px, calc(50% - 208px))`，對齊欄右緣；手機 <448px 保底 16px |
+| SidebarNav 漢堡鈕 | `fixed` 定位維持視窗左上角，不受欄寬限制 |
+| 彈窗 / bottom sheet | 各自獨立定位（`fixed inset-0`），不受欄寬影響 |
+
+**禁止**：各頁自行加 `max-w-md mx-auto`，統一交給 Layout 處理。
 
 ---
 
