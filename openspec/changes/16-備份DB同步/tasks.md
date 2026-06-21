@@ -21,26 +21,26 @@
   3. 網路頁籤：**開啟**連線埠轉送（公有網路），記下公網 IP + Port
   4. 環境變數頁籤：記下 `POSTGRES_CONNECTION_STRING`（公網格式）
 
-- [ ] **1.3 匯出舊 dev DB schema 與資料**（使用者本機 PC 執行）
-  ```bash
-  # schema only
-  pg_dump "postgres://...舊dev DB公網連線字串..." --schema-only -f dev_schema.sql
-  # 資料
-  pg_dump "postgres://...舊dev DB公網連線字串..." --data-only -f dev_data.sql
-  ```
+- [x] **1.3 準備 schema 初始化腳本**（Claude — 已完成）
+  - `scripts/init-db.js`：Node.js 腳本，按順序套用所有 migration SQL
+  - 不需要 pg_dump，直接從 codebase 的 SQL 檔重建
 
-- [ ] **1.4 匯入 schema 與資料到新 dev DB**（使用者本機 PC 執行）
+- [ ] **1.4 套用 schema 到新 dev DB**（使用者本機 PC 執行）
   ```bash
-  psql "postgres://...新dev DB公網連線字串..." -f dev_schema.sql
-  psql "postgres://...新dev DB公網連線字串..." -f dev_data.sql
+  # 新 dev DB 公網：43.163.196.8:32216
+  # 密碼從 Zeabur kj-champion → postgresql-dev → 環境變數 → POSTGRES_PASSWORD
+  TARGET_DB_URL="postgresql://root:<PASSWORD>@43.163.196.8:32216/zeabur" node scripts/init-db.js
   ```
+  看到「🎉 Schema 初始化完成！」即可
 
-- [ ] **1.5 初始化備份 DB schema**（使用者本機 PC 執行）
-  ```bash
-  # prod DB 需暫時開公網才能 dump（做完立刻關）
-  pg_dump "postgres://...prod DB公網連線字串..." --schema-only -f prod_schema.sql
-  psql "postgres://...備份DB內網或公網連線字串..." -f prod_schema.sql
-  ```
+- [ ] **1.5 套用 schema 到備份 DB**（使用者手動開公網 + PC 執行）
+  1. Zeabur → `kj-champion` → `postgresql-backup` → 網路 → **暫時開啟**連線埠轉送 → 儲存
+  2. 記下公網 IP + Port
+  3. 執行：
+     ```bash
+     TARGET_DB_URL="postgresql://root:<PASSWORD>@<公網IP>:<Port>/zeabur" node scripts/init-db.js
+     ```
+  4. 完成後**立刻關閉**連線埠轉送
 
 - [ ] **1.6 更新 dev 後端環境變數**（使用者手動 — Zeabur Dashboard）
   1. Zeabur → Projects → `kj-champion-dev` → `kj-champion-dev` 服務 → 環境變數
