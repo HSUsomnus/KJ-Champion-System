@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.4.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
+> **版本 v2.5.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -24,8 +24,8 @@
 
 ```
 瀏覽器（React SPA）
-  └─ /api/* → Cloudflare Worker (_worker.js) → Zeabur 後端 (內網連線 PostgreSQL)
-  └─ 靜態資源 → Cloudflare Pages (Vite build output)
+  └─ /api/* → Cloudflare Worker (_worker.js) → Zeabur 後端（內網連線 PostgreSQL）
+  └─ 靜態資源 → Cloudflare Pages（Vite build output）
 ```
 
 ### 前端路由分流（_worker.js）
@@ -44,16 +44,17 @@
 | 月曆視圖 | 團體行事曆，依事件類型標色 | 所有人 |
 | 行程列表 | 清單模式瀏覽行程 | 所有人 |
 | 行程管理 | 新增 / 編輯 / 刪除（同步 Google Calendar）— 詳情頁 FAB 含紅色刪除按鈕（v2.2.1） | admin / manager |
-| 行程儲存 UX | FAB「確認/儲存」明確按鈕語意，必填欄位 alert 提示，離開守衛使用 ref 避免時序競態（v2.0.4） | — |
+| 行程儲存 UX | FAB「確認/儲存」明確按鈕語意，必填欄位驗證，離開守衛防誤操作 | — |
 | 成員管理 | 成員列表、詳情、角色設定 | admin / manager |
 | 個人資料 | 查看與編輯個人資訊、同步 LINE 頭像 | 所有人 |
-| 首次登入流程 | LINE OAuth 登入後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用，未完成不得進其他頁（v2.0.5 / v2.0.6 / v2.0.7 / v2.0.8 四修補完成） | 所有人 |
+| 首次登入流程 | LINE OAuth 登入後強制 onboarding：用戶資料（4 欄全必填）→ 用戶數據（課程紀錄 ≥ 1 筆）→ 主應用 | 所有人 |
 | 財務功能 | 上傳財務報表、選取/編輯模式（多選刪除/下載）、網頁預覽試算表 | manager |
 | LINE Login | OAuth 2.0，後端動態偵測前端 origin 編入 OAuth state，callback 後 redirect 回原前端 | 所有人 |
+| **側邊欄導覽**（v2.5.0） | 左側抽屜式 SidebarNav 整合舊 Header + FabNav；漢堡 FAB 左上固定，點擊展開 220px 寬抽屜；底部顯示用戶頭像 + 姓名（點擊進個人資料）；role=開發者 額外顯示開發者設定入口 | 所有人 |
 | **每日行程推播 LINE Bot**（v2.2.0 後端 / v2.3.0 前端） | node-cron 每日定時（預設 21:00 Asia/Taipei）讀取隔日行程 → 依對象篩選 → 推送 Flex 字卡 | 推播：依 `daily_agenda_target` 設定 |
 | **開發者設定頁** `/agenda-settings`（v2.3.0） | 推播啟用 toggle / 時間 picker / 對象下拉 / 立即推播按鈕；同頁含 Eruda 手機除錯面板開關 | 僅開發者 |
 | **定時同步 Calendar**（v2.4.0） | node-cron 每分鐘自動同步 Google Calendar → 本地 DB，無須手動觸發；所有 Google API 改用 raw https.request（繞過 gaxios） | 後台自動 |
-| PWA | 可安裝至手機桌面（v2.3.0 補 `mobile-web-app-capable` meta，Chrome / iOS Safari 雙吃） | 所有人 |
+| PWA | 可安裝至手機桌面（Chrome / iOS Safari） | 所有人 |
 
 ---
 
@@ -74,49 +75,6 @@
 
 ---
 
-## 定時同步 Calendar（v2.4.0 新增）
-
-### 同步行為
-
-- **觸發頻率**：每分鐘（node-cron `* * * * *`，時區 `Asia/Taipei`）
-- **同步範圍**：當下 ±2 個月（`syncRecentMonths`）
-- **同步邏輯**：拉取 Google Calendar → upsert 到本地 DB → 刪除 DB 內已從 Calendar 移除的行程
-
-### Google Auth 架構（v2.4.0 完全改寫）
-
-原用 `googleapis` / `gaxios` 的 HTTP client，在 Zeabur Node.js 18 環境因 `gaxios@6+` 切換 `undici`（native fetch）導致全面 Premature close。
-
-現改為：
-- **Token 換取**：自簽 JWT assertion（`crypto.createSign('RSA-SHA256')`）+ `https.request` POST 到 `oauth2.googleapis.com/token`
-- **Calendar API 呼叫**：`calendarApiRequest()`（`server/config/googleAuth.js` 封裝的 raw `https.request`）
-- 所有 Google API 均不走 `googleapis` / `gaxios`
-
-### 自檢端點
-
-```
-GET /api/debug/health
-```
-
-回傳 JSON（四層：credentials → token → calendar → db），隨時可確認 Google Auth 狀態。
-
----
-
-## 每日行程推播（v2.2.0 新增）
-
-- **時區**：固定 `Asia/Taipei`
-- **預設時間**：21:00
-- **預設對象**：`developer`
-
-### API（僅開發者）
-
-| Method | Path | 說明 |
-|---|---|---|
-| `GET` | `/api/line/agenda-settings` | 讀取目前設定 |
-| `PUT` | `/api/line/agenda-settings` | 更新（body: `{time?, enabled?, target?}`） |
-| `POST` | `/api/line/push-daily-agenda` | 手動觸發推播（測試用） |
-
----
-
 ## 本機開發
 
 ### 後端
@@ -125,7 +83,6 @@ GET /api/debug/health
 npm install
 npm run dev
 # 後端啟動於 http://localhost:8080
-# 啟動時自動 migration + 啟動 calendar sync scheduler + 每日推播 scheduler
 npm test            # Jest 後端單元測試（28 個 test）
 npm run diagnose    # Google Auth 6 步驟 CLI 診斷
 ```
@@ -133,14 +90,13 @@ npm run diagnose    # Google Auth 6 步驟 CLI 診斷
 ### 前端
 
 ```bash
-cd frontend
-npm install
-npm run dev
-# 前端啟動於 http://localhost:5173（Vite dev server）
+npm --prefix frontend install
+npm --prefix frontend run dev
+# 前端啟動於 http://localhost:5173
 ```
 
 開發模式測試登入：URL 帶 `?dev=1` 自動模擬 LINE 登入。
-測試前先清 Service Worker（DevTools → Application → Service Workers → Unregister），避免舊 PWA 快取干擾。
+測試前先清 Service Worker（DevTools → Application → Service Workers → Unregister）。
 
 ---
 
@@ -154,9 +110,13 @@ npm run dev
 │   │   └── icons/               # PWA 圖示
 │   ├── index.html               # Eruda inline loader + PWA meta
 │   ├── src/
-│   │   ├── App.jsx              # React Router 主入口 + ProtectedRoute + /agenda-settings 路由
-│   │   ├── pages/               # Home / Calendar / AddEvent / EventDetail / Members / Profile / Financial / UserStats / AgendaSettings
-│   │   ├── components/          # Header / FabNav（含開發者入口）/ FabAction / ConfirmLeaveDialog
+│   │   ├── App.jsx              # React Router 主入口 + ProtectedRoute + Layout 三層巢狀
+│   │   ├── pages/               # 16 個頁面（Home / Calendar / AddEvent / EventDetail / Members / Profile / Financial / UserStats / Management / AgendaSettings 等）
+│   │   ├── components/
+│   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（v2.5.0，取代 Header + FabNav）
+│   │   │   ├── Layout.jsx       # Outlet 包裹器，自動帶入 SidebarNav
+│   │   │   ├── FabAction.jsx    # 右側浮動操作按鈕（各頁面獨立宣告）
+│   │   │   └── ConfirmLeaveDialog.jsx
 │   │   ├── contexts/AuthContext.jsx
 │   │   ├── services/api.js
 │   │   └── utils/shareEvent.js
@@ -172,8 +132,8 @@ npm run dev
 │   │   ├── financial.js         # 財務（限 manager）
 │   │   └── debug.js             # GET /api/debug/health 自檢端點（v2.4.0）
 │   ├── services/
-│   │   ├── calendarService.js   # Google Calendar CRUD（v2.4.0 全改 raw https.request）
-│   │   ├── calendarSyncService.js  # 同步主流程（upsert + delete）
+│   │   ├── calendarService.js   # Google Calendar CRUD（raw https.request）
+│   │   ├── calendarSyncService.js
 │   │   ├── eventDbService.js
 │   │   ├── memberDbService.js
 │   │   ├── lineService.js
@@ -182,17 +142,17 @@ npm run dev
 │   │   ├── calendarSync.js      # node-cron 每分鐘同步（v2.4.0）
 │   │   └── dailyAgenda.js       # node-cron 每日推播
 │   ├── config/
-│   │   ├── googleAuth.js        # JWT 自簽 + calendarApiRequest（v2.4.0 完全改寫）
+│   │   ├── googleAuth.js        # JWT 自簽 + calendarApiRequest
 │   │   ├── db.js
-│   │   └── __tests__/           # Jest 後端單元測試（v2.4.0）
+│   │   └── __tests__/           # Jest 後端單元測試
 │   ├── middleware/
 │   └── migrations/
 ├── scripts/
-│   ├── diagnose-google-auth.js  # 6 步驟 Google Auth CLI 診斷（v2.4.0）
-│   └── ...（其他工具腳本）
+│   ├── diagnose-google-auth.js  # 6 步驟 Google Auth CLI 診斷
+│   └── ...
 ├── openspec/                    # OpenSpec 功能規格
-├── jest.config.js               # Jest 後端測試設定（v2.4.0）
-├── .claude/                     # Claude Code 規則 + context（含 googleapis-gaxios-zeabur.md）
+├── jest.config.js
+├── .claude/                     # Claude Code 規則 + context
 ├── CHANGELOG.md
 ├── CLAUDE.md
 └── package.json
@@ -224,7 +184,7 @@ npm run dev
 | 強調色 | `#4A7C59` |
 | 文字色 | `#2C2C2C` |
 | 圓角 | `rounded-xl` |
-| FAB 顏色 | 左下 `#2C2C2C` 黑、右下 `#4A7C59` 綠（編輯模式紅 `#dc2626`） |
+| 漢堡 FAB | 左上固定 `#2C2C2C` 黑（開啟側邊欄）；FabAction 右側 `#4A7C59` 綠（編輯模式紅 `#dc2626`） |
 
 ---
 

@@ -22,17 +22,13 @@
 | 10 | zeabur-projects-split | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0）|
 | 12 | 統一彈出訊息系統 | 🔄 IN PROGRESS | 分支 `m_b_統一彈出訊息系統`，0/33 task，目標 v2.5.0 |
 | 13 | 定時同步Calendar | ✅ DONE | node-cron 每分鐘同步 Google Calendar，raw https.request 繞過 gaxios（v2.4.0）|
-| 14 | 側邊欄導覽 | 🔄 IN PROGRESS | 整合 Header + FabNav 為左側抽屜式側邊欄，分支 `m_b_側邊欄導覽`，0/9 task，目標 v2.5.0 |
+| 14 | 側邊欄導覽 | ✅ DONE | 左側抽屜式 SidebarNav 整合 Header + FabNav，Layout 包裹器（v2.5.0）|
 
 ---
 
-## 當前 Change：14-側邊欄導覽
+## 當前 Change：無（下一個 change 待定）
 
-**分支**：`m_b_側邊欄導覽`
-**進度**：0/9 task（尚未開始實作）
-**目標版本**：v2.5.0
-
-詳細 tasks 見：`openspec/changes/14-側邊欄導覽/tasks.md`
+change 12「統一彈出訊息系統」仍在 dev，分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。
 
 ---
 

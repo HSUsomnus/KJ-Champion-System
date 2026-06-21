@@ -6,12 +6,13 @@
 
 ## 當前 Change
 
-change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作，目標 v2.5.0。
+change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。dev 已有部分 feedback 元件（FeedbackProvider / useToast / useConfirm），merge main 時需留意衝突。
 change 13「定時同步Calendar」— ✅ DONE，已上線 v2.4.0。
+change 14「側邊欄導覽」— ✅ DONE，已上線 v2.5.0。
 
 ## 最近推送
 
-v2.4.0 — change 13「定時同步Calendar」。node-cron 每分鐘同步 Google Calendar；完全移除 googleapis/gaxios，改用 raw https.request（繞過 Zeabur undici Premature close 問題）。DEV 驗證 synced=89, deleted=1 正常。
+v2.5.0 — change 14「側邊欄導覽」。移除 Header + FabNav，新建 SidebarNav.jsx（左側抽屜）+ Layout.jsx（Outlet 包裹器），16 頁面批次清理。dev 站實機驗收通過。
 
 ## 已知地雷
 

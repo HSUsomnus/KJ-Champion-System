@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.5.0] - 2026-06-21
+
+git tag: v2.5.0
+摘要：change 14「側邊欄導覽」— 移除固定頂部 Header 與底部左側 FabNav，改以左側抽屜式 SidebarNav 整合兩者。新建 SidebarNav.jsx（漢堡 FAB + 遮罩 + 抽屜，createPortal 掛 document.body）、Layout.jsx（Outlet 包裹器，自動帶入 SidebarNav），App.jsx 改為 ProtectedRoute → Layout → 各頁面三層巢狀。16 個頁面批次移除 Header/FabNav import 及 activeFab 狀態，padding 由 pt-16 統一調為 pt-14。未來新增頁面只需在 App.jsx 加一行路由即可自動取得側邊欄。
+
+---
+
 ## [v2.4.0] - 2026-06-21
 
 git tag: v2.4.0
