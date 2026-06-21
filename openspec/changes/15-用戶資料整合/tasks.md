@@ -38,12 +38,12 @@
 
 ## Section 3：Regression
 
-- [ ] **3.1** dev 站手動驗收清單
-  - [ ] 側邊欄「用戶資料」導到 /profile，三 tab 正常切換
-  - [ ] 個人資料 tab：姓名/Email/電話/生日顯示，隱藏 toggle 生效
-  - [ ] 用戶數據 tab：星級卡、課程紀錄、志工紀錄顯示
-  - [ ] 用戶財力 tab：金額顯示、文件清單 lazy 載入、兩層 toggle
-  - [ ] 各 tab 的 FabAction 顯示正確按鈕，點擊可跳轉編輯頁
-  - [ ] 登出按鈕（個人資料 tab）正常
-  - [ ] onboarding 流程（/profile/edit → /user-stats/edit）不受影響
-  - [ ] /financial?userId=xxx 他人財力頁面正常（不受影響）
+- [x] **3.1** dev 站手動驗收清單
+  - [x] 側邊欄「用戶資料」導到 /profile，三 tab 正常切換
+  - [x] 個人資料 tab：姓名/Email/電話/生日顯示，隱藏 toggle 生效
+  - [x] 用戶數據 tab：星級卡、課程紀錄、志工紀錄顯示
+  - [x] 用戶財力 tab：金額顯示、文件清單 lazy 載入、兩層 toggle
+  - [x] 各 tab 的 FabAction 顯示正確按鈕，點擊可跳轉編輯頁
+  - [x] 登出按鈕（個人資料 tab）正常
+  - [x] onboarding 流程（/profile/edit → /user-stats/edit）不受影響
+  - [x] /financial?userId=xxx 他人財力頁面正常（不受影響）
