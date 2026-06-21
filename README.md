@@ -209,7 +209,7 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 
 | 分支 | 功能說明 | 狀態 | 對應 OpenSpec |
 |------|---------|------|--------------|
-| `m_b_桌機版面置中` | 全站 max-w-md 置中欄；Layout 統一控制；FabAction 對齊欄右緣 | 已合入，驗收中 | change 17-桌機版面置中 |
+| `m_b_桌機版面置中` | 全站置中欄；Layout 統一控制；FabAction 對齊欄右緣；欄寬以寬高比自動判斷（W/H ≤ 9/16 為手機全寬） | 已合入，驗收中 | change 17-桌機版面置中 |
 
 ---
 
