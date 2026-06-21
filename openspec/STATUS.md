@@ -25,12 +25,15 @@
 | 14 | 側邊欄導覽 | ✅ DONE | 左側抽屜式 SidebarNav 整合 Header + FabNav，Layout 包裹器（v2.5.0）|
 | 15 | 用戶資料整合 | ✅ DONE | 個人資料+用戶數據+用戶財力合併單一頁面 pill tab，MemberDetail 同款樣式（v2.6.0）|
 | 16 | 備份DB同步 | ✅ DONE | 8小時定時全量覆蓋 prod→backup，admin API 手動觸發 + backup→dev 複製（v2.7.0）|
+| 17 | 桌機版面置中 | 🔄 IN PROGRESS | 分支 `m_b_桌機版面置中`，max-w-md 置中移入 Layout + FabAction 對齊欄右緣，全站一致化（方案 A），0/9 task |
 
 ---
 
-## 當前 Change：無（等待下一個需求）
+## 當前 Change：17-桌機版面置中（規劃完成，待實作）
 
-change 12「統一彈出訊息系統」仍在 dev，分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。
+分支 `m_b_桌機版面置中`（已對齊 main v2.7.0）。OpenSpec 三件套就緒，0/9 task，等「執行計畫」開始實作 1.1（Layout.jsx 加 max-w-md mx-auto）。
+
+> change 12「統一彈出訊息系統」仍在 dev，分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。
 
 ---
 
