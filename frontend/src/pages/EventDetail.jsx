@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import shareEvent from '../utils/shareEvent'
 import { useToast, useConfirm } from '../components/feedback'
@@ -19,9 +17,6 @@ export default function EventDetail() {
   const { user } = useAuth()
   const { id } = useParams()
   const navigate = useNavigate()
-  const toast = useToast()
-  const confirm = useConfirm()
-  const [activeFab, setActiveFab] = useState(null)
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -39,8 +34,7 @@ export default function EventDetail() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-        <Header user={user} />
-        <main className="flex-1 flex items-center justify-center pt-16">
+        <main className="flex-1 flex items-center justify-center pt-14">
           <p className="text-sm" style={{ color: '#8A8680' }}>載入中...</p>
         </main>
       </div>
@@ -50,8 +44,7 @@ export default function EventDetail() {
   if (!event) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-        <Header user={user} />
-        <main className="flex-1 flex items-center justify-center pt-16">
+        <main className="flex-1 flex items-center justify-center pt-14">
           <div className="text-center">
             <p className="text-sm" style={{ color: '#8A8680' }}>找不到此行程</p>
             <button onClick={() => navigate('/calendar')} className="mt-4 px-4 py-2 rounded-xl text-sm" style={{ background: '#4A7C59', color: '#fff' }}>
@@ -123,9 +116,7 @@ export default function EventDetail() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <div className="mt-4 mb-3">
           <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: `${typeColor}15`, color: typeColor }}>
             {event.type}
@@ -162,8 +153,7 @@ export default function EventDetail() {
         </div>
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
     </div>
   )
 }

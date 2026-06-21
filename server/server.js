@@ -19,9 +19,11 @@ const profileRoutes = require('./routes/profile');
 const lineRoutes = require('./routes/line');
 const financialRoutes = require('./routes/financial');
 const authRoutes = require('./routes/auth');
+const debugRoutes = require('./routes/debug');
 
 // 引入排程
 const dailyAgendaScheduler = require('./scheduler/dailyAgenda');
+const calendarSyncScheduler = require('./scheduler/calendarSync');
 
 // 建立 Express 應用程式
 const app = express();
@@ -105,6 +107,10 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/line', lineRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/auth', authRoutes);
+
+// 自檢端點（永遠開放 — 只回傳 ok/fail 狀態，不暴露 token 或私鑰）
+app.use('/api/debug', debugRoutes);
+console.log('🔧 [debug] /api/debug/health 已啟用');
 
 // 健康檢查端點（供 Cloud Run 使用）
 app.get('/health', (req, res) => {
@@ -197,18 +203,22 @@ if (require.main === module) {
     console.log(`📅 環境: ${process.env.NODE_ENV || 'development'}`);
     // 啟動每日行程推播排程（僅在長駐程式中啟動）
     dailyAgendaScheduler.start();
+    // 啟動每分鐘 Google Calendar 同步排程
+    calendarSyncScheduler.start();
   });
 
   // 優雅關閉處理
   process.on('SIGTERM', () => {
     console.log('收到 SIGTERM 訊號，正在關閉伺服器...');
     dailyAgendaScheduler.stop();
+    calendarSyncScheduler.stop();
     process.exit(0);
   });
 
   process.on('SIGINT', () => {
     console.log('收到 SIGINT 訊號，正在關閉伺服器...');
     dailyAgendaScheduler.stop();
+    calendarSyncScheduler.stop();
     process.exit(0);
   });
 }

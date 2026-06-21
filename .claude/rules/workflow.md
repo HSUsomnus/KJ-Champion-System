@@ -321,7 +321,8 @@ git push origin dev   # ← push 前 Claude 必須給使用者列改動清單，
 3. 確認該 change 的所有 tasks 皆為 `[x]`
 4. 執行 deploy.md 的推送流程（CHANGELOG / context / README / 機密檢查 / 使用者明確確認 / merge main / tag）
 5. 將 `openspec/STATUS.md` 的 change 標為 DONE
-6. 刪除功能分支（本機 + 遠端）
+6. **詢問使用者**：「prod 上線功能正常嗎？」— 等使用者明確回覆「正常」後才繼續
+7. 刪除功能分支（本機 + 遠端）
 
 ---
 
