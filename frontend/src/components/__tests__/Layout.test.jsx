@@ -9,7 +9,7 @@ vi.mock('../SidebarNav', () => ({
 }))
 
 describe('Layout', () => {
-  it('renders SidebarNav and max-w-md center wrapper containing Outlet', () => {
+  it('renders SidebarNav and dynamic-width center wrapper containing Outlet', () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/']}>
         <Routes>
@@ -22,7 +22,7 @@ describe('Layout', () => {
 
     const sidebarNav = screen.getByTestId('sidebar-nav')
     const pageContent = screen.getByTestId('page-content')
-    const centerWrapper = container.querySelector('.max-w-md.mx-auto')
+    const centerWrapper = container.querySelector('[data-testid="layout-column"]')
 
     expect(sidebarNav).toBeInTheDocument()
     expect(pageContent).toBeInTheDocument()

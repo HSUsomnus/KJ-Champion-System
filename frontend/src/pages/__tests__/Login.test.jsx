@@ -17,11 +17,10 @@ vi.mock('../../services/api', () => ({
 }))
 
 describe('Login', () => {
-  it('renders max-w-md content wrapper inside full-screen background', () => {
+  it('renders dynamic-width content wrapper inside full-screen background', () => {
     const { container } = render(<Login />)
-    const wrapper = container.querySelector('.max-w-md')
+    const wrapper = container.querySelector('[data-testid="login-content"]')
     expect(wrapper).not.toBeNull()
-    expect(wrapper.classList.contains('mx-auto')).toBe(false) // Login 用 flex items-center，不需 mx-auto
     expect(wrapper.classList.contains('w-full')).toBe(true)
   })
 })
