@@ -38,6 +38,56 @@ router.post('/sync-prod-to-backup', verifyAdmin, async (req, res) => {
 
 
 /**
+ * GET /api/admin/export-backup-csv?table=members
+ * 從 backup DB 匯出指定 table 為 CSV 下載（backup DB 走內網，不需開公網）
+ * 用途：手動下載後再用 import-csv-to-dev.js 匯入 dev DB
+ */
+router.get('/export-backup-csv', verifyAdmin, async (req, res) => {
+  const backupUrl = process.env.BACKUP_DATABASE_URL;
+  if (!backupUrl) {
+    return res.status(500).json({ success: false, message: 'BACKUP_DATABASE_URL 未設定' });
+  }
+
+  const table = req.query.table;
+  if (!table || !/^[a-z_]+$/.test(table)) {
+    return res.status(400).json({ success: false, message: '請提供合法的 table 名稱，例如 ?table=members' });
+  }
+
+  const pool = new Pool({ connectionString: backupUrl, max: 2, connectionTimeoutMillis: 5000 });
+  try {
+    const { rows } = await pool.query(`SELECT * FROM "${table}"`);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: `${table} 無資料` });
+    }
+
+    const cols = Object.keys(rows[0]);
+
+    function toCSVField(value) {
+      if (value === null || value === undefined) return '';
+      const s = value instanceof Date ? value.toISOString() : String(value);
+      if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    const lines = [
+      cols.join(','),
+      ...rows.map(row => cols.map(c => toCSVField(row[c])).join(',')),
+    ];
+
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${table}-backup-${date}.csv"`);
+    res.send(lines.join('\n'));
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    await pool.end().catch(() => {});
+  }
+});
+
+/**
  * GET /api/admin/backup-status
  * 查詢備份 DB 各 table 筆數（自動探索所有 public table）
  */
