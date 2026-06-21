@@ -263,14 +263,14 @@ router.put('/update-roles', async (req, res) => {
       });
     }
 
-    // 檢查是否為開發者（從資料庫讀取）
+    // 檢查是否為負責人或開發者（從資料庫讀取）
     const editor = await memberDbService.getMemberByLineId(editorId);
-    const isAdmin = editor && editor.role === '開發者';
-    
-    if (!isAdmin) {
+    const canEdit = editor && (editor.role === '開發者' || editor.role === '負責人');
+
+    if (!canEdit) {
       return res.status(403).json({
         success: false,
-        message: '只有開發者可以修改權限',
+        message: '只有負責人或開發者可以修改權限',
       });
     }
 
