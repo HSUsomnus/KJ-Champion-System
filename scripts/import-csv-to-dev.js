@@ -1,13 +1,21 @@
 /**
  * import-csv-to-dev.js
- * 將 scripts/csv-export/ 的 CSV 匯入 dev DB（UPSERT，不 TRUNCATE）
+ * 將 CSV 匯入 dev DB（UPSERT，不 TRUNCATE）
  *
- * 使用：
- *   DEV_DATABASE_URL="postgresql://..." node scripts/import-csv-to-dev.js           # 匯入全部 CSV
- *   DEV_DATABASE_URL="..." node scripts/import-csv-to-dev.js members                # 只匯入 members
- *   DEV_DATABASE_URL="..." node scripts/import-csv-to-dev.js members events         # 多個 table
+ * 完整流程（backup DB 不需開公網）：
+ *   1. 瀏覽器開啟：
+ *      https://kj-champion-system.zeabur.app/api/admin/export-backup-csv?table=members
+ *      Header: Authorization: Bearer <ADMIN_SECRET>
+ *      → 下載 members-backup-YYYY-MM-DD.csv
+ *   2. 將 CSV 放到 scripts/csv-export/members.csv（檔名去掉日期）
+ *   3. 執行本腳本：
+ *      DEV_DATABASE_URL="postgresql://..." node scripts/import-csv-to-dev.js members
  *
- * DEV_DATABASE_URL：Zeabur → kj-champion → postgresql-dev → 連線字串（公網，無需額外開關）
+ * DEV_DATABASE_URL：Zeabur → kj-champion → postgresql-dev → 連線字串（公網常開）
+ *
+ * 其他用法：
+ *   node scripts/import-csv-to-dev.js                  # 匯入 csv-export/ 所有 CSV
+ *   node scripts/import-csv-to-dev.js members events   # 指定多個 table
  */
 
 'use strict'
