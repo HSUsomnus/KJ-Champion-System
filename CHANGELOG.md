@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.7.0] - 2026-06-21
+
+git tag: v2.7.0
+摘要：change 16「備份 DB 同步」— 在 Zeabur `kj-champion` 專案新增 `postgresql-backup`（備份 DB，內網 only）與 `postgresql-dev`（dev DB，公網開放）。後端每 8 小時定時全量覆蓋 prod → backup（node-cron `0 */8 * * *`）；新增 admin API（Bearer token 保護）：`POST /api/admin/sync-prod-to-backup`（手動觸發）、`POST /api/admin/sync-backup-to-dev`（備份→dev 複製）、`GET /api/admin/backup-status`（備份筆數查詢）。移除原先的 write-through queue 架構（backupQueue.js / backupDb.js 刪除，db.js / eventDbService.js 清除相關邏輯）。新增 `scripts/init-db.js` 用於 schema 初始化（不需 pg_dump）。
+
+---
+
 ## [v2.6.0] - 2026-06-21
 
 git tag: v2.6.0
