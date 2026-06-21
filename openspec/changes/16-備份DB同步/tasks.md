@@ -58,28 +58,28 @@
 
 ## Section 2：後端 — 備份 DB 連線與異步 Queue
 
-- [ ] **2.1 建立 `server/config/backupDb.js`**（Claude）
+- [x] **2.1 建立 `server/config/backupDb.js`**（Claude）
   - 建立獨立 Pool 連接 `BACKUP_DATABASE_URL`
   - 若環境變數不存在（本機開發），Pool 設為 null，query 自動 no-op
   - 匯出 `{ query, pool }` 介面，與 `db.js` 相同
 
-- [ ] **2.2 建立 `server/services/backupQueue.js`**（Claude）
+- [x] **2.2 建立 `server/services/backupQueue.js`**（Claude）
   - In-memory queue（最大 1000 筆）
   - Worker 每 5 秒處理一批（`setTimeout` 驅動）
   - 單筆失敗：最多重試 3 次，超過丟棄並 console.error
   - 匯出：`enqueue(sql, params)`、`enqueueAll(queries)` (for transactions)、`stop()`
 
-- [ ] **2.3 修改 `server/config/db.js` — 自動攔截寫入**（Claude）
+- [x] **2.3 修改 `server/config/db.js` — 自動攔截寫入**（Claude）
   - 在 `query()` 函式內，偵測 SQL 以 `INSERT`/`UPDATE`/`DELETE` 開頭
   - 主寫入成功後，呼叫 `backupQueue.enqueue(text, params)`（不 await，異步）
   - 讀取操作（SELECT）不 enqueue
 
-- [ ] **2.4 處理 `getClient()` transaction 場景**（Claude）
+- [x] **2.4 處理 `getClient()` transaction 場景**（Claude）
   - 修改 `server/services/eventDbService.js` 的批次 upsert function
   - 在 `client.query('COMMIT')` 後，收集本次 transaction 的寫入 SQL，呼叫 `backupQueue.enqueueAll(queries)`
   - 在 `ROLLBACK` 時捨棄，不 enqueue
 
-- [ ] **2.5 本機驗證備份 Queue 邏輯（不連真實備份 DB）**（使用者 PC 執行）
+- [x] **2.5 本機驗證備份 Queue 邏輯（不連真實備份 DB）**（使用者 PC 執行）
   - 本機不設 `BACKUP_DATABASE_URL`，確認 queue 自動 no-op，後端正常啟動
   - 看 console log 確認「BackupQueue: BACKUP_DATABASE_URL 未設定，備份功能停用」
 
@@ -93,19 +93,19 @@
 
 ## Section 3：後端 — Admin Sync API
 
-- [ ] **3.1 建立 `server/routes/admin.js`**（Claude）
+- [x] **3.1 建立 `server/routes/admin.js`**（Claude）
   - `POST /api/admin/sync-backup-to-dev`
   - Bearer token 驗證：比對 `Authorization` header 與 `process.env.ADMIN_SECRET`
   - 驗證失敗 → 401
 
-- [ ] **3.2 實作資料複製邏輯**（Claude）
+- [x] **3.2 實作資料複製邏輯**（Claude）
   - 連接 `BACKUP_DATABASE_URL`（讀取端）與 `DEV_DATABASE_URL`（寫入端）
   - 逐 table 執行：`TRUNCATE CASCADE` → `SELECT *` 全量讀取 → `INSERT` 批次寫入
   - Tables：`members`、`events`、`financial_documents`
   - 任一 table 失敗 → rollback dev DB 該 table 操作，回傳 500 + 錯誤訊息
   - 成功回傳：`{ success: true, tables: { members: N, events: N, financial_documents: N } }`
 
-- [ ] **3.3 在 `server/server.js` 掛載 admin routes**（Claude）
+- [x] **3.3 在 `server/server.js` 掛載 admin routes**（Claude）
   - `app.use('/api/admin', require('./routes/admin'))`
 
 - [ ] **3.4 部署並測試 sync-backup-to-dev**（使用者 PC curl 測試）

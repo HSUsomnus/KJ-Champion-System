@@ -20,6 +20,7 @@ const lineRoutes = require('./routes/line');
 const financialRoutes = require('./routes/financial');
 const authRoutes = require('./routes/auth');
 const debugRoutes = require('./routes/debug');
+const adminRoutes = require('./routes/admin');
 
 // 引入排程
 const dailyAgendaScheduler = require('./scheduler/dailyAgenda');
@@ -110,6 +111,7 @@ app.use('/api/auth', authRoutes);
 
 // 自檢端點（永遠開放 — 只回傳 ok/fail 狀態，不暴露 token 或私鑰）
 app.use('/api/debug', debugRoutes);
+app.use('/api/admin', adminRoutes);
 console.log('🔧 [debug] /api/debug/health 已啟用');
 
 // 健康檢查端點（供 Cloud Run 使用）
