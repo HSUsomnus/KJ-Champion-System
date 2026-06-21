@@ -7,7 +7,6 @@ import Calendar from './pages/Calendar'
 import Members from './pages/Members'
 import Profile from './pages/Profile'
 import ProfileEdit from './pages/ProfileEdit'
-import UserStats from './pages/UserStats'
 import UserStatsEdit from './pages/UserStatsEdit'
 import Financial from './pages/Financial'
 import AddEvent from './pages/AddEvent'
@@ -67,7 +66,7 @@ const router = createBrowserRouter([
           { path: '/members', element: <Members /> },
           { path: '/profile', element: <Profile /> },
           { path: '/profile/edit', element: <ProfileEdit /> },
-          { path: '/user-stats', element: <UserStats /> },
+          { path: '/user-stats', element: <Navigate to="/profile" replace /> },
           { path: '/user-stats/edit', element: <UserStatsEdit /> },
           { path: '/financial', element: <Financial /> },
           { path: '/financial/edit', element: <FinancialEdit /> },

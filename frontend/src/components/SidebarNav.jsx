@@ -39,25 +39,12 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: '用戶數據',
-    path: '/user-stats',
+    label: '用戶資料',
+    path: '/profile',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10"/>
-        <line x1="12" y1="20" x2="12" y2="4"/>
-        <line x1="6" y1="20" x2="6" y2="14"/>
-      </svg>
-    ),
-  },
-  {
-    label: '用戶財力',
-    path: '/financial',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-        <line x1="12" y1="12" x2="12" y2="16"/>
-        <line x1="10" y1="14" x2="14" y2="14"/>
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
     ),
   },
@@ -236,7 +223,7 @@ export default function SidebarNav() {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#2C2C2C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user?.realName || user?.displayName}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: '#8A8680' }}>個人資料</p>
+            <p style={{ margin: 0, fontSize: 11, color: '#8A8680' }}>用戶資料</p>
           </div>
         </button>
       </div>
