@@ -20,10 +20,12 @@ const lineRoutes = require('./routes/line');
 const financialRoutes = require('./routes/financial');
 const authRoutes = require('./routes/auth');
 const debugRoutes = require('./routes/debug');
+const adminRoutes = require('./routes/admin');
 
 // 引入排程
 const dailyAgendaScheduler = require('./scheduler/dailyAgenda');
 const calendarSyncScheduler = require('./scheduler/calendarSync');
+const backupSyncScheduler = require('./scheduler/backupSync');
 
 // 建立 Express 應用程式
 const app = express();
@@ -110,6 +112,7 @@ app.use('/api/auth', authRoutes);
 
 // 自檢端點（永遠開放 — 只回傳 ok/fail 狀態，不暴露 token 或私鑰）
 app.use('/api/debug', debugRoutes);
+app.use('/api/admin', adminRoutes);
 console.log('🔧 [debug] /api/debug/health 已啟用');
 
 // 健康檢查端點（供 Cloud Run 使用）
@@ -205,6 +208,8 @@ if (require.main === module) {
     dailyAgendaScheduler.start();
     // 啟動每分鐘 Google Calendar 同步排程
     calendarSyncScheduler.start();
+    // 啟動每 8 小時備份同步排程（BACKUP_DATABASE_URL 未設定時自動停用）
+    backupSyncScheduler.start();
   });
 
   // 優雅關閉處理
@@ -212,6 +217,7 @@ if (require.main === module) {
     console.log('收到 SIGTERM 訊號，正在關閉伺服器...');
     dailyAgendaScheduler.stop();
     calendarSyncScheduler.stop();
+    backupSyncScheduler.stop();
     process.exit(0);
   });
 
@@ -219,6 +225,7 @@ if (require.main === module) {
     console.log('收到 SIGINT 訊號，正在關閉伺服器...');
     dailyAgendaScheduler.stop();
     calendarSyncScheduler.stop();
+    backupSyncScheduler.stop();
     process.exit(0);
   });
 }

@@ -5,7 +5,6 @@
 
 const { Pool } = require('pg');
 require('dotenv').config();
-
 // 判斷執行環境
 // Vercel Serverless：每個 Function 實例各自建立 pool，需嚴格限制連線數
 // 否則多個實例同時啟動會超過 Supabase 免費版上限（約 15 條）
