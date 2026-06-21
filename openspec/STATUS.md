@@ -20,17 +20,16 @@
 | 08 | dev-test-database | 🗄️ SUPERSEDED | 被 10 取代並 archive |
 | 09 | 每日行程推播 | ✅ DONE | 後端 v2.2.0 + 前端 v2.3.0 全部上線 |
 | 10 | zeabur-projects-split | ✅ DONE | Zeabur 專案分離 — dev 與 prod 完全物理隔離（v2.1.0）|
-| 12 | 統一彈出訊息系統 | 🔄 IN PROGRESS | 分支 `m_b_統一彈出訊息系統`，0/33 task，目標 v2.4.0 |
+| 12 | 統一彈出訊息系統 | 🔄 IN PROGRESS | 分支 `m_b_統一彈出訊息系統`，0/33 task，目標 v2.5.0 |
+| 13 | 定時同步Calendar | ✅ DONE | node-cron 每分鐘同步 Google Calendar，raw https.request 繞過 gaxios（v2.4.0）|
+| 14 | 側邊欄導覽 | ✅ DONE | 左側抽屜式 SidebarNav 整合 Header + FabNav，Layout 包裹器（v2.5.0）|
+| 15 | 用戶資料整合 | ✅ DONE | 個人資料+用戶數據+用戶財力合併單一頁面 pill tab，MemberDetail 同款樣式（v2.6.0）|
 
 ---
 
-## 當前 Change：12-統一彈出訊息系統
+## 當前 Change：無（下一個 change 待定）
 
-**分支**：`m_b_統一彈出訊息系統`
-**進度**：0/33 task（尚未開始實作）
-**目標版本**：v2.4.0
-
-詳細 tasks 見：`openspec/changes/12-統一彈出訊息系統/tasks.md`（若存在）
+change 12「統一彈出訊息系統」仍在 dev，分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。
 
 ---
 
@@ -45,4 +44,4 @@
 
 ---
 
-*最後更新：2026-06-20（精簡方案執行 — STATUS.md 移除 task 列表，路線圖補 03/04/05；proposal+design 合併為 spec.md）*
+*最後更新：2026-06-21（change 15「用戶資料整合」上線 v2.6.0）*

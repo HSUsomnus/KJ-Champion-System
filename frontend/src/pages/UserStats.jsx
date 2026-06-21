@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -29,7 +27,6 @@ function parseVolunteers(str) {
 
 export default function UserStats() {
   const { user } = useAuth()
-  const [activeFab, setActiveFab] = useState(null)
 
   const starLevel = user?.starLevel || '白星'
   const starColor = STAR_COLORS[starLevel] || STAR_COLORS['白星']
@@ -51,9 +48,7 @@ export default function UserStats() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>用戶數據</h1>
 
         {/* 星等 */}
@@ -119,8 +114,7 @@ export default function UserStats() {
         </section>
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
     </div>
   )
 }

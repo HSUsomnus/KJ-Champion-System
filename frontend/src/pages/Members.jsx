@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapMember } from '../services/api'
@@ -17,7 +15,6 @@ const STAR_COLORS = {
 
 export default function Members() {
   const { user } = useAuth()
-  const [activeFab, setActiveFab] = useState(null)
   const [search, setSearch] = useState('')
   const [members, setMembers] = useState([])
   const navigate = useNavigate()
@@ -50,8 +47,7 @@ export default function Members() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>成員列表</h1>
 
         <div className="mb-4">
@@ -93,8 +89,7 @@ export default function Members() {
         </div>
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
     </div>
   )
 }

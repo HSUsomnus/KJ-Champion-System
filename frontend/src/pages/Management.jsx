@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapMember } from '../services/api'
@@ -28,7 +26,6 @@ const STAR_COLORS = {
 export default function Management() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [activeFab, setActiveFab] = useState(null)
   const [tab, setTab] = useState('數據')
   const [members, setMembers] = useState([])
   const [permissions, setPermissions] = useState([])
@@ -63,8 +60,7 @@ export default function Management() {
   if (!hasAccess) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-        <Header user={user} />
-        <main className="flex-1 flex items-center justify-center pt-16 pb-28 px-4">
+        <main className="flex-1 flex items-center justify-center pt-14 pb-28 px-4">
           <div className="text-center">
             <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: '#EFEDE9' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8A8680" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -78,7 +74,6 @@ export default function Management() {
             </button>
           </div>
         </main>
-        <FabNav onOpen={() => setActiveFab('nav')} />
       </div>
     )
   }
@@ -87,8 +82,7 @@ export default function Management() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>管理介面</h1>
 
         <div className="flex gap-2 mb-4">
@@ -175,8 +169,7 @@ export default function Management() {
         )}
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction onOpen={() => setActiveFab('action')} />
+      <FabAction />
     </div>
   )
 }

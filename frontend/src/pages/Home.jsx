@@ -1,13 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
+import { useState, useEffect } from 'react'
 import FabAction from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapEvent } from '../services/api'
 
 export default function Home() {
   const { user } = useAuth()
-  const [activeFab, setActiveFab] = useState(null)
   const [todayEvents, setTodayEvents] = useState([])
 
   // 取得今日行程作為最新消息
@@ -23,14 +20,9 @@ export default function Home() {
       .catch(() => {})
   }, [])
 
-  const handleNavOpen = useCallback(() => setActiveFab('nav'), [])
-  const handleActionOpen = useCallback(() => setActiveFab('action'), [])
-
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
 
         {/* 歡迎區塊 */}
         <section className="mt-4 mb-6 flex items-center gap-3">
@@ -81,8 +73,7 @@ export default function Home() {
         </section>
       </main>
 
-      <FabNav onOpen={handleNavOpen} />
-      <FabAction onOpen={handleActionOpen} />
+      <FabAction />
     </div>
   )
 }

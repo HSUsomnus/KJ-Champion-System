@@ -3,7 +3,6 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import Spreadsheet from 'x-data-spreadsheet'
 import 'x-data-spreadsheet/dist/xspreadsheet.css'
 import * as XLSX from 'xlsx'
-import Header from '../components/Header'
 import { useAuth } from '../contexts/AuthContext'
 
 // Office 預設 theme 顏色（index 0-9）
@@ -165,9 +164,7 @@ export default function FinancialPreview() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <div className="flex items-center gap-3 px-4 pt-20 pb-2">
+      <div className="flex items-center gap-3 px-4 pt-14 pb-2">
         <button
           onClick={() => navigate(-1)}
           className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all"

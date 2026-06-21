@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
 import { useAuth } from '../contexts/AuthContext'
@@ -135,9 +133,7 @@ export default function FinancialEdit() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <div className="flex items-center justify-between mt-4 mb-4">
           <h1 className="text-base font-semibold" style={{ color: '#2C2C2C' }}>
             {isViewingOther ? `${targetUserName || '用戶'}的財力 — 選取/編輯` : '用戶財力 — 選取/編輯'}
@@ -243,8 +239,7 @@ export default function FinancialEdit() {
         </section>
       </main>
 
-      <FabNav onOpen={() => {}} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor="#4A7C59" onOpen={() => {}} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor="#4A7C59" />
       <ConfirmLeaveDialog blocker={blocker} />
     </div>
   )
