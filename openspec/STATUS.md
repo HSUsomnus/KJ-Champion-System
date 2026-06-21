@@ -23,11 +23,13 @@
 | 12 | 統一彈出訊息系統 | 🔄 IN PROGRESS | 分支 `m_b_統一彈出訊息系統`，0/33 task，目標 v2.5.0 |
 | 13 | 定時同步Calendar | ✅ DONE | node-cron 每分鐘同步 Google Calendar，raw https.request 繞過 gaxios（v2.4.0）|
 | 14 | 側邊欄導覽 | ✅ DONE | 左側抽屜式 SidebarNav 整合 Header + FabNav，Layout 包裹器（v2.5.0）|
+| 15 | 用戶資料整合 | 🔄 IN PROGRESS | 個人資料+用戶數據+用戶財力合併為單一頁面，pill tab 切換，分支 `m_b_用戶資料整合` |
 
 ---
 
-## 當前 Change：無（下一個 change 待定）
+## 當前 Change：15 — 用戶資料整合
 
+change 15「用戶資料整合」分支 `m_b_用戶資料整合`，0/9 task，待實作。
 change 12「統一彈出訊息系統」仍在 dev，分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。
 
 ---
