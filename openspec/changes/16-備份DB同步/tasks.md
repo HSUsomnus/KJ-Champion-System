@@ -83,7 +83,7 @@
   - 本機不設 `BACKUP_DATABASE_URL`，確認 queue 自動 no-op，後端正常啟動
   - 看 console log 確認「BackupQueue: BACKUP_DATABASE_URL 未設定，備份功能停用」
 
-- [ ] **2.6 部署後端到 Zeabur prod，驗證備份寫入**（使用者手動 + 觀察 log）
+- [x] **2.6 部署後端到 Zeabur prod，驗證備份寫入**（使用者手動 + 觀察 log）
   - `git push origin m_b_備份DB同步` → Zeabur 自動部署（若有設定 dev branch deploy）
   - 或等 merge 後觀察
   - Zeabur → `kj-champion-system` 服務 → 日誌
@@ -108,7 +108,7 @@
 - [x] **3.3 在 `server/server.js` 掛載 admin routes**（Claude）
   - `app.use('/api/admin', require('./routes/admin'))`
 
-- [ ] **3.4 部署並測試 sync-backup-to-dev**（使用者 PC curl 測試）
+- [x] **3.4 部署並測試 sync-backup-to-dev**（使用者 PC curl 測試）
   ```bash
   curl -X POST https://kj-champion-system.zeabur.app/api/admin/sync-backup-to-dev \
     -H "Authorization: Bearer <ADMIN_SECRET>"
@@ -124,7 +124,7 @@
   - 確認 dev 後端已連到新 dev DB 且正常運作後，再刪除舊服務
   - Zeabur → Projects → `kj-champion-dev` → `postgresql-dev` → 設定 → 刪除服務
 
-- [ ] **4.2 更新 `.env` 範例與 `server/` 說明**（Claude）
+- [x] **4.2 更新 `.env` 範例與 `server/` 說明**（Claude）
   - 在 `server/` 或根目錄的 `.env.example` 新增三個環境變數說明
   - 標注哪些是 prod only、哪些本機開發可留空
 
