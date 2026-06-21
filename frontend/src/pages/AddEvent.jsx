@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
 import shareEvent from '../utils/shareEvent'
@@ -48,7 +46,6 @@ export default function AddEvent() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [activeFab, setActiveFab] = useState(null)
   const [saving, setSaving] = useState(false)
 
   const existingEvent = location.state?.event || null
@@ -118,8 +115,7 @@ export default function AddEvent() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>
           {isEdit ? '編輯行程' : '新增行程'}
         </h1>
@@ -182,8 +178,7 @@ export default function AddEvent() {
         </div>
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
       <ConfirmLeaveDialog blocker={blocker} />
       <ShareConfirmDialog open={showShareDialog} isEdit={isEdit} onShare={handleShare} onCancel={handleSkipShare} />
     </div>

@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+import Layout from './components/Layout'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Calendar from './pages/Calendar'
@@ -58,22 +59,27 @@ const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      { path: '/', element: <Home /> },
-      { path: '/calendar', element: <Calendar /> },
-      { path: '/members', element: <Members /> },
-      { path: '/profile', element: <Profile /> },
-      { path: '/profile/edit', element: <ProfileEdit /> },
-      { path: '/user-stats', element: <UserStats /> },
-      { path: '/user-stats/edit', element: <UserStatsEdit /> },
-      { path: '/financial', element: <Financial /> },
-      { path: '/financial/edit', element: <FinancialEdit /> },
-      { path: '/add-event', element: <AddEvent /> },
-      { path: '/event/:id', element: <EventDetail /> },
-      { path: '/financial-upload', element: <FinancialUpload /> },
-      { path: '/financial-preview', element: <FinancialPreview /> },
-      { path: '/management', element: <Management /> },
-      { path: '/member/:id', element: <MemberDetail /> },
-      { path: '/agenda-settings', element: <AgendaSettings /> },
+      {
+        element: <Layout />,
+        children: [
+          { path: '/', element: <Home /> },
+          { path: '/calendar', element: <Calendar /> },
+          { path: '/members', element: <Members /> },
+          { path: '/profile', element: <Profile /> },
+          { path: '/profile/edit', element: <ProfileEdit /> },
+          { path: '/user-stats', element: <UserStats /> },
+          { path: '/user-stats/edit', element: <UserStatsEdit /> },
+          { path: '/financial', element: <Financial /> },
+          { path: '/financial/edit', element: <FinancialEdit /> },
+          { path: '/add-event', element: <AddEvent /> },
+          { path: '/event/:id', element: <EventDetail /> },
+          { path: '/financial-upload', element: <FinancialUpload /> },
+          { path: '/financial-preview', element: <FinancialPreview /> },
+          { path: '/management', element: <Management /> },
+          { path: '/member/:id', element: <MemberDetail /> },
+          { path: '/agenda-settings', element: <AgendaSettings /> },
+        ],
+      },
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },

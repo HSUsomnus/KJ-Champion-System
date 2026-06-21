@@ -1,7 +1,5 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
 import { useAuth } from '../contexts/AuthContext'
@@ -11,7 +9,6 @@ export default function FinancialUpload() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
-  const [activeFab, setActiveFab] = useState(null)
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
 
@@ -72,9 +69,7 @@ export default function FinancialUpload() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>上傳財力證明</h1>
 
         <div
@@ -112,8 +107,7 @@ export default function FinancialUpload() {
         )}
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
       <ConfirmLeaveDialog blocker={blocker} />
     </div>
   )

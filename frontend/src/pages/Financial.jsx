@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../services/api'
@@ -15,7 +13,6 @@ export default function Financial() {
   const isViewingOther = targetUserId && targetUserId !== user?.lineId
   const viewUserId = targetUserId || user?.lineId
 
-  const [activeFab, setActiveFab] = useState(null)
   const [hideFinancial, setHideFinancial] = useState(false)
   const [hideDocuments, setHideDocuments] = useState(false)
   const [documents, setDocuments] = useState([])
@@ -98,9 +95,7 @@ export default function Financial() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <div className="flex items-center justify-between mt-4 mb-4">
           <h1 className="text-base font-semibold" style={{ color: '#2C2C2C' }}>
             {isViewingOther ? `${targetUserName || '用戶'}的財力` : '用戶財力'}
@@ -183,8 +178,7 @@ export default function Financial() {
         </section>
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor="#4A7C59" onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} fabColor="#4A7C59" />
     </div>
   )
 }

@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -21,7 +19,6 @@ const INFO_ITEMS = [
 
 export default function Profile() {
   const { user, logout } = useAuth()
-  const [activeFab, setActiveFab] = useState(null)
   const [hideProfile, setHideProfile] = useState(false)
   const navigate = useNavigate()
 
@@ -54,9 +51,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <div className="flex items-center justify-between mt-4 mb-4">
           <h1 className="text-base font-semibold" style={{ color: '#2C2C2C' }}>用戶資料</h1>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -112,12 +107,7 @@ export default function Profile() {
         </section>
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction
-        items={fabItems}
-        fabIcon={PENCIL_ICON}
-        onOpen={() => setActiveFab('action')}
-      />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
     </div>
   )
 }

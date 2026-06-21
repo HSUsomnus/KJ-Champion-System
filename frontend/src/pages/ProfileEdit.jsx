@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import ConfirmLeaveDialog, { useLeaveGuard } from '../components/ConfirmLeaveDialog'
 import { useAuth } from '../contexts/AuthContext'
@@ -11,7 +9,6 @@ export default function ProfileEdit() {
   const navigate = useNavigate()
   const { user, refreshUser, login, isProfileComplete } = useAuth()
   const onboarding = !isProfileComplete(user)
-  const [activeFab, setActiveFab] = useState(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     realName: user?.realName || '',
@@ -93,8 +90,7 @@ export default function ProfileEdit() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>編輯資料</h1>
         {onboarding && (
           <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: '#FFF3E0', border: '1px solid #FFB74D', color: '#7B5800' }}>
@@ -116,8 +112,7 @@ export default function ProfileEdit() {
           ))}
         </div>
       </main>
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
       <ConfirmLeaveDialog blocker={blocker} />
     </div>
   )

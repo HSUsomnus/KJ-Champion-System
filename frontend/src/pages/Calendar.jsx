@@ -1,7 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from '../components/Header'
-import FabNav from '../components/FabNav'
 import FabAction, { PENCIL_ICON } from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapEvent } from '../services/api'
@@ -65,7 +63,6 @@ export default function Calendar() {
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDate, setSelectedDate] = useState(dateStr(today.getFullYear(), today.getMonth(), today.getDate()))
-  const [activeFab, setActiveFab] = useState(null)
   const [viewMode, setViewMode] = useState('calendar')
   const [typeFilter, setTypeFilter] = useState('全部')
   const [events, setEvents] = useState([])
@@ -182,9 +179,7 @@ export default function Calendar() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#F7F5F2' }}>
-      <Header user={user} />
-
-      <main className="flex-1 overflow-y-auto pt-16 pb-28 px-4">
+      <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
         <div className="sticky top-0 z-20 -mx-4 px-4 pt-2 pb-2" style={{ background: '#F7F5F2' }}>
           <section className="flex items-center justify-between">
             <button onClick={prevMonth} className="w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-all" style={{ background: '#EFEDE9' }}>
@@ -286,8 +281,7 @@ export default function Calendar() {
         )}
       </main>
 
-      <FabNav onOpen={() => setActiveFab('nav')} />
-      <FabAction items={fabItems} fabIcon={PENCIL_ICON} onOpen={() => setActiveFab('action')} />
+      <FabAction items={fabItems} fabIcon={PENCIL_ICON} />
     </div>
   )
 }
