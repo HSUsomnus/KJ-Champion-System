@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
+const { syncProdToBackup } = require('../services/backupSyncService');
 
 const TABLES = ['members', 'events', 'financial_documents'];
 
@@ -12,6 +13,23 @@ const verifyAdmin = (req, res, next) => {
   }
   next();
 };
+
+/**
+ * POST /api/admin/sync-prod-to-backup
+ * 立即觸發 prod → backup 全量同步（不等 8 小時排程）
+ */
+router.post('/sync-prod-to-backup', verifyAdmin, async (req, res) => {
+  try {
+    const counts = await syncProdToBackup();
+    if (counts === null) {
+      return res.status(500).json({ success: false, message: 'BACKUP_DATABASE_URL 未設定' });
+    }
+    res.json({ success: true, tables: counts });
+  } catch (err) {
+    console.error('❌ sync-prod-to-backup 失敗:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 /**
  * POST /api/admin/sync-backup-to-dev
