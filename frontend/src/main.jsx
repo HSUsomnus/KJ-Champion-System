@@ -28,10 +28,6 @@ const _colW = pickColWidth()
 document.documentElement.style.setProperty('--col-max-w', `${_colW}px`)
 document.documentElement.style.setProperty('--col-half-w', `${_colW / 2}px`)
 
-// 字體等比縮放：基準 375px 手機 = 16px（Tailwind 預設）
-// 欄寬 432px → 18.4px，所有 rem 單位（text-sm / p-4 / w-28 等）自動等比放大
-const _scale = _colW / 375
-document.documentElement.style.fontSize = `${(_scale * 16).toFixed(2)}px`
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
