@@ -1,5 +1,7 @@
 import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+import useLandscapeGuard from './hooks/useLandscapeGuard'
+import LandscapeOverlay from './components/LandscapeOverlay'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -85,5 +87,11 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  const { showOverlay } = useLandscapeGuard()
+  return (
+    <>
+      {showOverlay && <LandscapeOverlay />}
+      <RouterProvider router={router} />
+    </>
+  )
 }
