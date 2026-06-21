@@ -84,15 +84,30 @@ export default function Management() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
       <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
-        <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>管理介面</h1>
+        <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>管理者後台</h1>
 
-        <div className="flex gap-2 mb-4">
-          {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className="px-4 py-2 rounded-full text-xs font-medium transition-all active:scale-95"
-              style={{ background: tab === t ? '#2C2C2C' : '#fff', color: tab === t ? '#fff' : '#2C2C2C', border: tab === t ? 'none' : '1px solid #E2DED8' }}
-            >{t}</button>
-          ))}
+        <div className="mb-4">
+          <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3 }}>
+            {TABS.map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  fontSize: 12,
+                  fontWeight: tab === t ? 500 : 400,
+                  padding: '6px 4px',
+                  borderRadius: 16,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: tab === t ? '#4A7C59' : 'transparent',
+                  color: tab === t ? '#fff' : '#2C2C2C',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+              >{t}</button>
+            ))}
+          </div>
         </div>
 
         {/* 數據 tab */}
