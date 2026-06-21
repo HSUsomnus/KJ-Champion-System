@@ -10,7 +10,7 @@ const PHONE_RATIOS = [9 / 21, 9 / 20, 9 / 19.5, 9 / 19, 9 / 18, 9 / 16]
 function pickColWidth() {
   const W = window.innerWidth
   const H = window.innerHeight
-  if (W <= 520) return W  // 手機：直接用視窗寬
+  if (W <= 768) return W  // 手機/小平板：直接用視窗寬
   // 桌機/平板：用視窗高度模擬手機直式，選最接近 430px 的標準比例
   const TARGET = 430
   let best = null, bestDiff = Infinity
