@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.8.0] - 2026-06-21
+
+git tag: v2.8.0
+摘要：change 17「SidebarNav UI 重構」— SidebarNav 頂部在 logo 右側加入品牌文字「康九冠軍」；新增「管理者後台」導覽入口（isManager = role !== '一般人'，即負責人與開發者皆可見）；Management.jsx 頁面標題改為「管理者後台」並將 tab 切換改為統一 pill 樣式（#EFEDE9 底容器 / active #4A7C59 綠底白字 / borderRadius 20/16）。後端 PUT /api/members/update-roles 權限由「僅開發者」放寬為「負責人或開發者」。新增 GET /api/admin/export-backup-csv（從 backup DB 匯出 CSV，走內網不需開公網）；移除 POST /api/admin/sync-backup-to-dev（安全考量，dev DB 寫入改為全手動）；backup-status 改動態探索 public table。新增 scripts/import-csv-to-dev.js（本機 CSV → dev DB UPSERT 工具）。UIDESIGN.md 補充 Pill Tab 規範與 SidebarNav 規範。
+
+---
+
 ## [v2.7.0] - 2026-06-21
 
 git tag: v2.7.0
