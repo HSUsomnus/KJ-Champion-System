@@ -104,7 +104,7 @@ export default function SidebarNav() {
       <button
         onClick={() => setOpen(true)}
         style={{
-          position: 'fixed', top: 16, left: 16, zIndex: 50,
+          position: 'fixed', top: 16, left: 'max(16px, calc(50vw - var(--col-half-w, 224px) + 16px))', zIndex: 50,
           width: 40, height: 40, borderRadius: '50%',
           background: '#2C2C2C', color: '#fff', border: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
