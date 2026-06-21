@@ -40,6 +40,18 @@ const NAV_ITEMS = [
   },
 ]
 
+const MANAGER_ITEMS = [
+  {
+    label: '管理者後台',
+    path: '/management',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    ),
+  },
+]
+
 const DEVELOPER_ITEMS = [
   {
     label: '開發者設定',
@@ -59,9 +71,15 @@ export default function SidebarNav() {
   const location = useLocation()
   const { user } = useAuth()
 
-  const items = user?.role === '開發者'
-    ? [...NAV_ITEMS, ...DEVELOPER_ITEMS]
-    : NAV_ITEMS
+  const role = user?.role || '一般人'
+  const isManager = role !== '一般人'
+  const isDeveloper = role === '開發者'
+
+  const items = [
+    ...NAV_ITEMS,
+    ...(isManager ? MANAGER_ITEMS : []),
+    ...(isDeveloper ? DEVELOPER_ITEMS : []),
+  ]
 
   const close = () => setOpen(false)
 
@@ -125,18 +143,20 @@ export default function SidebarNav() {
           transition: 'transform 0.25s ease',
         }}
       >
-        {/* 頂部：Logo + 重整 */}
+        {/* 頂部：Logo + 品牌文字 + 重整 */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '16px 14px 12px',
           borderBottom: '1px solid #E2DED8',
         }}>
-          <img
-            src="/康九_logo.png"
-            alt="KJ Champion"
-            style={{ height: 32, width: 'auto', objectFit: 'contain', cursor: 'pointer' }}
-            onClick={() => handleNav('/')}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => handleNav('/')}>
+            <img
+              src="/康九_logo.png"
+              alt="KJ Champion"
+              style={{ height: 32, width: 'auto', objectFit: 'contain' }}
+            />
+            <span style={{ fontSize: 15, fontWeight: 500, color: '#2C2C2C' }}>康九冠軍</span>
+          </div>
           <button
             onClick={() => window.location.reload()}
             style={{
