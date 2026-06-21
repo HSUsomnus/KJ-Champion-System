@@ -29,6 +29,11 @@
   - `/user-stats`（無 edit）→ `<Navigate to="/profile" replace />`
   - `/financial`（無 userId param）→ 保留 Financial.jsx，已有 `?userId=xxx` 分流邏輯，無需另加 redirect（Financial.jsx 自己判斷 isViewingOther）
 
+- [x] **2.3** 更新 `frontend/src/pages/MemberDetail.jsx` tab 樣式
+  - TABS 改為物件陣列 `{ key, label }`，label 改為「個人資料 | 用戶數據 | 用戶財力」
+  - 舊個別按鈕（黑底/白底切換）→ pill 容器樣式（#EFEDE9 底，active #4A7C59）
+  - tab state 仍用 key string（'資料'/'數據'/'財力'），內容條件不需改
+
 ---
 
 ## Section 3：Regression

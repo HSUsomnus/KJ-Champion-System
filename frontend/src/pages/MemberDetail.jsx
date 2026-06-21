@@ -46,7 +46,11 @@ function parseCourses(str) {
   return str.split(',').map(c => c.trim()).filter(c => c)
 }
 
-const TABS = ['資料', '數據', '財力']
+const TABS = [
+  { key: '資料', label: '個人資料' },
+  { key: '數據', label: '用戶數據' },
+  { key: '財力', label: '用戶財力' },
+]
 
 export default function MemberDetail() {
   const { user } = useAuth()
@@ -116,13 +120,28 @@ export default function MemberDetail() {
         </section>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-4">
-          {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className="flex-1 py-2 rounded-full text-xs font-medium transition-all active:scale-95"
-              style={{ background: tab === t ? '#2C2C2C' : '#fff', color: tab === t ? '#fff' : '#2C2C2C', border: tab === t ? 'none' : '1px solid #E2DED8' }}
-            >{t}</button>
-          ))}
+        <div className="mb-3">
+          <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3 }}>
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  fontSize: 12,
+                  fontWeight: tab === t.key ? 500 : 400,
+                  padding: '6px 4px',
+                  borderRadius: 16,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: tab === t.key ? '#4A7C59' : 'transparent',
+                  color: tab === t.key ? '#fff' : '#8A8680',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+              >{t.label}</button>
+            ))}
+          </div>
         </div>
 
         {/* 資料 tab */}
