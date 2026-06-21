@@ -77,7 +77,7 @@ export default function Login() {
       className="min-h-screen flex flex-col items-center justify-center"
       style={{ background: '#F7F5F2' }}
     >
-      <div data-testid="login-content" className="w-full flex flex-col items-center px-6" style={{ maxWidth: 'min(clamp(375px, calc(100svh / 2), 500px), 100vw)' }}>
+      <div data-testid="login-content" className="w-full flex flex-col items-center px-6" style={{ maxWidth: 'var(--col-max-w, 448px)' }}>
       {/* Logo */}
       <img
         src="/康九_logo.png"
