@@ -143,7 +143,7 @@ export default function AgendaSettings() {
     return (
       <div className="min-h-screen" style={{ background: '#F7F5F2' }}>
         <main className="pt-14 pb-24 px-4">
-          <div className="max-w-md mx-auto text-center rounded-2xl p-8" style={cardStyle}>
+          <div className="text-center rounded-2xl p-8" style={cardStyle}>
             <p className="text-sm mb-2" style={{ color: '#2C2C2C', fontWeight: 600 }}>無存取權限</p>
             <p className="text-xs mb-4" style={{ color: '#8A8680' }}>僅「開發者」角色可進入此頁面</p>
             <button
@@ -162,7 +162,7 @@ export default function AgendaSettings() {
   return (
     <div className="min-h-screen" style={{ background: '#F7F5F2' }}>
       <main className="pt-14 pb-24 px-4">
-        <div className="max-w-md mx-auto space-y-4">
+        <div className="space-y-4">
           <h1 className="text-lg font-bold" style={{ color: '#2C2C2C' }}>開發者設定</h1>
 
           {/* ===== 區塊 1：除錯工具 ===== */}
