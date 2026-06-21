@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.8.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
+> **版本 v2.8.1-dev** | 分支：`dev` | 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-06-22
 
 測試環境。正式版本請看 `main` 分支。
 
@@ -202,6 +202,14 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 | 文字色 | `#2C2C2C` |
 | Pill tab | container `#EFEDE9` / active `#4A7C59` 白字 / inactive `#2C2C2C` 透明底 |
 | 漢堡 FAB | 左上固定黑（開側邊欄）；FabAction 右側綠（編輯模式紅） |
+
+---
+
+## dev 分支獨有功能（待上線）
+
+| 分支 | 功能說明 | 狀態 | 對應 OpenSpec |
+|------|---------|------|--------------|
+| `m_b_桌機版面置中` | 全站 max-w-md 置中欄；Layout 統一控制；FabAction 對齊欄右緣 | 已合入，驗收中 | change 17-桌機版面置中 |
 
 ---
 
