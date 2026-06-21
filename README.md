@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.8.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
+> **版本 v2.8.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-21
 
 測試環境。正式版本請看 `main` 分支。
 
