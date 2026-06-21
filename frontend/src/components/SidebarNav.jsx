@@ -211,8 +211,7 @@ export default function SidebarNav() {
           style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '12px 14px',
-            borderTop: '1px solid #E2DED8', border: 'none',
-            borderTop: '1px solid #E2DED8',
+            border: 'none', borderTop: '1px solid #E2DED8',
             background: 'transparent', cursor: 'pointer',
             width: '100%', textAlign: 'left',
           }}

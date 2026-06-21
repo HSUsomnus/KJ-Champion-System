@@ -2,7 +2,7 @@
 
 ## Section 1：建立新元件
 
-- [ ] **1.1** 建立 `frontend/src/components/SidebarNav.jsx`
+- [x] **1.1** 建立 `frontend/src/components/SidebarNav.jsx`
   - 漢堡 FAB（fixed top-left 16/16，40×40，#2C2C2C）
   - 遮罩 + 側邊欄抽屜（translateX 動畫，220px 寬）
   - 頂部：Logo `/康九_logo.png` + 重整按鈕
@@ -17,19 +17,19 @@
   - role=開發者 顯示「開發者設定」，一般角色不顯示
   - 跑 `npm --prefix frontend run test:run` 全綠才勾
 
-- [ ] **1.3** 建立 `frontend/src/components/Layout.jsx`
+- [x] **1.3** 建立 `frontend/src/components/Layout.jsx`
   - 從 AuthContext 讀 user，render `<SidebarNav />` + `<Outlet />`
 
 ## Section 2：整合 App.jsx
 
-- [ ] **2.1** 更新 `frontend/src/App.jsx`
+- [x] **2.1** 更新 `frontend/src/App.jsx`
   - import Layout
   - ProtectedRoute element 改為 `<Layout />`
   - 移除原有 Header / FabNav 相關 import（若有）
 
 ## Section 3：清理所有頁面
 
-- [ ] **3.1** 批次清理 16 個頁面（AddEvent / Calendar / EventDetail / Financial / FinancialEdit / FinancialPreview / FinancialUpload / Home / Management / MemberDetail / Members / Profile / ProfileEdit / UserStats / UserStatsEdit / AgendaSettings）
+- [x] **3.1** 批次清理 16 個頁面（AddEvent / Calendar / EventDetail / Financial / FinancialEdit / FinancialPreview / FinancialUpload / Home / Management / MemberDetail / Members / Profile / ProfileEdit / UserStats / UserStatsEdit / AgendaSettings）
   - 移除 `import Header` + `<Header user={user} />`
   - 移除 `import FabNav` + `<FabNav onOpen={...} />`
   - 移除 `activeFab` 狀態（若只用於協調 FabNav/FabAction 則整組移除，FabAction 的 onOpen 一併移除）
@@ -38,7 +38,7 @@
 
 ## Section 4：刪除舊元件
 
-- [ ] **4.1** 確認 Header.jsx / FabNav.jsx 無其他引用（grep 驗證）後刪除兩個檔案
+- [x] **4.1** 確認 Header.jsx / FabNav.jsx 無其他引用（grep 驗證）後刪除兩個檔案
 
 ## Section 5：e2e 測試
 
