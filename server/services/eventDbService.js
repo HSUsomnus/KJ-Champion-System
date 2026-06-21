@@ -4,6 +4,7 @@
  */
 
 const db = require('../config/db');
+const backupQueue = require('./backupQueue');
 
 /**
  * 將資料庫 row 轉換成行程物件
@@ -72,11 +73,12 @@ const getEventById = async (eventId) => {
  */
 const _upsertEventsToPool = async (getClientFn, events) => {
   const client = await getClientFn();
+  const backupQueries = [];
   try {
     await client.query('BEGIN');
     let count = 0;
     for (const event of events) {
-      await client.query(`
+      const sql = `
         INSERT INTO events (
           id, title, description, start_at, end_at, all_day,
           location, type, is_birthday_event, creator_email, synced_at
@@ -93,7 +95,8 @@ const _upsertEventsToPool = async (getClientFn, events) => {
           creator_email = EXCLUDED.creator_email,
           synced_at = NOW(),
           updated_at = NOW()
-      `, [
+      `;
+      const params = [
         event.id,
         event.title,
         event.description || '',
@@ -104,10 +107,13 @@ const _upsertEventsToPool = async (getClientFn, events) => {
         event.type || '活動',
         event.isBirthdayEvent || false,
         event.creator || '',
-      ]);
+      ];
+      await client.query(sql, params);
+      backupQueries.push({ sql, params });
       count++;
     }
     await client.query('COMMIT');
+    backupQueue.enqueueAll(backupQueries);
     return count;
   } catch (error) {
     await client.query('ROLLBACK');

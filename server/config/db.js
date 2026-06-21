@@ -5,6 +5,9 @@
 
 const { Pool } = require('pg');
 require('dotenv').config();
+const backupQueue = require('../services/backupQueue');
+
+const WRITE_RE = /^\s*(INSERT|UPDATE|DELETE)\s/i;
 
 // 判斷執行環境
 // Vercel Serverless：每個 Function 實例各自建立 pool，需嚴格限制連線數
@@ -41,6 +44,9 @@ const query = async (text, params) => {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
     console.log('SQL 執行:', { text, duration, rows: res.rowCount });
+    if (WRITE_RE.test(text)) {
+      backupQueue.enqueue(text, params);
+    }
     return res;
   } catch (error) {
     console.error('❌ SQL 執行錯誤:', { text, error: error.message });

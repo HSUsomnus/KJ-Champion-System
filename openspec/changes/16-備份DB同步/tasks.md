@@ -9,13 +9,13 @@
 
 > 所有 Section 1 操作均在 **Zeabur Dashboard** 手動完成，Claude 負責提供指引
 
-- [ ] **1.1 在 `kj-champion` 新建備份 PostgreSQL 服務**（使用者手動 — Zeabur Dashboard）
+- [x] **1.1 在 `kj-champion` 新建備份 PostgreSQL 服務**（使用者手動 — Zeabur Dashboard）
   1. Zeabur → Projects → `kj-champion` → 建立服務 → Marketplace → PostgreSQL
   2. 服務名稱建議：`postgresql-backup`
   3. 網路頁籤：確認**不開啟**連線埠轉送（保持私有）
   4. 環境變數頁籤：記下 `POSTGRES_CONNECTION_STRING`（內網格式，供後續步驟用）
 
-- [ ] **1.2 在 `kj-champion` 新建 dev PostgreSQL 服務**（使用者手動 — Zeabur Dashboard）
+- [x] **1.2 在 `kj-champion` 新建 dev PostgreSQL 服務**（使用者手動 — Zeabur Dashboard）
   1. Zeabur → Projects → `kj-champion` → 建立服務 → Marketplace → PostgreSQL
   2. 服務名稱建議：`postgresql-dev-new`
   3. 網路頁籤：**開啟**連線埠轉送（公有網路），記下公網 IP + Port
@@ -25,7 +25,7 @@
   - `scripts/init-db.js`：Node.js 腳本，按順序套用所有 migration SQL
   - 不需要 pg_dump，直接從 codebase 的 SQL 檔重建
 
-- [ ] **1.4 套用 schema 到新 dev DB**（使用者本機 PC 執行）
+- [x] **1.4 套用 schema 到新 dev DB**（使用者本機 PC 執行）
   ```bash
   # 新 dev DB 公網：43.163.196.8:32216
   # 密碼從 Zeabur kj-champion → postgresql-dev → 環境變數 → POSTGRES_PASSWORD
@@ -33,7 +33,7 @@
   ```
   看到「🎉 Schema 初始化完成！」即可
 
-- [ ] **1.5 套用 schema 到備份 DB**（使用者手動開公網 + PC 執行）
+- [x] **1.5 套用 schema 到備份 DB**（使用者手動開公網 + PC 執行）
   1. Zeabur → `kj-champion` → `postgresql-backup` → 網路 → **暫時開啟**連線埠轉送 → 儲存
   2. 記下公網 IP + Port
   3. 執行：
@@ -42,12 +42,12 @@
      ```
   4. 完成後**立刻關閉**連線埠轉送
 
-- [ ] **1.6 更新 dev 後端環境變數**（使用者手動 — Zeabur Dashboard）
+- [x] **1.6 更新 dev 後端環境變數**（使用者手動 — Zeabur Dashboard）
   1. Zeabur → Projects → `kj-champion-dev` → `kj-champion-dev` 服務 → 環境變數
   2. `DATABASE_URL` → 更新為新 dev DB 公網連線字串
   3. 重啟服務，確認 `/api/debug/health` 回應正常
 
-- [ ] **1.7 更新 prod 後端環境變數（新增 3 個）**（使用者手動 — Zeabur Dashboard）
+- [x] **1.7 更新 prod 後端環境變數（新增 3 個）**（使用者手動 — Zeabur Dashboard）
   1. Zeabur → Projects → `kj-champion` → `kj-champion-system` 服務 → 環境變數
   2. 新增 `BACKUP_DATABASE_URL` = 備份 DB 的 `POSTGRES_CONNECTION_STRING`（內網格式）
   3. 新增 `DEV_DATABASE_URL` = 新 dev DB 公網連線字串
