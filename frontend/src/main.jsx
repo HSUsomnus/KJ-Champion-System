@@ -10,17 +10,20 @@ const PHONE_RATIOS = [9 / 21, 9 / 20, 9 / 19.5, 9 / 19, 9 / 18, 9 / 16]
 function pickColWidth() {
   const W = window.innerWidth
   const H = window.innerHeight
-  if (W <= 520) return W  // 手機：直接用視窗寬
-  // 桌機/平板：用視窗高度模擬手機直式，選最接近 430px 的標準比例
+  const maxPhoneRatio = Math.max(...PHONE_RATIOS)  // 9/16 = 0.5625
+
+  // 寬高比在手機直式範圍內 → 視為手機，直接用全寬
+  if (W / H <= maxPhoneRatio) return W
+
+  // 桌機/平板（橫式）：用視窗高度反推手機直式欄寬，選最接近的標準比例
   const TARGET = 430
   let best = null, bestDiff = Infinity
   for (const r of PHONE_RATIOS) {
     const w = Math.round(H * r)
-    if (w < 375 || w > 520) continue
     const diff = Math.abs(w - TARGET)
     if (diff < bestDiff) { bestDiff = diff; best = w }
   }
-  return best ?? Math.min(500, Math.max(375, Math.round(H * (9 / 19.5))))
+  return best ?? Math.round(H * (9 / 19.5))
 }
 
 // React render 前同步設定，所有頁面整個 session 共用同一個值
