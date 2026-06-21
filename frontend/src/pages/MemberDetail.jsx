@@ -100,6 +100,7 @@ export default function MemberDetail() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
       <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
+        <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>成員資料</h1>
 
         {/* 頭像 + 名稱 */}
         <section className="rounded-2xl p-5 shadow-sm mt-4 mb-3 flex items-center gap-4" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
