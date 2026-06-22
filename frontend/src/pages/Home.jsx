@@ -210,7 +210,7 @@ export default function Home() {
               <SystemLinkTile
                 data-testid="link-line"
                 icon={<IconChat />}
-                label="LINE Bot"
+                label={`LINE\n事業部小幫手`}
                 onClick={() => window.open(systemLinks.lineAddFriendUrl, '_blank')}
               />
             )}
@@ -218,7 +218,7 @@ export default function Home() {
               <SystemLinkTile
                 data-testid="link-calendar"
                 icon={<IconCalendar />}
-                label="行事曆"
+                label={`康九冠軍\ngoogle 日曆`}
                 onClick={() => window.open(systemLinks.calendarAddUrl, '_blank')}
               />
             )}
