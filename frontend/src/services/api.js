@@ -156,6 +156,9 @@ export const api = {
   checkFinancialPermission: (editorId, targetUserId) =>
     request(`/financial/check-permission?editorId=${editorId}&targetUserId=${targetUserId}`),
 
+  // === LINE 系統連結（公開） ===
+  getSystemLinks: () => request('/line/system-links'),
+
   // === LINE Bot 每日行程推播設定（開發者） ===
   getAgendaSettings: () => request('/line/agenda-settings'),
   updateAgendaSettings: (body) => request('/line/agenda-settings', {
