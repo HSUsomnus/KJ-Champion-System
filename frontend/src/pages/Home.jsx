@@ -231,7 +231,7 @@ export default function Home() {
                   data-testid="financial-amount"
                   style={{ fontSize: 14, fontWeight: 600, color: hasFinancial ? '#2C2C2C' : '#8A8680' }}
                 >
-                  {hasFinancial ? `$${Number(fa).toLocaleString()}` : '尚未填寫'}
+                  {hasFinancial ? fa : '尚未填寫'}
                 </p>
               </div>
               <button
