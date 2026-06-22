@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.9.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-22
+> **版本 v2.10.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-22
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -63,7 +63,8 @@ kj-champion-dev 專案（dev 後端）
 | **備份 DB 定時同步**（v2.7.0） | node-cron 每 8 小時全量覆蓋 prod → backup DB（0/8/16 點台北時間） | 後台自動 |
 | **Admin API**（v2.8.0） | `POST /api/admin/sync-prod-to-backup`（手動觸發）/ `GET /api/admin/export-backup-csv?table=xxx`（backup→CSV 下載）/ `GET /api/admin/backup-status`（查筆數），Bearer token 保護 | ADMIN_SECRET |
 | **桌機版面置中**（v2.9.0） | 桌機橫式螢幕以手機直式欄框居中；欄寬依視窗高度從標準比例反推（~430px）；手機直接全寬零回歸 | 所有人 |
-| PWA | 可安裝至手機桌面（Chrome / iOS Safari） | 所有人 |
+| **主頁快捷資訊**（v2.10.0） | 歡迎卡整合財力金額（空值顯示「尚未填寫」）與「上傳財力」按鈕；系統連結區三個圖示方塊（LINE 事業部小幫手、康九冠軍 google 日曆、安裝到手機/PC）；PWA 安裝依狀態彈出 dialog | 所有人 |
+| PWA | 可安裝至手機桌面（Chrome / iOS Safari）；安裝按鈕依狀態提示（已安裝 / 不支援瀏覽器） | 所有人 |
 
 ---
 
@@ -139,7 +140,7 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   │   ├── favicon.svg
 │   │   └── icons/               # PWA 圖示
 │   ├── src/
-│   │   ├── main.jsx             # pickColWidth() 設定 --col-max-w / --col-half-w CSS 變數
+│   │   ├── main.jsx             # pickColWidth() 設定欄寬變數；預攔截 beforeinstallprompt 存 window.__pwaInstallPrompt
 │   │   ├── App.jsx              # React Router + ProtectedRoute + Layout 三層巢狀
 │   │   ├── pages/               # 15 個活躍頁面
 │   │   ├── components/
