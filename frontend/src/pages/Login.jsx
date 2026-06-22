@@ -74,9 +74,10 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6"
+      className="min-h-screen flex flex-col items-center justify-center"
       style={{ background: '#F7F5F2' }}
     >
+      <div data-testid="login-content" className="w-full flex flex-col items-center px-6" style={{ maxWidth: 'var(--col-max-w, 448px)' }}>
       {/* Logo */}
       <img
         src="/康九_logo.png"
@@ -191,6 +192,8 @@ export default function Login() {
           </button>
         </div>
       )}
+
+      </div>
 
       {/* 底部版本 */}
       <p className="absolute bottom-6 text-xs" style={{ color: '#E2DED8' }}>v2.0</p>

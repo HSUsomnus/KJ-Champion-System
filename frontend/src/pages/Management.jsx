@@ -87,23 +87,16 @@ export default function Management() {
         <h1 className="text-base font-semibold mt-4 mb-4" style={{ color: '#2C2C2C' }}>管理者後台</h1>
 
         <div className="mb-4">
-          <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3 }}>
+          <div className="flex rounded-[20px] p-[3px]" style={{ background: '#EFEDE9' }}>
             {TABS.map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
+                className="flex-1 text-center text-xs py-1.5 px-1 rounded-2xl border-none cursor-pointer transition-colors duration-150"
                 style={{
-                  flex: 1,
-                  textAlign: 'center',
-                  fontSize: 12,
                   fontWeight: tab === t ? 500 : 400,
-                  padding: '6px 4px',
-                  borderRadius: 16,
-                  border: 'none',
-                  cursor: 'pointer',
                   background: tab === t ? '#4A7C59' : 'transparent',
                   color: tab === t ? '#fff' : '#2C2C2C',
-                  transition: 'background 0.15s, color 0.15s',
                 }}
               >{t}</button>
             ))}

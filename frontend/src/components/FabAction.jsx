@@ -88,7 +88,7 @@ export default function FabAction({ onOpen, items, fabIcon, fabColor }) {
         />
       )}
 
-      <div style={{ position: 'fixed', bottom: 24, right: 16, width: FAB_SIZE, height: FAB_SIZE, zIndex: 50 }}>
+      <div data-testid="fab-container" style={{ position: 'fixed', bottom: 24, right: 'max(16px, calc(50vw - var(--col-half-w, 224px) + 16px))', width: FAB_SIZE, height: FAB_SIZE, zIndex: 50 }}>
         {actionItems.map((item, i) => {
           const bottomOffset = FAB_SIZE + ITEM_GAP + i * (ITEM_SIZE + ITEM_GAP)
           return (
