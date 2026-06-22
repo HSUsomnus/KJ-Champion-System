@@ -128,7 +128,7 @@ export default function Home() {
     }
     if (!deferredPromptRef.current) {
       const isMobile = window.matchMedia('(pointer: coarse)').matches
-      setPwaDialog(isMobile ? '不支援該瀏覽器，請使用其他瀏覽器' : '不支援該瀏覽器，請使用 Chrome 或 Edge')
+      setPwaDialog(isMobile ? '如果重新整理無效，不支援該瀏覽器，請使用其他瀏覽器' : '如果重新整理無效，不支援該瀏覽器，請使用 Chrome 或 Edge')
       return
     }
     deferredPromptRef.current.prompt()
