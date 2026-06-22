@@ -24,5 +24,6 @@
 
 ## 前端目錄
 
-- main 分支的正式前端：`public/`
-- 部署至：Cloudflare Pages（正式專案）
+- main 分支的正式前端：`frontend/`（React + Vite + PWA，`public/` 已於 v2.0.0 刪除）
+- 部署至：Cloudflare Pages（`kj-champion-system.pages.dev`）
+- Build command：`cd frontend && npm install && npm run build`，output：`frontend/dist`

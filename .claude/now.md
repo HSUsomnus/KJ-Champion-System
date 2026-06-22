@@ -12,7 +12,7 @@ change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
 ## 最近推送
 
-git-guard.js 修正：① git add 誤判（路徑開頭的 `.` 被當 `git add .`）→ 改為按命令段落切分，只比對段首指令；② main commit 過度攔截（CLAUDE.md、scripts/ 等規則類被擋）→ 改為只攔截真正的功能程式碼（server/、frontend/ 等）。
+規則檔全面更新（依 v2.10.1 現況）：backend.md 補 debug/admin 路由；database.md 修 dev 服務名稱 + import-csv-to-dev 工具；deploy.md 修 dev 服務名稱；frontend.md 更新 components/頁面數；main.md 修正前端目錄（`public/` → `frontend/`）；workflow.md 修 Zeabur 路徑；UIDESIGN.md 更新 FAB/SidebarNav 位置公式 + Header 廢棄說明 + Feedback 待實作說明。
 
 ## 已知地雷
 

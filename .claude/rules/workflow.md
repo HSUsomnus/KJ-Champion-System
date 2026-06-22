@@ -160,7 +160,7 @@ Cloudflare Pages（前端 dev 環境）
   3. Trigger deploy → 等待部署完成
 
 Zeabur（後端 dev 環境）
-  1. Zeabur Dashboard → kj-champion-dev → kj-champion-system-dev → Settings → Git
+  1. Zeabur Dashboard → kj-champion-dev → kj-champion-dev → Settings → Git
   2. Branch 改為：m_b_功能名稱
   3. 重新部署 → 等待服務啟動
 ```

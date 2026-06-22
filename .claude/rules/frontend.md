@@ -11,10 +11,10 @@ frontend/
 ├── public/
 │   └── _worker.js        # Cloudflare Worker（API 路由 + dev/prod 分流）
 ├── src/
-│   ├── App.jsx            # React Router 主入口 + ProtectedRoute
-│   ├── main.jsx
-│   ├── pages/             # 15 個頁面元件
-│   ├── components/        # Header / FabNav / FabAction / ConfirmLeaveDialog
+│   ├── App.jsx            # React Router 主入口 + ProtectedRoute + Layout 三層巢狀
+│   ├── main.jsx           # pickColWidth() 設欄寬 CSS 變數；預攔截 beforeinstallprompt
+│   ├── pages/             # 17 個頁面元件
+│   ├── components/        # SidebarNav / Layout / FabAction / ConfirmLeaveDialog
 │   ├── contexts/          # AuthContext
 │   ├── services/          # api.js（API 呼叫層）
 │   └── utils/             # shareEvent.js
