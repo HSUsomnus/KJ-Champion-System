@@ -8,7 +8,7 @@ export default function Layout() {
   return (
     <>
       <SidebarNav />
-      <div data-testid="layout-column" style={{ maxWidth: 'var(--col-max-w, 448px)', marginInline: 'auto' }}>
+      <div data-testid="layout-column" style={{ width: '100%', maxWidth: 'var(--col-max-w, 448px)', marginInline: 'auto' }}>
         <Outlet />
       </div>
     </>
