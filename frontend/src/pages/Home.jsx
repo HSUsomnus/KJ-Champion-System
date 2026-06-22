@@ -91,6 +91,7 @@ export default function Home() {
   const [todayEvents, setTodayEvents] = useState([])
   const [systemLinks, setSystemLinks] = useState({ lineAddFriendUrl: null, calendarAddUrl: null })
   const [pwaInstalled, setPwaInstalled] = useState(false)
+  const [pwaDialog, setPwaDialog] = useState(null)   // null | '已安裝' | '不支援該瀏覽器，請使用 Chrome 或 Edge'
   const deferredPromptRef = useRef(null)
 
   useEffect(() => {
@@ -121,7 +122,14 @@ export default function Home() {
   }, [])
 
   const handlePwaInstall = () => {
-    if (!deferredPromptRef.current) return
+    if (pwaInstalled) {
+      setPwaDialog('已安裝')
+      return
+    }
+    if (!deferredPromptRef.current) {
+      setPwaDialog('不支援該瀏覽器，請使用 Chrome 或 Edge')
+      return
+    }
     deferredPromptRef.current.prompt()
     deferredPromptRef.current.userChoice.then(() => {
       deferredPromptRef.current = null
@@ -134,6 +142,29 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
+
+      {/* PWA 資訊 dialog（Change 12 feedback 系統實作前的臨時方案） */}
+      {pwaDialog && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(44,44,44,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setPwaDialog(null)}
+        >
+          <div
+            style={{ background: '#FFFFFF', borderRadius: 16, padding: 24, maxWidth: 280, width: 'calc(100% - 48px)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p style={{ fontSize: 14, fontWeight: 500, color: '#2C2C2C', textAlign: 'center', marginBottom: 20 }}>
+              {pwaDialog}
+            </p>
+            <button
+              onClick={() => setPwaDialog(null)}
+              style={{ width: '100%', background: '#2C2C2C', color: '#FFFFFF', border: 'none', borderRadius: 12, padding: '12px 0', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+            >
+              確認
+            </button>
+          </div>
+        </div>
+      )}
       <main className="flex-1 overflow-y-auto pt-14 pb-28 px-4">
 
         {/* 歡迎卡：左 頭像+名字，右 財力金額+上傳按鈕 */}
@@ -228,7 +259,6 @@ export default function Home() {
               label={`安裝到\n手機/PC`}
               subLabel={pwaInstalled ? '已安裝' : undefined}
               onClick={handlePwaInstall}
-              disabled={pwaInstalled}
             />
           </div>
         </section>

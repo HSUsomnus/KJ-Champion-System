@@ -83,7 +83,7 @@ describe('Home — 系統連結', () => {
 })
 
 describe('Home — PWA 安裝按鈕', () => {
-  it('standalone 模式時安裝按鈕為 disabled', async () => {
+  it('standalone 模式時安裝按鈕仍可點擊（點擊後顯示 dialog）', async () => {
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: vi.fn().mockReturnValue({ matches: true }),
@@ -91,13 +91,17 @@ describe('Home — PWA 安裝按鈕', () => {
     mockUseAuth.mockReturnValue({ user: { realName: '王小明', financialAmount: null } })
     render(<Home />)
     const btn = await screen.findByTestId('link-pwa')
-    expect(btn).toBeDisabled()
+    expect(btn).not.toBeDisabled()
   })
 
-  it('非 standalone 模式時安裝按鈕可點擊', async () => {
+  it('standalone 模式時安裝按鈕有「已安裝」副文字', async () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockReturnValue({ matches: true }),
+    })
     mockUseAuth.mockReturnValue({ user: { realName: '王小明', financialAmount: null } })
     render(<Home />)
-    const btn = await screen.findByTestId('link-pwa')
-    expect(btn).not.toBeDisabled()
+    await screen.findByTestId('link-pwa')
+    expect(screen.getByText('已安裝')).toBeTruthy()
   })
 })
