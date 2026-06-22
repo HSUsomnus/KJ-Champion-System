@@ -12,7 +12,7 @@ change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
 ## 最近推送
 
-v2.10.0 — change 19「主頁快捷資訊」：主頁歡迎卡整合財力金額、系統連結區（LINE/行事曆/PWA 三個圖示方塊）、新後端 API `GET /api/line/system-links`、PWA 安裝按鈕依狀態 dialog 提示、main.jsx 預攔截 beforeinstallprompt。
+v2.10.1 — hotfix：主頁財力金額顯示「$非數值」。`financial_amount` 存自由文字（如「1700萬」），`Number()` 回傳 NaN，修法為直接顯示原始字串，不做數值轉換。
 
 ## 已知地雷
 

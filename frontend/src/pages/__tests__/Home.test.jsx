@@ -40,11 +40,11 @@ beforeEach(() => {
 })
 
 describe('Home — 財力金額', () => {
-  it('財力有值時顯示金額', async () => {
-    mockUseAuth.mockReturnValue({ user: { realName: '王小明', financialAmount: '500000' } })
+  it('財力有值時顯示原始值', async () => {
+    mockUseAuth.mockReturnValue({ user: { realName: '王小明', financialAmount: '1700萬' } })
     render(<Home />)
     const el = await screen.findByTestId('financial-amount')
-    expect(el.textContent).toContain('500,000')
+    expect(el.textContent).toBe('1700萬')
   })
 
   it('財力空字串時顯示「尚未填寫」', async () => {
