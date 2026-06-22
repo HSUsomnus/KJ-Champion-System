@@ -10,7 +10,7 @@
 | `postgresql-backup` | **backup DB**（備份，每 8 小時自動從 prod 全量覆蓋） | 預設**關閉**，永遠不開 |
 | `postgresql-dev` | **dev DB**（測試） | **開啟**（dev 後端跨專案存取需要） |
 
-Dev 後端（`kj-champion-dev` 專案的 `kj-champion-system-dev`）透過公網 URL 連 `postgresql-dev`。
+Dev 後端（`kj-champion-dev` 專案的 `kj-champion-dev` 服務）透過公網 URL 連 `postgresql-dev`。
 
 已廢棄：
 - **Supabase**：已廢棄，禁止直接操作
@@ -22,8 +22,9 @@ Dev 後端（`kj-champion-dev` 專案的 `kj-champion-system-dev`）透過公網
 
 ```
 ❌ 不開 DB 公網連接埠（prod DB / backup DB 公網永遠關閉）
-❌ 不從本機執行腳本連接 DB（scripts/*.js 連 DB 的方式已廢棄）
-✅ 所有 DB 操作透過 Zeabur 儀表板的終端機執行
+❌ 不從本機執行腳本直連 prod DB / backup DB（公網永遠關閉，連不到）
+✅ prod / backup DB 操作：透過 Zeabur 儀表板的終端機執行
+✅ dev DB 操作：可用 scripts/import-csv-to-dev.js（dev DB 公網常開，v2.8.0 加入）
 ```
 
 **兩種終端機入口：**
@@ -79,7 +80,9 @@ Admin API（Bearer token 保護）：
 - `GET /api/admin/export-backup-csv`：從 backup DB 匯出 CSV（後端內網，不需開公網）
 - `GET /api/admin/backup-status`：查詢各 table 筆數
 
-`sync-backup-to-dev` API 已移除（v2.8.0），dev DB 寫入只能手動（Console 貼 SQL）。
+`sync-backup-to-dev` API 已移除（v2.8.0）。dev DB 寫入有兩種路徑：
+- **Zeabur Console 直貼 SQL**：`kj-champion` → `postgresql-dev` → Console
+- **本機工具**：`GET /api/admin/export-backup-csv` 下載 CSV → 放到 `scripts/csv-export/<table>.csv` → `node scripts/import-csv-to-dev.js <table>`（需要設 `DEV_DATABASE_URL`）
 
 ---
 

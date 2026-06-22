@@ -5,7 +5,7 @@
 | 環境 | Zeabur 專案 | 服務 | 公網 |
 |---|---|---|---|
 | **prod** | `kj-champion` | `postgresql`（內網 only）+ `kj-champion-system`（後端，main branch） | DB 公網**關閉**、後端公網開（Cloudflare Pages 走後端公網入口） |
-| **dev** | `kj-champion-dev` | `postgresql-dev`（公網開）+ `kj-champion-system-dev`（後端，dev branch） | 全部開（PC + Cloudflare Pages preview 都連得到） |
+| **dev** | `kj-champion-dev` | `postgresql-dev`（公網開）+ `kj-champion-dev`（後端，m_b_* 功能分支） | 全部開（PC + Cloudflare Pages preview 都連得到） |
 
 dev 後端 URL：`kj-champion-dev.zeabur.app`（v2.1.0 起，舊 `kj-champion-system-dev.zeabur.app` 已廢棄）
 
@@ -50,7 +50,7 @@ git commit -m "feat/fix/chore: ..."
 
 **不得直推 main 的變更**（必須走功能分支 → merge 流程）：
 
-- 功能程式碼（`server/`、`frontend/`、`public/`）
+- 功能程式碼（`server/`、`frontend/`）
 - 資料庫相關（migrations、schema、seeds）
 - 套件 / 依賴變更（`package.json`、`package-lock.json`）
 - 部署設定（`_worker.js`、`vercel.json`、`zbpack.json`）

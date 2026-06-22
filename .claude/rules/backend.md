@@ -14,12 +14,14 @@
 
 | 前綴 | 說明 |
 | --- | --- |
-| `/api/calendar/*` | 行事曆（Google Calendar + Supabase） |
-| `/api/members/*` | 成員管理 |
+| `/api/calendar/*` | 行事曆（Google Calendar + 本地 DB，raw https.request） |
+| `/api/members/*` | 成員管理（update-roles：負責人或開發者可操作） |
 | `/api/profile/*` | 個人資料（含 sync-avatar） |
-| `/api/line/*` | LINE BOT 整合 |
+| `/api/line/*` | LINE BOT 整合、每日推播 API、系統連結（`system-links`） |
 | `/api/auth/*` | LINE Login OAuth |
 | `/api/financial/*` | 財務（限 manager 角色） |
+| `/api/debug/*` | 後端自檢（`GET /api/debug/health`：Google Auth + DB 連線六步驟） |
+| `/api/admin/*` | Admin 操作（Bearer token 保護）：sync-prod-to-backup / export-backup-csv / backup-status |
 
 ## 登入機制（後端部分）
 

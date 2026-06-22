@@ -1,7 +1,7 @@
 # UIDESIGN — KJ Champion System UI 設計總入口
 
 > **任何新增 / 修改前端 UI 元件前必讀本檔。** 包含 Warm Minimal 設計系統、Pill Tab 規範、SidebarNav 規範、Feedback 元件規範、彈出訊息決策樹、禁止事項。
-> 最後更新：2026-06-21（v2.7.0 新增 Pill Tab 規範 + SidebarNav 規範）
+> 最後更新：2026-06-23（v2.9.0 桌機欄框置中 + FAB/SidebarNav 位置公式更新；v2.10.0 主頁快捷入口）
 
 ---
 
@@ -84,9 +84,9 @@ system-ui, -apple-system, 'Microsoft JhengHei', '微軟正黑體', sans-serif
 | FAB 主按鈕 | 56×56px | 固定在左下 / 右下角 |
 | FAB 子項按鈕 | 44×44px | 展開時從主按鈕往上疊出 |
 | 快捷入口圓形 | 56×56px | 主頁 4 個功能快捷 |
-| 用戶頭像（Header） | 28×28px | Header 右上角 |
+| 用戶頭像（SidebarNav 底部） | 28×28px | SidebarNav 底部用戶區 |
 | 用戶頭像（主頁歡迎） | 56×56px | 主頁歡迎區塊 |
-| 重新整理按鈕 | 32×32px | Header 左側 Logo 旁 |
+| 重新整理按鈕 | 32×32px | SidebarNav 頂部 Logo 右側 |
 | 頭像佔位符 | 繼承父層 | 無圖片時顯示名字首字，背景 `accent` |
 
 **圓形元素共用樣式：**
@@ -148,21 +148,18 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 
 ---
 
-## Header 規範（每頁共用）
+## Header 規範（已廢棄）
+
+> ⚠️ **獨立的 `Header.jsx` 元件已於 v2.5.0 移除，由 SidebarNav 取代。**
+> 各頁面不再有固定頂部 Header。導覽與用戶資訊透過左側抽屜式 SidebarNav 提供（見下方「SidebarNav 規範」）。
+> 以下規格**保留作設計參考**，不得基於此建立新的 Header 元件。
 
 ```
+已廢棄規格（僅供參考）：
 高度：56px（fixed top）
 背景：rgba(247,245,242,0.92) + backdrop-filter: blur(12px)
 底部邊框：1px solid #E2DED8
 ```
-
-**左側（必填）：**
-- 康九 Logo（`h-8`，`/康九_logo.png`）
-- 重新整理圓形按鈕（32px，`surface-2` 背景）
-
-**右側（依登入狀態）：**
-- 已登入：用戶頭像圓形（28px）+ 真實姓名（14px/500，最寬 80px 截斷）
-- 未登入：用戶 icon 圓形（32px，`surface-2` 背景）
 
 ---
 
@@ -181,7 +178,8 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 
 ### 共用規則
 - 兩個 FAB 使用 React Portal 渲染到 `document.body`（避免 stacking context 問題）
-- 固定位置：`bottom: 24px`，左 FAB `left: 16px`，右 FAB `right: max(16px, calc(50% - 208px))`（對齊 448px 欄右緣）
+- 固定位置：`bottom: 24px`，左 FAB `left: max(16px, calc(50vw - var(--col-half-w) + 16px))`，右 FAB `right: max(16px, calc(50vw - var(--col-half-w) + 16px))`（v2.9.0 起，跟隨欄位邊緣）
+- `--col-half-w` 由 `main.jsx` 的 `pickColWidth()` 在 React render 前寫入 `<html>` style，session 固定
 - 展開時背景遮罩：`rgba(44,44,44,0.15)`，點擊收合
 
 ---
@@ -239,8 +237,8 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 |------|------|
 | 主要內容欄 | `max-w-md`（448px）置中，由 `Layout.jsx` 統一控制 |
 | Login 頁 | `w-full max-w-md` 內層 wrapper（不經 Layout，自行限寬） |
-| 右下角 FAB | `right: max(16px, calc(50% - 208px))`，對齊欄右緣；手機 <448px 保底 16px |
-| SidebarNav 漢堡鈕 | `fixed` 定位維持視窗左上角，不受欄寬限制 |
+| 右下角 FAB | `right: max(16px, calc(50vw - var(--col-half-w) + 16px))`，對齊欄右緣（v2.9.0） |
+| SidebarNav 漢堡鈕 | `left: max(16px, calc(50vw - var(--col-half-w) + 16px))`，對齊欄左緣（v2.9.0） |
 | 彈窗 / bottom sheet | 各自獨立定位（`fixed inset-0`），不受欄寬影響 |
 
 **禁止**：各頁自行加 `max-w-md mx-auto`，統一交給 Layout 處理。
@@ -364,9 +362,12 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 
 ---
 
-## Feedback 元件規範（v2.4.0 起）
+## Feedback 元件規範（Change 12 實作後生效）
 
-統一彈出訊息系統位於 `frontend/src/components/feedback/`。**所有彈出訊息必須使用此套件，禁止使用瀏覽器原生 `alert / confirm / prompt`。**
+> ⚠️ **`frontend/src/components/feedback/` 尚未實作**（Change 12「統一彈出訊息系統」，分支 `m_b_統一彈出訊息系統`，尚未開始）。以下為設計規範，實作後才可使用。
+> 目前 main 仍有 `window.confirm()` 殘留（EventDetail.jsx）和 Home.jsx inline modal，Change 12 完成後統一替換。
+
+統一彈出訊息系統位於 `frontend/src/components/feedback/`。**Change 12 上線後，所有彈出訊息必須使用此套件，禁止使用瀏覽器原生 `alert / confirm / prompt`。**
 
 ### Toast（輕量通知）
 
