@@ -15,14 +15,12 @@ process.stdin.on('end', () => {
     if (/git push\b.*\borigin\b.*\bmain\b/.test(command) && !/--delete/.test(command)) {
       const syncScript = [
         'git fetch origin --prune',
-        '# 1. 同步 dev',
-        'git checkout dev && git merge main --no-edit && git push origin dev',
-        '# 2. 同步所有遠端 m_b_* 分支',
+        '# 同步所有遠端 m_b_* 分支',
         "for branch in $(git ls-remote --heads origin 'refs/heads/m_b_*' | sed 's|.*refs/heads/||'); do",
         '  git checkout -B "$branch" "origin/$branch"',
         '  git merge main --no-edit && git push origin "$branch" || git merge --abort',
         'done',
-        'git checkout dev'
+        'git checkout main'
       ].join('\n');
 
       const output = {
