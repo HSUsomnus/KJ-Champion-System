@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.8.1-dev** | 分支：`dev` | 測試站：[kjcs-dev.pages.dev](https://kjcs-dev.pages.dev) | 更新：2026-06-22
+> **版本 v2.9.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-22
 
 測試環境。正式版本請看 `main` 分支。
 
@@ -60,6 +60,7 @@ kj-champion-dev 專案（dev 後端）
 | **定時同步 Calendar**（v2.4.0） | node-cron 每分鐘自動同步 Google Calendar → 本地 DB；raw https.request 繞過 gaxios | 後台自動 |
 | **備份 DB 定時同步**（v2.7.0） | node-cron 每 8 小時全量覆蓋 prod → backup DB（0/8/16 點台北時間） | 後台自動 |
 | **Admin API**（v2.8.0） | `POST /api/admin/sync-prod-to-backup`（手動觸發）/ `GET /api/admin/export-backup-csv?table=xxx`（backup→CSV 下載）/ `GET /api/admin/backup-status`（查筆數），Bearer token 保護 | ADMIN_SECRET |
+| **桌機版面置中**（v2.9.0） | 桌機橫式螢幕以手機直式欄框居中；欄寬依視窗高度從標準比例反推（~430px）；手機直接全寬零回歸 | 所有人 |
 | PWA | 可安裝至手機桌面（Chrome / iOS Safari） | 所有人 |
 
 ---
@@ -127,12 +128,13 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   │   ├── favicon.svg
 │   │   └── icons/               # PWA 圖示
 │   ├── src/
+│   │   ├── main.jsx             # pickColWidth() 設定 --col-max-w / --col-half-w CSS 變數
 │   │   ├── App.jsx              # React Router + ProtectedRoute + Layout 三層巢狀
 │   │   ├── pages/               # 15 個活躍頁面
 │   │   ├── components/
-│   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（logo + 品牌文字 + 管理者後台入口）
-│   │   │   ├── Layout.jsx       # Outlet 包裹器
-│   │   │   └── FabAction.jsx    # 浮動操作按鈕
+│   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（漢堡按鈕對齊欄左緣）
+│   │   │   ├── Layout.jsx       # Outlet 置中欄包裹器（width:100% + maxWidth:--col-max-w）
+│   │   │   └── FabAction.jsx    # 浮動操作按鈕（right 對齊欄右緣）
 │   │   ├── contexts/AuthContext.jsx
 │   │   ├── services/api.js
 │   │   └── utils/shareEvent.js
@@ -202,6 +204,7 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 | 文字色 | `#2C2C2C` |
 | Pill tab | container `#EFEDE9` / active `#4A7C59` 白字 / inactive `#2C2C2C` 透明底 |
 | 漢堡 FAB | 左上固定黑（開側邊欄）；FabAction 右側綠（編輯模式紅） |
+| 桌機版面 | 手機直式欄框（~430px）居中，兩側 `#F7F5F2` 留白 |
 
 ---
 

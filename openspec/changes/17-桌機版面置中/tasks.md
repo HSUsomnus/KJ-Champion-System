@@ -26,7 +26,7 @@
   - 對應測試：Login 渲染測試補 case
 - [x] **3.2** 更新 `UIDESIGN.md`：新增「版面寬度規範」（`max-w-md` 置中、由 Layout 統一控制、`FabAction` 用 `max()+calc()` 對齊欄右緣、SidebarNav 漢堡鈕維持視窗角）
 - [x] **3.3 最終 regression**：`npm --prefix frontend run test:run` + `npm --prefix frontend run test:e2e` 全綠
-- [ ] **3.4 dev 站手動驗收**（使用者執行）：
+- [x] **3.4 dev 站手動驗收**（使用者執行）：
   - 桌機 Chrome：**所有頁面**內容置中、兩側米白留白、FAB 對齊置中欄右緣（與 AgendaSettings 現有樣式一致）
   - 手機 PWA：版面與目前**完全一致**（限寬零回歸）、抽屜選單正常
   - 視窗從寬縮到 448px 附近：FAB 定位平滑無抖動

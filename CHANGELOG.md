@@ -6,6 +6,13 @@
 
 ---
 
+## [v2.9.0] - 2026-06-22
+
+git tag: v2.9.0
+摘要：change 18「桌機版面置中」— 桌機橫式螢幕以手機直式欄框居中顯示。`main.jsx` 於 React render 前同步執行 `pickColWidth()`，依視窗寬高比判斷手機/桌機（≤ 9/16 為手機直接全寬，否則從視窗高度反推最接近 430px 的標準比例），寫入 `--col-max-w` / `--col-half-w` CSS 變數（session 固定）。`Layout.jsx` 欄位加 `width:100%` 修正 `#root { display:flex; flex-direction:column }` 環境下 flex item 需顯式設寬才填滿 `maxWidth` 的 bug。`FabAction.jsx` 與 `SidebarNav.jsx` 漢堡按鈕改用 `max(16px, calc(50vw - var(--col-half-w) + 16px))` 跟隨欄位邊緣。`Management.jsx` pill tab 從 inline px 改 Tailwind rem 確保值一致。
+
+---
+
 ## [v2.8.1] - 2026-06-21
 
 git tag: v2.8.1

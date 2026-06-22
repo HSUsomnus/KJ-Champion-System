@@ -8,11 +8,11 @@
 
 change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。dev 已有部分 feedback 元件（FeedbackProvider / useToast / useConfirm），merge main 時需留意衝突。
 
-change 17「SidebarNav UI 重構」— ✅ DONE，已上線 v2.8.0。
+change 18「桌機版面置中」— ✅ DONE，已上線 v2.9.0。
 
 ## 最近推送
 
-v2.8.1 — hotfix：`package.json engines` 加 `"npm": "10"` 繞過 Zeabur 基礎映像 `promise-retry` 缺失 bug（v2.8.0 部署失敗的根因，與 change 17 程式碼無關）。
+v2.9.0 — change 18「桌機版面置中」：pickColWidth 依寬高比反推欄寬、Layout width:100% 修正 flex 不填滿 bug、FAB 與漢堡按鈕對齊欄邊緣公式。
 
 ## 已知地雷
 
