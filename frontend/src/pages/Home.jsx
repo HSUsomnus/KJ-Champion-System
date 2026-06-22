@@ -144,22 +144,43 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F5F2' }}>
 
-      {/* PWA 資訊 dialog（Change 12 feedback 系統實作前的臨時方案） */}
+      {/* PWA 資訊 dialog（Change 12 feedback 系統實作前的臨時方案，樣式按 UIDESIGN ConfirmDialog 規格） */}
       {pwaDialog && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(44,44,44,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => setPwaDialog(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 60,
+            background: 'rgba(44,44,44,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
         >
           <div
-            style={{ background: '#FFFFFF', borderRadius: 16, padding: 24, maxWidth: 280, width: 'calc(100% - 48px)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
             onClick={e => e.stopPropagation()}
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 16,
+              padding: 24,
+              maxWidth: 320,
+              width: 'calc(100% - 48px)',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.05)',
+            }}
           >
-            <p style={{ fontSize: 14, fontWeight: 500, color: '#2C2C2C', textAlign: 'center', marginBottom: 20 }}>
+            <p style={{
+              fontSize: 14, fontWeight: 500, color: '#2C2C2C',
+              textAlign: 'center', marginBottom: 24, lineHeight: 1.6,
+            }}>
               {pwaDialog}
             </p>
             <button
               onClick={() => setPwaDialog(null)}
-              style={{ width: '100%', background: '#2C2C2C', color: '#FFFFFF', border: 'none', borderRadius: 12, padding: '12px 0', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+              style={{
+                width: '100%',
+                background: '#2C2C2C', color: '#FFFFFF',
+                border: 'none', borderRadius: 16,
+                padding: '14px 24px',
+                fontSize: 16, fontWeight: 600,
+                cursor: 'pointer',
+              }}
             >
               確認
             </button>
