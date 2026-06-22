@@ -4,6 +4,87 @@ import FabAction from '../components/FabAction'
 import { useAuth } from '../contexts/AuthContext'
 import { api, mapEvent } from '../services/api'
 
+// ── Inline SVG icons（UIDESIGN 禁止 emoji）──────────────────────────────────
+
+function IconChat() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function IconCalendar() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  )
+}
+
+function IconDownload() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  )
+}
+
+// ── SystemLinkTile ──────────────────────────────────────────────────────────
+
+function SystemLinkTile({ icon, label, subLabel, onClick, disabled, 'data-testid': testId }) {
+  return (
+    <button
+      data-testid={testId}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid #E2DED8',
+        borderRadius: 16,
+        padding: '14px 8px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        opacity: disabled ? 0.4 : 1,
+        cursor: disabled ? 'default' : 'pointer',
+        transition: 'transform 0.1s',
+      }}
+    >
+      <div style={{
+        width: 44,
+        height: 44,
+        borderRadius: '50%',
+        background: '#E8F0EB',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#4A7C59',
+      }}>
+        {icon}
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 500, color: '#2C2C2C', textAlign: 'center', lineHeight: 1.3, whiteSpace: 'pre-line' }}>
+        {label}
+      </span>
+      {subLabel && (
+        <span style={{ fontSize: 11, color: '#8A8680', marginTop: -4 }}>{subLabel}</span>
+      )}
+    </button>
+  )
+}
+
+// ── Home ────────────────────────────────────────────────────────────────────
+
 export default function Home() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -25,7 +106,16 @@ export default function Home() {
 
     setPwaInstalled(window.matchMedia('(display-mode: standalone)').matches)
 
-    const handler = (e) => { e.preventDefault(); deferredPromptRef.current = e }
+    // [設計決策] 讀 main.jsx 預先攔截的 beforeinstallprompt
+    // 因為該 event 在 React mount 前就觸發，useEffect 若自己監聽會 miss
+    if (window.__pwaInstallPrompt) {
+      deferredPromptRef.current = window.__pwaInstallPrompt
+    }
+    const handler = (e) => {
+      e.preventDefault()
+      deferredPromptRef.current = e
+      window.__pwaInstallPrompt = e
+    }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
@@ -33,7 +123,10 @@ export default function Home() {
   const handlePwaInstall = () => {
     if (!deferredPromptRef.current) return
     deferredPromptRef.current.prompt()
-    deferredPromptRef.current.userChoice.then(() => { deferredPromptRef.current = null })
+    deferredPromptRef.current.userChoice.then(() => {
+      deferredPromptRef.current = null
+      window.__pwaInstallPrompt = null
+    })
   }
 
   const fa = user?.financialAmount
@@ -45,39 +138,61 @@ export default function Home() {
 
         {/* 歡迎卡：左 頭像+名字，右 財力金額+上傳按鈕 */}
         <section className="mt-4 mb-5">
-          <div
-            className="rounded-2xl p-4 shadow-sm flex items-center gap-3"
-            style={{ background: '#fff', border: '1px solid #E2DED8' }}
-          >
+          <div style={{
+            background: '#FFFFFF',
+            border: '1px solid #E2DED8',
+            borderRadius: 16,
+            padding: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            {/* 頭像 56px per UIDESIGN spec */}
             {user?.pictureUrl ? (
-              <img src={user.pictureUrl} alt="" className="w-12 h-12 rounded-full object-cover shrink-0 shadow-sm" />
+              <img src={user.pictureUrl} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
             ) : (
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 shadow-sm"
-                style={{ background: '#4A7C59', color: '#fff' }}
-              >
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
+                background: '#4A7C59', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 20, fontWeight: 700,
+              }}>
                 {(user?.realName || '?')[0]}
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs" style={{ color: '#8A8680' }}>歡迎回來</p>
-              <p className="text-base font-semibold truncate" style={{ color: '#2C2C2C' }}>{user?.realName}</p>
+
+            {/* 名字 */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 12, color: '#8A8680', marginBottom: 2 }}>歡迎回來</p>
+              <p style={{ fontSize: 16, fontWeight: 600, color: '#2C2C2C', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.realName}
+              </p>
             </div>
-            <div className="shrink-0 flex flex-col items-end gap-1.5">
-              <div className="text-right">
-                <p className="text-xs" style={{ color: '#8A8680' }}>財力金額</p>
+
+            {/* 財力區 */}
+            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 11, color: '#8A8680', marginBottom: 2 }}>財力金額</p>
                 <p
-                  className="text-sm font-semibold"
                   data-testid="financial-amount"
-                  style={{ color: hasFinancial ? '#2C2C2C' : '#8A8680' }}
+                  style={{ fontSize: 14, fontWeight: 600, color: hasFinancial ? '#2C2C2C' : '#8A8680' }}
                 >
                   {hasFinancial ? `$${Number(fa).toLocaleString()}` : '尚未填寫'}
                 </p>
               </div>
               <button
                 onClick={() => navigate('/financial-upload')}
-                className="text-xs px-3 py-1 rounded-full font-medium"
-                style={{ background: '#4A7C59', color: '#fff' }}
+                style={{
+                  background: '#4A7C59',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '5px 12px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
               >
                 上傳財力
               </button>
@@ -87,79 +202,67 @@ export default function Home() {
 
         {/* 系統連結區 */}
         <section className="mb-5">
-          <h2 className="text-xs font-semibold mb-3" style={{ color: '#8A8680', letterSpacing: '0.06em' }}>
+          <h2 style={{ fontSize: 14, fontWeight: 600, color: '#8A8680', letterSpacing: '0.06em', marginBottom: 12 }}>
             系統連結
           </h2>
-          <div className="grid grid-cols-3 gap-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             {systemLinks.lineAddFriendUrl && (
-              <button
+              <SystemLinkTile
                 data-testid="link-line"
+                icon={<IconChat />}
+                label="LINE Bot"
                 onClick={() => window.open(systemLinks.lineAddFriendUrl, '_blank')}
-                className="rounded-2xl p-4 flex flex-col items-center gap-2 shadow-sm"
-                style={{ background: '#D8F5E5', border: '1px solid #B8E8CC' }}
-              >
-                <span className="text-2xl">💬</span>
-                <span className="text-xs font-medium" style={{ color: '#2C2C2C' }}>LINE Bot</span>
-              </button>
+              />
             )}
-
             {systemLinks.calendarAddUrl && (
-              <button
+              <SystemLinkTile
                 data-testid="link-calendar"
+                icon={<IconCalendar />}
+                label="行事曆"
                 onClick={() => window.open(systemLinks.calendarAddUrl, '_blank')}
-                className="rounded-2xl p-4 flex flex-col items-center gap-2 shadow-sm"
-                style={{ background: '#DEEAF6', border: '1px solid #BDD4EC' }}
-              >
-                <span className="text-2xl">📅</span>
-                <span className="text-xs font-medium" style={{ color: '#2C2C2C' }}>行事曆</span>
-              </button>
+              />
             )}
-
-            <button
+            <SystemLinkTile
               data-testid="link-pwa"
+              icon={<IconDownload />}
+              label={`安裝到\n手機/PC`}
+              subLabel={pwaInstalled ? '已安裝' : undefined}
               onClick={handlePwaInstall}
               disabled={pwaInstalled}
-              className="rounded-2xl p-4 flex flex-col items-center gap-1 shadow-sm"
-              style={{
-                background: '#E8F0EB',
-                border: '1px solid #C8DDD0',
-                opacity: pwaInstalled ? 0.45 : 1,
-                cursor: pwaInstalled ? 'default' : 'pointer',
-              }}
-            >
-              <span className="text-2xl">📲</span>
-              <span className="text-xs font-medium" style={{ color: '#2C2C2C' }}>安裝 App</span>
-              {pwaInstalled && (
-                <span className="text-xs" style={{ color: '#8A8680' }}>已安裝</span>
-              )}
-            </button>
+            />
           </div>
         </section>
 
         {/* 今日行程 */}
         <section>
-          <h2 className="text-xs font-semibold mb-3" style={{ color: '#8A8680', letterSpacing: '0.06em' }}>
+          <h2 style={{ fontSize: 14, fontWeight: 600, color: '#8A8680', letterSpacing: '0.06em', marginBottom: 12 }}>
             今日行程
           </h2>
           <div className="flex flex-col gap-3">
             {todayEvents.length === 0 ? (
-              <div className="rounded-2xl p-6 shadow-sm text-center" style={{ background: '#fff', border: '1px solid #E2DED8' }}>
-                <p className="text-sm" style={{ color: '#8A8680' }}>今日沒有行程</p>
+              <div style={{
+                background: '#FFFFFF', border: '1px solid #E2DED8', borderRadius: 16,
+                padding: '24px 16px', textAlign: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              }}>
+                <p style={{ fontSize: 14, color: '#8A8680' }}>今日沒有行程</p>
               </div>
             ) : (
               todayEvents.map(item => (
                 <div
                   key={item.id}
-                  className="rounded-2xl p-4 shadow-sm"
-                  style={{ background: '#fff', border: '1px solid #E2DED8' }}
+                  style={{
+                    background: '#FFFFFF', border: '1px solid #E2DED8', borderRadius: 16,
+                    padding: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  }}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium" style={{ color: '#2C2C2C' }}>{item.title}</p>
-                    <span className="text-xs shrink-0" style={{ color: '#8A8680' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <p style={{ fontSize: 14, fontWeight: 500, color: '#2C2C2C' }}>{item.title}</p>
+                    <span style={{ fontSize: 12, color: '#8A8680', flexShrink: 0 }}>
                       {item.allDay ? '整日' : item.time || ''}
                     </span>
                   </div>
-                  <p className="text-xs mt-1.5" style={{ color: '#8A8680' }}>{item.type}</p>
+                  <p style={{ fontSize: 12, color: '#8A8680', marginTop: 6 }}>{item.type}</p>
                 </div>
               ))
             )}
