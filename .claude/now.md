@@ -12,7 +12,7 @@ change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
 ## 最近推送
 
-規則檔全面更新（依 v2.10.1 現況）：backend.md 補 debug/admin 路由；database.md 修 dev 服務名稱 + import-csv-to-dev 工具；deploy.md 修 dev 服務名稱；frontend.md 更新 components/頁面數；main.md 修正前端目錄（`public/` → `frontend/`）；workflow.md 修 Zeabur 路徑；UIDESIGN.md 更新 FAB/SidebarNav 位置公式 + Header 廢棄說明 + Feedback 待實作說明。
+openspec 廢棄檔清理：刪除 `openspec/STATUS.md`（已被 workflow.md 規則取代）、`openspec/project-chat-context.md`（舊版手機腦力激盪 context）、`openspec/changes/_archived/`（split-deploy-cloudflare-zeabur 舊草稿，已被 change 01/02/04 取代）。
 
 ## 已知地雷
 
