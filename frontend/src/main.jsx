@@ -31,6 +31,14 @@ const _colW = pickColWidth()
 document.documentElement.style.setProperty('--col-max-w', `${_colW}px`)
 document.documentElement.style.setProperty('--col-half-w', `${_colW / 2}px`)
 
+// [設計決策] beforeinstallprompt 在 React mount 前就觸發，必須在這裡攔截
+// 若在 useEffect 才加 listener 會 miss event，導致 PWA install 無法觸發
+window.__pwaInstallPrompt = null
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  window.__pwaInstallPrompt = e
+})
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

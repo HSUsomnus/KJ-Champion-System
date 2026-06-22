@@ -6,13 +6,13 @@
 
 ## 當前 Change
 
-change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。dev 已有部分 feedback 元件（FeedbackProvider / useToast / useConfirm），merge main 時需留意衝突。
+change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。dev 已有部分 feedback 元件（FeedbackProvider / useToast / useConfirm），merge main 時需留意衝突。Home.jsx 中有臨時 pwaDialog inline modal，待 change 12 完成後替換為 feedback 元件。
 
-change 18「桌機版面置中」— ✅ DONE，已上線 v2.9.0。
+change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
 ## 最近推送
 
-v2.9.0 — change 18「桌機版面置中」：pickColWidth 依寬高比反推欄寬、Layout width:100% 修正 flex 不填滿 bug、FAB 與漢堡按鈕對齊欄邊緣公式。
+v2.10.0 — change 19「主頁快捷資訊」：主頁歡迎卡整合財力金額、系統連結區（LINE/行事曆/PWA 三個圖示方塊）、新後端 API `GET /api/line/system-links`、PWA 安裝按鈕依狀態 dialog 提示、main.jsx 預攔截 beforeinstallprompt。
 
 ## 已知地雷
 

@@ -57,6 +57,18 @@ router.get('/liff-id', (req, res) => {
 });
 
 /**
+ * GET /api/line/system-links
+ * 取得系統快捷連結（LINE 加好友、Google 行事曆訂閱）；公開端點，不需驗證
+ */
+router.get('/system-links', (req, res) => {
+  const lineAddFriendUrl = process.env.LINE_ADD_FRIEND_URL || null;
+  const calendarAddUrl = process.env.GROUP_CALENDAR_ID
+    ? 'https://calendar.google.com/calendar/render?cid=' + encodeURIComponent(process.env.GROUP_CALENDAR_ID)
+    : null;
+  res.json({ success: true, data: { lineAddFriendUrl, calendarAddUrl } });
+});
+
+/**
  * GET /api/line/share-message/:eventId
  * 取得行程的分享訊息內容（LIFF shareTargetPicker 用，字卡內有詳情按鈕）
  */
