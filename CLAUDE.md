@@ -26,8 +26,8 @@
 | `.claude/rules/frontend.md` | 前端 `frontend/` 規則 | 編輯 `frontend/` 前 |
 | `.claude/rules/main.md` | main 分支限制 | 確認在 main 分支時 |
 | `.claude/rules/readme.md` | README 撰寫標準 | 推送或合併前 |
-| `openspec/STATUS.md` | 所有 change 路線圖 | 執行/修改計畫前 |
 | `UIDESIGN.md` | 前端 UI 完整規範 | 動任何 UI 元件前 |
+| `.claude/RULES-MAP.md` | 規則體系地圖（Hook 關係 + 速查表） | 理解規則架構 / 新增規則時 |
 
 > 新增任何 `.claude/rules/*.md` 或專案規範文件，必須同時在此表加一行。
 

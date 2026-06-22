@@ -30,22 +30,22 @@ process.stdin.on('end', () => {
       );
     }
 
-    // ── 2. 在 dev / main 直接 commit 非 .claude/ 的變更 ──────────────────
+    // ── 2. 在 main 直接 commit 非 .claude/ 的變更 ────────────────────────
     if (/git commit\b/.test(command)) {
       let branch = '';
       try { branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim(); } catch (_) {}
 
-      if (branch === 'dev' || branch === 'main') {
+      if (branch === 'main') {
         let staged = '';
         try { staged = execSync('git diff --name-only --cached', { encoding: 'utf8' }); } catch (_) {}
         const nonClaude = staged.split('\n').filter(f => f.trim() && !f.startsWith('.claude/'));
 
         if (nonClaude.length > 0) {
           messages.push(
-            `⛔ [git-guard] 當前在 ${branch} 分支，staged 中有非 .claude/ 的變更：`,
+            '⛔ [git-guard] 當前在 main 分支，staged 中有非 .claude/ 的變更：',
             ...nonClaude.map(f => `  - ${f}`),
             '',
-            `禁止在 ${branch} 直接 commit 功能程式碼！`,
+            '禁止在 main 直接 commit 功能程式碼！',
             '正確做法：切到對應 m_b_* 功能分支再 commit。',
             '（.claude/ 內的規則類檔案是唯一例外，允許任何分支 commit 後 cherry-pick 到 main）'
           );
