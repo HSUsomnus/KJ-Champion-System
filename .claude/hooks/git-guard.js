@@ -4,8 +4,9 @@
  *
  * 攔截三類危險操作：
  * 1. git push origin main → 強制顯示 deploy.md checklist
- * 2. git commit 在 dev / main 分支且 staged 有非 .claude/ 檔案 → 分支守衛
- * 3. git add -A 或 git add . → 禁止（deploy.md 明文規定，避免意外加入機密）
+ * 2. git commit 在 main 分支且 staged 有功能程式碼（server/、frontend/ 等）→ 分支守衛
+ *    規則類（.claude/、CLAUDE.md、CHANGELOG.md、scripts/、.gitignore）允許直推，不攔截
+ * 3. git add -A 或 git add .（孤立的點）→ 禁止；git add .claude/ 等路徑不受影響
  */
 const { execSync } = require('child_process');
 
@@ -30,7 +31,8 @@ process.stdin.on('end', () => {
       );
     }
 
-    // ── 2. 在 main 直接 commit 非 .claude/ 的變更 ────────────────────────
+    // ── 2. 在 main 直接 commit 功能程式碼 ────────────────────────────────
+    // 只攔截產品程式碼；規則類（.claude/、CLAUDE.md、CHANGELOG.md、scripts/、.gitignore 等）允許直推
     if (/git commit\b/.test(command)) {
       let branch = '';
       try { branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim(); } catch (_) {}
@@ -38,23 +40,36 @@ process.stdin.on('end', () => {
       if (branch === 'main') {
         let staged = '';
         try { staged = execSync('git diff --name-only --cached', { encoding: 'utf8' }); } catch (_) {}
-        const nonClaude = staged.split('\n').filter(f => f.trim() && !f.startsWith('.claude/'));
+        const productCode = staged.split('\n').filter(f => {
+          const file = f.trim();
+          if (!file) return false;
+          return /^(server|frontend|public)\//.test(file) ||
+            /^(package\.json|package-lock\.json|_worker\.js|vercel\.json|zbpack\.json|wrangler\.toml)$/.test(file) ||
+            /\/(migrations|schema|seeds)\//.test(file);
+        });
 
-        if (nonClaude.length > 0) {
+        if (productCode.length > 0) {
           messages.push(
-            '⛔ [git-guard] 當前在 main 分支，staged 中有非 .claude/ 的變更：',
-            ...nonClaude.map(f => `  - ${f}`),
+            '⛔ [git-guard] 當前在 main 分支，staged 中有功能程式碼：',
+            ...productCode.map(f => `  - ${f}`),
             '',
             '禁止在 main 直接 commit 功能程式碼！',
             '正確做法：切到對應 m_b_* 功能分支再 commit。',
-            '（.claude/ 內的規則類檔案是唯一例外，允許任何分支 commit 後 cherry-pick 到 main）'
+            '（.claude/、CLAUDE.md、CHANGELOG.md、scripts/、.gitignore 等規則類是例外）'
           );
         }
       }
     }
 
-    // ── 3. git add -A 或 git add . ────────────────────────────────────────
-    if (/git add\s+(-A|\.)\b/.test(command)) {
+    // ── 3. git add -A 或 git add .（孤立的點，非路徑前綴）─────────────
+    // 將 command 切成各段（&&、||、;、換行），只比對每段開頭的 git add 指令，
+    // 避免 heredoc commit message 內出現「git add .」文字時誤觸發。
+    const cmdSegments = command.split(/&&|\|\|?|;|\n/);
+    const isGitAddForbidden = cmdSegments.some(seg => {
+      const t = seg.trimStart();
+      return /^git add\s+-A\b/.test(t) || /^git add\s+\.(?![/\w])/.test(t);
+    });
+    if (isGitAddForbidden) {
       messages.push(
         '⛔ [git-guard] 禁止使用 git add -A 或 git add .（deploy.md 明文規定）',
         '原因：可能意外加入 .env、Key/、金鑰 *.json 等機密檔案。',

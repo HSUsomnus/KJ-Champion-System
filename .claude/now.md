@@ -12,7 +12,7 @@ change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
 ## 最近推送
 
-規則整理直推：DB 操作新政策（全走 Zeabur Console，廢棄 scripts/）、刪除 19 支舊腳本、UIDESIGN.md 搬進 `.claude/rules/`、rules-injector.js 強化（Read 工具也觸發，前端路徑直接注入 UIDESIGN.md）。
+git-guard.js 修正：① git add 誤判（路徑開頭的 `.` 被當 `git add .`）→ 改為按命令段落切分，只比對段首指令；② main commit 過度攔截（CLAUDE.md、scripts/ 等規則類被擋）→ 改為只攔截真正的功能程式碼（server/、frontend/ 等）。
 
 ## 已知地雷
 
