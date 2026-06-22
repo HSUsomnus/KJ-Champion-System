@@ -62,8 +62,14 @@ process.stdin.on('end', () => {
     }
 
     // ── 3. git add -A 或 git add .（孤立的點，非路徑前綴）─────────────
-    // 負向前瞻：. 後面不跟 / 或英數字，避免誤判 .claude/、.gitignore 等路徑
-    if (/git add\s+-A\b/.test(command) || /git add\s+\.(?![/\w])/.test(command)) {
+    // 將 command 切成各段（&&、||、;、換行），只比對每段開頭的 git add 指令，
+    // 避免 heredoc commit message 內出現「git add .」文字時誤觸發。
+    const cmdSegments = command.split(/&&|\|\|?|;|\n/);
+    const isGitAddForbidden = cmdSegments.some(seg => {
+      const t = seg.trimStart();
+      return /^git add\s+-A\b/.test(t) || /^git add\s+\.(?![/\w])/.test(t);
+    });
+    if (isGitAddForbidden) {
       messages.push(
         '⛔ [git-guard] 禁止使用 git add -A 或 git add .（deploy.md 明文規定）',
         '原因：可能意外加入 .env、Key/、金鑰 *.json 等機密檔案。',
