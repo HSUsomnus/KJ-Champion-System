@@ -26,6 +26,7 @@
 | 15 | 用戶資料整合 | ✅ DONE | 個人資料+用戶數據+用戶財力合併單一頁面 pill tab，MemberDetail 同款樣式（v2.6.0）|
 | 16 | 備份DB同步 | ✅ DONE | 8小時定時全量覆蓋 prod→backup，admin API 手動觸發 + backup→dev 複製（v2.7.0）|
 | 17 | SidebarNav-UI重構 | ✅ DONE | SidebarNav 品牌文字、管理者後台入口、tab 樣式統一、負責人可改權限（v2.8.0）|
+| 18 | 桌機版面置中 | ✅ DONE | 手機直式欄框在桌機橫式螢幕居中，pickColWidth 依寬高比反推欄寬，FAB + 漢堡對齊欄邊緣（v2.9.0）|
 
 ---
 
@@ -46,4 +47,4 @@
 
 ---
 
-*最後更新：2026-06-21（change 17 上線 v2.8.0）*
+*最後更新：2026-06-22（change 18 上線 v2.9.0）*
