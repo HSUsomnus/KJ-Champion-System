@@ -44,7 +44,12 @@ function isAllowedOrigin(origin) {
   return !!origin && ALLOWED_ORIGINS.some((pattern) => pattern.test(origin));
 }
 
-const redirectUriFor = () => `${APP_URL}/admin-auth/callback`;
+// [設計決策] redirect_uri 指向前端網域（經 _worker.js 的 /survey-api/* 代理轉發），
+// 不是後端自己的網址（APP_URL）
+// 原因：LINE 導回時若直接落在後端網域，session cookie 會被設在後端的網域上，
+// 前端網域（瀏覽器實際呼叫 API 的來源）收不到，等於白登入
+// 若要修改：確認 LINE Developers Console 的 Callback URL 清單有對應更新
+const redirectUriFor = (frontendOrigin) => `${frontendOrigin}/survey-api/admin-auth/callback`;
 
 /**
  * GET /admin-auth/line-login
@@ -58,7 +63,7 @@ router.get('/line-login', (req, res) => {
     `https://access.line.me/oauth2/v2.1/authorize?` +
     `response_type=code&` +
     `client_id=${process.env.LINE_CHANNEL_ID}&` +
-    `redirect_uri=${encodeURIComponent(redirectUriFor())}&` +
+    `redirect_uri=${encodeURIComponent(redirectUriFor(frontendOrigin))}&` +
     `state=${state}&` +
     `scope=profile%20openid`;
 
@@ -84,7 +89,7 @@ router.get('/callback', async (req, res) => {
       return res.redirect(`${frontendOrigin}/admin?authError=missing_code`);
     }
 
-    const idToken = await exchangeCodeForIdToken(code, redirectUriFor());
+    const idToken = await exchangeCodeForIdToken(code, redirectUriFor(frontendOrigin));
     const { lineId } = await verifyIdToken(idToken);
     const role = await getMemberRole(lineId);
 

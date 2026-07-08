@@ -35,8 +35,9 @@ describe('GET /admin-auth/line-login', () => {
     expect(res.status).toBe(302);
     expect(res.headers.location).toContain('https://access.line.me/oauth2/v2.1/authorize');
     expect(res.headers.location).toContain('client_id=test-channel-id');
+    // redirect_uri 指向前端網域（經 _worker.js /survey-api/* 代理），不是後端自己的網址
     expect(res.headers.location).toContain(
-      encodeURIComponent('https://kj-survey-dev.zeabur.app/admin-auth/callback')
+      encodeURIComponent('https://kjcs-dev.pages.dev/survey-api/admin-auth/callback')
     );
   });
 });
@@ -55,6 +56,11 @@ describe('GET /admin-auth/callback', () => {
     expect(res.headers.location).toBe('https://kjcs-dev.pages.dev/admin');
     expect(res.headers['set-cookie']?.[0]).toContain('kj_survey_admin_session=signed-session-token');
     expect(res.headers['set-cookie']?.[0]).toContain('HttpOnly');
+    // 換 token 時用的 redirect_uri 要跟 line-login 時給 LINE 的完全一致（走前端網域代理）
+    expect(adminAuthService.exchangeCodeForIdToken).toHaveBeenCalledWith(
+      'abc',
+      'https://kjcs-dev.pages.dev/survey-api/admin-auth/callback'
+    );
   });
 
   test('角色不足（一般人） → 導回 /admin?authError=forbidden，不設 cookie', async () => {
