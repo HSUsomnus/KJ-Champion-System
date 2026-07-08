@@ -1,8 +1,7 @@
 -- Change 20：團隊調查表單系統（KJ Survey）
 -- 建在既有 PostgreSQL（dev: postgresql-dev / prod: postgresql），不建新 DB。
 -- 表名加 survey_ 前綴，避免撞名既有 members 表。
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- token 用 gen_random_uuid()（PG13+ 內建，不需 pgcrypto extension）。
 
 -- ============================================================
 -- survey_members：KJ Survey 自己的團隊名單庫（與主系統 members 是兩張獨立表）
@@ -115,7 +114,7 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO survey_forms (title, token, fields, status) VALUES (
   '康九團隊調查',
-  encode(gen_random_bytes(24), 'hex'),
+  replace(gen_random_uuid()::text, '-', ''),
   '[
     { "key": "name", "label": "姓名", "type": "searchable_select", "options": { "source": "survey_members", "field": "name" } },
     { "key": "star_rank", "label": "夥伴星等", "type": "searchable_select", "options": { "source": "static", "values": ["白", "綠", "橙", "紅", "紫"] } },
