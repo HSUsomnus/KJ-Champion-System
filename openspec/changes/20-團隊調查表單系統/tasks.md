@@ -5,9 +5,9 @@
 ## Section 0：DB Migration（人工，Zeabur Console）
 
 - [x] **20.0** 產生 `kj-survey-server/migrations/001_init_survey_tables.sql`（建 `survey_members` / `survey_forms` / `survey_submissions` + 40 人種子 + Phase 1 固定表單）
-- [ ] **20.0a** 使用者到 dev Console 貼上執行：`kj-champion-dev` → `postgresql-dev` → Console
-- [ ] **20.0b** 使用者到 prod Console 貼上執行：`kj-champion` → `postgresql` → Console
-- [ ] **20.0c** 使用者到 backup Console 貼上執行：`kj-champion` → `postgresql-backup` → Console
+- [x] **20.0a** 使用者到 dev Console 貼上執行：`kj-champion` → `postgresql-dev` → Console（40 人 + 表單，token: `3b30e527e45f4f0ca19396e721391af2`）
+- [x] **20.0b** 使用者到 prod Console 貼上執行：`kj-champion` → `postgresql` → Console（40 人 + 表單，token: `5fd6de200cad4a3c85e401f69eb43928`）
+- [x] **20.0c** 使用者到 backup Console 貼上執行：`kj-champion` → `postgresql-backup` → Console（40 人 + 表單，均完成）
 - [ ] **20.0d** dev 執行後人工核對種子名單罕用字與推薦人歸屬（發佈前必做，見 spec.md 已知限制）
 
 ---
