@@ -6,11 +6,13 @@
 
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const healthRoutes = require('./routes/health');
 const formsRoutes = require('./routes/forms');
 const membersRoutes = require('./routes/members');
+const adminAuthRoutes = require('./routes/adminAuth');
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -22,12 +24,14 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
-app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true }));
+app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/health', healthRoutes);
 app.use('/forms', formsRoutes);
 app.use('/members', membersRoutes);
+app.use('/admin-auth', adminAuthRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ kj-survey-server 已啟動，PORT=${PORT}`);

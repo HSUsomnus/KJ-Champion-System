@@ -42,15 +42,15 @@
 
 ## Section 3：後台認證骨架
 
-- [ ] **20.16** `kj-survey-server`：LINE Login OAuth 起始 + callback 路由（比照 `server/routes/auth.js` 精神，獨立實作不 import 主系統程式碼）
-- [ ] **20.17** LINE ID token **後端驗簽**（驗證 JWT 簽章來自 LINE 官方，絕不信前端傳值）
-- [ ] **20.18** 驗簽通過後 `SELECT role FROM members WHERE line_id = $1`，確認 `role ∈ {管理者, 負責人, 開發者}`
-- [ ] **20.19** Session 設計：**只存記憶體**（如簽發短效期 JWT 存 httpOnly cookie，不落地 localStorage；關頁重開需重登，符合手冊鐵律）
-- [ ] **20.20** Unit test：驗簽失敗擋下、role 不足擋下、role 足夠放行三個 case
-- [ ] **20.21** 管理者綁定 LINE ID 的專屬設定連結（寫入 `survey_members` 或另建輕量對照，設計依實作時定案）
-- [ ] **20.22** 前端：`frontend/src/pages/survey/SurveyAdmin.jsx` 骨架 + 登入閘門（未通過導去 LINE 登入，不共用主系統 `AuthContext`）
-- [ ] **20.23** `App.jsx` 新增路由 `{ path: '/admin', element: <SurveyAdmin /> }`（與 `/login` 同層）
-- [ ] **20.24** Section milestone：dev 環境用非管理者 LINE 帳號測試被擋、管理者帳號測試放行
+- [x] **20.16** `kj-survey-server`：LINE Login OAuth 起始 + callback 路由（`routes/adminAuth.js`，比照 `server/routes/auth.js` 精神，獨立實作不 import 主系統程式碼）
+- [x] **20.17** LINE ID token **後端驗簽**（呼叫 LINE 官方 `/oauth2/v2.1/verify` 端點驗簽，絕不信前端傳值，比照主系統 `auth.js` 的驗證模式）
+- [x] **20.18** 驗簽通過後 `SELECT role FROM members WHERE line_id = $1`，確認 `role ∈ {管理者, 負責人, 開發者}`
+- [x] **20.19** Session 設計：簽發短效期（4 小時）JWT 存 httpOnly + Secure + SameSite=Lax cookie，不設 Max-Age（session cookie，關瀏覽器即失效），不落地 localStorage
+- [x] **20.20** Unit test：驗簽/角色比對/session 簽發驗證/middleware 放行擋下，共 15 個 case（`adminAuthService.test.js` + `requireAdminSession.test.js` + `adminAuth.test.js`）全綠
+- [x] ~~**20.21** 管理者綁定 LINE ID 的專屬設定連結~~ **已因架構簡化變得不必要**：因 DB 改共用（見 spec.md），角色比對直接查主系統既有 `members.role`，凡是在主系統已經是管理者/負責人/開發者的人，自動就有後台權限，不需要另外在 KJ Survey 綁定一次 LINE ID
+- [x] **20.22** 前端：`frontend/src/pages/survey/SurveyAdmin.jsx` 骨架 + 登入閘門（未通過導去 LINE 登入，不共用主系統 `AuthContext`，4 個 vitest 全綠）
+- [x] **20.23** `App.jsx` 新增路由 `{ path: '/admin', element: <SurveyAdmin /> }`（與 `/login` 同層）
+- [ ] **20.24** Section milestone：dev 環境用非管理者 LINE 帳號測試被擋、管理者帳號測試放行（**待 dev 服務加上 `SESSION_SECRET` 環境變數後才能實測**）
 
 ---
 

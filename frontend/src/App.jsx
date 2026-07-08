@@ -18,6 +18,7 @@ import Management from './pages/Management'
 import MemberDetail from './pages/MemberDetail'
 import AgendaSettings from './pages/AgendaSettings'
 import SurveyFill from './pages/survey/SurveyFill'
+import SurveyAdmin from './pages/survey/SurveyAdmin'
 
 function ProtectedRoute() {
   const { user, loading, isProfileComplete, isStatsComplete } = useAuth()
@@ -57,6 +58,7 @@ function ProtectedRoute() {
 const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/f/:token', element: <SurveyFill /> },
+  { path: '/admin', element: <SurveyAdmin /> },
   {
     element: <ProtectedRoute />,
     children: [

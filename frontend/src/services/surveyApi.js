@@ -9,7 +9,7 @@ async function request(path, options = {}) {
     headers['Content-Type'] = 'application/json'
   }
 
-  const res = await fetch(`/survey-api${path}`, { ...options, headers })
+  const res = await fetch(`/survey-api${path}`, { ...options, headers, credentials: 'include' })
   const data = await res.json()
 
   if (!res.ok) {
@@ -35,4 +35,16 @@ export function submitForm(token, answers) {
     method: 'POST',
     body: JSON.stringify({ answers }),
   })
+}
+
+// ========== 後台認證 ==========
+
+export const ADMIN_LOGIN_URL = '/survey-api/admin-auth/line-login'
+
+export function getAdminMe() {
+  return request('/admin-auth/me')
+}
+
+export function adminLogout() {
+  return request('/admin-auth/logout', { method: 'POST' })
 }
