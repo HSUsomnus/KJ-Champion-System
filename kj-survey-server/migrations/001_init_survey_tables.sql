@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS survey_members (
   id                SERIAL PRIMARY KEY,
-  name              VARCHAR(255) NOT NULL,
+  name              VARCHAR(255) NOT NULL UNIQUE,
   star_rank         VARCHAR(10) NOT NULL CHECK (star_rank IN ('白', '綠', '橙', '紅', '紫')),
   recommender_name  VARCHAR(255) DEFAULT '',
   status            VARCHAR(20) NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'pending')),

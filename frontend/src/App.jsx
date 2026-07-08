@@ -17,6 +17,7 @@ import FinancialPreview from './pages/FinancialPreview'
 import Management from './pages/Management'
 import MemberDetail from './pages/MemberDetail'
 import AgendaSettings from './pages/AgendaSettings'
+import SurveyFill from './pages/survey/SurveyFill'
 
 function ProtectedRoute() {
   const { user, loading, isProfileComplete, isStatsComplete } = useAuth()
@@ -55,6 +56,7 @@ function ProtectedRoute() {
 
 const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
+  { path: '/f/:token', element: <SurveyFill /> },
   {
     element: <ProtectedRoute />,
     children: [

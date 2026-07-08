@@ -14,29 +14,29 @@
 
 ## Section 1：`kj-survey-server` 後端骨架
 
-- [ ] **20.1** `kj-survey-server/package.json`：express、pg、jsonwebtoken（LINE ID token 驗簽用）、exceljs、dotenv
-- [ ] **20.2** `kj-survey-server/.env.example`：`DATABASE_URL`（dev 用 `DEV_DATABASE_URL` 等價值，prod 用內網連線字串）、`LINE_CHANNEL_ID`、`LINE_CHANNEL_SECRET`、`APP_URL`、`FRONTEND_URL`、`PORT`
-- [ ] **20.3** `kj-survey-server/server.js`：Express 入口 + DB pool（比照 `server/` 現有 pg pool 寫法）
-- [ ] **20.4** `GET /health`：DB 連線檢查（比照 `server/routes/debug.js` 精神，簡化版）
-- [ ] **20.5** Unit test：health check 回 200 + DB 連線成功訊息
-- [ ] **20.6** Section milestone：部署 dev 服務（`kj-champion-dev` 專案內新服務，使用者手動建立），打 `/health` 確認連上 dev DB
+- [x] **20.1** `kj-survey-server/package.json`：express、pg、jsonwebtoken（LINE ID token 驗簽用）、exceljs、dotenv
+- [x] **20.2** `kj-survey-server/.env.example`：`DATABASE_URL`（dev 用 `DEV_DATABASE_URL` 等價值，prod 用內網連線字串）、`LINE_CHANNEL_ID`、`LINE_CHANNEL_SECRET`、`APP_URL`、`FRONTEND_URL`、`PORT`
+- [x] **20.3** `kj-survey-server/server.js`：Express 入口 + DB pool（比照 `server/` 現有 pg pool 寫法）
+- [x] **20.4** `GET /health`：DB 連線檢查（比照 `server/routes/debug.js` 精神，簡化版）
+- [x] **20.5** Unit test：health check 回 200 + DB 連線成功訊息（`npx jest` 於 `kj-survey-server/` 全綠）
+- [ ] **20.6** Section milestone：部署 dev 服務（`kj-champion-dev` 專案內新服務，使用者手動建立），打 `/health` 確認連上 dev DB（**待使用者建立 Zeabur 服務才能跑**）
 
 ---
 
 ## Section 2：前台填表（`/f/:token`）
 
 ### 後端
-- [ ] **20.7** `GET /forms/:token`：查 `survey_forms`（`status='published'`），回傳 `fields`；查無 / draft → 統一 404 友善錯誤（不洩漏是哪種原因）
-- [ ] **20.8** `GET /members`：回傳 `survey_members`（姓名/推薦人下拉用）
-- [ ] **20.9** `POST /forms/:token/submit`：寫入 `survey_submissions`；`name`/`recommender` 為新姓名時（不在 `survey_members` 內）先寫入 `survey_members`（`status='pending'`）再存 submission
-- [ ] **20.10** Unit test（`kj-survey-server`）：token 有效/無效、draft 表單擋下、新姓名寫入 pending 三個 case
+- [x] **20.7** `GET /forms/:token`：查 `survey_forms`（`status='published'`），回傳 `fields`；查無 / draft → 統一 404 友善錯誤（不洩漏是哪種原因）
+- [x] **20.8** `GET /members`：回傳 `survey_members`（姓名/推薦人下拉用）
+- [x] **20.9** `POST /forms/:token/submit`：寫入 `survey_submissions`；`name`/`recommender` 為新姓名時（不在 `survey_members` 內）先寫入 `survey_members`（`status='pending'`）再存 submission
+- [x] **20.10** Unit test（`kj-survey-server`）：token 有效/無效、新姓名寫入 pending、既有姓名不重複寫入，共 11 case 全綠
 
 ### 前端
-- [ ] **20.11** `frontend/src/services/surveyApi.js`：`getFormByToken`、`getMembers`、`submitForm`（呼叫 `/survey-api/*`）
-- [ ] **20.12** `frontend/src/pages/survey/SurveyFill.jsx`：依 `fields` 動態 render（`searchable_select`/`yesno`/`text`），送出後顯示成功頁
-- [ ] **20.13** `App.jsx` 新增路由 `{ path: '/f/:token', element: <SurveyFill /> }`（與 `/login` 同層，不經 `ProtectedRoute`）
-- [ ] **20.14** vitest：`SurveyFill` render 正確欄位數、送出呼叫 API 正確 payload
-- [ ] **20.15** Section milestone：dev 環境实测，手機瀏覽器開 `/f/:token` 走一次完整送出流程
+- [x] **20.11** `frontend/src/services/surveyApi.js`：`getFormByToken`、`getMembers`、`submitForm`（呼叫 `/survey-api/*`）
+- [x] **20.12** `frontend/src/pages/survey/SurveyFill.jsx`：依 `fields` 動態 render（`searchable_select`/`yesno`/`text`），送出後顯示成功頁
+- [x] **20.13** `App.jsx` 新增路由 `{ path: '/f/:token', element: <SurveyFill /> }`（與 `/login` 同層，不經 `ProtectedRoute`）
+- [x] **20.14** vitest：`SurveyFill` render 正確欄位數、token 無效顯示錯誤、送出呼叫 API 正確 payload，3 case 全綠（`npx vitest run` 全專案 15 test 全綠）
+- [ ] **20.15** Section milestone：dev 環境实测，手機瀏覽器開 `/f/:token` 走一次完整送出流程（**待 Zeabur dev 服務 + DB migration 執行後才能跑**）
 
 ---
 
@@ -98,7 +98,7 @@
 
 ## Section 8：`_worker.js` 代理 + 收尾
 
-- [ ] **20.47** `frontend/public/_worker.js` 新增 `/survey-api/*` 代理規則（prod/dev 依 hostname 判斷，比照 `resolveBackend()`）
+- [x] **20.47** `frontend/public/_worker.js` 新增 `/survey-api/*` 代理規則（prod/dev 依 hostname 判斷，比照 `resolveBackend()`）— 提前於 Section 2 一併完成，讓前台在 dev 服務建好後可直接動
 - [ ] **20.48** 確認 `/f/:token` 與 `/admin` 在 `_worker.js` 靜態資源 fallback 邏輯下正常走 SPA（非 `/api/*`、非 `/survey-api/*` 的路徑要 fallback 到 `index.html`）
 - [ ] **20.49** Integration test：dev 環境完整跑一次「建表單 → 分享連結 → 填寫 → 後台查看 → 篩選 → 未填名冊 → 匯出」全流程
 - [ ] **20.50** README.md 更新（依 `readme.md` 規則，推送前必做）
