@@ -21,10 +21,10 @@ describe('GET /forms/:token', () => {
   beforeEach(() => jest.resetAllMocks());
 
   test('token 有效 → 200 + 表單資料', async () => {
-    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, title: '康九團隊調查', fields: [] });
+    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, title: '康九冠軍調查', fields: [] });
     const res = await request(buildApp()).get('/forms/abc123');
     expect(res.status).toBe(200);
-    expect(res.body.data.title).toBe('康九團隊調查');
+    expect(res.body.data.title).toBe('康九冠軍調查');
   });
 
   test('token 無效 / 表單非 published → 404 統一錯誤，不洩漏原因', async () => {

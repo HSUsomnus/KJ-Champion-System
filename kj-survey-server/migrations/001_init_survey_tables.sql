@@ -113,7 +113,7 @@ ON CONFLICT DO NOTHING;
 -- ============================================================
 
 INSERT INTO survey_forms (title, token, fields, status) VALUES (
-  '康九團隊調查',
+  '康九冠軍調查',
   replace(gen_random_uuid()::text, '-', ''),
   '[
     { "key": "name", "label": "姓名", "type": "searchable_select", "options": { "source": "survey_members", "field": "name" } },

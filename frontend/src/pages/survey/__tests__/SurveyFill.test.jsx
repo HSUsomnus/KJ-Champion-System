@@ -9,7 +9,7 @@ vi.mock('react-router-dom', () => ({
 
 const FORM = {
   id: 1,
-  title: '康九團隊調查',
+  title: '康九冠軍調查',
   fields: [
     { key: 'name', label: '姓名', type: 'searchable_select', options: { source: 'survey_members', field: 'name' } },
     { key: 'join_master', label: '天驥加盟主', type: 'yesno' },
@@ -40,7 +40,7 @@ describe('SurveyFill', () => {
 
     render(<SurveyFill />)
 
-    expect(await screen.findByText('康九團隊調查')).toBeInTheDocument()
+    expect(await screen.findByText('康九冠軍調查')).toBeInTheDocument()
     expect(screen.getByText('姓名')).toBeInTheDocument()
     expect(screen.getByText('天驥加盟主')).toBeInTheDocument()
   })
@@ -60,7 +60,7 @@ describe('SurveyFill', () => {
     mockSubmitForm.mockResolvedValue({ success: true, data: { id: 1 } })
 
     render(<SurveyFill />)
-    await screen.findByText('康九團隊調查')
+    await screen.findByText('康九冠軍調查')
 
     fireEvent.change(screen.getByPlaceholderText('搜尋或選擇姓名'), { target: { value: '徐毓紘' } })
     fireEvent.click(screen.getByText('是'))
@@ -77,7 +77,7 @@ describe('SurveyFill', () => {
     mockGetMembers.mockResolvedValue({ success: true, data: MEMBERS })
 
     render(<SurveyFill />)
-    await screen.findByText('康九團隊調查')
+    await screen.findByText('康九冠軍調查')
 
     // 姓名沒填，只點了是非題
     fireEvent.click(screen.getByText('是'))
@@ -93,7 +93,7 @@ describe('SurveyFill', () => {
     mockSubmitForm.mockResolvedValue({ success: true, data: { id: 1 } })
 
     render(<SurveyFill />)
-    await screen.findByText('康九團隊調查')
+    await screen.findByText('康九冠軍調查')
 
     fireEvent.click(screen.getByText('是'))
     fireEvent.click(screen.getByText('送出'))
