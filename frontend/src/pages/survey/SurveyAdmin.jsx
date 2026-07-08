@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { getAdminMe, adminLogout, ADMIN_LOGIN_URL } from '../../services/surveyApi'
+import { getAdminMe } from '../../services/surveyApi'
 
-const AUTH_ERROR_MESSAGES = {
-  forbidden: '此 LINE 帳號沒有後台權限，請聯繫負責人確認角色設定',
-  missing_code: '登入失敗，請重新嘗試',
-  server_error: '登入失敗，請稍後再試',
-}
+// [設計決策] 登入沿用主系統既有的 /api/auth/line-login（見 pages/Login.jsx），
+// 不自己做 OAuth 流程。原本自建的 callback + cookie session 因為 LINE 導回網域
+// 跟前端網域對不上、cookie 設錯地方，一直失敗；主系統這套已經穩定在跑。
+// 差異：這裡的登入狀態跟主系統共用同一個 localStorage lineUserId，屬永久登入
+// （不會因為關分頁就登出），跟原規劃「關頁即失效」不同，但後台權限仍每次向
+// 後端查角色，不是前端說了算。
+const LINE_LOGIN_URL = '/api/auth/line-login?returnUrl=/admin'
 
 export default function SurveyAdmin() {
-  const [searchParams] = useSearchParams()
-  const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState('checking') // checking | no-user | forbidden | ok
   const [admin, setAdmin] = useState(null)
 
-  // [設計決策] 後台是桌機優先（給管理者在電腦上看資料/篩選/匯出），跟全站手機優先的
+  // 後台是桌機優先（給管理者在電腦上看資料/篩選/匯出），跟全站手機優先的
   // width=device-width 相反。掛載時把 viewport 換成固定寬度，手機開會整頁縮小顯示，
   // 而不是被硬擠成手機版面；離開頁面時還原，不影響其他頁面。
-  // 若要修改：確認 index.html 的預設 viewport 內容沒有跟著被永久改掉
   useEffect(() => {
     const meta = document.querySelector('meta[name="viewport"]')
     const original = meta?.getAttribute('content')
@@ -26,21 +25,42 @@ export default function SurveyAdmin() {
     }
   }, [])
 
+  // 檢查 URL 是否帶有主系統 OAuth 回調參數（比照 pages/Login.jsx 的處理方式）
   useEffect(() => {
-    getAdminMe()
-      .then((res) => setAdmin(res.data))
-      .catch(() => setAdmin(null))
-      .finally(() => setLoading(false))
+    const params = new URLSearchParams(window.location.search)
+    const userId = params.get('userId')
+    if (userId) {
+      localStorage.setItem('lineUserId', userId)
+      localStorage.setItem('lineDisplayName', params.get('displayName') || '')
+      localStorage.setItem('linePictureUrl', params.get('pictureUrl') || '')
+      window.history.replaceState({}, '', '/admin')
+    }
   }, [])
 
-  const handleLogout = async () => {
-    await adminLogout()
+  useEffect(() => {
+    if (!localStorage.getItem('lineUserId')) {
+      setStatus('no-user')
+      return
+    }
+    getAdminMe()
+      .then((res) => {
+        setAdmin(res.data)
+        setStatus('ok')
+      })
+      .catch((err) => {
+        setStatus(err.status === 403 ? 'forbidden' : 'no-user')
+      })
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('lineUserId')
+    localStorage.removeItem('lineDisplayName')
+    localStorage.removeItem('linePictureUrl')
     setAdmin(null)
+    setStatus('no-user')
   }
 
-  const authError = searchParams.get('authError')
-
-  if (loading) {
+  if (status === 'checking') {
     return (
       <div style={pageStyle}>
         <p style={{ color: '#8A8680', fontSize: 14 }}>載入中...</p>
@@ -48,7 +68,7 @@ export default function SurveyAdmin() {
     )
   }
 
-  if (!admin) {
+  if (status === 'no-user' || status === 'forbidden') {
     return (
       <div style={pageStyle}>
         <div style={{ width: '100%', maxWidth: 448 }}>
@@ -59,27 +79,49 @@ export default function SurveyAdmin() {
             <p style={{ fontSize: 12, color: '#8A8680', margin: '0 0 20px', textAlign: 'center' }}>
               僅限管理者 / 負責人 / 開發者
             </p>
-            {authError && (
+            {status === 'forbidden' && (
               <p style={{ fontSize: 12, color: '#C0392B', marginBottom: 16, textAlign: 'center' }}>
-                {AUTH_ERROR_MESSAGES[authError] || '登入失敗，請重新嘗試'}
+                此 LINE 帳號沒有後台權限，請聯繫負責人確認角色設定
               </p>
             )}
-            <a
-              href={ADMIN_LOGIN_URL}
-              style={{
-                display: 'block',
-                textAlign: 'center',
-                padding: '14px 24px',
-                borderRadius: 16,
-                background: '#06C755',
-                color: '#FFFFFF',
-                fontSize: 16,
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
-              使用 LINE 登入
-            </a>
+            {status === 'forbidden' ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'center',
+                  padding: '14px 24px',
+                  borderRadius: 16,
+                  border: '1.5px solid #E2DED8',
+                  background: '#FFFFFF',
+                  color: '#2C2C2C',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                切換帳號
+              </button>
+            ) : (
+              <a
+                href={LINE_LOGIN_URL}
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  padding: '14px 24px',
+                  borderRadius: 16,
+                  background: '#06C755',
+                  color: '#FFFFFF',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                使用 LINE 登入
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -130,7 +172,7 @@ const pageStyle = {
   overscrollBehavior: 'none',
 }
 
-// 已登入後的桌機版面：不置中限寬 448，左對齊撐開到 1200px，給表格/篩選/側邊欄空間
+// 已登入後的桌機版面：不置中限寬 448，撐開到 1200px，給表格/篩選/側邊欄空間
 const desktopPageStyle = {
   minHeight: '100svh',
   background: '#F7F5F2',

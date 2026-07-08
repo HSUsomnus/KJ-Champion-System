@@ -3,45 +3,52 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
 import SurveyAdmin from '../SurveyAdmin'
 
-let mockSearchParams = new URLSearchParams()
-vi.mock('react-router-dom', () => ({
-  useSearchParams: () => [mockSearchParams],
-}))
-
 const mockGetAdminMe = vi.fn()
-const mockAdminLogout = vi.fn()
 
 vi.mock('../../../services/surveyApi', () => ({
   getAdminMe: (...args) => mockGetAdminMe(...args),
-  adminLogout: (...args) => mockAdminLogout(...args),
-  ADMIN_LOGIN_URL: '/survey-api/admin-auth/line-login',
 }))
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockSearchParams = new URLSearchParams()
+  localStorage.clear()
+  window.history.replaceState({}, '', '/admin')
 })
 
 describe('SurveyAdmin', () => {
-  it('未登入 → 顯示 LINE 登入按鈕，連結正確', async () => {
-    mockGetAdminMe.mockRejectedValue(new Error('請先登入'))
-
+  it('沒有 lineUserId → 顯示 LINE 登入按鈕，連結指向主系統既有登入流程', async () => {
     render(<SurveyAdmin />)
 
     const link = await screen.findByText('使用 LINE 登入')
-    expect(link.closest('a')).toHaveAttribute('href', '/survey-api/admin-auth/line-login')
+    expect(link.closest('a')).toHaveAttribute('href', '/api/auth/line-login?returnUrl=/admin')
+    expect(mockGetAdminMe).not.toHaveBeenCalled()
   })
 
-  it('authError=forbidden → 顯示權限不足訊息', async () => {
-    mockGetAdminMe.mockRejectedValue(new Error('請先登入'))
-    mockSearchParams = new URLSearchParams('authError=forbidden')
+  it('URL 帶 userId（主系統 OAuth 回調）→ 存進 localStorage 並清掉網址參數', async () => {
+    window.history.replaceState({}, '', '/admin?userId=U1234&displayName=%E5%BE%90%E6%AF%93%E7%B4%98&auth=1')
+    mockGetAdminMe.mockResolvedValue({ success: true, data: { lineId: 'U1234', role: '管理者' } })
+
+    render(<SurveyAdmin />)
+
+    await screen.findByText('調查表單後台')
+    expect(localStorage.getItem('lineUserId')).toBe('U1234')
+    expect(window.location.search).toBe('')
+  })
+
+  it('有 lineUserId 但角色不足（403）→ 顯示權限不足訊息 + 切換帳號按鈕', async () => {
+    localStorage.setItem('lineUserId', 'U9999')
+    const err = new Error('此帳號沒有後台權限')
+    err.status = 403
+    mockGetAdminMe.mockRejectedValue(err)
 
     render(<SurveyAdmin />)
 
     expect(await screen.findByText(/沒有後台權限/)).toBeInTheDocument()
+    expect(screen.getByText('切換帳號')).toBeInTheDocument()
   })
 
-  it('已登入 → 顯示身分與後台內容', async () => {
+  it('角色足夠 → 顯示身分與後台內容', async () => {
+    localStorage.setItem('lineUserId', 'U1234')
     mockGetAdminMe.mockResolvedValue({ success: true, data: { lineId: 'U1234', role: '管理者' } })
 
     render(<SurveyAdmin />)
@@ -50,16 +57,16 @@ describe('SurveyAdmin', () => {
     expect(screen.getByText(/管理者/)).toBeInTheDocument()
   })
 
-  it('點登出 → 呼叫 adminLogout，畫面回到登入畫面', async () => {
+  it('點登出 → 清空 localStorage，畫面回到登入畫面', async () => {
+    localStorage.setItem('lineUserId', 'U1234')
     mockGetAdminMe.mockResolvedValue({ success: true, data: { lineId: 'U1234', role: '管理者' } })
-    mockAdminLogout.mockResolvedValue({ success: true })
 
     render(<SurveyAdmin />)
     await screen.findByText('調查表單後台')
 
     fireEvent.click(screen.getByText('登出'))
 
-    await waitFor(() => expect(mockAdminLogout).toHaveBeenCalled())
-    expect(await screen.findByText('使用 LINE 登入')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('使用 LINE 登入')).toBeInTheDocument())
+    expect(localStorage.getItem('lineUserId')).toBeNull()
   })
 })

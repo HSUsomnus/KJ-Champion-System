@@ -6,7 +6,6 @@
 
 const express = require('express');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const healthRoutes = require('./routes/health');
@@ -24,9 +23,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
-app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true, credentials: true }));
+app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true }));
 app.use(express.json());
-app.use(cookieParser());
 
 app.use('/health', healthRoutes);
 app.use('/forms', formsRoutes);
