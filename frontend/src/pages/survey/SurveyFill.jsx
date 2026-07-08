@@ -270,9 +270,16 @@ export default function SurveyFill() {
   return (
     <div style={pageStyle}>
       <div style={{ width: '100%', maxWidth: 448 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 600, color: '#2C2C2C', margin: '0 0 16px' }}>
-          {form.title}
-        </h1>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <img
+            src="/康九_logo.png"
+            alt="KJ Champion"
+            style={{ width: 112, objectFit: 'contain', marginBottom: 12 }}
+          />
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: '#2C2C2C', margin: '0 0 16px', textAlign: 'center' }}>
+            {form.title}
+          </h1>
+        </div>
         <form onSubmit={handleSubmit} style={cardStyle}>
           {form.fields.map((field) => (
             <div

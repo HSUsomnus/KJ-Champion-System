@@ -43,6 +43,7 @@ describe('SurveyFill', () => {
     expect(await screen.findByText('康九冠軍調查')).toBeInTheDocument()
     expect(screen.getByText('姓名')).toBeInTheDocument()
     expect(screen.getByText('天驥加盟主')).toBeInTheDocument()
+    expect(screen.getByAltText('KJ Champion')).toHaveAttribute('src', '/康九_logo.png')
   })
 
   it('token 無效 → 顯示友善錯誤，不顯示表單', async () => {
