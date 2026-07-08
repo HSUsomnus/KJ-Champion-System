@@ -13,6 +13,19 @@ export default function SurveyAdmin() {
   const [loading, setLoading] = useState(true)
   const [admin, setAdmin] = useState(null)
 
+  // [設計決策] 後台是桌機優先（給管理者在電腦上看資料/篩選/匯出），跟全站手機優先的
+  // width=device-width 相反。掛載時把 viewport 換成固定寬度，手機開會整頁縮小顯示，
+  // 而不是被硬擠成手機版面；離開頁面時還原，不影響其他頁面。
+  // 若要修改：確認 index.html 的預設 viewport 內容沒有跟著被永久改掉
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="viewport"]')
+    const original = meta?.getAttribute('content')
+    meta?.setAttribute('content', 'width=1280')
+    return () => {
+      if (original) meta?.setAttribute('content', original)
+    }
+  }, [])
+
   useEffect(() => {
     getAdminMe()
       .then((res) => setAdmin(res.data))
@@ -74,8 +87,8 @@ export default function SurveyAdmin() {
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={{ width: '100%', maxWidth: 448 }}>
+    <div style={desktopPageStyle}>
+      <div style={{ width: '100%', maxWidth: 1200 }}>
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h1 style={{ fontSize: 20, fontWeight: 600, color: '#2C2C2C', margin: 0 }}>
@@ -114,6 +127,16 @@ const pageStyle = {
   display: 'flex',
   justifyContent: 'center',
   padding: '32px 16px',
+  overscrollBehavior: 'none',
+}
+
+// 已登入後的桌機版面：不置中限寬 448，左對齊撐開到 1200px，給表格/篩選/側邊欄空間
+const desktopPageStyle = {
+  minHeight: '100svh',
+  background: '#F7F5F2',
+  display: 'flex',
+  justifyContent: 'center',
+  padding: '32px',
   overscrollBehavior: 'none',
 }
 
