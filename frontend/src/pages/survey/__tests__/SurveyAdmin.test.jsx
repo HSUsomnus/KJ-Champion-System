@@ -19,7 +19,7 @@ describe('SurveyAdmin', () => {
   it('沒有 lineUserId → 顯示 LINE 登入按鈕，連結指向主系統既有登入流程', async () => {
     render(<SurveyAdmin />)
 
-    const link = await screen.findByText('使用 LINE 登入')
+    const link = await screen.findByText('LINE 登入驗證')
     expect(link.closest('a')).toHaveAttribute('href', '/api/auth/line-login?returnUrl=/admin')
     expect(mockGetAdminMe).not.toHaveBeenCalled()
   })
@@ -66,7 +66,7 @@ describe('SurveyAdmin', () => {
 
     fireEvent.click(screen.getByText('登出'))
 
-    await waitFor(() => expect(screen.getByText('使用 LINE 登入')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('LINE 登入驗證')).toBeInTheDocument())
     expect(localStorage.getItem('lineUserId')).toBeNull()
   })
 })

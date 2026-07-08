@@ -70,56 +70,42 @@ export default function SurveyAdmin() {
 
   if (status === 'no-user' || status === 'forbidden') {
     return (
-      <div style={pageStyle}>
-        <div style={{ width: '100%', maxWidth: 448 }}>
-          <div style={cardStyle}>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: '#2C2C2C', margin: '0 0 8px', textAlign: 'center' }}>
-              後台登入
-            </h1>
-            <p style={{ fontSize: 12, color: '#8A8680', margin: '0 0 20px', textAlign: 'center' }}>
-              僅限管理者 / 負責人 / 開發者
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: '#F7F5F2' }}>
+        <div className="w-full flex flex-col items-center px-6" style={{ maxWidth: 448 }}>
+          <img src="/康九_logo.png" alt="KJ Champion" className="w-28 object-contain mb-3" />
+
+          <h1 className="text-xl font-semibold mb-1" style={{ color: '#2C2C2C', letterSpacing: '0.06em' }}>
+            康九冠軍調查後台
+          </h1>
+          <p className="text-xs mb-8" style={{ color: '#8A8680' }}>
+            僅限管理者 / 負責人 / 開發者
+          </p>
+
+          {status === 'forbidden' && (
+            <p className="text-xs mb-4 text-center" style={{ color: '#C0392B' }}>
+              此 LINE 帳號沒有後台權限，請聯繫負責人確認角色設定
             </p>
-            {status === 'forbidden' && (
-              <p style={{ fontSize: 12, color: '#C0392B', marginBottom: 16, textAlign: 'center' }}>
-                此 LINE 帳號沒有後台權限，請聯繫負責人確認角色設定
-              </p>
-            )}
+          )}
+
+          <div className="w-full max-w-xs">
             {status === 'forbidden' ? (
               <button
-                type="button"
                 onClick={handleLogout}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'center',
-                  padding: '14px 24px',
-                  borderRadius: 16,
-                  border: '1.5px solid #E2DED8',
-                  background: '#FFFFFF',
-                  color: '#2C2C2C',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all active:scale-95"
+                style={{ background: '#4A7C59', color: '#fff' }}
               >
                 切換帳號
               </button>
             ) : (
               <a
                 href={LINE_LOGIN_URL}
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  padding: '14px 24px',
-                  borderRadius: 16,
-                  background: '#06C755',
-                  color: '#FFFFFF',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all active:scale-95"
+                style={{ background: '#4A7C59', color: '#fff', textDecoration: 'none' }}
               >
-                使用 LINE 登入
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                LINE 登入驗證
               </a>
             )}
           </div>
