@@ -19,7 +19,7 @@
 - [x] **20.3** `kj-survey-server/server.js`：Express 入口 + DB pool（比照 `server/` 現有 pg pool 寫法）
 - [x] **20.4** `GET /health`：DB 連線檢查（比照 `server/routes/debug.js` 精神，簡化版）
 - [x] **20.5** Unit test：health check 回 200 + DB 連線成功訊息（`npx jest` 於 `kj-survey-server/` 全綠）
-- [ ] **20.6** Section milestone：部署 dev 服務（`kj-champion-dev` 專案內新服務，使用者手動建立），打 `/health` 確認連上 dev DB（**待使用者建立 Zeabur 服務才能跑**）
+- [x] **20.6** Section milestone：dev 服務已部署（`kj-champion-dev` 專案 `kj-survey-server` 服務），`/members` 確認連上 dev DB（回傳 40 筆資料）（**待使用者建立 Zeabur 服務才能跑**）
 
 ---
 
