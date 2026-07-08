@@ -30,6 +30,7 @@ vi.mock('../../../services/surveyApi', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  Element.prototype.scrollIntoView = vi.fn()
 })
 
 describe('SurveyFill', () => {
@@ -61,10 +62,44 @@ describe('SurveyFill', () => {
     render(<SurveyFill />)
     await screen.findByText('康九團隊調查')
 
+    fireEvent.change(screen.getByPlaceholderText('搜尋或選擇姓名'), { target: { value: '徐毓紘' } })
     fireEvent.click(screen.getByText('是'))
     fireEvent.click(screen.getByText('送出'))
 
-    await waitFor(() => expect(mockSubmitForm).toHaveBeenCalledWith('abc123', { join_master: 'yes' }))
+    await waitFor(() =>
+      expect(mockSubmitForm).toHaveBeenCalledWith('abc123', { name: '徐毓紘', join_master: 'yes' })
+    )
     expect(await screen.findByText('已送出，謝謝填寫！')).toBeInTheDocument()
+  })
+
+  it('有欄位未填 → 擋下送出、顯示錯誤訊息，不呼叫 submitForm', async () => {
+    mockGetFormByToken.mockResolvedValue({ success: true, data: FORM })
+    mockGetMembers.mockResolvedValue({ success: true, data: MEMBERS })
+
+    render(<SurveyFill />)
+    await screen.findByText('康九團隊調查')
+
+    // 姓名沒填，只點了是非題
+    fireEvent.click(screen.getByText('是'))
+    fireEvent.click(screen.getByText('送出'))
+
+    expect(await screen.findByText(/請選擇姓名/)).toBeInTheDocument()
+    expect(mockSubmitForm).not.toHaveBeenCalled()
+  })
+
+  it('補填欄位後，該欄位的錯誤訊息會消失', async () => {
+    mockGetFormByToken.mockResolvedValue({ success: true, data: FORM })
+    mockGetMembers.mockResolvedValue({ success: true, data: MEMBERS })
+    mockSubmitForm.mockResolvedValue({ success: true, data: { id: 1 } })
+
+    render(<SurveyFill />)
+    await screen.findByText('康九團隊調查')
+
+    fireEvent.click(screen.getByText('是'))
+    fireEvent.click(screen.getByText('送出'))
+    expect(await screen.findByText(/請選擇姓名/)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByPlaceholderText('搜尋或選擇姓名'), { target: { value: '徐毓紘' } })
+    expect(screen.queryByText('請選擇姓名')).not.toBeInTheDocument()
   })
 })

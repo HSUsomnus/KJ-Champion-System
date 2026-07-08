@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getFormByToken, getMembers, submitForm } from '../../services/surveyApi'
 
@@ -162,6 +162,12 @@ function YesNoField({ value, onChange }) {
   )
 }
 
+const fieldErrorMessage = (field) => {
+  if (field.type === 'yesno') return `請選擇${field.label}`
+  if (field.type === 'searchable_select') return `請選擇${field.label}`
+  return `請輸入${field.label}`
+}
+
 export default function SurveyFill() {
   const { token } = useParams()
   const [form, setForm] = useState(null)
@@ -172,6 +178,8 @@ export default function SurveyFill() {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
+  const fieldRefs = useRef({})
 
   useEffect(() => {
     Promise.all([getFormByToken(token), getMembers()])
@@ -183,10 +191,38 @@ export default function SurveyFill() {
       .finally(() => setLoading(false))
   }, [token])
 
-  const setAnswer = (key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))
+  const setAnswer = (key, value) => {
+    setAnswers((prev) => ({ ...prev, [key]: value }))
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+  }
+
+  const validate = () => {
+    const errors = {}
+    for (const field of form.fields) {
+      const value = (answers[field.key] || '').trim()
+      if (!value) errors[field.key] = fieldErrorMessage(field)
+    }
+    return errors
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    const errors = validate()
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      const firstKey = form.fields.find((f) => errors[f.key])?.key
+      const el = fieldRefs.current[firstKey]
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      el?.querySelector('input')?.focus()
+      return
+    }
+
     setSubmitting(true)
     setError('')
     try {
@@ -239,7 +275,11 @@ export default function SurveyFill() {
         </h1>
         <form onSubmit={handleSubmit} style={cardStyle}>
           {form.fields.map((field) => (
-            <div key={field.key} style={{ marginBottom: 20 }}>
+            <div
+              key={field.key}
+              ref={(el) => { fieldRefs.current[field.key] = el }}
+              style={{ marginBottom: 20 }}
+            >
               <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#2C2C2C', marginBottom: 8 }}>
                 {field.label}
               </label>
@@ -268,6 +308,11 @@ export default function SurveyFill() {
                     color: '#2C2C2C',
                   }}
                 />
+              )}
+              {fieldErrors[field.key] && (
+                <p style={{ fontSize: 12, color: '#C0392B', marginTop: 4, marginBottom: 0 }}>
+                  ● {fieldErrors[field.key]}
+                </p>
               )}
             </div>
           ))}
