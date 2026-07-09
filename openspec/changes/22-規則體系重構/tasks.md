@@ -7,16 +7,16 @@
 
 ## 0. 前置
 
-- [ ] 0.1 從 main 切 `m_b_規則體系重構` 並推遠端
+- [x] 0.1 從 main 切 `m_b_規則體系重構` 並推遠端
 
 ## 1. Phase 1 — 修矛盾
 
-- [ ] 1.1 CLAUDE.md 修兩處壞連結（CHANGELOG 路徑、UIDESIGN 路徑）
-- [ ] 1.2 刪除 `.cursorrules`
-- [ ] 1.3 刪除 `.claude/RULES-MAP.md` + CLAUDE.md 索引表移除該列
-- [ ] 1.4 產出遠端分支差異報告（dev、fix/landscape-orientation-overlay）交使用者決定
-- [ ] 1.5 now.md 頂部加入地雷清理規則
-- [ ] 1.6 commit（Phase 1 一個 commit）
+- [x] 1.1 CLAUDE.md 修兩處壞連結（CHANGELOG 路徑、UIDESIGN 路徑）
+- [x] 1.2 刪除 `.cursorrules`
+- [x] 1.3 刪除 `.claude/RULES-MAP.md` + CLAUDE.md 索引表移除該列
+- [x] 1.4 產出遠端分支差異報告（dev、fix/landscape-orientation-overlay）交使用者決定
+- [x] 1.5 now.md 頂部加入地雷清理規則
+- [x] 1.6 commit（Phase 1 一個 commit）
 
 ## 2. Phase 2 — Hook 硬化 + 腳本化
 
