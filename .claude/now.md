@@ -11,13 +11,13 @@ change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`
 
 change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
-change 22「規則體系重構與 Token 降本」— 分支 `m_b_規則體系重構`，剛從 main 切出，準備開始 Phase 1。五個 Phase（修矛盾 → hook 硬化 → 規則合併 → Skill 化 → OpenSpec 殘骸清理），詳見 `openspec/changes/22-規則體系重構/spec.md`。只動 `.claude/`、`scripts/`、根目錄文件、`openspec/`，不碰 `server/`、`frontend/`。
+change 22「規則體系重構與 Token 降本」— 分支 `m_b_規則體系重構`，Phase 1–4 已完成並推送，進行中 Phase 5（工具殘骸清理，含目錄去品牌化改名）。詳見 `changes/22-規則體系重構/spec.md`。只動 `.claude/`、`scripts/`、根目錄文件、`changes/`，不碰 `server/`、`frontend/`。
 
 change 23「模型分層工作證」— 依賴 change 22 完成後才開始，尚未動工。
 
 ## 最近推送
 
-merge PR #6：新增 `openspec/changes/22-規則體系重構/` 與 `openspec/changes/23-模型分層工作證/` 的 spec.md + tasks.md（純文件，不含產品程式碼）。
+merge PR #6：新增 change 22「規則體系重構」與 change 23「模型分層工作證」的 spec.md + tasks.md（純文件，不含產品程式碼）。
 
 ## 已知地雷
 

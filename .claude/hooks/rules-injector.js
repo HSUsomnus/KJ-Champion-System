@@ -25,7 +25,6 @@ process.stdin.on('end', () => {
 
     const isMeta =
       normalized.includes('/.claude/') ||
-      normalized.includes('/openspec/STATUS') ||
       normalized.endsWith('CLAUDE.md');
     if (isMeta) process.exit(0);
 

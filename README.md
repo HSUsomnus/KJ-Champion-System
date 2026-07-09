@@ -181,7 +181,7 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   ├── init-db.js               # DB schema 初始化
 │   ├── import-csv-to-dev.js     # CSV → dev DB UPSERT 工具（v2.8.0）
 │   └── diagnose-google-auth.js
-├── openspec/                    # OpenSpec 功能規格
+├── changes/                      # 功能規格（spec.md + tasks.md）
 ├── jest.config.js
 ├── .claude/                     # Claude Code 規則 + context
 ├── CHANGELOG.md

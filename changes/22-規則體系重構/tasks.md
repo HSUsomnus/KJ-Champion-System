@@ -53,11 +53,11 @@
 
 ## 5. Phase 5 — OpenSpec 工具殘骸清理
 
-- [ ] 5.1 刪除 `openspec/changes/` 下所有已完成 change 資料夾（01–19，含兩個 17；保留 20）
-- [ ] 5.2 `git mv openspec/changes changes`，刪除空的 `openspec/`
-- [ ] 5.3 全 repo grep `openspec`：規則/skill 文字中「OpenSpec change」→「change」、路徑改 `changes/`
-- [ ] 5.4 workflow skill 補「新 change 編號 = 現存最大編號 + 1」一句
-- [ ] 5.5 刪除「雙裝置工作流」整段（確認 now.md 地雷區已涵蓋 CCR 環境事實）
+- [x] 5.1 刪除 `openspec/changes/` 下所有已完成 change 資料夾（01–19，含兩個 17；change 20 本分支未存在，無需保留動作）
+- [x] 5.2 `git mv openspec/changes changes`，刪除空的 `openspec/`
+- [x] 5.3 全 repo grep `openspec`：規則/skill 文字中「OpenSpec change」→「change」、路徑改 `changes/`（另修正 rules-injector.js 殘留的 `/openspec/STATUS` 過時檢查、README.md 專案結構圖、now.md 兩處歷史記錄）
+- [x] 5.4 workflow skill 補「新 change 編號 = 現存最大編號 + 1」一句
+- [x] 5.5 刪除「雙裝置工作流」整段（確認 now.md 地雷區已涵蓋 CCR 環境事實）
 - [ ] 5.6 commit
 
 ## 6. 收尾
