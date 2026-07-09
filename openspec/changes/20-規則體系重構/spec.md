@@ -185,6 +185,9 @@ done
 
 注意 deploy.md 已記載的 Bash 陷阱（pipeline exit code、set -e 迴圈中斷）——上述實作已避開，不要改回去。
 
+**必須支援 `DRY_RUN=1` 模式**：只 fetch 並列出「將處理的分支與預計動作」，
+不執行任何 checkout / merge / push。這是驗證用的安全開關（見第七節 Phase 2 gate）。
+
 ### 2.3 post-push-sync.js 訊息精簡
 
 hook 輸出從「整段內嵌腳本」改為：
@@ -381,17 +384,120 @@ Phase 5 排在 Phase 4 之後執行（workflow skill 先成形，再做路徑與
 
 ---
 
-## 七、驗收清單
+## 七、驗證與成功判定（Sonnet 執行用）
 
-- [ ] `node --check` 通過：git-guard.js、post-push-sync.js、rules-injector.js
-- [ ] `bash -n scripts/sync-branches.sh` 通過
-- [ ] 在 m_b_ 分支上模擬 `git add -A` → git-guard 實際 deny（不是警告）
-- [ ] 全 repo 無 `.claude/rules/` 殘留引用（除本 change 文件與 context 歷史檔）
-- [ ] 全 repo 無 `openspec` 字樣殘留（除 context 歷史檔與 git 歷史）；`changes/` 下僅存進行中 change
-- [ ] CLAUDE.md 內所有連結指向存在的檔案
-- [ ] `.claude/skills/` 四個 SKILL.md 均有合規 frontmatter
-- [ ] 常駐內容估算 ≤ 3,500 tokens（CLAUDE.md + now.md + 4 個 skill description）
+### 7.0 判定總規則
+
+1. **每個 Phase 結束時，先跑該 Phase 的 gate（下表），全 ✅ 才 commit、才進下一 Phase。**
+2. 任一項 ❌ → 在該 Phase 內修復後重跑 gate。**修復方式若超出本 spec 範圍 → 停止，
+   回報使用者**（列出：失敗項、實際輸出、你的診斷、建議做法），不得自行擴大改動。
+3. 全部 Phase 完成後跑 7.6 總驗收；**總驗收全 ✅ = change 20 成功**，任何一項 ❌ = 未完成。
+4. **回滾方式**：每 Phase 一個 commit，所以任何 Phase 出問題都可以 `git revert <該 Phase commit>`
+   單獨撤銷，不影響其他 Phase。
+
+### 7.1 Phase 1 gate（修矛盾）
+
+```bash
+# 全部指令的預期結果標注在註解中
+ls .cursorrules .claude/RULES-MAP.md 2>&1        # 預期：兩者皆 No such file
+grep -n "CHANGELOG.md\|UIDESIGN" CLAUDE.md        # 預期：路徑為 .claude/CHANGELOG.md 與 .claude/rules/UIDESIGN.md
+grep -c "RULES-MAP" CLAUDE.md                     # 預期：0
+head -8 .claude/now.md | grep "移除"              # 預期：命中新加入的地雷清理規則
+```
+
+### 7.2 Phase 2 gate（Hook 硬化）— 含不開新 session 的 hook 實測法
+
+hook 可以直接用 pipe 餵 JSON 測試，不需要真的觸發 Claude 工具呼叫：
+
+```bash
+node --check .claude/hooks/git-guard.js && node --check .claude/hooks/post-push-sync.js
+bash -n scripts/sync-branches.sh
+
+# 測試 1：git add -A 必須被 deny（分支無關，可直接在工作分支測）
+echo '{"tool_name":"Bash","tool_input":{"command":"git add -A"}}' \
+  | node .claude/hooks/git-guard.js
+# 預期 stdout 含："permissionDecision":"deny"
+
+# 測試 2：heredoc / commit message 內含 "git add ." 字樣不得誤判
+echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m \"docs: 說明 git add . 的規則\""}}' \
+  | node .claude/hooks/git-guard.js
+# 預期：無 deny 輸出（在非 main 分支、無 staged 產品碼的前提下）
+
+# 測試 3：main 分支 commit 產品程式碼必須被 deny —— 用暫存假 repo 模擬，不碰真 repo
+PROJ=$(pwd); T=$(mktemp -d); cd "$T"
+git init -qb main && mkdir server && echo x > server/a.js && git add server/a.js
+echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m test"}}' \
+  | node "$PROJ/.claude/hooks/git-guard.js"
+# 預期 stdout 含："permissionDecision":"deny"
+cd "$PROJ" && rm -rf "$T"
+
+# 測試 4：sync 腳本 DRY_RUN 模式
+DRY_RUN=1 bash scripts/sync-branches.sh
+# 預期：列出遠端 m_b_* 分支與預計動作，git status 確認工作區無任何變動、分支未切換
+```
+
+### 7.3 Phase 3 gate（規則合併）
+
+```bash
+ls .claude/rules/main.md .claude/rules/readme.md 2>&1   # 預期：皆 No such file
+grep -rn "rules/main.md\|rules/readme.md" .claude/ CLAUDE.md | grep -v context/  # 預期：0 筆
+grep -c "^## \[" .claude/CHANGELOG.md                    # 預期：完整摘要 ≤ 5 版（其餘為一行索引）
+grep -n "Read" .claude/settings.json                     # 預期：matcher 中無 Read
+grep -n "功能上線" .claude/rules/deploy.md | head -3     # 預期：README 重寫條件已改為僅功能上線
+```
+
+### 7.4 Phase 4 gate（Skill 化）
+
+```bash
+# frontmatter 合規：每檔前 5 行須含 ---、name:、description:
+for f in .claude/skills/*/SKILL.md; do echo "== $f =="; head -5 "$f"; done
+
+ls .claude/rules/ 2>&1                                   # 預期：目錄不存在或為空
+grep -rn "\.claude/rules/" --include="*.md" --include="*.js" . \
+  | grep -v node_modules | grep -v "changes/" | grep -v context/   # 預期：0 筆
+
+# 常駐 token 估算（成功門檻 ≤ 3,500）
+python3 -c "
+import re, glob
+files = ['CLAUDE.md', '.claude/now.md']
+total = 0
+for f in files:
+    s = open(f, encoding='utf-8').read()
+    cjk = len(re.findall(r'[一-鿿]', s)); total += cjk*1.5 + (len(s)-cjk)/4
+for f in glob.glob('.claude/skills/*/SKILL.md'):
+    s = open(f, encoding='utf-8').read()
+    desc = s.split('---')[1] if s.count('---') >= 2 else ''
+    cjk = len(re.findall(r'[一-鿿]', desc)); total += cjk*1.5 + (len(desc)-cjk)/4
+print(f'常駐估算: {int(total)} tokens（門檻 3500）')
+"
+```
+
+### 7.5 Phase 5 gate（OpenSpec 殘骸清理）
+
+```bash
+ls changes/                                              # 預期：僅 20、21 兩個資料夾
+ls openspec 2>&1                                         # 預期：No such file
+grep -rni "openspec" --include="*.md" --include="*.js" . \
+  | grep -v node_modules | grep -v context/ | grep -v changes/     # 預期：0 筆
+grep -c "雙裝置" .claude/skills/workflow/SKILL.md        # 預期：0
+```
+
+### 7.6 總驗收（全部 Phase 完成後）
+
+- [ ] 7.1–7.5 各 gate 重跑一次全 ✅（防後面 Phase 改壞前面的東西）
+- [ ] `git log --oneline main..HEAD` 顯示 5–6 個 commit，每 Phase 一個
 - [ ] tasks.md 全部勾選
+- [ ] 產出**驗收報告**給使用者，格式：
+  ```
+  ## Change 20 驗收報告
+  - 各 Phase gate 結果：（逐項 ✅/❌ + 關鍵輸出）
+  - 常駐 token 估算：改造前 ~19,000 → 改造後 N
+  - 待使用者確認事項：Phase 1.4 分支刪除清單、merge 進 main 的時機
+  - 已知未盡事項：（若有）
+  ```
+- [ ] **最終人工驗收（使用者執行，Sonnet 在報告中提醒）**：merge main 後開一個全新 session，
+  確認 (a) CLAUDE.md 正常載入且連結可達；(b) 說「幫我看一下某個前端元件」時 uidesign skill
+  會被自動載入；(c) 在分支上執行 `git add -A` 被實際擋下。
 
 ## 八、使用者自辦事項（不在 Sonnet 執行範圍，列出供追蹤）
 
