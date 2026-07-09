@@ -1,11 +1,11 @@
-# Change 21 — 模型分層工作證 — Tasks
+# Change 23 — 模型分層工作證 — Tasks
 
-> 進度唯一來源。依賴 change 20 完成後執行。
+> 進度唯一來源。依賴 change 22 完成後執行。
 > 全部為 `.claude/` / 文件類變更，驗證方式為 spec.md 第七節驗收清單。
 
 ## 0. 前置
 
-- [ ] 0.1 確認 change 20 已上線 main（skill 目錄與 git-guard deny 模式已存在）
+- [ ] 0.1 確認 change 22 已上線 main（skill 目錄與 git-guard deny 模式已存在）
 - [ ] 0.2 從 main 切 `m_b_模型分層工作證` 並推遠端
 
 ## 1. Phase 1 — 角色 Command

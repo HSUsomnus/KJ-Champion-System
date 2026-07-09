@@ -1,4 +1,4 @@
-# Change 20 — 規則體系重構與 Token 降本 — Tasks
+# Change 22 — 規則體系重構與 Token 降本 — Tasks
 
 > 進度唯一來源。每個 task 完成並通過該 Phase 驗證才勾 [x]。
 > 本 change 全部是 `.claude/` / `scripts/` / 文件類變更，不含產品程式碼，無 vitest 對象。

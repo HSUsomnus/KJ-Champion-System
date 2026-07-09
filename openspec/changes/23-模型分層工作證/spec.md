@@ -1,7 +1,7 @@
-# Change 21 — 模型分層工作證（三層角色邊界系統）
+# Change 23 — 模型分層工作證（三層角色邊界系統）
 
 > 由顧問 session（Claude Fable 5）與使用者討論定案後產出，供 Sonnet 執行。
-> **依賴：change 20 完成後才執行**（需要 change 20 建立的 skill 目錄、
+> **依賴：change 22 完成後才執行**（需要 change 22 建立的 skill 目錄、
 > git-guard deny 模式、deploy-release skill）。
 > 產出日期：2026-07-09
 
@@ -41,9 +41,9 @@
 
 ## 二、執行約束（Sonnet 必讀）
 
-1. 分支：change 20 上線後，從 main 切 `m_b_模型分層工作證`，推遠端。
+1. 分支：change 22 上線後，從 main 切 `m_b_模型分層工作證`，推遠端。
 2. 不碰 `server/`、`frontend/` 產品程式碼。
-3. 新 hook 必過 `node --check`；改動不得破壞 change 20 建立的既有 hook 行為。
+3. 新 hook 必過 `node --check`；改動不得破壞 change 22 建立的既有 hook 行為。
 4. 每個 Phase 一個 commit；spec 未涵蓋的判斷點 → 停下來問使用者。
 
 ---
@@ -145,7 +145,7 @@ model: haiku
 
 1. 讀 `.claude/.session-role`；**檔案不存在 → 直接 exit 0（不攔截）**，
    一般 session 完全不受影響（向後相容）。
-2. 依標記攔截，使用 change 20 建立的 `permissionDecision: 'deny'` 格式：
+2. 依標記攔截，使用 change 22 建立的 `permissionDecision: 'deny'` 格式：
 
 | 標記 | 工具 | 攔截條件 | deny 訊息要點 |
 |---|---|---|---|
@@ -178,7 +178,7 @@ model: haiku
 ## 七、驗收清單
 
 - [ ] `node --check .claude/hooks/role-guard.js` 通過
-- [ ] 無標記檔時，Edit/Write/Bash 行為與 change 21 之前完全一致
+- [ ] 無標記檔時，Edit/Write/Bash 行為與 change 23 之前完全一致
 - [ ] `planner` 標記下 Edit `frontend/` 任一檔 → 實際被 deny
 - [ ] `engineer` 標記下 `git tag vX` → 實際被 deny，且 heredoc 內含 "git tag" 字樣不誤判
 - [ ] `.claude/agents/收尾員.md` frontmatter 合法（name / description / model: haiku）

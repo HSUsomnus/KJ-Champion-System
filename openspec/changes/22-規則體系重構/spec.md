@@ -1,4 +1,4 @@
-# Change 20 — 規則體系重構與 Token 降本
+# Change 22 — 規則體系重構與 Token 降本
 
 > 本 spec 由顧問 session（Claude Fable 5）完整診斷後產出，供 Sonnet 直接執行。
 > 診斷結論與證據已完成，執行者**不需要重新調查**，照本文件逐 Phase 實作即可。
@@ -362,8 +362,10 @@ grep -rn "\.claude/rules/" --include="*.md" --include="*.js" . | grep -v node_mo
 
 刪除 `openspec/changes/` 下所有**已完成**的 change 資料夾（01–19 全部，含兩個 17）。
 依據：歷史已由 git 與 `.claude/context/vX.Y.Z.md` 承載，資料夾是第三份重複 + 搜尋污染源。
-保留：`20-規則體系重構`、`21-模型分層工作證`（皆進行中）。change 12 的資料夾在
-`m_b_統一彈出訊息系統` 分支上，main 上不存在，不需處理。
+保留原則：**進行中的 change 一律保留**。目前已知進行中：`20-團隊調查表單系統`
+（若屆時已 merge 進 main 且仍在開發）、`22-規則體系重構`、`23-模型分層工作證`。
+change 12 的資料夾在 `m_b_統一彈出訊息系統` 分支上、`20-AI員工後端橋接` 在
+`claude/new-session-k97gfv` 分支上，main 上皆不存在，不需處理。
 
 ### 5.2 目錄與稱呼去品牌化
 
@@ -391,7 +393,7 @@ Phase 5 排在 Phase 4 之後執行（workflow skill 先成形，再做路徑與
 1. **每個 Phase 結束時，先跑該 Phase 的 gate（下表），全 ✅ 才 commit、才進下一 Phase。**
 2. 任一項 ❌ → 在該 Phase 內修復後重跑 gate。**修復方式若超出本 spec 範圍 → 停止，
    回報使用者**（列出：失敗項、實際輸出、你的診斷、建議做法），不得自行擴大改動。
-3. 全部 Phase 完成後跑 7.6 總驗收；**總驗收全 ✅ = change 20 成功**，任何一項 ❌ = 未完成。
+3. 全部 Phase 完成後跑 7.6 總驗收；**總驗收全 ✅ = change 22 成功**，任何一項 ❌ = 未完成。
 4. **回滾方式**：每 Phase 一個 commit，所以任何 Phase 出問題都可以 `git revert <該 Phase commit>`
    單獨撤銷，不影響其他 Phase。
 
@@ -475,7 +477,7 @@ print(f'常駐估算: {int(total)} tokens（門檻 3500）')
 ### 7.5 Phase 5 gate（OpenSpec 殘骸清理）
 
 ```bash
-ls changes/                                              # 預期：僅 20、21 兩個資料夾
+ls changes/                                              # 預期：僅存進行中 change（22、23，及已 merge 且仍開發中者）
 ls openspec 2>&1                                         # 預期：No such file
 grep -rni "openspec" --include="*.md" --include="*.js" . \
   | grep -v node_modules | grep -v context/ | grep -v changes/     # 預期：0 筆
@@ -489,7 +491,7 @@ grep -c "雙裝置" .claude/skills/workflow/SKILL.md        # 預期：0
 - [ ] tasks.md 全部勾選
 - [ ] 產出**驗收報告**給使用者，格式：
   ```
-  ## Change 20 驗收報告
+  ## Change 22 驗收報告
   - 各 Phase gate 結果：（逐項 ✅/❌ + 關鍵輸出）
   - 常駐 token 估算：改造前 ~19,000 → 改造後 N
   - 待使用者確認事項：Phase 1.4 分支刪除清單、merge 進 main 的時機
@@ -506,3 +508,14 @@ grep -c "雙裝置" .claude/skills/workflow/SKILL.md        # 預期：0
 3. 模型分層習慣：Opus 規劃 → Sonnet 實作 → Haiku commit；階段之間開新 session（cache 依模型分開）。
 4. 零碎使用時批次交辦；一個 change 收尾就 `/打包`。
 5. docs/ 過時文件（Vercel/Supabase 時代 30+ 檔）搬 `docs/archive/`、大圖與 PDF 移出——可另開小 change 或手動處理。
+6. **調查表單分支復工**（change 20-團隊調查表單系統，現在 `claude/new-feature-pz95p1`，
+   領先 main 14 commits，內容完整安全）。本 change 上線 main 之後、繼續開發之前：
+   a. 分支改名入籍：`git checkout claude/new-feature-pz95p1 && git checkout -b m_b_調查表單 && git push origin m_b_調查表單`
+      （之後 sync 腳本才會涵蓋它；舊分支刪除在 CCR 會 403，PC 上刪）。
+   b. 把 main 的新規則接進來：`git merge main --no-edit`。
+      `.claude/` 相關衝突一律取 main 版本（main 是規則唯一來源）。
+   c. 目錄遷移：merge 後表單的 spec 會殘留在舊路徑，執行
+      `git mv openspec/changes/20-團隊調查表單系統 changes/ && rmdir -p openspec/changes 2>/dev/null`。
+   d. 之後照常開發（change 23 上線後可用 `/實作` 角色）。
+7. `20-AI員工後端橋接`（`claude/new-session-k97gfv` 分支，僅一個 spec commit）：
+   撿起時將編號改為 21，避免與表單的 change 20 撞號。
