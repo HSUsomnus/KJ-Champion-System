@@ -90,7 +90,9 @@ process.stdin.on('end', () => {
       try { branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim(); } catch (_) {}
       if (/^m_b_/.test(branch)) {
         let staged = '';
-        try { staged = execSync('git diff --name-only --cached', { encoding: 'utf8' }); } catch (_) {}
+        // -c core.quotepath=false：change 目錄多為中文命名，quotepath 預設會把非 ASCII
+        // 檔名整行包在引號內並轉義成八進位（例如 "changes/\346..."), 導致下面的路徑 regex 永遠比對不到。
+        try { staged = execSync('git -c core.quotepath=false diff --name-only --cached', { encoding: 'utf8' }); } catch (_) {}
         const stagedFiles = staged.split('\n').map(f => f.trim()).filter(Boolean);
         const hasTasksStaged = stagedFiles.some(f => /^changes\/[^/]+\/tasks\.md$/.test(f));
         let hasTasksInRepo = false;
