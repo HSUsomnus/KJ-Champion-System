@@ -24,8 +24,6 @@
 | `.claude/rules/backend.md` | 後端 `server/` 規則 | 編輯 `server/` 前 |
 | `.claude/rules/database.md` | 資料庫操作安全規則 | 編輯 `server/services/` 前 |
 | `.claude/rules/frontend.md` | 前端 `frontend/` 規則 | 編輯 `frontend/` 前 |
-| `.claude/rules/main.md` | main 分支限制 | 確認在 main 分支時 |
-| `.claude/rules/readme.md` | README 撰寫標準 | 推送或合併前 |
 | `.claude/rules/UIDESIGN.md` | 前端 UI 完整規範 | 動任何 UI 元件前 |
 
 > 新增任何 `.claude/rules/*.md` 或專案規範文件，必須同時在此表加一行。

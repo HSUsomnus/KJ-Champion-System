@@ -39,6 +39,62 @@ git commit -m "feat/fix/chore: ..."
 
 ---
 
+## main 分支限制（原 main.md 內容，已併入本檔）
+
+⚠️ 在 main 分支時：**任何修改都直接影響真實用戶，謹慎操作。**
+
+- 不在 main 上直接開發，只接受從**功能分支**（`m_b_*`）或 `hotfix` merge 的驗證過內容
+- **⛔ 絕不從 dev 分支 merge 回 main**（dev 含未批准上線的功能）
+- WIP 代碼、未測試功能 → 禁止 push 到 main
+- DB 是正式資料，任何 schema 變動需額外確認
+- 不接受實驗性代碼
+
+> 即時提醒由 rules-injector（`branch === 'main'` 時注入警告）+ git-guard（main 直接 commit 產品程式碼 → deny）承擔，本節只是規則文字本身的單一事實來源。推送流程見下方「推送到 main（正式上線）」，不重複列出。
+
+### 前端建置資訊（main 正式環境）
+
+- main 分支的正式前端：`frontend/`（React + Vite + PWA，`public/` 已於 v2.0.0 刪除）
+- 部署至：Cloudflare Pages（`kj-champion-system.pages.dev`）
+- Build command：`cd frontend && npm install && npm run build`，output：`frontend/dist`
+
+---
+
+## README 撰寫標準（原 readme.md 內容，已併入本檔；規則已降級，見下方說明）
+
+**降級後規則（change 22 起）：只在「功能上線」merge 進 main 時，必須完整重寫 README.md；功能分支中途 push 不需要。**（原規則「不論哪個分支、不論改了什麼，push 前都要重寫」已取消，過度要求且與其他規則衝突。）
+
+README 必須精確反映**該分支目前的實際狀態**，不得有過時資訊。
+
+### 各分支 README 撰寫重點
+
+- **`main`（正式上線）**：目前版本號、正式部署網址與架構、完整功能清單（只列已上線功能）、環境變數說明、本機開發啟動方式
+- **`m_b_功能名稱`（功能分支）**：此分支正在開發的功能說明、功能目標與實作方式、如何在本機測試此功能、與 main 的差異點
+
+### 撰寫標準
+
+README 必須包含以下區塊（依分支性質調整內容）：
+
+```
+# 專案名稱
+
+> 版本 | 分支 | 部署網址
+
+## 部署架構
+## 主要功能
+## 環境變數
+## 本機開發
+## 專案結構
+```
+
+### 嚴禁
+
+- ❌ 複製上一次的 README 只改版本號
+- ❌ 留有已移除功能的說明
+- ❌ 留有已更換服務的舊網址
+- ❌ 「功能上線」merge 進 main 前沒有更新 README
+
+---
+
 ## 規則類更新 — 直推 main
 
 以下類型的變更屬於「規則 / 基礎建設」，可在任何分支 commit 後直接 cherry-pick 到 main 並 push：

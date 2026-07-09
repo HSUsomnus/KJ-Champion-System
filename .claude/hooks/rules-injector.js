@@ -50,7 +50,8 @@ process.stdin.on('end', () => {
     }
 
     // main 分支警告只在實際修改（Edit/Write）時才加，Read 不加
-    if (!isRead && branch === 'main') rules.push('.claude/rules/main.md');
+    // main 分支限制已併入 deploy.md（change 22 起獨立檔案已刪除）
+    if (!isRead && branch === 'main') rules.push('.claude/rules/deploy.md');
 
     if (rules.length > 0) {
       let msg;

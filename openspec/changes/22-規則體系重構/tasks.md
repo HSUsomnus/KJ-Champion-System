@@ -31,12 +31,12 @@
 
 ## 3. Phase 3 — 規則合併與流程降本
 
-- [ ] 3.1 main.md 內容併入 deploy.md，刪除 main.md
-- [ ] 3.2 readme.md 內容併入 deploy.md，刪除 readme.md
-- [ ] 3.3 README 規則降級為「僅功能上線 main 時重寫」（deploy.md + workflow.md 同步）
-- [ ] 3.4 .claude/CHANGELOG.md 裁切（近 5 版全文，其餘一行索引）
-- [ ] 3.5 settings.json：rules-injector matcher 移除 Read
-- [ ] 3.6 CLAUDE.md 索引表同步（移除 main.md / readme.md 列）
+- [x] 3.1 main.md 內容併入 deploy.md，刪除 main.md
+- [x] 3.2 readme.md 內容併入 deploy.md，刪除 readme.md
+- [x] 3.3 README 規則降級為「僅功能上線 main 時重寫」（deploy.md + workflow.md 同步）
+- [x] 3.4 .claude/CHANGELOG.md 裁切（近 5 版全文，其餘一行索引）
+- [x] 3.5 settings.json：rules-injector matcher 移除 Read（使用者於 GitHub 手動編輯完成）
+- [x] 3.6 CLAUDE.md 索引表同步（移除 main.md / readme.md 列）
 - [ ] 3.7 commit
 
 ## 4. Phase 4 — Skill 化
