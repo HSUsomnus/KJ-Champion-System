@@ -41,14 +41,14 @@
 
 ## 4. Phase 4 — Skill 化
 
-- [ ] 4.1 建立 `.claude/skills/uidesign/SKILL.md`（UIDESIGN.md 全文 + frontend.md 開發段落，含 frontmatter）
-- [ ] 4.2 建立 `.claude/skills/deploy-release/SKILL.md`（deploy.md 含已併入內容）
-- [ ] 4.3 建立 `.claude/skills/database/SKILL.md`（database.md + backend.md 目錄/路由段落）
-- [ ] 4.4 建立 `.claude/skills/workflow/SKILL.md`（workflow.md 全文）
-- [ ] 4.5 rules-injector.js 改為 skill 載入提醒（main 警告文字內嵌 hook）
-- [ ] 4.6 重寫 CLAUDE.md（依 spec 4.3 草稿，已定案決策表原封保留）
-- [ ] 4.7 刪除已搬移的 `.claude/rules/*.md`
-- [ ] 4.8 全 repo grep 確認無 `.claude/rules/` 殘留引用
+- [x] 4.1 建立 `.claude/skills/uidesign/SKILL.md`（UIDESIGN.md 全文 + frontend.md 開發段落，含 frontmatter）
+- [x] 4.2 建立 `.claude/skills/deploy-release/SKILL.md`（deploy.md 含已併入內容）
+- [x] 4.3 建立 `.claude/skills/database/SKILL.md`（database.md + backend.md 目錄/路由段落）
+- [x] 4.4 建立 `.claude/skills/workflow/SKILL.md`（workflow.md 全文）
+- [x] 4.5 rules-injector.js 改為 skill 載入提醒（main 警告文字內嵌 hook）
+- [x] 4.6 重寫 CLAUDE.md（依 spec 4.3 草稿，已定案決策表原封保留）
+- [x] 4.7 刪除已搬移的 `.claude/rules/*.md`
+- [x] 4.8 全 repo grep 確認無 `.claude/rules/` 殘留引用（另修正 `.gitignore` 誤將 `.claude/skills/` 整個排除、`.claude/now.md` 一處存活引用）
 - [ ] 4.9 commit
 
 ## 5. Phase 5 — OpenSpec 工具殘骸清理

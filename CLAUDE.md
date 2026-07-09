@@ -14,19 +14,24 @@
 
 繁體中文（台灣用語）。技術術語可英文，解釋繁中。
 
-## 統一索引表
+## 鐵律（不可違反；前兩條由 git-guard hook 硬攔截）
 
-| 文件 | 職責 | 何時讀 |
-|---|---|---|
-| `.claude/now.md` | 已知地雷 + 環境特殊狀態 | 每次 session 開始 |
-| `.claude/rules/workflow.md` | 分支、change、關鍵字完整流程 | 任何實作或計畫動作前 |
-| `.claude/rules/deploy.md` | 部署、git 推送完整 checklist | git 操作前 |
-| `.claude/rules/backend.md` | 後端 `server/` 規則 | 編輯 `server/` 前 |
-| `.claude/rules/database.md` | 資料庫操作安全規則 | 編輯 `server/services/` 前 |
-| `.claude/rules/frontend.md` | 前端 `frontend/` 規則 | 編輯 `frontend/` 前 |
-| `.claude/rules/UIDESIGN.md` | 前端 UI 完整規範 | 動任何 UI 元件前 |
+- ⛔ 禁止在 main 直接 commit 功能程式碼（server/、frontend/、package.json、部署設定、migrations）
+- ⛔ 禁止 `git add -A` / `git add .`，一律指定具體檔案
+- ⛔ prod / backup DB 任何寫入，需使用者明確回覆「確認操作正式 DB」
+- ⛔ 功能分支必須推遠端；merge 進 main 一律 `--no-ff`
+- ⛔ push main 前：更新 now.md（與推送同 commit）+ 機密檢查 + 使用者明確確認
+- ⛔ 需求或方案不可行時，先說明並詢問使用者，不得自行改用其他做法
+- 修改 `server/` 後必須提醒使用者重啟本機伺服器
 
-> 新增任何 `.claude/rules/*.md` 或專案規範文件，必須同時在此表加一行。
+## Skill 索引（依情境自動載入；未載入時可用 /skill名稱 手動載入）
+
+| 情境 | Skill |
+|---|---|
+| 動 frontend/ 任何 UI 元件前 | uidesign |
+| git push / merge / tag / 上線 / 部署設定 | deploy-release |
+| 編輯 server/services/ 或任何 DB 操作 | database |
+| 新功能／修改計畫／執行計畫／測試功能／修 bug／功能上線 | workflow |
 
 ## 已定案決策（不得推翻）
 
@@ -43,5 +48,5 @@
 
 ## 版本記憶
 
-- 版本索引：[.claude/CHANGELOG.md](.claude/CHANGELOG.md)
+- 版本索引：[.claude/CHANGELOG.md](.claude/CHANGELOG.md)（近 5 版全文，更早僅索引）
 - 每版詳細上下文：`.claude/context/vX.Y.Z.md`

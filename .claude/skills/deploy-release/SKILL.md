@@ -1,3 +1,8 @@
+---
+name: deploy-release
+description: 部署與 git 推送規則。執行 git push、merge、tag、功能上線、hotfix 上線、修改部署設定（_worker.js / zbpack / .env）之前，必須先載入本 skill。
+---
+
 # Deploy Rules — git 操作或觸碰設定檔時注入
 
 ## Zeabur 雙專案部署架構（v2.1.0 起）

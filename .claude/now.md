@@ -29,7 +29,7 @@ merge PR #6：新增 `openspec/changes/22-規則體系重構/` 與 `openspec/cha
 - **測試前必清 Service Worker**：DevTools → Application → Service Workers → Unregister，避免舊 PWA 快取干擾
 - **CCR 沙箱 outbound 白名單**：zeabur.com 與 Zeabur DB 公網 IP 不可達，連 DB 的指令必須由 PC 本地執行
 - **Zeabur PostgreSQL connection string**：`${POSTGRES_CONNECTION_STRING}` 引用 `${PASSWORD}`（不是 `${POSTGRES_PASSWORD}`），改密碼時兩個都改並重啟後端服務
-- **備份 DB schema 更新**（v2.7.0 起）：新增 migration 時不開公網，直接到 `kj-champion` → `postgresql-backup` → Console 貼上 migration SQL（詳見 `.claude/rules/database.md`）
+- **備份 DB schema 更新**（v2.7.0 起）：新增 migration 時不開公網，直接到 `kj-champion` → `postgresql-backup` → Console 貼上 migration SQL（詳見 database skill）
 - **Zeabur 跨服務變數引用不解析**：`${postgresql-backup.POSTGRES_CONNECTION_STRING}` 在手動填寫的環境變數欄位不會展開，必須填完整連線字串
 - **PowerShell ADMIN_SECRET 要用單引號**：含 `$` 字元的 secret 必須 `$secret = 'xxx$yyy'`（單引號），雙引號會把 `$y` 當變數展開導致 401
 - **sync-backup-to-dev 已移除**（v2.8.0）：dev DB 寫入只能手動。流程：prod 後端 export-backup-csv API → 下載 CSV → Zeabur `postgresql-dev` Console 貼上 INSERT/UPSERT SQL

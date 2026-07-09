@@ -1,6 +1,71 @@
+---
+name: uidesign
+description: KJ 前端 UI 設計規範（Warm Minimal 設計系統）。任何新增、修改 frontend/ 內的 UI 元件、樣式、顏色、彈窗、Tab、FAB、SidebarNav 之前，必須先載入本 skill。
+---
+
+# 前端開發（併自 frontend.md）
+
+## 當前前端目錄
+
+`frontend/`（React 19 + Vite 8 + Tailwind CSS 4 + PWA）— v2.0.0 起，`public/` HTML 版已刪除，禁止復用。
+
+## 目錄結構
+
+```
+frontend/
+├── public/
+│   └── _worker.js        # Cloudflare Worker（API 路由 + dev/prod 分流）
+├── src/
+│   ├── App.jsx            # React Router 主入口 + ProtectedRoute + Layout 三層巢狀
+│   ├── main.jsx           # pickColWidth() 設欄寬 CSS 變數；預攔截 beforeinstallprompt
+│   ├── pages/             # 17 個頁面元件
+│   ├── components/        # SidebarNav / Layout / FabAction / ConfirmLeaveDialog
+│   ├── contexts/          # AuthContext
+│   ├── services/          # api.js（API 呼叫層）
+│   └── utils/             # shareEvent.js
+└── vite.config.js
+```
+
+## 本機開發
+
+```bash
+npm --prefix frontend run dev       # 啟動 Vite dev server
+npm --prefix frontend run build     # 打包
+```
+
+開發模式測試：URL 帶 `?dev=1` 自動模擬登入，不需真實 LINE OAuth。
+
+## 修改前確認
+
+1. 確認當前分支（`git branch --show-current`）
+2. **在 main 分支**：強烈警告，修改直接影響正式上線用戶，應切功能分支
+
+## 測試指令
+
+```bash
+npm --prefix frontend run test:run   # vitest 全部（約 3 秒）
+npm --prefix frontend run test:e2e   # playwright e2e
+```
+
+測試前若有 Service Worker 問題：DevTools → Application → Service Workers → Unregister
+
+## 登入機制
+
+- 正式登入：LINE OAuth 2.0（不依賴 LIFF SDK，`server/routes/auth.js` 處理 callback）
+- 本機測試：URL 帶 `?dev=1`
+- 核心：`frontend/src/contexts/AuthContext.jsx`
+
+## 分享機制
+
+- 手機：LINE URL Scheme（`https://line.me/R/share?text=...`）
+- 電腦：Web Share API 或複製到剪貼簿
+- 實作：`frontend/src/utils/shareEvent.js`
+
+---
+
 # UIDESIGN — KJ Champion System UI 設計總入口
 
-> **任何新增 / 修改前端 UI 元件前必讀本檔。** 包含 Warm Minimal 設計系統、Pill Tab 規範、SidebarNav 規範、Feedback 元件規範、彈出訊息決策樹、禁止事項。
+> **任何新增 / 修改前端 UI 元件前必讀本節。** 包含 Warm Minimal 設計系統、Pill Tab 規範、SidebarNav 規範、Feedback 元件規範、彈出訊息決策樹、禁止事項。
 > 最後更新：2026-06-23（v2.9.0 桌機欄框置中 + FAB/SidebarNav 位置公式更新；v2.10.0 主頁快捷入口）
 
 ---
@@ -473,7 +538,3 @@ color: #4A7C59;             /* icon 使用 accent 色 */
 - 禁止在 Header 加入除 Logo + 重整 + 用戶 以外的元素
 - **禁止使用瀏覽器原生 `window.alert / confirm / prompt`**（一律走 `frontend/src/components/feedback/`，見上方 Feedback 元件規範）
 - 禁止引入第三方通知套件（react-toastify / sonner / hot-toast 等），自製套件已涵蓋所有需求
-
----
-
-*此文件為前端 UI 規範總入口。CLAUDE.md 已索引此檔，動到任何前端 UI 元件前必讀。設計方向調整請同步更新此文件。*

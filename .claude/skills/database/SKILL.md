@@ -1,3 +1,37 @@
+---
+name: database
+description: 資料庫操作安全規則（prod/backup/dev 三 DB 架構與雙閘門）。編輯 server/services/、產生 migration、或任何直接讀寫 DB 的操作之前，必須先載入本 skill。
+---
+
+# 後端目錄與路由（併自 backend.md）
+
+## 目錄結構
+
+- 主入口：`server/server.js`
+- 後端路由：`server/routes/`
+- 業務邏輯：`server/services/`
+
+## API 路由規範
+
+| 前綴 | 說明 |
+| --- | --- |
+| `/api/calendar/*` | 行事曆（Google Calendar + 本地 DB，raw https.request） |
+| `/api/members/*` | 成員管理（update-roles：負責人或開發者可操作） |
+| `/api/profile/*` | 個人資料（含 sync-avatar） |
+| `/api/line/*` | LINE BOT 整合、每日推播 API、系統連結（`system-links`） |
+| `/api/auth/*` | LINE Login OAuth |
+| `/api/financial/*` | 財務（限 manager 角色） |
+| `/api/debug/*` | 後端自檢（`GET /api/debug/health`：Google Auth + DB 連線六步驟） |
+| `/api/admin/*` | Admin 操作（Bearer token 保護）：sync-prod-to-backup / export-backup-csv / backup-status |
+
+## 登入機制（後端部分）
+
+- LINE Login OAuth 回調：`server/routes/auth.js`
+- callback 後 redirect 使用 `FRONTEND_URL + returnUrl`
+- 不依賴 LIFF SDK
+
+---
+
 # Database Rules — 觸碰 server/services/* 時注入
 
 ## 架構總覽（v2.7.0 起）
