@@ -20,13 +20,13 @@
 
 ## 2. Phase 2 — Hook 硬化 + 腳本化
 
-- [ ] 2.1 git-guard.js：main commit 產品程式碼 → permissionDecision deny
-- [ ] 2.2 git-guard.js：`git add -A` / 孤立 `git add .` → permissionDecision deny
-- [ ] 2.3 新增 `scripts/sync-branches.sh`（`bash -n` 通過）
-- [ ] 2.4 post-push-sync.js 輸出改為指向 sync-branches.sh
-- [ ] 2.5 deploy.md / workflow.md 內嵌 sync 腳本替換為指向 scripts/sync-branches.sh
-- [ ] 2.6 deploy.md 加入 merge `--no-ff` 規範
-- [ ] 2.7 `node --check` 三個 hook 全通過 + 模擬 `git add -A` 確認實際被 deny
+- [x] 2.1 git-guard.js：main commit 產品程式碼 → permissionDecision deny
+- [x] 2.2 git-guard.js：`git add -A` / 孤立 `git add .` → permissionDecision deny
+- [x] 2.3 新增 `scripts/sync-branches.sh`（`bash -n` 通過；**執行時修訂**：衝突預設停下回報，`SYNC_STRATEGY=theirs` 手動開關才覆蓋，見 spec.md 2.2 註記）
+- [x] 2.4 post-push-sync.js 輸出改為指向 sync-branches.sh
+- [x] 2.5 deploy.md / workflow.md 內嵌 sync 腳本替換為指向 scripts/sync-branches.sh
+- [x] 2.6 deploy.md 加入 merge `--no-ff` 規範
+- [x] 2.7 `node --check` 三個 hook 全通過 + 模擬 `git add -A` 確認實際被 deny
 - [ ] 2.8 commit
 
 ## 3. Phase 3 — 規則合併與流程降本

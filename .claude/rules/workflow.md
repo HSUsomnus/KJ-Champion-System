@@ -292,16 +292,7 @@ git checkout <回到原分支>
 
 ### 同步機制
 
-push main 後，立即將 main merge 到所有 m_b_* 分支：
-
-```bash
-git fetch origin --prune
-for branch in $(git ls-remote --heads origin 'refs/heads/m_b_*' | sed 's|.*refs/heads/||'); do
-  git checkout -B "$branch" "origin/$branch"
-  git merge main --no-edit && git push origin "$branch" || git merge --abort
-done
-git checkout main
-```
+push main 後，立即執行 `bash scripts/sync-branches.sh`（唯一事實來源，見 deploy.md「同步流程」與「衝突處理策略」）。
 
 ---
 

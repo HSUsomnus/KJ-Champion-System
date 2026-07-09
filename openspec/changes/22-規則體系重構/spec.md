@@ -149,14 +149,22 @@ process.exit(0);
 
 ### 2.2 新增 `scripts/sync-branches.sh`（sync 流程單一事實來源）
 
-參考實作（可微調，但行為必須一致）：
+> **執行時修訂**：實際實作與本節原始參考實作有一處政策差異，經使用者確認採用新政策——
+> 衝突時**預設 abort 該分支、記入失敗清單、停下交人工判斷**，不自動採 `-X theirs` 覆蓋。
+> 只有使用者已看過衝突內容並手動加上 `SYNC_STRATEGY=theirs` 環境變數時，才對該次執行啟用
+> `-X theirs` 覆蓋。原因：`-X theirs` 靜默覆蓋分支內容的風險超過自動化省下的時間，
+> 且該政策原本就只是「預設」，人工判斷比自動覆蓋更安全。deploy.md「衝突處理策略」段落已同步修訂。
+
+參考實作（可微調，但行為必須一致；`-X theirs` 僅在 `SYNC_STRATEGY=theirs` 時觸發，非預設）：
 
 ```bash
 #!/usr/bin/env bash
 # main 推送後全分支同步 — 唯一事實來源
-# 衝突時依 deploy 規則自動改用 -X theirs 並在結果中標示（需人工檢查被覆蓋的 dep）
+# 預設：衝突時 abort 並記入 FAILED，停下交人工判斷
+# SYNC_STRATEGY=theirs：使用者已確認衝突內容後，手動啟用 -X theirs 覆蓋
 set -u
 git fetch origin --prune
+STRATEGY="${SYNC_STRATEGY:-stop}"
 OK=(); THEIRS=(); FAILED=()
 for branch in $(git ls-remote --heads origin 'refs/heads/m_b_*' | sed 's|.*refs/heads/||'); do
   git checkout -B "$branch" "origin/$branch" >/dev/null 2>&1 || { FAILED+=("$branch(checkout)"); continue; }
@@ -164,10 +172,14 @@ for branch in $(git ls-remote --heads origin 'refs/heads/m_b_*' | sed 's|.*refs/
     git push origin "$branch" >/dev/null 2>&1 && OK+=("$branch") || FAILED+=("$branch(push)")
   else
     git merge --abort 2>/dev/null
-    if git merge main -X theirs --no-edit >/dev/null 2>&1; then
-      git push origin "$branch" >/dev/null 2>&1 && THEIRS+=("$branch") || FAILED+=("$branch(push)")
+    if [ "$STRATEGY" = "theirs" ]; then
+      if git merge main -X theirs --no-edit >/dev/null 2>&1; then
+        git push origin "$branch" >/dev/null 2>&1 && THEIRS+=("$branch") || FAILED+=("$branch(push)")
+      else
+        git merge --abort 2>/dev/null; FAILED+=("$branch(merge)")
+      fi
     else
-      git merge --abort 2>/dev/null; FAILED+=("$branch(merge)")
+      FAILED+=("$branch(conflict-stopped)")
     fi
   fi
 done
@@ -176,7 +188,7 @@ git fetch origin >/dev/null 2>&1
 echo "=== 同步結果 ==="
 echo "✅ 成功: ${OK[*]:-無}"
 echo "⚠️ 使用 -X theirs（有內容被 main 覆蓋，接手該分支前需檢查 dep）: ${THEIRS[*]:-無}"
-echo "❌ 失敗: ${FAILED[*]:-無}"
+echo "❌ 失敗 / 需人工處理: ${FAILED[*]:-無}"
 echo "=== behind 驗證（應全為 0）==="
 for branch in $(git ls-remote --heads origin 'refs/heads/m_b_*' | sed 's|.*refs/heads/||'); do
   echo "$branch: behind main $(git rev-list --count "origin/$branch..origin/main" 2>/dev/null || echo '?')"
