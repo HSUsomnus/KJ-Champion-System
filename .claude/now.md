@@ -11,7 +11,7 @@ change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`
 
 change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
-change 22「規則體系重構與 Token 降本」— 分支 `m_b_規則體系重構`，Phase 1–4 已完成並推送，進行中 Phase 5（工具殘骸清理，含目錄去品牌化改名）。詳見 `changes/22-規則體系重構/spec.md`。只動 `.claude/`、`scripts/`、根目錄文件、`changes/`，不碰 `server/`、`frontend/`。
+change 22「規則體系重構與 Token 降本」— 分支 `m_b_規則體系重構`，全部 5 個 Phase + 收尾已完成，全部 gate 通過，等待使用者確認驗收報告後「功能上線」merge main。常駐規則 token 估算 ~19,000 → ~2,725。詳見 `changes/22-規則體系重構/spec.md`、`tasks.md`。
 
 change 23「模型分層工作證」— 依賴 change 22 完成後才開始，尚未動工。
 

@@ -27,7 +27,7 @@
 - [x] 2.5 deploy.md / workflow.md 內嵌 sync 腳本替換為指向 scripts/sync-branches.sh
 - [x] 2.6 deploy.md 加入 merge `--no-ff` 規範
 - [x] 2.7 `node --check` 三個 hook 全通過 + 模擬 `git add -A` 確認實際被 deny
-- [ ] 2.8 commit
+- [x] 2.8 commit
 
 ## 3. Phase 3 — 規則合併與流程降本
 
@@ -37,7 +37,7 @@
 - [x] 3.4 .claude/CHANGELOG.md 裁切（近 5 版全文，其餘一行索引）
 - [x] 3.5 settings.json：rules-injector matcher 移除 Read（使用者於 GitHub 手動編輯完成）
 - [x] 3.6 CLAUDE.md 索引表同步（移除 main.md / readme.md 列）
-- [ ] 3.7 commit
+- [x] 3.7 commit
 
 ## 4. Phase 4 — Skill 化
 
@@ -49,7 +49,7 @@
 - [x] 4.6 重寫 CLAUDE.md（依 spec 4.3 草稿，已定案決策表原封保留）
 - [x] 4.7 刪除已搬移的 `.claude/rules/*.md`
 - [x] 4.8 全 repo grep 確認無 `.claude/rules/` 殘留引用（另修正 `.gitignore` 誤將 `.claude/skills/` 整個排除、`.claude/now.md` 一處存活引用）
-- [ ] 4.9 commit
+- [x] 4.9 commit
 
 ## 5. Phase 5 — OpenSpec 工具殘骸清理
 
@@ -58,11 +58,11 @@
 - [x] 5.3 全 repo grep `openspec`：規則/skill 文字中「OpenSpec change」→「change」、路徑改 `changes/`（另修正 rules-injector.js 殘留的 `/openspec/STATUS` 過時檢查、README.md 專案結構圖、now.md 兩處歷史記錄）
 - [x] 5.4 workflow skill 補「新 change 編號 = 現存最大編號 + 1」一句
 - [x] 5.5 刪除「雙裝置工作流」整段（確認 now.md 地雷區已涵蓋 CCR 環境事實）
-- [ ] 5.6 commit
+- [x] 5.6 commit
 
 ## 6. 收尾
 
-- [ ] 6.1 重跑 7.1–7.5 全部 gate + 完成 7.6 總驗收（含驗收報告產出）
-- [ ] 6.2 常駐 token 估算 ≤ 3,500（估算方式：中文字數 ×1.5 + 其他字元 ÷4）
-- [ ] 6.3 更新 `.claude/now.md`「當前 Change」段落
-- [ ] 6.4 回報使用者：驗收結果 + 使用者自辦事項清單（spec 第八節）
+- [x] 6.1 重跑 7.1–7.5 全部 gate + 完成 7.6 總驗收（含驗收報告產出）
+- [x] 6.2 常駐 token 估算 ≤ 3,500（估算方式：中文字數 ×1.5 + 其他字元 ÷4）
+- [x] 6.3 更新 `.claude/now.md`「當前 Change」段落
+- [x] 6.4 回報使用者：驗收結果 + 使用者自辦事項清單（spec 第八節）
