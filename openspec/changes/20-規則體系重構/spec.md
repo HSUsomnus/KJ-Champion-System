@@ -359,8 +359,8 @@ grep -rn "\.claude/rules/" --include="*.md" --include="*.js" . | grep -v node_mo
 
 刪除 `openspec/changes/` 下所有**已完成**的 change 資料夾（01–19 全部，含兩個 17）。
 依據：歷史已由 git 與 `.claude/context/vX.Y.Z.md` 承載，資料夾是第三份重複 + 搜尋污染源。
-保留：`20-規則體系重構`（進行中）。change 12 的資料夾在 `m_b_統一彈出訊息系統` 分支上，
-main 上不存在，不需處理。
+保留：`20-規則體系重構`、`21-模型分層工作證`（皆進行中）。change 12 的資料夾在
+`m_b_統一彈出訊息系統` 分支上，main 上不存在，不需處理。
 
 ### 5.2 目錄與稱呼去品牌化
 
