@@ -2,11 +2,13 @@
 /**
  * PreToolUse hook (Bash) — git 操作守衛
  *
- * 攔截三類危險操作：
+ * 攔截三類危險操作，另有兩類提醒：
  * 1. git add -A 或 git add .（孤立的點）→ deny；git add .claude/ 等路徑不受影響
  * 2. git commit 在 main 分支且 staged 有功能程式碼（server/、frontend/ 等）→ deny
  *    規則類（.claude/、CLAUDE.md、CHANGELOG.md、scripts/、.gitignore）允許直推，不攔截
- * 3. git push origin main → 顯示 deploy.md checklist（警告，不攔截；push 本來就有人工確認流程）
+ * 3. commit message 未帶型別前綴（feat|fix|chore|docs|refactor|test）→ deny
+ * 4. m_b_* 分支 commit 未 staged changes/<name>/tasks.md → 提醒（警告，不攔截）
+ * 5. git push origin main → 顯示 deploy.md checklist（警告，不攔截；push 本來就有人工確認流程）
  */
 const { execSync } = require('child_process');
 
@@ -17,6 +19,7 @@ process.stdin.on('end', () => {
     const data = JSON.parse(input);
     const command = (data.tool_input && data.tool_input.command) || '';
     const denyReasons = [];
+    const warnings = [];
 
     // ── 1. git add -A 或 git add .（孤立的點，非路徑前綴）─────────────
     // 將 command 切成各段（&&、||、;、換行），只比對每段開頭的 git add 指令，
@@ -64,6 +67,45 @@ process.stdin.on('end', () => {
       }
     }
 
+    // ── 3. commit message 型別前綴格式閘 ──────────────────────────────────
+    // 只驗格式不驗語意；型別選擇判準見 deploy-release skill「commit 型別對照表」。
+    const commitSeg = cmdSegments.map(s => s.trimStart()).find(s => /^git commit\b/.test(s));
+    if (commitSeg) {
+      const msgMatch = commitSeg.match(/-m\s+["']([^"']+)/);
+      if (msgMatch && !/^(feat|fix|chore|docs|refactor|test)(\([^)]*\))?: /.test(msgMatch[1])) {
+        denyReasons.push(
+          '⛔ [git-guard] commit message 必須以型別前綴開頭：feat|fix|chore|docs|refactor|test',
+          `收到：「${msgMatch[1].slice(0, 60)}」`,
+          '型別判準：feat=新功能｜fix=修錯誤行為｜refactor=行為不變重構｜chore=規則/設定/腳本｜docs=純文件',
+          '詳見 deploy-release skill「commit 型別對照表」'
+        );
+      }
+    }
+
+    // ── 4. m_b_* 分支 commit 未同步 tasks.md → 提醒（警告，不攔截）─────────
+    // 原因：change 22 驗收發現 Phase commit 漏勾 tasks.md，最後才補勾。
+    // tasks.md 是進度唯一來源，勾選必須與完成該 task 的 commit 同批。
+    if (/git commit\b/.test(command)) {
+      let branch = '';
+      try { branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim(); } catch (_) {}
+      if (/^m_b_/.test(branch)) {
+        let staged = '';
+        try { staged = execSync('git diff --name-only --cached', { encoding: 'utf8' }); } catch (_) {}
+        const stagedFiles = staged.split('\n').map(f => f.trim()).filter(Boolean);
+        const hasTasksStaged = stagedFiles.some(f => /^changes\/[^/]+\/tasks\.md$/.test(f));
+        let hasTasksInRepo = false;
+        try {
+          hasTasksInRepo = execSync('git ls-files "changes/*/tasks.md"', { encoding: 'utf8' }).trim().length > 0;
+        } catch (_) {}
+        if (stagedFiles.length > 0 && hasTasksInRepo && !hasTasksStaged) {
+          warnings.push(
+            '📋 [git-guard] 本次 commit 未包含 changes/*/tasks.md — 若本 commit 完成了任何 task，' +
+            '勾選必須同 commit（tasks.md 是進度唯一來源）。純中途修正可忽略本提醒。'
+          );
+        }
+      }
+    }
+
     if (denyReasons.length > 0) {
       const output = {
         hookSpecificOutput: {
@@ -76,9 +118,9 @@ process.stdin.on('end', () => {
       process.exit(0);
     }
 
-    // ── 3. 推送到 main（警告，不攔截）────────────────────────────────────
+    // ── 5. 推送到 main（警告，不攔截）────────────────────────────────────
     if (/git push\b.*\borigin\b.*\bmain\b/.test(command) && !/--delete/.test(command)) {
-      const messages = [
+      warnings.push(
         '🔴 [git-guard] 推送 main 前必須完成 deploy.md checklist（缺一不可）：',
         '  1. now.md 已更新，且與本次 push 同一個 commit',
         '  2. 機密檢查：git status 確認無 .env / Key/ / 金鑰 *.json',
@@ -86,11 +128,14 @@ process.stdin.on('end', () => {
         '',
         '  push 完成後 → 立刻執行全分支 sync（deploy.md「main 推送後同步規則」）',
         '  → 不可只 cherry-pick 到特定分支，必須 merge main 到所有 m_b_*'
-      ];
+      );
+    }
+
+    if (warnings.length > 0) {
       const output = {
         hookSpecificOutput: {
           hookEventName: 'PreToolUse',
-          additionalContext: messages.join('\n')
+          additionalContext: warnings.join('\n')
         }
       };
       process.stdout.write(JSON.stringify(output) + '\n');

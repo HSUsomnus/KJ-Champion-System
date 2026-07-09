@@ -42,6 +42,17 @@ git add <具體檔案>   # 禁止 git add -A，避免意外加入機密
 git commit -m "feat/fix/chore: ..."
 ```
 
+**commit 型別對照表**（git-guard 強制前綴格式；型別選擇依此表）：
+
+| 前綴 | 用於 |
+|---|---|
+| `feat` | 新增使用者可感知的功能 |
+| `fix` | 修正錯誤行為（改之前是壞的） |
+| `refactor` | 行為不變的結構調整 |
+| `chore` | 規則、設定、hook、腳本、雜務 |
+| `docs` | 純文件（README、spec、context） |
+| `test` | 純測試變更 |
+
 ---
 
 ## main 分支限制（原 main.md 內容，已併入本檔）

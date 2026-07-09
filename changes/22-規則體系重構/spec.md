@@ -455,7 +455,8 @@ DRY_RUN=1 bash scripts/sync-branches.sh
 ```bash
 ls .claude/rules/main.md .claude/rules/readme.md 2>&1   # 預期：皆 No such file
 grep -rn "rules/main.md\|rules/readme.md" .claude/ CLAUDE.md | grep -v context/  # 預期：0 筆
-grep -c "^## \[" .claude/CHANGELOG.md                    # 預期：完整摘要 ≤ 5 版（其餘為一行索引）
+grep -c "^git tag:" .claude/CHANGELOG.md                 # 預期：≤ 5（只有完整摘要版有 git tag: 行，一行索引沒有）
+# （addendum 修訂：原 grep "^## \[" 會同時數到一行索引標題，字面預期值不可能達成）
 grep -n "Read" .claude/settings.json                     # 預期：matcher 中無 Read
 grep -n "功能上線" .claude/rules/deploy.md | head -3     # 預期：README 重寫條件已改為僅功能上線
 ```

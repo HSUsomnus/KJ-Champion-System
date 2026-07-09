@@ -66,3 +66,13 @@
 - [x] 6.2 常駐 token 估算 ≤ 3,500（估算方式：中文字數 ×1.5 + 其他字元 ÷4）
 - [x] 6.3 更新 `.claude/now.md`「當前 Change」段落
 - [x] 6.4 回報使用者：驗收結果 + 使用者自辦事項清單（spec 第八節）
+
+## 7. 補強 — 紀律閘門（addendum-紀律補強.md）
+
+- [x] 7.1 git-guard.js：m_b_* commit 未帶 tasks.md → additionalContext 提醒（A 項）
+- [x] 7.2 git-guard.js：commit message 型別前綴格式閘 → deny（B 項）
+- [x] 7.3 deploy-release skill 補 commit 型別對照表（C 項）
+- [x] 7.4 workflow skill 補「spec 撰寫標準」兩條（D 項）
+- [x] 7.5 change 22 spec gate 7.3 指令修正（E 項）
+- [x] 7.6 addendum 第四節 gate 全 ✅（含 regression）
+- [x] 7.7 一個 commit（chore: 前綴、tasks.md 勾選同 commit）+ push
