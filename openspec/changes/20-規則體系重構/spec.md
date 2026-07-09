@@ -347,12 +347,47 @@ grep -rn "\.claude/rules/" --include="*.md" --include="*.js" . | grep -v node_mo
 
 ---
 
+## 六之二、Phase 5 — OpenSpec 工具殘骸清理（P1）
+
+> 背景：OpenSpec 開源工具（Fission-AI/OpenSpec）僅在早期 VS Code 環境使用過，
+> 自 change 13 起實務上已改為純兩件套（spec.md + tasks.md），工具本身不再使用。
+> 現存殘骸：01–10 的四件套格式（proposal/design）、`17-SidebarNav-UI重構` 與
+> `17-桌機版面置中` 編號撞號（後者缺 spec.md，CHANGELOG 又稱其為 change 18）、
+> 工具品牌名殘留在規則文字與目錄名。
+
+### 5.1 已完成 change 資料夾歸檔刪除
+
+刪除 `openspec/changes/` 下所有**已完成**的 change 資料夾（01–19 全部，含兩個 17）。
+依據：歷史已由 git 與 `.claude/context/vX.Y.Z.md` 承載，資料夾是第三份重複 + 搜尋污染源。
+保留：`20-規則體系重構`（進行中）。change 12 的資料夾在 `m_b_統一彈出訊息系統` 分支上，
+main 上不存在，不需處理。
+
+### 5.2 目錄與稱呼去品牌化
+
+- `git mv openspec/changes changes` → 目錄改為根目錄 `changes/`，刪除空的 `openspec/`。
+- 全 repo grep `openspec`，規則文字中「OpenSpec change」一律改為「change」、
+  路徑 `openspec/changes/` 改為 `changes/`（workflow 內容已搬入 skill 者在 skill 內改）。
+- 編號規則在 workflow skill 中補一句：「新 change 編號 = 現存最大編號 + 1」。
+
+### 5.3 刪除雙裝置工作流段落
+
+workflow.md（或已搬入的 workflow skill）中「雙裝置工作流（PC + 手機 Claude Code Web）」
+整段刪除。使用者用什麼裝置屬使用者私事，模型不需知道；模型需要的環境事實
+（CCR 沙箱 git tag 403、npm 不可用等）已在 `.claude/now.md` 地雷區，不受影響。
+
+### 5.4 執行順序
+
+Phase 5 排在 Phase 4 之後執行（workflow skill 先成形，再做路徑與稱呼替換，避免改兩次）。
+
+---
+
 ## 七、驗收清單
 
 - [ ] `node --check` 通過：git-guard.js、post-push-sync.js、rules-injector.js
 - [ ] `bash -n scripts/sync-branches.sh` 通過
 - [ ] 在 m_b_ 分支上模擬 `git add -A` → git-guard 實際 deny（不是警告）
-- [ ] 全 repo 無 `.claude/rules/` 殘留引用（除本 change 的 openspec 文件與 context 歷史檔）
+- [ ] 全 repo 無 `.claude/rules/` 殘留引用（除本 change 文件與 context 歷史檔）
+- [ ] 全 repo 無 `openspec` 字樣殘留（除 context 歷史檔與 git 歷史）；`changes/` 下僅存進行中 change
 - [ ] CLAUDE.md 內所有連結指向存在的檔案
 - [ ] `.claude/skills/` 四個 SKILL.md 均有合規 frontmatter
 - [ ] 常駐內容估算 ≤ 3,500 tokens（CLAUDE.md + now.md + 4 個 skill description）

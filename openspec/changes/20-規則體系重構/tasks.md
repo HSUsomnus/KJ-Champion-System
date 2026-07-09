@@ -50,9 +50,18 @@
 - [ ] 4.8 全 repo grep 確認無 `.claude/rules/` 殘留引用
 - [ ] 4.9 commit
 
-## 5. 收尾
+## 5. Phase 5 — OpenSpec 工具殘骸清理
 
-- [ ] 5.1 跑完 spec.md 第七節驗收清單，全項通過
-- [ ] 5.2 常駐 token 估算 ≤ 3,500（估算方式：中文字數 ×1.5 + 其他字元 ÷4）
-- [ ] 5.3 更新 `.claude/now.md`「當前 Change」段落
-- [ ] 5.4 回報使用者：驗收結果 + 使用者自辦事項清單（spec 第八節）
+- [ ] 5.1 刪除 `openspec/changes/` 下所有已完成 change 資料夾（01–19，含兩個 17；保留 20）
+- [ ] 5.2 `git mv openspec/changes changes`，刪除空的 `openspec/`
+- [ ] 5.3 全 repo grep `openspec`：規則/skill 文字中「OpenSpec change」→「change」、路徑改 `changes/`
+- [ ] 5.4 workflow skill 補「新 change 編號 = 現存最大編號 + 1」一句
+- [ ] 5.5 刪除「雙裝置工作流」整段（確認 now.md 地雷區已涵蓋 CCR 環境事實）
+- [ ] 5.6 commit
+
+## 6. 收尾
+
+- [ ] 6.1 跑完 spec.md 第七節驗收清單，全項通過
+- [ ] 6.2 常駐 token 估算 ≤ 3,500（估算方式：中文字數 ×1.5 + 其他字元 ÷4）
+- [ ] 6.3 更新 `.claude/now.md`「當前 Change」段落
+- [ ] 6.4 回報使用者：驗收結果 + 使用者自辦事項清單（spec 第八節）
