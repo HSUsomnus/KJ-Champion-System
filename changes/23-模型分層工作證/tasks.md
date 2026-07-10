@@ -7,15 +7,15 @@
 
 ## 0. 前置
 
-- [ ] 0.1 確認 change 22 已上線 main（v2.11.0：skill 目錄、git-guard deny、heredoc 型別閘 F 項）
-- [ ] 0.2 從 main 切 `m_b_模型分層工作證` 並推遠端
+- [x] 0.1 確認 change 22 已上線 main（v2.11.0：skill 目錄、git-guard deny、heredoc 型別閘 F 項）
+- [x] 0.2 從 main 切 `m_b_模型分層工作證` 並推遠端
 
 ## 1. Phase 1 — 角色 Command
 
-- [ ] 1.1 建立 `.claude/commands/規劃.md`（標記寫入 / 職責 / spec 撰寫標準引用 / 禁區 / 停止點交接 / 標記清除）
-- [ ] 1.2 建立 `.claude/commands/實作.md`（同上，加：語言與回報紀律〔繁中、每 task 一行回報、Phase commit 回報 hash〕；停止點含：寫收尾筆記 → 呼叫收尾員子代理 → 清標記）
-- [ ] 1.3 `.gitignore` 加入 `.claude/.session-role`
-- [ ] 1.4 跑 7.1 gate 全 ✅ → commit
+- [x] 1.1 建立 `.claude/commands/規劃.md`（標記寫入 / 職責 / spec 撰寫標準引用 / 禁區 / 停止點交接 / 標記清除）
+- [x] 1.2 建立 `.claude/commands/實作.md`（同上，加：語言與回報紀律〔繁中、每 task 一行回報、Phase commit 回報 hash〕；停止點含：寫收尾筆記 → 呼叫收尾員子代理 → 清標記）
+- [x] 1.3 `.gitignore` 加入 `.claude/.session-role`
+- [x] 1.4 跑 7.1 gate 全 ✅ → commit
 
 ## 2. Phase 2 — 收尾員子代理
 
