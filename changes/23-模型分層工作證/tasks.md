@@ -25,10 +25,10 @@
 
 ## 3. Phase 3 — role-guard hook
 
-- [ ] 3.1 建立 `.claude/hooks/role-guard.js`（無標記 → 放行；planner / engineer 依表 deny；deny 訊息附解除方式；讀檔失敗一律放行）
-- [ ] 3.2 建立 `.claude/hooks/lang-reminder.js`（UserPromptSubmit 每回合注入語言提醒，依 spec 3.2 參考實作）
-- [ ] 3.3 settings.json 註冊：role-guard（PreToolUse matcher `Edit|Write|Bash`）+ lang-reminder（UserPromptSubmit）
-- [ ] 3.4 跑 7.3 gate 全 ✅（含 pipe 實測 + git-guard regression 兩項 + lang-reminder 輸出驗證）→ commit
+- [x] 3.1 建立 `.claude/hooks/role-guard.js`（無標記 → 放行；planner / engineer 依表 deny；deny 訊息附解除方式；讀檔失敗一律放行）
+- [x] 3.2 建立 `.claude/hooks/lang-reminder.js`（UserPromptSubmit 每回合注入語言提醒，依 spec 3.2 參考實作）
+- [x] 3.3 settings.json 註冊：role-guard（PreToolUse matcher `Edit|Write|Bash`）+ lang-reminder（UserPromptSubmit）
+- [x] 3.4 跑 7.3 gate 全 ✅（含 pipe 實測 + git-guard regression 兩項 + lang-reminder 輸出驗證）→ commit
 
 ## 4. Phase 4 — 文件整合
 
