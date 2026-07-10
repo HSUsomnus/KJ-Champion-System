@@ -13,7 +13,7 @@ change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
 change 22「規則體系重構與 Token 降本」— ✅ DONE，已上線 v2.11.0。分支 `m_b_規則體系重構` 已刪除。
 
-change 23「模型分層工作證」— spec/tasks 正式版已 merge main（PR #9），分支 `m_b_模型分層工作證` 開始實作中。復工前提醒：`.claude/skills/`、git-guard deny 模式、deploy-release skill 皆已就緒。
+change 23「模型分層工作證」— ✅ 實作完成（tasks.md 全勾、gate 7.1–7.5 全綠），分支 `m_b_模型分層工作證` 待使用者驗收後上線。使用者自辦事項：spec 第八節第 3 條——上線後第一個新 change 全程走 `/規劃` → `/實作` → 收尾員流程實地驗證。
 
 change 20「團隊調查表單系統」（分支 `claude/new-feature-pz95p1`）、`claude/new-session-k97gfv`（AI員工後端橋接，復工時編號改 21）— 復工時 `.claude/` 相關衝突一律取 main 版本；spec 需從舊路徑搬到 `changes/`。
 
