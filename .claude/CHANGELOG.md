@@ -7,6 +7,13 @@
 
 ---
 
+## [v2.11.0] - 2026-07-10
+
+git tag: v2.11.0
+摘要：change 22「規則體系重構與 Token 降本」— 常駐規則 token 從 ~19,000 降到 ~2,453。`.claude/rules/*.md`（8 個規則檔）改造為 `.claude/skills/`（uidesign / deploy-release / database / workflow 四個 skill），依情境自動載入取代常駐全文。git-guard.js hook 從純警告升級為 `permissionDecision: deny` 硬攔截（main 直接 commit 產品碼、`git add -A`/`git add .`、commit message 缺型別前綴三類），另加 `m_b_*` commit 未同步 tasks.md 的警告提醒。新增 `scripts/sync-branches.sh` 作為 main→全 `m_b_*` 分支同步的唯一事實來源（取代 deploy.md / workflow.md / post-push-sync.js 三處重複腳本），衝突處理改為預設停下回報、`SYNC_STRATEGY=theirs` 作為明確手動開關（不再自動覆蓋分支內容）。README 全分支強制重寫規則降級為「僅功能上線 merge main 時」。刪除 `.cursorrules`、`.claude/RULES-MAP.md`、`openspec/changes/` 下 17 個已完成 change 資料夾，`openspec/changes/` 改名為根目錄 `changes/`（去 OpenSpec 工具品牌化）。`docs/` 底下 19 份 Vercel/Supabase/ngrok/LIFF 時代過時文件歸檔至 `docs/archive/`。
+
+---
+
 ## [v2.10.1] - 2026-06-22
 
 git tag: v2.10.1
@@ -35,12 +42,7 @@ git tag: v2.8.1
 
 ---
 
-## [v2.8.0] - 2026-06-21
-
-git tag: v2.8.0
-摘要：change 17「SidebarNav UI 重構」— SidebarNav 頂部在 logo 右側加入品牌文字「康九冠軍」；新增「管理者後台」導覽入口（isManager = role !== '一般人'，即負責人與開發者皆可見）；Management.jsx 頁面標題改為「管理者後台」並將 tab 切換改為統一 pill 樣式（#EFEDE9 底容器 / active #4A7C59 綠底白字 / borderRadius 20/16）。後端 PUT /api/members/update-roles 權限由「僅開發者」放寬為「負責人或開發者」。新增 GET /api/admin/export-backup-csv（從 backup DB 匯出 CSV，走內網不需開公網）；移除 POST /api/admin/sync-backup-to-dev（安全考量，dev DB 寫入改為全手動）；backup-status 改動態探索 public table。新增 scripts/import-csv-to-dev.js（本機 CSV → dev DB UPSERT 工具）。UIDESIGN.md 補充 Pill Tab 規範與 SidebarNav 規範。
-
----
+## [v2.8.0] - 2026-06-21 — change 17「SidebarNav UI 重構」：管理者後台入口 + pill tab 統一樣式（詳見 .claude/context/v2.8.0.md）
 
 ## [v2.7.0] - 2026-06-21 — change 16「備份 DB 同步」：新增 backup DB + dev DB、定時全量覆蓋（詳見 .claude/context/v2.7.0.md）
 

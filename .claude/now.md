@@ -11,13 +11,15 @@ change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`
 
 change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
-change 22「規則體系重構與 Token 降本」— 分支 `m_b_規則體系重構`，5 個 Phase + 收尾 + 補強工作證（addendum，Phase 7：git-guard 加 tasks.md 同步提醒 + commit 型別前綴 deny 閘）全部完成並推送，另補做 spec 第八節 docs/ 過時文件歸檔（19 份文件 + PDF/PNG 搬入 `docs/archive/`）。等待使用者確認後「功能上線」merge main。常駐規則 token 估算 ~19,000 → ~2,725。詳見 `changes/22-規則體系重構/spec.md`、`tasks.md`、`addendum-紀律補強.md`。
+change 22「規則體系重構與 Token 降本」— ✅ DONE，已上線 v2.11.0。分支 `m_b_規則體系重構` 已刪除。
 
-change 23「模型分層工作證」— 依賴 change 22 完成後才開始，尚未動工。
+change 23「模型分層工作證」— 依賴 change 22（現已完成）可以開始，尚未動工。復工前提醒：`.claude/skills/`、git-guard deny 模式、deploy-release skill 皆已就緒。
+
+change 20「團隊調查表單系統」（分支 `claude/new-feature-pz95p1`）、`claude/new-session-k97gfv`（AI員工後端橋接，復工時編號改 21）— 復工時 `.claude/` 相關衝突一律取 main 版本；spec 需從舊路徑搬到 `changes/`。
 
 ## 最近推送
 
-merge PR #6：新增 change 22「規則體系重構」與 change 23「模型分層工作證」的 spec.md + tasks.md（純文件，不含產品程式碼）。
+v2.11.0：change 22「規則體系重構」上線 main。`.claude/rules/` 8 個規則檔改造為 4 個 `.claude/skills/`（依情境自動載入）；git-guard.js 三類攔截升級為 deny（main 產品碼 commit / `git add -A` / commit 缺型別前綴），heredoc commit 誤判已修正；新增 `scripts/sync-branches.sh`（衝突預設停下回報，不自動覆蓋）；`openspec/changes/` 改名 `changes/` 並清空已完成資料夾；`docs/` 19 份過時文件歸檔至 `docs/archive/`。常駐 token ~19,000 → ~2,453。詳見 `.claude/context/v2.11.0.md`。
 
 ## 已知地雷
 
