@@ -27,7 +27,6 @@ Thumbs.db
 .claude/settings.local.json
 .claude/commands/
 !.claude/commands/*.md
-.claude/skills/
 .claude/worktrees/
 
 # 日誌檔案
