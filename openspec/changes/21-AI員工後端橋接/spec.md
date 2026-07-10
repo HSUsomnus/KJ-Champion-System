@@ -1,4 +1,7 @@
-# Change 20 — AI 員工後端橋接 API
+# Change 21 — AI 員工後端橋接 API
+
+> **編號變更說明**：本 change 原編號 20，因與「團隊調查表單系統」（`m_b_調查表單` 分支）
+> 的 change 20 撞號，改編號為 21。內容未變動，僅資料夾與標題更新。
 
 > 來源：使用者提供的 `README.md`（設計決策紀錄）與 `CLAUDE.md`（經理手冊），描述「KJ AI 員工 — LINE Bot 互動介面層」專案。
 > 該專案絕大部分（LINE webhook、規則層、Claude Code CLI 整合）是**獨立的新 Zeabur 專案，不在本 repo**。
