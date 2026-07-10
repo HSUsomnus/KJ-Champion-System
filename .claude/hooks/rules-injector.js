@@ -1,71 +1,54 @@
 #!/usr/bin/env node
 /**
- * PreToolUse hook: 依據檔案路徑與當前分支輸出規則提示
- * 觸發條件：Edit、Write（實作/修 bug）、Read（需求探索，僅前端路徑）
+ * PreToolUse hook: 依據檔案路徑與當前分支提醒載入對應 skill
+ * 觸發條件：Edit、Write（matcher 已移除 Read，change 22 起）
  *
- * 前端路徑特例：直接注入 UIDESIGN.md，不透過 frontend.md 二次轉介，
- * 避免 Claude 忽略 frontend.md 裡「請讀 UIDESIGN.md」的間接提示。
+ * 只提醒「載入 skill」，不再命令必須立即 Read 特定規則檔——
+ * 規則內容已搬進 .claude/skills/*，由 Claude 自行判斷是否已載入。
  */
 const { execSync } = require('child_process');
+
+const SKILL_MAP = [
+  { pattern: /\/(public|frontend)\//, skill: 'uidesign', label: '🎨 前端 UI' },
+  { pattern: /\/server\/services\//, skill: 'database', label: '🗄️ 資料庫服務' },
+  { pattern: /\/server\//, skill: 'database', label: '🗄️ 後端' },
+  { pattern: /\/(zbpack|_worker|_redirects|wrangler|\.env)/, skill: 'deploy-release', label: '🚀 部署設定' },
+];
 
 let input = '';
 process.stdin.on('data', chunk => { input += chunk; });
 process.stdin.on('end', () => {
   try {
     const data = JSON.parse(input);
-    const toolName = (data.tool_name || '').toLowerCase();
     const filePath = (data.tool_input && (data.tool_input.file_path || data.tool_input.filePath)) || '';
     const normalized = filePath.replace(/\\/g, '/');
 
     const isMeta =
       normalized.includes('/.claude/') ||
-      normalized.includes('/openspec/STATUS') ||
       normalized.endsWith('CLAUDE.md');
     if (isMeta) process.exit(0);
-
-    const isRead = toolName === 'read';
-    const isFrontend = /\/(public|frontend)\//.test(normalized);
-
-    // Read 工具只在前端路徑注入，其他路徑略過（避免噪音）
-    if (isRead && !isFrontend) process.exit(0);
 
     let branch = 'unknown';
     try {
       branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
     } catch (_) {}
 
-    const rules = [];
+    const match = SKILL_MAP.find(m => m.pattern.test(normalized));
+    const messages = [];
 
-    if (isFrontend) {
-      // Edit/Write 補上 frontend.md（開發規範）；Read 不加（探索階段只需 UI 規範）
-      if (!isRead) rules.push('.claude/rules/frontend.md');
-      // 直接注入 UIDESIGN.md，不透過 frontend.md 間接提示
-      rules.push('.claude/rules/UIDESIGN.md');
-    } else if (/\/server\/services\//.test(normalized)) {
-      rules.push('.claude/rules/backend.md', '.claude/rules/database.md');
-    } else if (/\/server\//.test(normalized)) {
-      rules.push('.claude/rules/backend.md');
-    } else if (/\/(zbpack|_worker|_redirects|wrangler|\.env)/.test(normalized)) {
-      rules.push('.claude/rules/deploy.md');
+    if (match) {
+      messages.push(`${match.label} — 若尚未載入 ${match.skill} skill，請先載入（分支：${branch}）`);
     }
 
-    // main 分支警告只在實際修改（Edit/Write）時才加，Read 不加
-    if (!isRead && branch === 'main') rules.push('.claude/rules/main.md');
+    if (branch === 'main') {
+      messages.push('⚠️ 目前在 main 分支，任何修改都直接影響真實用戶——若尚未載入 deploy-release skill，請先載入（內含 main 分支限制）');
+    }
 
-    if (rules.length > 0) {
-      let msg;
-      if (isFrontend) {
-        msg = isRead
-          ? `🎨 前端 UI 探索 — 設計規範必須優先讀取，再分析元件：${rules.join('、')}（分支：${branch}）`
-          : `🎨 前端 UI 實作 — 必須立即 Read 以下規則，不可略過：${rules.join('、')}（分支：${branch}）`;
-      } else {
-        msg = `📋 相關規則（需要時用 Read 讀取）：${rules.join('、')}（分支：${branch}）`;
-      }
-
+    if (messages.length > 0) {
       const output = {
         hookSpecificOutput: {
           hookEventName: 'PreToolUse',
-          additionalContext: msg
+          additionalContext: messages.join('\n')
         }
       };
       process.stdout.write(JSON.stringify(output) + '\n');
