@@ -76,3 +76,9 @@
 - [x] 7.5 change 22 spec gate 7.3 指令修正（E 項）
 - [x] 7.6 addendum 第四節 gate 全 ✅（含 regression）
 - [x] 7.7 一個 commit（chore: 前綴、tasks.md 勾選同 commit）+ push
+
+## 8. 補強 2 — heredoc 型別閘修正（addendum2-最終驗收與heredoc修正.md）
+
+- [x] 8.1 git-guard.js 型別閘訊息擷取改三層判定（F 項）
+- [x] 8.2 第四節 gate 全 ✅（F1–F8 + regression）
+- [x] 8.3 一個 commit（chore: 前綴、tasks.md 勾選同 commit）+ push

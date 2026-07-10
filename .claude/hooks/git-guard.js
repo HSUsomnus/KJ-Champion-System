@@ -69,13 +69,23 @@ process.stdin.on('end', () => {
 
     // ── 3. commit message 型別前綴格式閘 ──────────────────────────────────
     // 只驗格式不驗語意；型別選擇判準見 deploy-release skill「commit 型別對照表」。
+    // 訊息擷取三層判定（addendum2 修訂）：
+    //   單行 -m 直接驗；heredoc 寫法（-m "$(cat <<'EOF'…)"）取內文第一行驗；
+    //   其他動態訊息（$(date) 等）靜態驗不了 → fail-open 放行。
     const commitSeg = cmdSegments.map(s => s.trimStart()).find(s => /^git commit\b/.test(s));
     if (commitSeg) {
-      const msgMatch = commitSeg.match(/-m\s+["']([^"']+)/);
-      if (msgMatch && !/^(feat|fix|chore|docs|refactor|test)(\([^)]*\))?: /.test(msgMatch[1])) {
+      let msg = null;
+      const mFlag = commitSeg.match(/-m\s+["']([^"']*)/);
+      if (mFlag && mFlag[1].startsWith('$(')) {
+        const heredoc = command.match(/<<-?\s*['"]?(\w+)['"]?[^\n]*\n([\s\S]*?)^\1\s*$/m);
+        if (heredoc) msg = heredoc[2].split('\n')[0];
+      } else if (mFlag) {
+        msg = mFlag[1];
+      }
+      if (msg !== null && !/^(feat|fix|chore|docs|refactor|test)(\([^)]*\))?: /.test(msg)) {
         denyReasons.push(
           '⛔ [git-guard] commit message 必須以型別前綴開頭：feat|fix|chore|docs|refactor|test',
-          `收到：「${msgMatch[1].slice(0, 60)}」`,
+          `收到：「${msg.slice(0, 60)}」`,
           '型別判準：feat=新功能｜fix=修錯誤行為｜refactor=行為不變重構｜chore=規則/設定/腳本｜docs=純文件',
           '詳見 deploy-release skill「commit 型別對照表」'
         );
