@@ -13,7 +13,7 @@
 ## 1. Phase 1 — 角色 Command
 
 - [ ] 1.1 建立 `.claude/commands/規劃.md`（標記寫入 / 職責 / spec 撰寫標準引用 / 禁區 / 停止點交接 / 標記清除）
-- [ ] 1.2 建立 `.claude/commands/實作.md`（同上，停止點含：寫收尾筆記 → 呼叫收尾員子代理 → 清標記）
+- [ ] 1.2 建立 `.claude/commands/實作.md`（同上，加：語言與回報紀律〔繁中、每 task 一行回報、Phase commit 回報 hash〕；停止點含：寫收尾筆記 → 呼叫收尾員子代理 → 清標記）
 - [ ] 1.3 `.gitignore` 加入 `.claude/.session-role`
 - [ ] 1.4 跑 7.1 gate 全 ✅ → commit
 
@@ -26,8 +26,9 @@
 ## 3. Phase 3 — role-guard hook
 
 - [ ] 3.1 建立 `.claude/hooks/role-guard.js`（無標記 → 放行；planner / engineer 依表 deny；deny 訊息附解除方式；讀檔失敗一律放行）
-- [ ] 3.2 settings.json 註冊 PreToolUse matcher `Edit|Write|Bash`
-- [ ] 3.3 跑 7.3 gate 全 ✅（含六個 pipe 實測 + git-guard regression 兩項）→ commit
+- [ ] 3.2 建立 `.claude/hooks/lang-reminder.js`（UserPromptSubmit 每回合注入語言提醒，依 spec 3.2 參考實作）
+- [ ] 3.3 settings.json 註冊：role-guard（PreToolUse matcher `Edit|Write|Bash`）+ lang-reminder（UserPromptSubmit）
+- [ ] 3.4 跑 7.3 gate 全 ✅（含 pipe 實測 + git-guard regression 兩項 + lang-reminder 輸出驗證）→ commit
 
 ## 4. Phase 4 — 文件整合
 
@@ -35,7 +36,8 @@
 - [ ] 4.2 workflow skill「執行計畫」補「建議在 /實作 角色下執行」一句
 - [ ] 4.3 deploy-release skill 補收尾員說明一句
 - [ ] 4.4 deploy-release skill「git 指令規範」補 commit trailer 慣例（含 heredoc / 多 -m 寫法與 change 22 事件說明）
-- [ ] 4.5 跑 7.4 gate 全 ✅（含常駐 token 估算 ≤ 3,500）→ commit
+- [ ] 4.5 CLAUDE.md 鐵律區加語言一行（含進度短報；與 4.1 合計常駐增量 ≤ 60 tokens）
+- [ ] 4.6 跑 7.4 gate 全 ✅（含常駐 token 估算 ≤ 3,500）→ commit
 
 ## 5. 收尾
 
