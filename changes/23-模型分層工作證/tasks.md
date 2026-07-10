@@ -19,9 +19,9 @@
 
 ## 2. Phase 2 — 收尾員子代理
 
-- [ ] 2.1 建立 `.claude/agents/收尾員.md`（frontmatter：name / description / model: haiku）
-- [ ] 2.2 內容依 spec 2.1：讀收尾筆記 → CHANGELOG → context 檔 → now.md → 刪筆記 → commit（含 trailer 範本）→ tag 指令產出
-- [ ] 2.3 跑 7.2 gate 全 ✅ → commit
+- [x] 2.1 建立 `.claude/agents/收尾員.md`（frontmatter：name / description / model: haiku）
+- [x] 2.2 內容依 spec 2.1：讀收尾筆記 → CHANGELOG → context 檔 → now.md → 刪筆記 → commit（含 trailer 範本）→ tag 指令產出
+- [x] 2.3 跑 7.2 gate 全 ✅ → commit
 
 ## 3. Phase 3 — role-guard hook
 
