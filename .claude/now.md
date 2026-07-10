@@ -13,13 +13,13 @@ change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
 
 change 22「規則體系重構與 Token 降本」— ✅ DONE，已上線 v2.11.0。分支 `m_b_規則體系重構` 已刪除。
 
-change 23「模型分層工作證」— ✅ 實作完成（tasks.md 全勾、gate 7.1–7.5 全綠），分支 `m_b_模型分層工作證` 待使用者驗收後上線。使用者自辦事項：spec 第八節第 3 條——上線後第一個新 change 全程走 `/規劃` → `/實作` → 收尾員流程實地驗證。
+change 23「模型分層工作證」— ✅ DONE，已上線 v2.12.0。三層角色邊界系統（規劃/實作/收尾員）已運作。下一個新 change 須實地驗證 `/規劃` → `/實作` → 收尾員完整流程。
 
 change 20「團隊調查表單系統」（分支 `claude/new-feature-pz95p1`）、`claude/new-session-k97gfv`（AI員工後端橋接，復工時編號改 21）— 復工時 `.claude/` 相關衝突一律取 main 版本；spec 需從舊路徑搬到 `changes/`。
 
 ## 最近推送
 
-PR #9 merge main：change 23「模型分層工作證」spec.md + tasks.md 由草稿升級為正式版（整併 change 22 實戰教訓：交接素材落盤、分工邊界、trailer 慣例、gate 全面可執行化、語言紀律三層治理）。純文件變更，無程式碼異動。
+v2.12.0：change 23「模型分層工作證」上線 main。`.claude/commands/` 新增規劃/實作打卡 command，`.claude/agents/` 新增收尾員 Haiku 子代理；role-guard.js / lang-reminder.js hooks 強化角色邊界與語言紀律。CHANGELOG / context / now.md 更新完成。純 `.claude/` 基礎設施變更，無產品程式碼異動。
 
 v2.11.0：change 22「規則體系重構」上線 main。`.claude/rules/` 8 個規則檔改造為 4 個 `.claude/skills/`（依情境自動載入）；git-guard.js 三類攔截升級為 deny（main 產品碼 commit / `git add -A` / commit 缺型別前綴），heredoc commit 誤判已修正；新增 `scripts/sync-branches.sh`（衝突預設停下回報，不自動覆蓋）；`openspec/changes/` 改名 `changes/` 並清空已完成資料夾；`docs/` 19 份過時文件歸檔至 `docs/archive/`。常駐 token ~19,000 → ~2,453。詳見 `.claude/context/v2.11.0.md`。
 
