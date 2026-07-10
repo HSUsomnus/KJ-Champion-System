@@ -32,12 +32,12 @@
 
 ## 4. Phase 4 — 文件整合
 
-- [ ] 4.1 CLAUDE.md 加「Session 角色」小節（≤ 3 行）
-- [ ] 4.2 workflow skill「執行計畫」補「建議在 /實作 角色下執行」一句
-- [ ] 4.3 deploy-release skill 補收尾員說明一句
-- [ ] 4.4 deploy-release skill「git 指令規範」補 commit trailer 慣例（含 heredoc / 多 -m 寫法與 change 22 事件說明）
-- [ ] 4.5 CLAUDE.md 鐵律區加語言一行（含進度短報；與 4.1 合計常駐增量 ≤ 60 tokens）
-- [ ] 4.6 跑 7.4 gate 全 ✅（含常駐 token 估算 ≤ 3,500）→ commit
+- [x] 4.1 CLAUDE.md 加「Session 角色」小節（≤ 3 行）
+- [x] 4.2 workflow skill「執行計畫」補「建議在 /實作 角色下執行」一句
+- [x] 4.3 deploy-release skill 補收尾員說明一句
+- [x] 4.4 deploy-release skill「git 指令規範」補 commit trailer 慣例（含 heredoc / 多 -m 寫法與 change 22 事件說明）
+- [x] 4.5 CLAUDE.md 鐵律區加語言一行（含進度短報；與 4.1 合計常駐增量 ≤ 60 tokens）
+- [x] 4.6 跑 7.4 gate 全 ✅（含常駐 token 估算 ≤ 3,500）→ commit
 
 ## 5. 收尾
 

@@ -23,6 +23,7 @@
 - ⛔ push main 前：更新 now.md（與推送同 commit）+ 機密檢查 + 使用者明確確認
 - ⛔ 需求或方案不可行時，先說明並詢問使用者，不得自行改用其他做法
 - 修改 `server/` 後必須提醒使用者重啟本機伺服器
+- ⛔ 所有對使用者的文字輸出（含 tool call 之間的進度短報）一律繁體中文（台灣用語）
 
 ## Skill 索引（依情境自動載入；未載入時可用 /skill名稱 手動載入）
 
@@ -32,6 +33,10 @@
 | git push / merge / tag / 上線 / 部署設定 | deploy-release |
 | 編輯 server/services/ 或任何 DB 操作 | database |
 | 新功能／修改計畫／執行計畫／測試功能／修 bug／功能上線 | workflow |
+
+## Session 角色（模型分層）
+
+開 session 先打卡：Opus/Fable 規劃 → `/規劃`；Sonnet 實作 → `/實作`。收尾由「收尾員」子代理（Haiku）自動執行。
 
 ## 已定案決策（不得推翻）
 
