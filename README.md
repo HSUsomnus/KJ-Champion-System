@@ -1,6 +1,6 @@
 # 康九冠軍夥伴系統
 
-> **版本 v2.10.1** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-06-22
+> **版本 v2.11.0** | 分支：`main` | 部署：[kj-champion-system.pages.dev](https://kj-champion-system.pages.dev) | 更新：2026-07-10
 
 專為團隊設計的行事曆與成員管理系統，整合 LINE Login、LINE Bot、Google Calendar 與 PostgreSQL。
 
@@ -180,12 +180,20 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 ├── scripts/
 │   ├── init-db.js               # DB schema 初始化
 │   ├── import-csv-to-dev.js     # CSV → dev DB UPSERT 工具（v2.8.0）
+│   ├── sync-branches.sh         # main → 全 m_b_* 分支同步唯一事實來源（v2.11.0）
 │   └── diagnose-google-auth.js
-├── openspec/                    # OpenSpec 功能規格
+├── changes/                      # 功能規格（spec.md + tasks.md，change 編號遞增）
+├── docs/                         # 業務邏輯 / debug 經驗參考文件
+│   └── archive/                  # 已淘汰技術棧文件歸檔（Vercel/Supabase/ngrok/LIFF，v2.11.0）
 ├── jest.config.js
-├── .claude/                     # Claude Code 規則 + context
-├── CHANGELOG.md
-├── CLAUDE.md
+├── .claude/                     # Claude Code 規則體系（v2.11.0 起 Skill 化）
+│   ├── skills/                  # uidesign / deploy-release / database / workflow 四個 skill
+│   ├── hooks/                   # git-guard（deny 硬攔截）/ post-push-sync / rules-injector
+│   ├── commands/                # slash command
+│   ├── context/                 # 每版詳細上下文 vX.Y.Z.md
+│   ├── now.md                   # 動態狀態（地雷 + 環境特殊狀態）
+│   └── CHANGELOG.md             # 版本索引（近 5 版全文，其餘一行索引）
+├── CLAUDE.md                    # 對話啟動規則 + 鐵律 + Skill 索引
 └── package.json
 ```
 
@@ -222,4 +230,4 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 
 ## 版本記錄
 
-詳見 [CHANGELOG.md](./CHANGELOG.md)。每版詳細上下文：[.claude/context/](./.claude/context/)。
+詳見 [.claude/CHANGELOG.md](./.claude/CHANGELOG.md)（近 5 版全文，更早版本一行索引）。每版詳細上下文：[.claude/context/](./.claude/context/)。
