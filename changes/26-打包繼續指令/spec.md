@@ -114,6 +114,17 @@ node --check .claude/hooks/git-guard.js                     # 預期無輸出、
 
 規則類直推 main（deploy-release skill「規則類更新」流程）：commit → cherry-pick 到 main → **使用者明確確認**後 push → `bash scripts/sync-branches.sh`。now.md 更新與推送同 commit。CCR 環境 push main 若 403，改由使用者本機執行（指令須自包含）。
 
+## 懸掛狀態處置（使用者決策 2026-07-11，納入本 change 執行）
+
+| 項目 | 決策 | 狀態 |
+|---|---|---|
+| PR #12（change 20 策略修訂） | **保留**，使用者後續以 Opus session 繼續完成規劃文件 | 不動 |
+| PR #4（change 21 AI 員工橋接 spec，已過時） | **關閉** | ✅ 已由規劃 session 關閉 |
+| 分支 `m_b_三層流程補強`、`claude/project-spec-review-95epn4`、`claude/new-session-k97gfv` | **刪除** | 待實作 session 執行（tasks Phase 0） |
+| 分支 `m_b_調查表單`、`claude/change-20-strategy-hf8eds` | 保留（change 20 進行中 + PR #12） | 不動 |
+
+實作備註：使用者將於 VPS 以 Sonnet `/實作` 執行本 change，並藉此測試平行 sub-agent 工作流。
+
 ## 待確認事項（不阻塞本 change，但需使用者決定）
 
 1. **`.claude/commands/子代理.md` 已壞**：引用的 `.claude/hooks/open-worktree-vscode.js` 不存在、settings.json 也無對應 hook，且該指令只對本機 VS Code 有意義。要「修」（改為直接執行 `code <worktree路徑>`）還是「刪」？
