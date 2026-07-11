@@ -13,10 +13,10 @@
 
 ## Phase 2 — now.md 更新
 
-- [ ] 2.1 刪除 change 19 / 22 / 23 三行 ✅ DONE
-- [ ] 2.2 change 20/21 行改寫（照 spec 第四節第 4 點原文）
-- [ ] 2.3 跑 7.2 gate 全 ✅（含 change 12 行未誤刪）
-- [ ] 2.4 commit（`docs:` 前綴 + trailer）
+- [x] 2.1 刪除 change 19 / 22 / 23 三行 ✅ DONE
+- [x] 2.2 change 20/21 行改寫（照 spec 第四節第 4 點原文）
+- [x] 2.3 跑 7.2 gate 全 ✅（含 change 12 行未誤刪）
+- [x] 2.4 commit（`docs:` 前綴 + trailer）
 
 ## Phase 3 — 刪除已完成 change 資料夾
 

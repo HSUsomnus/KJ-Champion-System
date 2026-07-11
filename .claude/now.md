@@ -9,13 +9,7 @@
 
 change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。dev 已有部分 feedback 元件（FeedbackProvider / useToast / useConfirm），merge main 時需留意衝突。Home.jsx 中有臨時 pwaDialog inline modal，待 change 12 完成後替換為 feedback 元件。
 
-change 19「主頁快捷資訊」— ✅ DONE，已上線 v2.10.0。
-
-change 22「規則體系重構與 Token 降本」— ✅ DONE，已上線 v2.11.0。分支 `m_b_規則體系重構` 已刪除。
-
-change 23「模型分層工作證」— ✅ DONE，已上線 v2.12.0。三層角色邊界系統（規劃/實作/收尾員）已運作。下一個新 change 須實地驗證 `/規劃` → `/實作` → 收尾員完整流程。
-
-change 20「團隊調查表單系統」（分支 `claude/new-feature-pz95p1`）、`claude/new-session-k97gfv`（AI員工後端橋接，復工時編號改 21）— 復工時 `.claude/` 相關衝突一律取 main 版本；spec 需從舊路徑搬到 `changes/`。
+change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。`claude/new-session-k97gfv`（AI員工後端橋接）復工時編號改 21。兩者復工時 `.claude/` 相關衝突一律取 main 版本。
 
 ## 最近推送
 
