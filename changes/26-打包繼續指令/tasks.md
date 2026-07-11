@@ -1,7 +1,11 @@
 # Change 26 — tasks
 
 > 進度唯一來源。每 Phase 一個 commit（使用者手動 commit 例外，驗收報告須揭露）；
-> 純規則文件，依 workflow skill 測試表「純 spec/tasks 文件、規則檔」跳過 Unit Test，以 spec 的 G1–G7 gate 取代。
+> 純規則文件，依 workflow skill 測試表「純 spec/tasks 文件、規則檔」跳過 Unit Test，以 spec 的 G1–G10 gate 取代。
+>
+> **Sub-agent 分工已由 spec「Sub-agent 平行執行配置」定案，實作 session 不自行判斷**：
+> Phase 1、2、4 → 三個 sub-agent 平行（只寫檔＋跑 gate，不 commit）；
+> Phase 0、3、5、6 與**所有 commit/push** → 主 session 序列執行。
 
 ## Phase 0 — 懸掛狀態清理（使用者已決策 2026-07-11，見 spec「懸掛狀態處置」）
 

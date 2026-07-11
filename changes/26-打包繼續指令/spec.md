@@ -135,6 +135,30 @@ CLAUDE.md 第一段寫「上下文快滿輸入 `/打包`，新對話輸入 `/繼
 5. **doctor 角色用 hook 硬攔截，不靠指令文字自律**：本 change 規劃期間，高階模型 session 被 stop hook 一推就順手去關 PR、要刪分支——證明「文字禁區」擋不住環境壓力，必須比照 planner / engineer 用 role-guard deny。攔的是分支／merge／tag 類 Bash 操作與產品碼 Edit/Write；`git commit` / `git push` 依方案 A 不攔（報告檔交付通道，「僅限報告檔」由指令文字約束）。MCP 類 GitHub 操作攔不到（role-guard 只掛 Edit|Write|Bash），由指令文字補充禁止，屬已知限制。
 6. **/打包 收尾必吐起手式**：跨 session 的斷點在「新對話不知道去哪個分支」，把起手式做成 /打包 的固定輸出格式，使用者只需複製貼上＋輸入 /繼續，不需記任何分支名。
 
+## Sub-agent 平行執行配置（實作 session 照此執行，**不自行判斷平行邊界**）
+
+> 使用者要測試平行 sub-agent 工作流。平行與否是規劃層已定案的決策，依據是「檔案接觸面」：
+> 動不同檔案的 Phase 可平行；碰同一檔案的 Phase 嚴禁拆給不同 agent。
+
+### 鐵則
+
+1. **sub-agent 只寫檔 + 跑該 Phase 的 gate，不 commit、不 push**。commit / push 一律由主 session 收回、依 Phase 順序執行——兩個 agent 同時 `git add`/`git commit` 會交錯污染 staged 區，這是最大的事故源。
+2. sub-agent 回報格式：改了哪些檔、gate 輸出原文。gate fail → 主 session 自己修，不回派。
+
+### 分工表
+
+| 執行者 | 負責 | 原因 |
+|---|---|---|
+| **平行組（三個 sub-agent 同時派）** | Phase 1（打包.md）／Phase 2（繼續.md）／Phase 4（workflow SKILL + git-guard.js + now.md） | 三組檔案零重疊 |
+| **主 session 自辦（序列）** | Phase 0（分支清理）、Phase 3 ＋ Phase 5（**都動 CLAUDE.md**，禁止拆開平行）、全部 commit、Phase 6 | Phase 0 遇 403 要跟使用者互動；CLAUDE.md 單一寫入者；上線需使用者確認 |
+
+### 執行順序
+
+1. 主 session 先派出平行組（Phase 1、2、4 三個 sub-agent），同時自己做 Phase 0
+2. 平行組全數回報 → 主 session 複驗各 Phase gate → 依 Phase 1 → 2 → 4 順序逐 Phase commit + push
+3. 主 session 序列做 Phase 3 → Phase 5（各自 commit + push）
+4. Phase 6 上線（等使用者確認）
+
 ## 驗證 Gate（指令均已對現狀實測過語法；計數採保守下限，不猜精確值——change 25 教訓）
 
 ```bash
