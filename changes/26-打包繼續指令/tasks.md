@@ -34,17 +34,19 @@
 ## Phase 4 — 記憶體系除錯
 
 - [ ] 4.1 `.claude/skills/workflow/SKILL.md`：4 處 `deploy.md` 引用改為「deploy-release skill」（行 233/239/252/309）
-- [ ] 4.2 `.claude/hooks/git-guard.js`：4 處警告文字 `deploy.md` 改為「deploy-release skill」（行 11/34/136/141）
-- [ ] 4.3 `.claude/now.md`：change 20 spec 路徑改為 `changes/20-團隊調查表單系統/spec.md`
-- [ ] 4.4 跑 gate G5、G6、G7
+- [ ] 4.2 `.claude/skills/workflow/SKILL.md`「spec 撰寫標準」加「Sub-agent 平行執行配置」必寫段（四條判準，依 spec 技術設計 7）
+- [ ] 4.3 `.claude/hooks/git-guard.js`：4 處警告文字 `deploy.md` 改為「deploy-release skill」（行 11/34/136/141）
+- [ ] 4.4 `.claude/now.md`：change 20 spec 路徑改為 `changes/20-團隊調查表單系統/spec.md`
+- [ ] 4.5 跑 gate G5、G6、G7、G11（workflow 部分）
 
 ## Phase 5 — /診斷 指令 + doctor 角色圍籬 + 子代理清理
 
-- [ ] 5.1 新增 `.claude/commands/診斷.md`（依 spec「技術設計 5」：職責、方案 A 報告交付、起手式輸出、停止點；平實語言，不嵌比喻）
+- [ ] 5.1 新增 `.claude/commands/診斷.md`（依 spec「技術設計 5」：職責、方案 A 報告交付、起手式輸出、停止點；平實語言，不嵌比喻；內建待辦清單須標註 sub-agent 分工——技術設計 7）
 - [ ] 5.2 `.claude/hooks/role-guard.js` 新增 doctor 角色攔截（依 spec 禁區清單；`git commit`/`git push` 不攔）
 - [ ] 5.3 CLAUDE.md「Session 角色」段補 /診斷 一行（最高階模型）
-- [ ] 5.4 刪除 `.claude/commands/子代理.md`（已壞：引用不存在的 open-worktree-vscode.js hook）
-- [ ] 5.5 跑 gate G7、G8、G9、G10
+- [ ] 5.4 `.claude/commands/規劃.md`「spec 撰寫標準」節補「Sub-agent 平行執行配置」必寫段引用（依 spec 技術設計 7）
+- [ ] 5.5 刪除 `.claude/commands/子代理.md`（已壞：引用不存在的 open-worktree-vscode.js hook）
+- [ ] 5.6 跑 gate G7、G8、G9、G10、G11（規劃/診斷部分）
 
 ## Phase 6 — 上線（規則類直推 main）
 
