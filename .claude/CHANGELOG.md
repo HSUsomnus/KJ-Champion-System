@@ -7,6 +7,13 @@
 
 ---
 
+## [v2.12.2] - 2026-07-11
+
+git tag: v2.12.2
+摘要：change 25「三層流程補強」— 第二次實地驗證 + 制度化修補 change 24 暴露的六個交接缺口。`.claude/commands/規劃.md` 新增停止點「確認閘」；`.claude/commands/實作.md` 加「spec 取得」段 + 每 Phase 立即 push；`.claude/agents/收尾員.md` 交接素材改為取自收尾筆記主 session 連結；`.claude/skills/deploy-release/SKILL.md` 補做指令自包含範本 + SSH 簽章說明；`.claude/now.md` 補 CCR 限制與簽章條目、修正 change 12 記錄。零產品程式碼異動，全部是規則文字。
+
+---
+
 ## [v2.12.1] - 2026-07-11
 
 git tag: v2.12.1

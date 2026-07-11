@@ -7,11 +7,13 @@
 
 ## 當前 Change
 
-change 12「統一彈出訊息系統」— 已封存廢除（產品方向調整，2026-07-11）。成品在封存 tag `archive/change-12`（feedback 元件套件 + 44 單元測試 + 2 E2E 全綠），未來需要彈窗元件從 tag 撿回。Home.jsx 臨時 pwaDialog 隨之轉為現狀。
-
 change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。規格文件已遷入 `changes/20-調查表單/spec.md`。復工時注意 `.claude/` 變更一律取 main 版本。
 
+（change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」與 change 25「三層流程補強」均已上線 main）
+
 ## 最近推送
+
+v2.12.2：change 25「三層流程補強」— 第二次實地驗證 + 制度化修補 change 24 暴露的六個交接缺口。`.claude/commands/` 規劃/實作 command 強化；`.claude/agents/收尾員.md` 交接素材改為動態取值；`.claude/skills/deploy-release/SKILL.md` 補做指令自包含 + SSH 簽章說明；`.claude/now.md` 補 CCR 限制與簽章條目、修正 change 12 記錄。零產品程式碼異動。詳見 `.claude/context/v2.12.2.md`。
 
 v2.12.1：change 24「收尾清理」— change 22 + 23 上線後記錄檔掃尾。`.claude/CHANGELOG.md` v2.8.1 壓縮為索引（近 5 版規則補裁切）；`.claude/now.md` 移除已 DONE 行、更新進行中 change 說明；刪除 `changes/22-規則體系重構`、`changes/23-模型分層工作證`（歷史由 git + context 檔承載）。收尾員首次實地驗證三層流程（`/規劃` → `/實作` → 收尾員）。零產品程式碼異動。
 
