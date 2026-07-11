@@ -9,13 +9,15 @@
 
 change 12「統一彈出訊息系統」— 分支 `m_b_統一彈出訊息系統`，0/33 task，尚未開始實作。dev 已有部分 feedback 元件（FeedbackProvider / useToast / useConfirm），merge main 時需留意衝突。Home.jsx 中有臨時 pwaDialog inline modal，待 change 12 完成後替換為 feedback 元件。
 
-change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。`claude/new-session-k97gfv`（AI員工後端橋接）復工時編號改 21。兩者復工時 `.claude/` 相關衝突一律取 main 版本。
+change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。規格文件已遷入 `changes/20-調查表單/spec.md`。復工時注意 `.claude/` 變更一律取 main 版本。
 
 ## 最近推送
 
-v2.12.0：change 23「模型分層工作證」上線 main。`.claude/commands/` 新增規劃/實作打卡 command，`.claude/agents/` 新增收尾員 Haiku 子代理；role-guard.js / lang-reminder.js hooks 強化角色邊界與語言紀律。CHANGELOG / context / now.md 更新完成。純 `.claude/` 基礎設施變更，無產品程式碼異動。
+v2.12.1：change 24「收尾清理」— change 22 + 23 上線後記錄檔掃尾。`.claude/CHANGELOG.md` v2.8.1 壓縮為索引（近 5 版規則補裁切）；`.claude/now.md` 移除已 DONE 行、更新進行中 change 說明；刪除 `changes/22-規則體系重構`、`changes/23-模型分層工作證`（歷史由 git + context 檔承載）。收尾員首次實地驗證三層流程（`/規劃` → `/實作` → 收尾員）。零產品程式碼異動。
 
-v2.11.0：change 22「規則體系重構」上線 main。`.claude/rules/` 8 個規則檔改造為 4 個 `.claude/skills/`（依情境自動載入）；git-guard.js 三類攔截升級為 deny（main 產品碼 commit / `git add -A` / commit 缺型別前綴），heredoc commit 誤判已修正；新增 `scripts/sync-branches.sh`（衝突預設停下回報，不自動覆蓋）；`openspec/changes/` 改名 `changes/` 並清空已完成資料夾；`docs/` 19 份過時文件歸檔至 `docs/archive/`。常駐 token ~19,000 → ~2,453。詳見 `.claude/context/v2.11.0.md`。
+v2.12.0：change 23「模型分層工作證」上線 main。`.claude/commands/` 新增規劃/實作打卡 command，`.claude/agents/` 新增收尾員 Haiku 子代理；role-guard.js / lang-reminder.js hooks 強化角色邊界與語言紀律。詳見 `.claude/context/v2.12.0.md`。
+
+v2.11.0：change 22「規則體系重構」上線 main。`.claude/rules/` 8 個規則檔改造為 4 個 `.claude/skills/`；git-guard.js 三類攔截升級為 deny；新增 `scripts/sync-branches.sh`（衝突預設停下回報）；`openspec/changes/` 改名 `changes/` 並清空已完成資料夾；`docs/` 19 份過時文件歸檔至 `docs/archive/`。常駐 token ~19,000 → ~2,453。詳見 `.claude/context/v2.11.0.md`。
 
 ## 已知地雷
 
