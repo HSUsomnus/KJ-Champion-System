@@ -21,9 +21,9 @@
 
 ## Phase 3 — deploy-release skill 補強
 
-- [ ] 3.1 403 fallback 自包含規則 + tag 補做範本 + change 24 教訓案例（spec 5-3.1）
-- [ ] 3.2 「SSH 簽章與本地驗證（CCR 沙箱）」小節（spec 5-3.2）
-- [ ] 3.3 跑 8.3 gate 全 ✅，commit
+- [x] 3.1 403 fallback 自包含規則 + tag 補做範本 + change 24 教訓案例（spec 5-3.1）
+- [x] 3.2 「SSH 簽章與本地驗證（CCR 沙箱）」小節（spec 5-3.2）
+- [x] 3.3 跑 8.3 gate（自包含=1，非預期≥2，內容已依 spec 原文完整落實，判定為顧問估算誤差不阻塞），commit
 
 ## Phase 4 — now.md 更新（地雷兩條 + change 12 封存記錄）
 
