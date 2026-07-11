@@ -34,9 +34,17 @@
 - [ ] 4.3 `.claude/now.md`：change 20 spec 路徑改為 `changes/20-團隊調查表單系統/spec.md`
 - [ ] 4.4 跑 gate G5、G6、G7
 
-## Phase 5 — 上線（規則類直推 main）
+## Phase 5 — /診斷 指令 + doctor 角色圍籬 + 子代理清理
 
-- [ ] 5.1 更新 `.claude/now.md`「最近推送」段（與推送同 commit）
-- [ ] 5.2 機密檢查（git status 無 .env / Key/ / 金鑰 *.json）
-- [ ] 5.3 列推送清單，等使用者明確確認
-- [ ] 5.4 push main（CCR 403 則交自包含指令給使用者）→ `bash scripts/sync-branches.sh`
+- [ ] 5.1 新增 `.claude/commands/診斷.md`（依 spec「技術設計 5」：職責、方案 A 報告交付、起手式輸出、停止點；平實語言，不嵌比喻）
+- [ ] 5.2 `.claude/hooks/role-guard.js` 新增 doctor 角色攔截（依 spec 禁區清單；`git commit`/`git push` 不攔）
+- [ ] 5.3 CLAUDE.md「Session 角色」段補 /診斷 一行（最高階模型）
+- [ ] 5.4 刪除 `.claude/commands/子代理.md`（已壞：引用不存在的 open-worktree-vscode.js hook）
+- [ ] 5.5 跑 gate G7、G8、G9、G10
+
+## Phase 6 — 上線（規則類直推 main）
+
+- [ ] 6.1 更新 `.claude/now.md`「最近推送」段（與推送同 commit）
+- [ ] 6.2 機密檢查（git status 無 .env / Key/ / 金鑰 *.json）
+- [ ] 6.3 列推送清單，等使用者明確確認
+- [ ] 6.4 push main（CCR 403 則交自包含指令給使用者）→ `bash scripts/sync-branches.sh`
