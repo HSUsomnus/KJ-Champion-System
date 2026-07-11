@@ -20,9 +20,9 @@
 
 ## Phase 3 — 刪除已完成 change 資料夾
 
-- [ ] 3.1 `git rm -r changes/22-規則體系重構 changes/23-模型分層工作證`
-- [ ] 3.2 跑 7.3 gate 全 ✅
-- [ ] 3.3 commit（`chore:` 前綴 + trailer）
+- [x] 3.1 `git rm -r changes/22-規則體系重構 changes/23-模型分層工作證`
+- [x] 3.2 跑 7.3 gate 全 ✅
+- [x] 3.3 commit（`chore:` 前綴 + trailer）
 
 ## Phase 4 — 停止點與收尾（三層交接實地驗證）
 
