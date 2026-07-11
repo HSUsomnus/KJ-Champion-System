@@ -17,8 +17,8 @@
 
 ## Phase 1 — /打包 指令
 
-- [ ] 1.1 新增 `.claude/commands/打包.md`（依 spec「技術設計 1」六段交接檔 + 分支分流 + 不壓縮警語）
-- [ ] 1.2 跑 gate G1（打包.md 部分）、G2
+- [x] 1.1 新增 `.claude/commands/打包.md`（依 spec「技術設計 1」六段交接檔 + 分支分流 + 不壓縮警語）
+- [x] 1.2 跑 gate G1（打包.md 部分）、G2
 
 ## Phase 2 — /繼續 指令
 
