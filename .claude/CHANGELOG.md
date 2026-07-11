@@ -7,6 +7,13 @@
 
 ---
 
+## [v2.12.0] - 2026-07-10
+
+git tag: v2.12.0
+摘要：change 23「模型分層工作證」— 新增三層角色邊界系統。`.claude/commands/` 新增 `規劃.md`、`實作.md` 兩個打卡 command（Opus/Fable 規劃角色、Sonnet 實作角色），`.claude/agents/` 新增 `收尾員.md` Haiku 功能上線收尾子代理（負責 CHANGELOG / context / now.md / tag 指令）。`.claude/hooks/role-guard.js` 讀 `.claude/.session-role` 標記，deny 攔截 planner 角色寫產品碼、engineer 角色執行 `git tag` / push main；無標記完全不影響既有行為。`.claude/hooks/lang-reminder.js` 在 `UserPromptSubmit` 每回合注入繁體中文回報提醒，強化語言紀律三層治理。CLAUDE.md 新增「Session 角色」小節與語言鐵律一行；workflow / deploy-release skill 補述角色建議與收尾員說明、commit trailer 慣例。`.gitignore` 加入 `.claude/.session-role`。純 `.claude/` 基礎設施變更，無產品程式碼異動。
+
+---
+
 ## [v2.11.0] - 2026-07-10
 
 git tag: v2.11.0
