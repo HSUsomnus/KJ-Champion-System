@@ -4,11 +4,11 @@
 
 每次對話開始第一件事：
 
-1. 執行 `git branch --show-current && git log main -1 --oneline`（確認分支與 HEAD）
+1. 執行 `git branch --show-current && git fetch origin main --quiet && git log origin/main -1 --oneline`（確認分支與 HEAD；讀本機 main 可能是舊快照，CCR/新 clone 曾實測落後遠端）
 2. 讀 `.claude/now.md`（確認已知地雷與環境特殊狀態）
 3. 才接受指令
 
-上下文快滿輸入 `/打包`，新對話輸入 `/繼續`。
+上下文快滿輸入 `/打包`，新對話輸入 `/繼續`。（/打包＝寫交接檔跨對話交接；同對話就地壓縮用內建 `/compact`，兩者不同）
 
 ## 語言
 

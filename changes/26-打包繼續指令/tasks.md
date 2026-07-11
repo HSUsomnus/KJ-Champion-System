@@ -27,9 +27,9 @@
 
 ## Phase 3 — CLAUDE.md
 
-- [ ] 3.1 補 /打包 vs /compact 機制區分一句
-- [ ] 3.2 啟動規則第 1 步改為 `git fetch origin main --quiet && git log origin/main -1 --oneline`
-- [ ] 3.3 跑 gate G4
+- [x] 3.1 補 /打包 vs /compact 機制區分一句
+- [x] 3.2 啟動規則第 1 步改為 `git fetch origin main --quiet && git log origin/main -1 --oneline`
+- [x] 3.3 跑 gate G4
 
 ## Phase 4 — 記憶體系除錯
 
