@@ -53,6 +53,17 @@ git commit -m "feat/fix/chore: ..."
 | `docs` | 純文件（README、spec、context） |
 | `test` | 純測試變更 |
 
+**commit trailer 慣例**（change 22 教訓制度化：補強期間兩個 commit 因繞 heredoc 限制丟失
+trailer，模型可追溯性中斷）：每個 AI session 的 commit 訊息結尾必附兩行 trailer（使用者
+手動 commit 不強制）：
+
+```
+Co-Authored-By: Claude <模型名> <noreply@anthropic.com>
+Claude-Session: <session 連結>
+```
+
+多行訊息寫法：heredoc（首行須是「type: 標題」）或多個 `-m` 分段（最後一個 `-m` 放 trailer）。
+
 ---
 
 ## main 分支限制（原 main.md 內容，已併入本檔）
@@ -194,6 +205,8 @@ git push origin main
 git tag X.Y.Z
 git push --tags
 ```
+
+> 功能上線的記錄類收尾（CHANGELOG / context / now.md）由收尾員子代理執行（模型分層工作證，change 23）。
 
 **全部必做：**
 

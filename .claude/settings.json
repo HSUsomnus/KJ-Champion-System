@@ -20,6 +20,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/role-guard.js",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -29,6 +39,17 @@
           {
             "type": "command",
             "command": "node .claude/hooks/post-push-sync.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/lang-reminder.js",
             "timeout": 10
           }
         ]
