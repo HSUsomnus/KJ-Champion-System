@@ -8,7 +8,7 @@
  *    規則類（.claude/、CLAUDE.md、CHANGELOG.md、scripts/、.gitignore）允許直推，不攔截
  * 3. commit message 未帶型別前綴（feat|fix|chore|docs|refactor|test）→ deny
  * 4. m_b_* 分支 commit 未 staged changes/<name>/tasks.md → 提醒（警告，不攔截）
- * 5. git push origin main → 顯示 deploy.md checklist（警告，不攔截；push 本來就有人工確認流程）
+ * 5. git push origin main → 顯示 deploy-release skill checklist（警告，不攔截；push 本來就有人工確認流程）
  */
 const { execSync } = require('child_process');
 
@@ -31,7 +31,7 @@ process.stdin.on('end', () => {
     });
     if (isGitAddForbidden) {
       denyReasons.push(
-        '⛔ [git-guard] 禁止使用 git add -A 或 git add .（deploy.md 明文規定）',
+        '⛔ [git-guard] 禁止使用 git add -A 或 git add .（deploy-release skill 明文規定）',
         '原因：可能意外加入 .env、Key/、金鑰 *.json 等機密檔案。',
         '正確做法：git add <具體檔案路徑>'
       );
@@ -133,12 +133,12 @@ process.stdin.on('end', () => {
     // ── 5. 推送到 main（警告，不攔截）────────────────────────────────────
     if (/git push\b.*\borigin\b.*\bmain\b/.test(command) && !/--delete/.test(command)) {
       warnings.push(
-        '🔴 [git-guard] 推送 main 前必須完成 deploy.md checklist（缺一不可）：',
+        '🔴 [git-guard] 推送 main 前必須完成 deploy-release skill checklist（缺一不可）：',
         '  1. now.md 已更新，且與本次 push 同一個 commit',
         '  2. 機密檢查：git status 確認無 .env / Key/ / 金鑰 *.json',
         '  3. 使用者已明確確認（列出推送清單等待口頭 OK）',
         '',
-        '  push 完成後 → 立刻執行全分支 sync（deploy.md「main 推送後同步規則」）',
+        '  push 完成後 → 立刻執行全分支 sync（deploy-release skill「main 推送後同步規則」）',
         '  → 不可只 cherry-pick 到特定分支，必須 merge main 到所有 m_b_*'
       );
     }

@@ -33,11 +33,11 @@
 
 ## Phase 4 — 記憶體系除錯
 
-- [ ] 4.1 `.claude/skills/workflow/SKILL.md`：4 處 `deploy.md` 引用改為「deploy-release skill」（行 233/239/252/309）
-- [ ] 4.2 `.claude/skills/workflow/SKILL.md`「spec 撰寫標準」加「Sub-agent 平行執行配置」必寫段（四條判準，依 spec 技術設計 7）
-- [ ] 4.3 `.claude/hooks/git-guard.js`：4 處警告文字 `deploy.md` 改為「deploy-release skill」（行 11/34/136/141）
-- [ ] 4.4 `.claude/now.md`：change 20 spec 路徑改為 `changes/20-團隊調查表單系統/spec.md`
-- [ ] 4.5 跑 gate G5、G6、G7、G11（workflow 部分）
+- [x] 4.1 `.claude/skills/workflow/SKILL.md`：4 處 `deploy.md` 引用改為「deploy-release skill」（行 233/239/252/309）
+- [x] 4.2 `.claude/skills/workflow/SKILL.md`「spec 撰寫標準」加「Sub-agent 平行執行配置」必寫段（四條判準，依 spec 技術設計 7）
+- [x] 4.3 `.claude/hooks/git-guard.js`：4 處警告文字 `deploy.md` 改為「deploy-release skill」（行 11/34/136/141）
+- [x] 4.4 `.claude/now.md`：change 20 spec 路徑改為 `changes/20-團隊調查表單系統/spec.md`
+- [x] 4.5 跑 gate G5、G6、G7、G11（workflow 部分）
 
 ## Phase 5 — /診斷 指令 + doctor 角色圍籬 + 子代理清理
 
