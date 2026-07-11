@@ -16,8 +16,8 @@
 
 ## Phase 2 — 收尾員 trailer 來源修正
 
-- [ ] 2.1 `收尾員.md` 素材清單加「主 session 連結」；commit 範本改取自收尾筆記 + 缺連結 fallback 一行（spec 四）
-- [ ] 2.2 跑 8.2 gate 全 ✅，commit
+- [x] 2.1 `收尾員.md` 素材清單加「主 session 連結」；commit 範本改取自收尾筆記 + 缺連結 fallback 一行（spec 四）
+- [x] 2.2 跑 8.2 gate 全 ✅，commit
 
 ## Phase 3 — deploy-release skill 補強
 
