@@ -22,8 +22,8 @@
 
 ## Phase 2 — /繼續 指令
 
-- [ ] 2.1 新增 `.claude/commands/繼續.md`（依 spec「技術設計 2」：git log --all 尋找 handoff、fallback 問使用者、接手後刪檔）
-- [ ] 2.2 跑 gate G1（繼續.md 部分）、G3
+- [x] 2.1 新增 `.claude/commands/繼續.md`（依 spec「技術設計 2」：git log --all 尋找 handoff、fallback 問使用者、接手後刪檔）
+- [x] 2.2 跑 gate G1（繼續.md 部分）、G3
 
 ## Phase 3 — CLAUDE.md
 
