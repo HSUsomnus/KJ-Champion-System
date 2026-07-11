@@ -3,6 +3,14 @@
 > 進度唯一來源。每 Phase 一個 commit（使用者手動 commit 例外，驗收報告須揭露）；
 > 純規則文件，依 workflow skill 測試表「純 spec/tasks 文件、規則檔」跳過 Unit Test，以 spec 的 G1–G7 gate 取代。
 
+## Phase 0 — 懸掛狀態清理（使用者已決策 2026-07-11，見 spec「懸掛狀態處置」）
+
+- [ ] 0.1 刪除遠端分支 `m_b_三層流程補強`（已 merge，與 main 同 SHA e5fa804）
+- [ ] 0.2 刪除遠端分支 `claude/project-spec-review-95epn4`（0 個領先 commit）
+- [ ] 0.3 刪除遠端分支 `claude/new-session-k97gfv`（PR #4 已關閉；change 21 spec 可從已關 PR 撿回）
+- [ ] 0.4 用 `git ls-remote --heads origin` 驗證：上述三分支消失，`m_b_調查表單`、`claude/change-20-strategy-hf8eds`（PR #12 保留）仍在
+- [ ] 0.5 CCR 環境刪分支若 403：輸出自包含指令交使用者本機執行（`git push origin --delete <分支名>` 三行），不阻塞後續 Phase
+
 ## Phase 1 — /打包 指令
 
 - [ ] 1.1 新增 `.claude/commands/打包.md`（依 spec「技術設計 1」六段交接檔 + 分支分流 + 不壓縮警語）
