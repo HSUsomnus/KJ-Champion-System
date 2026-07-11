@@ -2,14 +2,14 @@
 
 ## Phase 0 — 開工
 
-- [ ] 0.1 `/實作` 打卡（`echo "engineer" > .claude/.session-role`）
-- [ ] 0.2 建分支：`git fetch origin claude/project-spec-review-95epn4 && git checkout -b m_b_收尾清理 origin/claude/project-spec-review-95epn4 && git push -u origin m_b_收尾清理`
+- [x] 0.1 `/實作` 打卡（`echo "engineer" > .claude/.session-role`）
+- [x] 0.2 建分支：`git fetch origin claude/project-spec-review-95epn4 && git checkout -b m_b_收尾清理 origin/claude/project-spec-review-95epn4 && git push -u origin m_b_收尾清理`
 
 ## Phase 1 — CHANGELOG 補裁切
 
-- [ ] 1.1 v2.8.1 完整摘要壓縮為一行索引（格式照 spec 第三節）
-- [ ] 1.2 跑 7.1 gate 全 ✅
-- [ ] 1.3 commit（`docs:` 前綴 + trailer，tasks.md 同批勾選）
+- [x] 1.1 v2.8.1 完整摘要壓縮為一行索引（格式照 spec 第三節）
+- [x] 1.2 跑 7.1 gate 全 ✅
+- [x] 1.3 commit（`docs:` 前綴 + trailer，tasks.md 同批勾選）
 
 ## Phase 2 — now.md 更新
 

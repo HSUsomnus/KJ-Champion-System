@@ -42,12 +42,7 @@ git tag: v2.9.0
 
 ---
 
-## [v2.8.1] - 2026-06-21
-
-git tag: v2.8.1
-摘要：hotfix — `package.json engines` 加入 `"npm": "10"`，繞過 Zeabur 基礎映像 `promise-retry` 缺失 bug（`npm update -g npm` 在新映像失敗）。Zeabur 偵測到 npm 版本約束後改執行 `npm install -f -g npm@10`，build 恢復正常。
-
----
+## [v2.8.1] - 2026-06-21 — hotfix：Zeabur 映像 promise-retry 缺失，engines 加 "npm": "10"（詳見 .claude/context/v2.8.1.md）
 
 ## [v2.8.0] - 2026-06-21 — change 17「SidebarNav UI 重構」：管理者後台入口 + pill tab 統一樣式（詳見 .claude/context/v2.8.0.md）
 
