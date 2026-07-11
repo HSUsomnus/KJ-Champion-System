@@ -258,6 +258,18 @@ git push origin --delete <branch>
 - **本機終端機**：直接給指令
 - **GitHub Web UI**：Tag → Releases → Create new tag；刪分支 → Branches → 🗑️
 
+**403 fallback 指令必須自包含**：交給使用者的補做指令，必須假設對方在**全新 clone** 執行——
+不得依賴沙箱本地狀態（本地 tag、本地分支、未推送的 commit）。tag 補做範本（SHA 必須明確給出）：
+
+```
+git fetch origin main
+git tag vX.Y.Z <merge commit SHA>
+git push origin vX.Y.Z
+```
+
+（change 24 教訓：沙箱本地 tag 推送吃 403 後，只給使用者 `git push origin vX.Y.Z` 一行，
+使用者端沒有這個 tag，失敗 `src refspec does not match any`。）
+
 ### CCR 環境已知的 403 操作（供參考）
 
 | 操作 | 結果 |
@@ -267,3 +279,12 @@ git push origin --delete <branch>
 | Push commit 到既有分支 | ✅ 通過 |
 | `git push origin --force-with-lease` | ✅ 通過 |
 | 建立新分支 | ✅ 通過 |
+
+### SSH 簽章與本地驗證（CCR 沙箱）
+
+CCR 沙箱由平台自動配置 SSH commit 簽章（`commit.gpgsign=true`、金鑰平台代管），每個 commit 預設已簽。
+但沙箱缺 `gpg.ssh.allowedSignersFile`，`git log --show-signature` 一律報錯並顯示 N——
+這是「**無法驗證**」不是「沒有簽」。
+
+⛔ 不得因本地顯示 N / 工具回報「缺簽章」而 rebase 重簽或重寫歷史（change 24 曾因此白工重簽
+4 個 commit）；簽章真偽一律以 GitHub commit 頁的 Verified badge 為準。

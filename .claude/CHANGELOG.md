@@ -7,6 +7,13 @@
 
 ---
 
+## [v2.12.2] - 2026-07-11
+
+git tag: v2.12.2
+摘要：change 25「三層流程補強」— 第二次實地驗證 + 制度化修補 change 24 暴露的六個交接缺口。`.claude/commands/規劃.md` 新增停止點「確認閘」；`.claude/commands/實作.md` 加「spec 取得」段 + 每 Phase 立即 push；`.claude/agents/收尾員.md` 交接素材改為取自收尾筆記主 session 連結；`.claude/skills/deploy-release/SKILL.md` 補做指令自包含範本 + SSH 簽章說明；`.claude/now.md` 補 CCR 限制與簽章條目、修正 change 12 記錄。零產品程式碼異動，全部是規則文字。
+
+---
+
 ## [v2.12.1] - 2026-07-11
 
 git tag: v2.12.1
@@ -35,12 +42,7 @@ git tag: v2.10.1
 
 ---
 
-## [v2.10.0] - 2026-06-22
-
-git tag: v2.10.0
-摘要：change 19「主頁快捷資訊」— 主頁歡迎區塊改為卡片，右側整合財力金額（空值顯示「尚未填寫」灰字）與「上傳財力」按鈕。新增系統連結區三個圖示方塊（LINE 事業部小幫手、康九冠軍 google 日曆、安裝到手機/PC），連結 URL 透過新後端 API `GET /api/line/system-links` 取得。PWA 安裝按鈕依狀態彈出 dialog（已安裝／不支援瀏覽器兩種訊息，手機與 PC 文案不同）。今日行程保留並移至系統連結下方。`main.jsx` 在 React render 前預攔截 `beforeinstallprompt` 事件解決 useEffect 太晚問題。
-
----
+## [v2.10.0] - 2026-06-22 — change 19「主頁快捷資訊」：主頁歡迎區塊卡片化 + 財力金額/系統連結區 + PWA 安裝按鈕（詳見 .claude/context/v2.10.0.md）
 
 ## [v2.9.0] - 2026-06-22 — change 18「桌機版面置中」：桌機橫式螢幕居中顯示（詳見 .claude/context/v2.9.0.md）
 
