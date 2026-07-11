@@ -126,6 +126,19 @@ CLAUDE.md 第一段寫「上下文快滿輸入 `/打包`，新對話輸入 `/繼
 
 引用的 `.claude/hooks/open-worktree-vscode.js` 不存在、settings.json 無對應 hook，指令整體已壞且僅對本機 VS Code 情境有意義 → 直接刪除，不修。
 
+### 7. Sub-agent 平行邊界準則制度化（使用者決策 2026-07-11：寫進 skill，不只本 change 一次性）
+
+> 平行邊界的判斷屬於規劃層／診斷層的固定職責。低階實作模型自行判斷平行邊界是事故源，
+> 必須由制度文字禁止。本節把下方「Sub-agent 平行執行配置」使用的判準寫進三個地方：
+
+- **`.claude/skills/workflow/SKILL.md`「spec 撰寫標準」加一條**——每份 spec 必含「Sub-agent 平行執行配置」段，內容依四條判準定案：
+  1. 判準＝**檔案接觸面**：Phase 之間動的檔案零重疊才可平行；碰同一檔案的 Phase 禁止拆給不同 agent
+  2. sub-agent 只寫檔＋跑該 Phase 的 gate，**不 commit、不 push**；commit / push 一律主 session 依 Phase 順序執行
+  3. 需與使用者互動的步驟（上線確認、403 fallback）一律主 session
+  4. 平行邊界由規劃層定案寫進 spec，實作 session 照表執行，**不自行判斷**
+- **`.claude/commands/規劃.md`「spec 撰寫標準」節補一行**：spec 必含「Sub-agent 平行執行配置」段（四條判準見 workflow skill，規劃者負責依判準定案分工表）
+- **`.claude/commands/診斷.md`（本 change 新增時直接內建）**：診斷報告的待辦清單交 `/實作` 執行時，須依同一判準標註分工（可平行組／主 session 序列），不得留給實作 session 判斷
+
 ## 關鍵設計決策
 
 1. **handoff.md 跟工作分支走，用 `git log --all` 尋找**：不推 main（避開 push main 確認流程）、不需要任何新基礎設施；新對話 fetch 後一定找得到。代價是 /繼續 要多一次 fetch --all，可接受。
@@ -197,6 +210,11 @@ grep -c "起手式" .claude/commands/診斷.md                   # 預期 ≥1
 
 # G10 role-guard 含 doctor 角色（現狀實測：0）
 grep -c "doctor" .claude/hooks/role-guard.js                # 預期 ≥1
+
+# G11 平行準則制度化（現狀實測：三者皆 0）
+grep -c "平行執行配置" .claude/skills/workflow/SKILL.md     # 預期 ≥1
+grep -c "平行執行配置" .claude/commands/規劃.md              # 預期 ≥1
+grep -c "平行" .claude/commands/診斷.md                     # 預期 ≥1
 ```
 
 ## 上線方式
