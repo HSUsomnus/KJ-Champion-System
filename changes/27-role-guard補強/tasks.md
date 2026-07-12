@@ -32,5 +32,5 @@
 - [x] 5.1 確認 change 26 已上線 main（`git log origin/main` 可見 change 26 commits），未上線則停下回報
 - [x] 5.2 更新 `.claude/now.md`「最近推送」段（與推送同 commit）
 - [x] 5.3 機密檢查（git status 無 .env / Key/ / 金鑰 *.json）
-- [ ] 5.4 列推送清單，等使用者明確確認
-- [ ] 5.5 push main（CCR/VPS 403 則交自包含指令給使用者，含 cd 絕對路徑、&& 串接）→ `bash scripts/sync-branches.sh`
+- [x] 5.4 列推送清單，等使用者明確確認
+- [ ] 5.5 push main（role-guard 攔 engineer push main，設計本意——交自包含指令給使用者於 Termius 執行，含 cd 絕對路徑、&& 串接）→ `bash scripts/sync-branches.sh`
