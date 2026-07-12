@@ -20,8 +20,8 @@ change 27「role-guard 補強」— 分支 `m_b_role-guard補強`，目標：修
 
 **下一步**：
 
-- Sonnet `/實作` session 執行 change 27 tasks（Phase 1：role-guard token 比對；Phase 2：session-role-notice.js + settings.json；全部主 session 序列，不派 sub-agent）
-- change 26（分支 `m_b_打包繼續指令`）還有 Phase 0（懸掛分支清理）與 Phase 6（上線）未做，可另開 session 處理
+- Sonnet `/實作` session 執行 change 27 tasks（Phase 1：role-guard token 比對；Phase 2：session-role-notice.js + settings.json；Phase 3：實作.md 使用者終端機指令紀律；全部主 session 序列，不派 sub-agent）
+- change 26 **已於 2026-07-12 上 main**（main HEAD `002cb01`，使用者 Termius 手動推）；剩 Phase 0（懸掛分支清理）與 sync-branches.sh 由 remote-control session 收尾
 
 ## 4. 工作區狀態
 

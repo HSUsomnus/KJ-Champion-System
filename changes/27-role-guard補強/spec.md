@@ -7,12 +7,14 @@
 
 1. **標記殘留**：`.claude/.session-role` 只在 `/實作` 停止點刪除。session 中斷、context 爆掉、使用者中途換題，標記就永久留在工作目錄。之後同目錄的任何新對話（即使沒打卡）都被當 engineer/planner/doctor 攔截，且**新 session 不自知**，第一反應常誤判成環境問題。CCR 容器短命會自癒；**VPS 長駐工作目錄特別容易踩**。
 2. **push-main regex 誤攔**：`role-guard.js:56` 的 `\bmain\b` 會命中任何含 main 這個 word 的分支名。實測（2026-07-12）：`git push -u origin fix-main-layout` 被 deny。engineer 被要求每 Phase 立即 push，功能分支撞名會卡死。
+3. **交給使用者的終端機指令不自包含**（2026-07-12 change 26 上線實測教訓）：使用者在 Termius 貼指令，SSH 登入起點是家目錄 `~`，session 給的指令沒帶 `cd` → 連環 `fatal: not a git repository`；指令含 `<路徑>` 佔位符 → 使用者原樣貼上，bash 把 `<` 當重導向，`syntax error near '&&'`。
 
 ## 範圍
 
 - ✅ `.claude/hooks/role-guard.js`（engineer push-main 判定收緊為 token 比對）
 - ✅ `.claude/hooks/session-role-notice.js`（新增 SessionStart hook：殘留標記提示）
 - ✅ `.claude/settings.json`（註冊 SessionStart hook）
+- ✅ `.claude/commands/實作.md`（停止點補「使用者終端機指令紀律」）
 - ❌ 不動 `/實作`、`/規劃`、`/診斷` 打卡格式（殘留偵測用檔案 mtime，不需嵌時間戳）
 - ❌ 不做「標記自動過期放行」（見設計決策 1）
 - ❌ 不動 `server/`、`frontend/` 任何產品程式碼
@@ -49,6 +51,20 @@ doctor 段的既有規則不動。
 ### 3. settings.json 註冊
 
 `hooks` 新增 `SessionStart` 段，command：`node .claude/hooks/session-role-notice.js`，timeout 10。
+
+### 4. 實作.md 停止點補「使用者終端機指令紀律」
+
+engineer 被 role-guard 攔下的收尾操作（merge main、push main、`git tag`）最終由**使用者
+在 Termius（自己的終端機）執行**。`實作.md`「停止點」第 3 點的「待使用者執行的指令」擴充為
+固定紀律（新增一小節，四條）：
+
+1. 明講**「請貼到 Termius（或你自己的終端機）執行」**，不假設使用者知道要換環境
+2. code block **第一段必為 `cd <repo 絕對路徑>`**——路徑以 `pwd` 實際取值**寫死進指令**，
+   禁止留 `<路徑>` 類佔位符（使用者 SSH 登入起點是 `~`；佔位符原樣貼上會被 bash 當重導向）
+3. 全串以 `&&` 串接成單行——任一步失敗即停，不連環噴錯
+4. 指令自包含：假設使用者終端是乾淨 shell（與 deploy-release「403 fallback 指令自包含」同精神）
+
+與既有「上線確認訊息的指令紀律」（code block 只放現在請你執行的指令）並列，不互相取代。
 
 ## 關鍵設計決策
 
@@ -90,6 +106,10 @@ node .claude/hooks/session-role-notice.js                   # 預期：無輸出
 
 # G4 SessionStart 已註冊（現狀實測：0）
 grep -c "SessionStart" .claude/settings.json                # 預期 ≥1
+
+# G5 實作.md 含使用者終端機指令紀律（現狀實測：0）
+grep -c "Termius" .claude/commands/實作.md                  # 預期 ≥1
+grep -c "cd " .claude/commands/實作.md                      # 預期 ≥1
 ```
 
 ## 上線方式
