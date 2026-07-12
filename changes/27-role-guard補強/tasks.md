@@ -13,9 +13,9 @@
 
 ## Phase 2 — 殘留標記提示 hook
 
-- [ ] 2.1 新增 `.claude/hooks/session-role-notice.js`（依 spec 技術設計 2：mtime、fail-open）
-- [ ] 2.2 `.claude/settings.json` 註冊 SessionStart hook（依 spec 技術設計 3）
-- [ ] 2.3 跑 gate G2（notice 部分）、G3、G4
+- [x] 2.1 新增 `.claude/hooks/session-role-notice.js`（依 spec 技術設計 2：mtime、fail-open）
+- [x] 2.2 `.claude/settings.json` 註冊 SessionStart hook（依 spec 技術設計 3）
+- [x] 2.3 跑 gate G2（notice 部分）、G3、G4
 
 ## Phase 3 — 實作.md 停止點補「使用者終端機指令紀律」
 
