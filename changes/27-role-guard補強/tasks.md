@@ -8,8 +8,8 @@
 
 ## Phase 1 — push-main 判定收緊
 
-- [ ] 1.1 `.claude/hooks/role-guard.js`：engineer 段 push-main 判定改為 token 比對（依 spec 技術設計 1；git tag 與 doctor 段不動）
-- [ ] 1.2 跑 gate G1、G2（role-guard 部分）
+- [x] 1.1 `.claude/hooks/role-guard.js`：engineer 段 push-main 判定改為 token 比對（依 spec 技術設計 1；git tag 與 doctor 段不動）
+- [x] 1.2 跑 gate G1、G2（role-guard 部分）
 
 ## Phase 2 — 殘留標記提示 hook
 
