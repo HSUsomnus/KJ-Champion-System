@@ -7,8 +7,7 @@
 
 ## 當前 Change
 
-- change 26「/打包、/繼續 指令實作」— **已於 2026-07-12 上 main**（使用者於 Termius 手動 cherry-pick + push，main HEAD `002cb01`）。剩 Phase 0（懸掛分支清理）與 `sync-branches.sh` 待 remote-control session 收尾。
-- change 27「role-guard 補強」— 分支 `m_b_role-guard補強`（自 change 26 分支切出），spec + tasks 已定稿，待 Sonnet `/實作` 執行。**上線順序固定 26 → 27**（27 分支夾帶 26 commits，先推 27 等於偷渡 26 上線；tasks 3.1 有前置檢查）。
+- change 27「role-guard 補強」— 分支 `m_b_role-guard補強`（自 change 26 分支切出），spec + tasks 已定稿，待 Sonnet `/實作` 執行。前置條件（change 26 先上 main）已於 2026-07-12 滿足（main HEAD `002cb01`），懸掛分支清理與 `sync-branches.sh` 亦已完成。
 - change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。規格文件已遷入 `changes/20-團隊調查表單系統/spec.md`。復工時注意 `.claude/` 變更一律取 main 版本。
 
 （change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」與 change 25「三層流程補強」均已上線 main）
