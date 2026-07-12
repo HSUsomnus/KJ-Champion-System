@@ -53,7 +53,16 @@ process.stdin.on('end', () => {
       const cmdSegments = command.split(/&&|\|\|?|;|\n/);
       const isBlocked = cmdSegments.some(seg => {
         const t = seg.trimStart();
-        return /^git tag\b/.test(t) || /^git push\b.*\borigin\b.*\bmain\b/.test(t);
+        if (/^git tag\b/.test(t)) return true;
+        if (/^git push\b/.test(t)) {
+          const tokens = t.split(/\s+/);
+          return tokens.some(tok =>
+            tok === 'main' ||
+            tok === 'refs/heads/main' ||
+            /^[^:]*:(refs\/heads\/)?main$/.test(tok)
+          );
+        }
+        return false;
       });
 
       if (isBlocked) {
