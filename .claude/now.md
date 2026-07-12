@@ -7,7 +7,9 @@
 
 ## 當前 Change
 
-change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。規格文件已遷入 `changes/20-團隊調查表單系統/spec.md`。復工時注意 `.claude/` 變更一律取 main 版本。
+- change 26「/打包、/繼續 指令實作」— 分支 `m_b_打包繼續指令`，Phase 1–5 完成，**Phase 0（懸掛分支清理）與 Phase 6（上線 main）未做**。
+- change 27「role-guard 補強」— 分支 `m_b_role-guard補強`（自 change 26 分支切出），spec + tasks 已定稿，待 Sonnet `/實作` 執行。**上線順序固定 26 → 27**（27 分支夾帶 26 commits，先推 27 等於偷渡 26 上線；tasks 3.1 有前置檢查）。
+- change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。規格文件已遷入 `changes/20-團隊調查表單系統/spec.md`。復工時注意 `.claude/` 變更一律取 main 版本。
 
 （change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」與 change 25「三層流程補強」均已上線 main）
 
