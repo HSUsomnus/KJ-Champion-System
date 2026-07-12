@@ -7,12 +7,13 @@
 
 ## 當前 Change
 
-- change 27「role-guard 補強」— 分支 `m_b_role-guard補強`（自 change 26 分支切出），spec + tasks 已定稿，待 Sonnet `/實作` 執行。前置條件（change 26 先上 main）已於 2026-07-12 滿足（main HEAD `002cb01`），懸掛分支清理與 `sync-branches.sh` 亦已完成。
 - change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。規格文件已遷入 `changes/20-團隊調查表單系統/spec.md`。復工時注意 `.claude/` 變更一律取 main 版本。
 
-（change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」與 change 25「三層流程補強」均已上線 main）
+（change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」、change 25「三層流程補強」、change 26「/打包、/繼續 指令實作」、change 27「role-guard 補強」均已上線 main）
 
 ## 最近推送
+
+規則類直推（2026-07-12）：change 27「role-guard 補強」——`role-guard.js` engineer 段 push-main 判定由 `\bmain\b` regex 改為 token 比對，修正誤攔含 main 字分支名（如 `fix-main-layout`）；新增 `session-role-notice.js`（SessionStart hook，殘留 `.session-role` 標記提示，fail-open）＋ `settings.json` 註冊；`實作.md` 補「使用者終端機指令紀律」四條（Termius／cd 絕對路徑寫死／&& 串接／指令自包含）；新增 `/vps新對話` 指令（管理 DevVps remote-control session 開新／關閉）。詳見 `changes/27-role-guard補強/spec.md`。
 
 規則類直推（2026-07-12）：change 26「/打包、/繼續 指令實作」——新增 `.claude/commands/打包.md`、`繼續.md`、`診斷.md`（+ role-guard.js doctor 角色圍籬）；CLAUDE.md 補 /打包 vs /compact 機制區分、啟動規則改讀 `origin/main`、Session 角色段補 /診斷；workflow SKILL.md／git-guard.js 修正過時 `deploy.md` 引用為 deploy-release skill；now.md 修正 change 20 spec 路徑；workflow SKILL.md／規劃.md 補「Sub-agent 平行執行配置」四條判準；刪除已壞的 `子代理.md`。詳見 `changes/26-打包繼續指令/spec.md`。
 
