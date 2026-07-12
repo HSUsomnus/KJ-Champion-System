@@ -4,11 +4,11 @@
 
 每次對話開始第一件事：
 
-1. 執行 `git branch --show-current && git log main -1 --oneline`（確認分支與 HEAD）
+1. 執行 `git branch --show-current && git fetch origin main --quiet && git log origin/main -1 --oneline`（確認分支與 HEAD；讀本機 main 可能是舊快照，CCR/新 clone 曾實測落後遠端）
 2. 讀 `.claude/now.md`（確認已知地雷與環境特殊狀態）
 3. 才接受指令
 
-上下文快滿輸入 `/打包`，新對話輸入 `/繼續`。
+上下文快滿輸入 `/打包`，新對話輸入 `/繼續`。（/打包＝寫交接檔跨對話交接；同對話就地壓縮用內建 `/compact`，兩者不同）
 
 ## 語言
 
@@ -36,7 +36,7 @@
 
 ## Session 角色（模型分層）
 
-開 session 先打卡：Opus/Fable 規劃 → `/規劃`；Sonnet 實作 → `/實作`。收尾由「收尾員」子代理（Haiku）自動執行。
+開 session 先打卡：Opus/Fable 規劃 → `/規劃`；Sonnet 實作 → `/實作`；最高階模型診斷 → `/診斷`（只診斷、不動手）。收尾由「收尾員」子代理（Haiku）自動執行。
 
 ## 已定案決策（不得推翻）
 
