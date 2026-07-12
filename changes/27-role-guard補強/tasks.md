@@ -19,8 +19,8 @@
 
 ## Phase 3 — 實作.md 停止點補「使用者終端機指令紀律」
 
-- [ ] 3.1 `.claude/commands/實作.md`：停止點第 3 點擴充四條紀律（依 spec 技術設計 4：明講貼到 Termius、cd 絕對路徑寫死、&& 串接單行、指令自包含）
-- [ ] 3.2 跑 gate G5
+- [x] 3.1 `.claude/commands/實作.md`：停止點第 3 點擴充四條紀律（依 spec 技術設計 4：明講貼到 Termius、cd 絕對路徑寫死、&& 串接單行、指令自包含）
+- [x] 3.2 跑 gate G5
 
 ## Phase 4 — /vps新對話 指令
 
