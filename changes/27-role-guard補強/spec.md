@@ -15,6 +15,7 @@
 - ✅ `.claude/hooks/session-role-notice.js`（新增 SessionStart hook：殘留標記提示）
 - ✅ `.claude/settings.json`（註冊 SessionStart hook）
 - ✅ `.claude/commands/實作.md`（停止點補「使用者終端機指令紀律」）
+- ✅ `.claude/commands/vps新對話.md`（新增：remote-control session 開新／關閉管理）
 - ❌ 不動 `/實作`、`/規劃`、`/診斷` 打卡格式（殘留偵測用檔案 mtime，不需嵌時間戳）
 - ❌ 不做「標記自動過期放行」（見設計決策 1）
 - ❌ 不動 `server/`、`frontend/` 任何產品程式碼
@@ -66,6 +67,39 @@ engineer 被 role-guard 攔下的收尾操作（merge main、push main、`git ta
 
 與既有「上線確認訊息的指令紀律」（code block 只放現在請你執行的指令）並列，不互相取代。
 
+### 5. `/vps新對話`（.claude/commands/vps新對話.md，新增）
+
+> 定位：管理 DevVps 上的 claude remote-control session——產生「開新 session」的可貼上指令，
+> 或列出既有 session 問使用者要關哪個。使用情境：session context 快滿要換新、或 VPS 上掛著
+> 太多舊 session 要清。
+
+**模式判斷（第一步）**：使用者輸入含「關」（要關／關閉）→ 關閉模式；否則 → 開新模式（預設）。
+
+**環境判斷（第二步）**：`pgrep -f "claude remote-control"` 有結果 → 本機就是 VPS，
+Claude 可直接代執行；無結果（CCR / 其他環境）→ 一律只輸出自包含指令給使用者貼 Termius
+（遵守技術設計 4 的四條紀律：cd 絕對路徑、&& 串接、無佔位符、乾淨 shell 假設）。
+
+**開新模式**：
+
+1. session 名稱：使用者有給就用，沒給預設 `KJ-<當前 change 編號或主題>`；
+   tmux session 名稱取唯一值（如 `kj-<HHMM>`），避免與既有 tmux session 撞名
+2. 產出單一 code block（貼 Termius 一次通）：
+   `tmux new -d -s <tmux名> 'cd /home/ubuntu/dev/KJ-Champion-System && claude remote-control --name "<session名>"'`
+   （名稱由 Claude 代入實值後輸出，code block 內不得殘留 `<>` 佔位符）
+3. 固定附一句：「貼上執行後，開 Claude app → Code 列表點『<session名>』即可（不需掃 QR）。」
+4. 本機即 VPS 時：直接 Bash 代執行上述指令並回報「已建立，去 app 列表找 <session名>」
+
+**關閉模式**：
+
+1. 列出對照表：`tmux ls` ＋ `ps -eo pid,etime,args | grep "[r]emote-control"`
+   （ps 可看到 `--name` 參數，把 tmux session ↔ claude session 名稱對起來）
+2. 問使用者要關哪個（列選項，含各 session 名稱與存活時間），不自行判斷
+3. **目標是自己所在的 process 時必須警告**：「關閉後本對話立即結束」，要求再次明確確認
+4. 本機即 VPS：確認後 `tmux kill-session -t <名>`（非 tmux 管理的 process 用 kill PID）並回報；
+   CCR / 其他環境：輸出自包含 kill 指令給使用者貼 Termius
+
+**平實語言撰寫，不嵌比喻**（與 /診斷 同標準）。
+
 ## 關鍵設計決策
 
 1. **殘留用「開場提示 + 人決策」，不做自動過期放行**：VPS 上正常的實作 session 本來就可能跨日，
@@ -110,6 +144,11 @@ grep -c "SessionStart" .claude/settings.json                # 預期 ≥1
 # G5 實作.md 含使用者終端機指令紀律（現狀實測：0）
 grep -c "Termius" .claude/commands/實作.md                  # 預期 ≥1
 grep -c "cd " .claude/commands/實作.md                      # 預期 ≥1
+
+# G6 /vps新對話 指令存在且含核心要素（現狀實測：檔案不存在）
+grep -c "remote-control" .claude/commands/vps新對話.md      # 預期 ≥1
+grep -c "tmux" .claude/commands/vps新對話.md                # 預期 ≥1
+grep -c "kill-session" .claude/commands/vps新對話.md        # 預期 ≥1
 ```
 
 ## 上線方式
