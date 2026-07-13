@@ -76,15 +76,25 @@ process.stdin.on('end', () => {
     if (role === 'doctor' && toolName === 'Bash') {
       const command = (data.tool_input && data.tool_input.command) || '';
       const cmdSegments = command.split(/&&|\|\|?|;|\n/);
+      const blocksTag = (t) => {
+        if (!/^git tag\b/.test(t)) return false;
+        const args = t.split(/\s+/).slice(2); // 'git tag' 之後的 tokens
+        const writeFlag = /^(-a|--annotate|-s|--sign|-u|--local-user|-m|--message|-F|--file|-e|--edit|-d|--delete|-f|--force)$/;
+        const readFlag = /^(-l|--list|-n\d*|--contains|--no-contains|--points-at|--merged|--no-merged|--sort.*|--format.*|--color|--no-color|-i|--ignore-case|-v|--verify)$/;
+        const hasWrite = args.some(a => writeFlag.test(a));
+        const hasRead = args.some(a => readFlag.test(a));
+        const bareCreate = !hasRead && args.some(a => !a.startsWith('-')); // 無 read flag 時的位置參數＝要建立的 tag 名
+        return hasWrite || bareCreate;
+      };
       const isBlocked = cmdSegments.some(seg => {
         const t = seg.trimStart();
         return (
-          /^git tag\b/.test(t) ||
+          blocksTag(t) ||
           /^git branch\b.*\s-[dD]\b/.test(t) ||
           /^git push\b.*--delete\b/.test(t) ||
           /^git checkout\b.*\s-b\b/.test(t) ||
           /^git switch\b.*\s-c\b/.test(t) ||
-          /^git merge\b/.test(t) ||
+          /^git merge(\s|$)/.test(t) ||
           /^git cherry-pick\b/.test(t) ||
           /^git rebase\b/.test(t) ||
           /^git reset\b/.test(t)

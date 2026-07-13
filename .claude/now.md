@@ -9,9 +9,11 @@
 
 - change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，待復工。規格文件已遷入 `changes/20-團隊調查表單系統/spec.md`。復工時注意 `.claude/` 變更一律取 main 版本。
 
-（change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」、change 25「三層流程補強」、change 26「/打包、/繼續 指令實作」、change 27「role-guard 補強」均已上線 main）
+（change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」、change 25「三層流程補強」、change 26「/打包、/繼續 指令實作」、change 27「role-guard 補強」、change 28「殭屍分支清理＋role-guard誤攔修復」均已上線 main）
 
 ## 最近推送
+
+規則類直推（2026-07-13）：change 28「殭屍分支與 role-guard 誤攔」——`role-guard.js` doctor 段修 2 個誤攔同型 bug：`git merge\b` 誤攔唯讀 `git merge-base`/`git merge-tree`（改 `git merge(\s|$)`）、`git tag\b` 誤攔唯讀列出（改 token 比對，放行 `-l`/`--contains` 等唯讀 flag，只攔建立/刪除）；deploy-release skill「直推流程」補「直推後刪功能分支」收尾小節，堵殭屍分支源頭（change 26、27 兩次規則類直推都漏刪來源分支，導致 `m_b_role-guard補強`、`m_b_打包繼續指令`、`claude/packing-continue-skills-audit-qr0c9z` 三條殘留分支）。詳見 `changes/28-殭屍分支與role-guard誤攔/spec.md`。
 
 規則類直推（2026-07-12）：change 27「role-guard 補強」——`role-guard.js` engineer 段 push-main 判定由 `\bmain\b` regex 改為 token 比對，修正誤攔含 main 字分支名（如 `fix-main-layout`）；新增 `session-role-notice.js`（SessionStart hook，殘留 `.session-role` 標記提示，fail-open）＋ `settings.json` 註冊；`實作.md` 補「使用者終端機指令紀律」四條（Termius／cd 絕對路徑寫死／&& 串接／指令自包含）；新增 `/vps新對話` 指令（管理 DevVps remote-control session 開新／關閉）。詳見 `changes/27-role-guard補強/spec.md`。
 

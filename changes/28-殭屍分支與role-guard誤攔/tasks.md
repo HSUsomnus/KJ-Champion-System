@@ -5,27 +5,27 @@
 
 ## 前置（主 session）
 
-- [ ] 0.1 確認在實作分支（`git checkout -b m_b_<功能名> origin/claude/diagnosis-report-review-gqjfkw` 後 push -u）
-- [ ] 0.2 讀 `診斷報告.md` + `spec.md`（決策 A 已定案＝一併修 git tag）
+- [x] 0.1 確認在實作分支（`git checkout -b m_b_<功能名> origin/claude/diagnosis-report-review-gqjfkw` 後 push -u）
+- [x] 0.2 讀 `診斷報告.md` + `spec.md`（決策 A 已定案＝一併修 git tag）
 
 ## Phase 1 — role-guard.js doctor 段誤攔修復（merge-base + git tag）
 
-- [ ] 1.1 改動 1：`.claude/hooks/role-guard.js:87` `/^git merge\b/` → `/^git merge(\s|$)/`
-- [ ] 1.2 改動 2：line 82 `/^git tag\b/` 整行換為 spec 決策 A 的 token 比對 block（放行唯讀列出）
-- [ ] 1.3 Gate：`node -e` 驗 merge-base 放行（false）、真 merge 仍攔（true）；git tag 10 案例全過
-- [ ] 1.4 提醒使用者：hook 下次 tool call 生效，無需重啟服務
-- [ ] 1.5 commit（規則類，可與 Phase 2/3 合併為單 commit）
+- [x] 1.1 改動 1：`.claude/hooks/role-guard.js:87` `/^git merge\b/` → `/^git merge(\s|$)/`
+- [x] 1.2 改動 2：line 82 `/^git tag\b/` 整行換為 spec 決策 A 的 token 比對 block（放行唯讀列出）
+- [x] 1.3 Gate：`node -e` 驗 merge-base 放行（false）、真 merge 仍攔（true）；git tag 10 案例全過
+- [x] 1.4 提醒使用者：hook 下次 tool call 生效，無需重啟服務
+- [x] 1.5 commit（規則類，可與 Phase 2/3 合併為單 commit）
 
 ## Phase 2 — deploy-release skill 補「直推後刪功能分支」收尾
 
-- [ ] 2.1 `.claude/skills/deploy-release/SKILL.md`「### 直推流程」段後補收尾小節（要點見 spec Phase 2）
-- [ ] 2.2 Gate：`grep -n "直推後刪\|上線後.*刪.*分支\|--delete" .claude/skills/deploy-release/SKILL.md` 命中新段
-- [ ] 2.3 確認未動「功能上線」段
+- [x] 2.1 `.claude/skills/deploy-release/SKILL.md`「### 直推流程」段後補收尾小節（要點見 spec Phase 2）
+- [x] 2.2 Gate：`grep -n "直推後刪\|上線後.*刪.*分支\|--delete" .claude/skills/deploy-release/SKILL.md` 命中新段
+- [x] 2.3 確認未動「功能上線」段
 
 ## Phase 3 — now.md 更新（與上線同 commit）
 
-- [ ] 3.1 `.claude/now.md`「最近推送」新增 change 28 紀錄
-- [ ] 3.2 Gate：`grep -c "change 28" .claude/now.md` ≥ 1
+- [x] 3.1 `.claude/now.md`「最近推送」新增 change 28 紀錄
+- [x] 3.2 Gate：`grep -c "change 28" .claude/now.md` ≥ 1
 
 ## 操作類（主 session + 使用者端，CCR 403 交使用者執行）
 
