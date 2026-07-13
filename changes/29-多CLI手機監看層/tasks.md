@@ -5,7 +5,7 @@
 
 ## Phase 1：amux + Tailscale setup runbook（在庫）
 
-- [ ] 1.1 撰寫 `changes/29-多CLI手機監看層/runbook.md`，含以下段落，指令自包含（cd 絕對路徑寫死 `/home/ubuntu`、`&&` 串接、無 `<>` 佔位符、假設乾淨 shell，遵守 `/實作` 使用者終端機指令紀律）：
+- [x] 1.1 撰寫 `changes/29-多CLI手機監看層/runbook.md`，含以下段落，指令自包含（cd 絕對路徑寫死 `/home/ubuntu`、`&&` 串接、無 `<>` 佔位符、假設乾淨 shell，遵守 `/實作` 使用者終端機指令紀律）：
   - 前置：確認 Python 3.10+、tmux 3.2+、目標 CLI（Codex）已裝
   - 安裝 amux：`git clone` → `./install.sh`
   - 安裝／登入 Tailscale（VPS 端 + 手機端同一 tailnet）
@@ -13,8 +13,8 @@
   - 手機端：經 Tailscale IP 開 `:8822`、信任憑證、加到主畫面當 PWA
   - 起 Codex tmux session 的範例指令（amux 自動探測）
   - 收尾備註：amux 無 auth、8822 嚴禁對公網開；MIT + Commons Clause 僅自用
-- [ ] 1.2 跑 gate G1（在庫）：runbook 存在且含 install.sh / tailscale / amux serve 關鍵字 → `GATE_G1_PASS`
-- [ ] 1.3 commit（Phase 1）
+- [x] 1.2 跑 gate G1（在庫）：runbook 存在且含 install.sh / tailscale / amux serve 關鍵字 → `GATE_G1_PASS`
+- [x] 1.3 commit（Phase 1）
 
 ## Phase 2：更新 /vps新對話 指令（.claude/）
 
