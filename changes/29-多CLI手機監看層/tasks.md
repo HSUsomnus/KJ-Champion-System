@@ -18,13 +18,13 @@
 
 ## Phase 2：更新 /vps新對話 指令（.claude/）
 
-- [ ] 2.1 修改 `.claude/commands/vps新對話.md`：
+- [x] 2.1 修改 `.claude/commands/vps新對話.md`：
   - 開新模式擴充：區分「Claude session（維持 `claude remote-control` → Claude App）」與「非 Claude CLI（Codex 等，起 tmux session → amux 監看）」兩條路徑
   - 開 Codex/非 Claude session 時，附一句指引：「開 amux 儀表板（Tailscale IP:8822）即可看卡片，不需 Termius」
   - 指向 runbook（首次安裝 amux/Tailscale 的步驟）
   - 維持既有 Termius 自包含指令紀律
-- [ ] 2.2 跑 gate G2（在庫）：`grep -q "amux" .claude/commands/vps新對話.md` → `GATE_G2_PASS`
-- [ ] 2.3 commit（Phase 2）；`.claude/` 修改依特殊規則 cherry-pick 到 main + `bash scripts/sync-branches.sh`（上線時，見 deploy-release）
+- [x] 2.2 跑 gate G2（在庫）：`grep -q "amux" .claude/commands/vps新對話.md` → `GATE_G2_PASS`
+- [x] 2.3 commit（Phase 2）；`.claude/` 修改依特殊規則 cherry-pick 到 main + `bash scripts/sync-branches.sh`（上線時，見 deploy-release）
 
 ## Phase 3：VPS 端實測（使用者，非 CCR）
 
