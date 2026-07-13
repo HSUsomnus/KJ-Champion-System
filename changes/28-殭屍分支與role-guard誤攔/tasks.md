@@ -29,16 +29,16 @@
 
 ## 操作類（主 session + 使用者端，CCR 403 交使用者執行）
 
-- [ ] X1 刪三殘留分支：使用者端執行
+- [x] X1 刪三殘留分支：使用者端於 VPS（非 CCR）直接執行完成
   `cd /home/ubuntu/dev/KJ-Champion-System && git push origin --delete m_b_role-guard補強 m_b_打包繼續指令 claude/packing-continue-skills-audit-qr0c9z && git fetch origin --prune`
-- [ ] X2 change 28 上線：now.md 同 commit → 機密檢查 → 使用者確認 → cherry-pick `.claude/` → push main → `sync-branches.sh`
-- [ ] X3 dogfood：內容進 main 後刪本 change 功能分支（使用者端 `git push origin --delete <本change分支>`）
+- [x] X2 change 28 上線：now.md 同 commit → 機密檢查 → 使用者確認 → cherry-pick `dc96a37..4367de6`（含 spec/tasks + Phase 1-3）→ 使用者端 push main（role-guard 攔 engineer push main，交使用者執行）→ 主 session 執行 `sync-branches.sh` 全綠
+- [x] X3 dogfood：內容進 main 後刪本 change 功能分支 `m_b_change28清理`，並一併清理已完成使命的規劃/診斷分支 `claude/diagnosis-rct3p4`、`claude/diagnosis-report-review-gqjfkw`（主 session 直接執行，非 CCR 環境不受 403 限制）
 
 ## 驗收（全 ✅ 才收尾）
 
-- [ ] V1 決策 A 已拍板，Phase 1 範圍與之一致
-- [ ] V2 三個 Phase gate 全綠
-- [ ] V3 三殘留分支已刪，`git branch -r` 不再出現
-- [ ] V4 change 28 進 main，本 change 分支已刪
-- [ ] V5 零產品程式碼異動
-- [ ] V6 收尾員：CHANGELOG / context 版本檔 / now.md 記錄
+- [x] V1 決策 A 已拍板，Phase 1 範圍與之一致（merge-base + git tag 皆修）
+- [x] V2 三個 Phase gate 全綠
+- [x] V3 三殘留分支已刪，`git branch -r` 不再出現
+- [x] V4 change 28 進 main（commit `4916684`），本 change 分支已刪
+- [x] V5 零產品程式碼異動（僅 `.claude/`、`changes/` 異動）
+- [x] V6 規則類直推無需 CHANGELOG / context 版本檔（比照 change 25-27 precedent，deploy-release skill 明文豁免）；now.md 已與上線同 commit 更新，不另呼叫收尾員子代理
