@@ -58,14 +58,23 @@ cd /home/ubuntu && amux serve --bind 127.0.0.1,$(tailscale ip -4)
 3. 第一次連線瀏覽器會警告憑證不受信任（因為是 Tailscale/mkcert/self-signed 憑證），選擇「繼續前往」或依提示信任憑證。
 4. 看到 amux 儀表板後，用瀏覽器「加到主畫面」把它變成 PWA，之後像 app 一樣點開即可。
 
-## 步驟 6：在 tmux 起 Codex session（amux 自動探測）
+## 步驟 6：用 amux 註冊並啟動 Codex session
+
+> ⚠️ **實測修正**：amux 的 dashboard **只認用 `amux register` 註冊過的 session**（記錄在
+> `~/.amux/sessions/*.env`），不會被動掃描任意 tmux session；手動 `tmux new` 開的 session
+> 不會出現在卡片列表。另外 `amux register` 目前沒有官方參數指定 provider 為 Codex，
+> 需手動補寫 `CC_PROVIDER` 這行到 session 設定檔。以下指令已修正為正確流程：
 
 ```bash
-tmux new -d -s codex-work 'cd /home/ubuntu/dev/KJ-Champion-System && codex'
+amux register codex-work --dir /home/ubuntu/dev/KJ-Champion-System && echo 'CC_PROVIDER="codex"' >> ~/.amux/sessions/codex-work.env && amux start codex-work --detach
 ```
 
-- amux 靠解析既有 tmux session 輸出運作，**不需要額外註冊指令**，起完這個 tmux session 後回到手機儀表板，卡片會自動出現。
-- session 名稱（此例 `codex-work`）可自訂，多個 CLI／多個專案就多開幾個 tmux session，amux 會逐一列成卡片。
+- `amux register` 建立 session 設定檔（`~/.amux/sessions/codex-work.env`），`--dir` 指定工作目錄（必須絕對路徑）。
+- 手動補一行 `CC_PROVIDER="codex"`，`amux start` 才會執行 `codex` 而非預設的 `claude`。
+- `amux start --detach` 會用 amux 自己的 tmux 命名規則（實際 tmux session 名為 `amux-codex-work`，非 `codex-work`）建立 session 並啟動 Codex，**這樣 dashboard 才抓得到卡片**。
+- session 名稱（此例 `codex-work`）可自訂，多個 CLI／多個專案就重複這個流程、換不同名稱。
+- 確認 session 已啟動：`tmux ls` 應看到 `amux-codex-work`；回手機儀表板刷新即可看到卡片。
+- Codex 預設會補上 `--model gpt-5.5 -a never`（`-a never` = 每個工具呼叫都要手動核准，安全預設）；若要換模型，進 Codex 內用 `/model` 指令切換即可，不影響 amux 監看。
 
 ## 收尾備註
 

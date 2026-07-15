@@ -56,16 +56,18 @@ pgrep -f "claude remote-control"
    `changes/29-多CLI手機監看層/runbook.md` 完成安裝與 Tailscale 設定（一次性），
    完成後即可重複用本指令開新 session。」並停在此步，不產出下一步指令。
 
-2. 已安裝 → tmux session 名稱：使用者有給就用，沒給預設 `<CLI名>-<HHMM>`（如 `codex-1430`），
-   避免撞名。產出單一 code block（貼 Termius 一次通），不留 `<>` 佔位符：
+2. 已安裝 → session 名稱：使用者有給就用，沒給預設 `<CLI名>-<HHMM>`（如 `codex-1430`），
+   避免撞名。**必須用 `amux register` + `amux start` 建立，不可用裸 `tmux new`**——amux
+   dashboard 只認註冊過的 session（見 runbook.md 步驟 6 的實測修正）。產出單一 code block
+   （貼 Termius 一次通），不留 `<>` 佔位符：
 
    ```bash
-   tmux new -d -s <實際 tmux 名> 'cd /home/ubuntu/dev/KJ-Champion-System && codex'
+   amux register <實際 session 名> --dir /home/ubuntu/dev/KJ-Champion-System && echo 'CC_PROVIDER="codex"' >> ~/.amux/sessions/<實際 session 名>.env && amux start <實際 session 名> --detach
    ```
 
 3. 固定附一句：「貼上執行後，手機開 amux 儀表板（Tailscale IP:8822）即可看到卡片、跟著即時狀態，
    不需要開 Termius 盯著。」
-4. 本機即 VPS 時：直接 Bash 代執行上述指令並回報「已建立，去 amux 儀表板找 <tmux 名>」
+4. 本機即 VPS 時：直接 Bash 代執行上述指令並回報「已建立，去 amux 儀表板找 <session 名>」
 
 ## 關閉模式
 

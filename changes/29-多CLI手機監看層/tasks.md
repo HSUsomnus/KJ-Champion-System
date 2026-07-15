@@ -30,9 +30,9 @@
 
 > 此 Phase 由使用者在 DevVps 依 runbook 實作並回報；實作 session 不代跑（CCR 不可達 VPS）。
 
-- [ ] 3.1 使用者依 runbook 完成 amux + Tailscale 安裝與啟動 → gate G3（amux 起得來、手機看得到儀表板）
-- [ ] 3.2 使用者起 Codex tmux session → gate G4（amux 現卡片、狀態即時更新、peek 看得到輸出）
-- [ ] 3.3 使用者回報 G3/G4 結果；若 amux flag/行為與 runbook 有出入，回頭修正 runbook（改 HOW，不擴大 change）
+- [x] 3.1 使用者依 runbook 完成 amux + Tailscale 安裝與啟動 → gate G3（amux 起得來、手機看得到儀表板）**通過**
+- [~] 3.2 使用者起 Codex tmux session → gate G4（amux 現卡片、狀態即時更新、peek 看得到輸出）**首次失敗**：手動 `tmux new` 開的 session 不會被 amux 抓到，dashboard 顯示「No sessions yet」
+- [x] 3.3 回頭修正 runbook：實測發現 amux dashboard 只認 `amux register` 註冊過的 session（讀 `~/.amux/sessions/*.env`），非被動掃描任意 tmux；且 `amux register` 無官方參數指定 Codex provider，需手動補 `CC_PROVIDER="codex"` 到 session env 檔。已修正 runbook.md 步驟 6 與 `/vps新對話` 指令為 `amux register` + 手動補 provider + `amux start --detach` 正確流程（改 HOW，不擴大 change）。**待使用者用修正後指令重跑，確認 G4 通過**
 
 ## Phase 4：記錄與上線（收尾）
 
