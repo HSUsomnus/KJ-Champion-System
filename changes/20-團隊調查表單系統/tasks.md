@@ -120,9 +120,9 @@
 ## Section 8：`_worker.js` + 收尾
 
 - [x] ~~**20.47** `_worker.js` 新增 `/survey-api/*` 代理規則~~ **改為移除**（見 20.M7）：後端合併後 `/api/survey/*` 走既有 `/api/*` 代理，不需獨立代理段
-- [ ] **20.48** 確認 `/f/:token` 與 `/admin` 在 `_worker.js` 靜態資源 fallback 邏輯下正常走 SPA（非 `/api/*` 的路徑要 fallback 到 `index.html`）
-- [ ] **20.49** Integration test：dev 環境完整跑一次「建任務（表單）→ 分享連結 → 填寫 → 後台首屏看完成狀況 → 切明細 → 篩選 → 匯出」全流程
-- [ ] **20.50** README.md 更新（依 `readme.md` 規則，推送前必做）
+- [x] **20.48** 確認 `/f/:token` 與 `/admin` 走 SPA fallback：`_worker.js` 僅 `/api/*` 走後端代理，其餘路徑經 `env.ASSETS` 找不到即 fallback 到 `index.html`；`/f/:token`、`/admin` 非 `/api/*` → 正確走 SPA（原始碼檢視確認）
+- [ ] **20.49** Integration test：dev 環境完整跑一次「建任務→分享連結→填寫→後台首屏看完成狀況→切明細→篩選→匯出」全流程（待部署後由使用者驗，CCR 連不到 Zeabur）
+- [x] **20.50** README.md 更新：新增「團隊調查表單系統（KJ Survey，Change 20）」專章（兩端不對稱設計、架構要點、API 一覽）+ 主要功能表 + 專案結構補 survey 目錄
 
 ---
 
