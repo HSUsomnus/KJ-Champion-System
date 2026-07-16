@@ -82,3 +82,24 @@ describe('adminFormService.computeAttendance', () => {
     expect(result.overall.done).toBe(0);
   });
 });
+
+describe('adminFormService.listSubmissions', () => {
+  test('表單不存在 → FORM_NOT_FOUND', async () => {
+    db.query.mockResolvedValueOnce({ rows: [] }); // getFormById
+    await expect(adminFormService.listSubmissions(999)).rejects.toMatchObject({
+      code: 'FORM_NOT_FOUND',
+    });
+  });
+
+  test('回傳表單欄位定義 + 逐筆明細', async () => {
+    const fields = [{ key: 'name', label: '姓名', type: 'searchable_select' }];
+    db.query
+      .mockResolvedValueOnce({ rows: [{ ...FORM_ROW, fields }] }) // getFormById
+      .mockResolvedValueOnce({ rows: [{ id: 9, answers: { name: '徐毓紘' }, created_at: 't' }] }); // submissions
+
+    const data = await adminFormService.listSubmissions(1);
+    expect(data.form.fields).toEqual(fields);
+    expect(data.submissions).toHaveLength(1);
+    expect(data.submissions[0].answers.name).toBe('徐毓紘');
+  });
+});

@@ -97,10 +97,35 @@ const computeAttendance = async (formId) => {
   };
 };
 
+/**
+ * 某任務的逐筆填寫明細（含表單欄位定義，供前端 render 標題/型態）
+ * @returns {object} { form: { id, title, fields }, submissions: [{ id, answers, created_at }] }
+ * @throws FORM_NOT_FOUND
+ */
+const listSubmissions = async (formId) => {
+  const form = await getFormById(formId);
+  if (!form) {
+    const err = new Error('表單不存在');
+    err.code = 'FORM_NOT_FOUND';
+    throw err;
+  }
+
+  const result = await db.query(
+    `SELECT id, answers, created_at FROM survey_submissions WHERE form_id = $1 ORDER BY created_at DESC`,
+    [formId]
+  );
+
+  return {
+    form: { id: form.id, title: form.title, fields: form.fields },
+    submissions: result.rows,
+  };
+};
+
 module.exports = {
   listForms,
   getFormById,
   computeAttendance,
+  listSubmissions,
   submissionName,
   UNGROUPED_LABEL,
   ADMIN_FIELD_TYPES,

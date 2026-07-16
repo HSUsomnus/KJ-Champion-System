@@ -5,10 +5,12 @@ import AdminDashboard from '../AdminDashboard'
 
 const mockGetAdminForms = vi.fn()
 const mockGetFormAttendance = vi.fn()
+const mockGetFormSubmissions = vi.fn()
 
 vi.mock('../../../../services/surveyApi', () => ({
   getAdminForms: (...a) => mockGetAdminForms(...a),
   getFormAttendance: (...a) => mockGetFormAttendance(...a),
+  getFormSubmissions: (...a) => mockGetFormSubmissions(...a),
 }))
 
 const FORMS = [
@@ -73,5 +75,25 @@ describe('AdminDashboard', () => {
 
     expect(await screen.findByText('目前沒有任何任務。')).toBeInTheDocument()
     expect(mockGetFormAttendance).not.toHaveBeenCalled()
+  })
+
+  it('切到「明細」tab → 抓 submissions 並渲染明細', async () => {
+    mockGetAdminForms.mockResolvedValue({ success: true, data: FORMS })
+    mockGetFormAttendance.mockResolvedValue({ success: true, data: ATTENDANCE_1 })
+    mockGetFormSubmissions.mockResolvedValue({
+      success: true,
+      data: {
+        form: { id: 1, title: '康九冠軍調查', fields: [{ key: 'name', label: '姓名', type: 'searchable_select' }] },
+        submissions: [{ id: 9, answers: { name: '徐毓紘' } }],
+      },
+    })
+
+    render(<AdminDashboard />)
+    await screen.findByText('50%')
+
+    fireEvent.click(screen.getByText('明細'))
+
+    await waitFor(() => expect(mockGetFormSubmissions).toHaveBeenCalledWith(1))
+    expect(await screen.findByText('共 1 筆')).toBeInTheDocument()
   })
 })

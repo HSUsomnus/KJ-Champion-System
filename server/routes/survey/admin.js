@@ -49,4 +49,20 @@ router.get('/forms/:id/attendance', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/survey/admin/forms/:id/submissions — 該任務逐筆明細（含欄位定義）
+ */
+router.get('/forms/:id/submissions', async (req, res) => {
+  try {
+    const data = await adminFormService.listSubmissions(req.params.id);
+    res.json({ success: true, data });
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey 明細讀取失敗:', error);
+    res.status(500).json({ success: false, message: '讀取明細失敗' });
+  }
+});
+
 module.exports = router;

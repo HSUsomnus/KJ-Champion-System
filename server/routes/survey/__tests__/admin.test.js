@@ -10,6 +10,7 @@ jest.mock('../../../services/survey/adminAuthService', () => ({
 jest.mock('../../../services/survey/adminFormService', () => ({
   listForms: jest.fn(),
   computeAttendance: jest.fn(),
+  listSubmissions: jest.fn(),
 }));
 
 const { getMemberRole } = require('../../../services/survey/adminAuthService');
@@ -91,5 +92,22 @@ describe('後台任務清單 / 完成狀況（需登入）', () => {
       .get('/api/survey/admin/forms/999/attendance')
       .set('X-Line-User-Id', 'U1234');
     expect(res.status).toBe(404);
+  });
+
+  test('GET /forms/:id/submissions 登入 → 200 + 明細', async () => {
+    adminFormService.listSubmissions.mockResolvedValue({
+      form: { id: 1, title: '康九冠軍調查', fields: [] },
+      submissions: [{ id: 9, answers: { name: '徐毓紘' }, created_at: 't' }],
+    });
+    const res = await request(buildApp())
+      .get('/api/survey/admin/forms/1/submissions')
+      .set('X-Line-User-Id', 'U1234');
+    expect(res.status).toBe(200);
+    expect(res.body.data.submissions).toHaveLength(1);
+  });
+
+  test('GET /forms/:id/submissions 未登入 → 401', async () => {
+    const res = await request(buildApp()).get('/api/survey/admin/forms/1/submissions');
+    expect(res.status).toBe(401);
   });
 });

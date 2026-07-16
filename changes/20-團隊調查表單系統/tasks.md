@@ -89,11 +89,11 @@
 
 ## Section 5：明細檢視 + 篩選（次要視圖，從首屏切入）
 
-- [ ] **20.31** `GET /api/survey/admin/forms/:id/submissions`：該任務所有 `survey_submissions`（需登入）
-- [ ] **20.32** 明細元件：手機每筆一張卡片（非寬表格橫向捲動）、桌面可展開為表格；是非型狀態 ✅/❎
-- [ ] **20.33** 篩選模式：欄位標題/姓名可點（推薦人欄不變）；點姓名→篩「推薦人=該人+本人」；點課程欄→篩 Yes；點星等→篩該星等；同鈕再點取消；單條件互斥
-- [ ] **20.34** vitest：篩選邏輯（姓名/課程欄/星等三種篩選 + 取消）
-- [ ] **20.35** Section milestone：dev 環境跑一輪篩選操作，確認結果正確
+- [x] **20.31** `GET /api/survey/admin/forms/:id/submissions`：該任務所有 `survey_submissions` + 表單欄位定義（`adminFormService.listSubmissions`，需登入）
+- [x] **20.32** 明細元件 `SubmissionsView`：每筆一張卡片、手機單欄/桌面 grid 多欄（不做寬表格橫向捲動）；是非型狀態 ✅/❎（桌面「可展開為表格」為選配，本次以響應式多欄卡片達成）
+- [x] **20.33** 篩選模式（`submissionFilter` 純函式 + `SubmissionsView` UI）：課程/樹欄位 chip 可點、姓名/星等 cell 可點（推薦人欄不可點）；點姓名→篩「推薦人=該人+本人」；點課程欄→篩 Yes；點星等→篩該星等；同鈕再點取消；單條件互斥
+- [x] **20.34** vitest：`submissionFilter` 11 case（切換/取消/三種篩選/描述）+ `SubmissionsView` 7 case（渲染/各篩選/取消/清除）全綠
+- [ ] **20.35** Section milestone：dev 環境跑一輪篩選操作，確認結果正確（待部署後由使用者驗）
 
 ---
 
