@@ -4,15 +4,22 @@ import { vi } from 'vitest'
 import SurveyAdmin from '../SurveyAdmin'
 
 const mockGetAdminMe = vi.fn()
+const mockGetAdminForms = vi.fn()
+const mockGetFormAttendance = vi.fn()
 
 vi.mock('../../../services/surveyApi', () => ({
   getAdminMe: (...args) => mockGetAdminMe(...args),
+  getAdminForms: (...args) => mockGetAdminForms(...args),
+  getFormAttendance: (...args) => mockGetFormAttendance(...args),
 }))
 
 beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
   window.history.replaceState({}, '', '/admin')
+  // AdminDashboard 掛載時會抓任務清單；預設回空清單，避免 authed 測試噴未 mock 錯誤
+  mockGetAdminForms.mockResolvedValue({ success: true, data: [] })
+  mockGetFormAttendance.mockResolvedValue({ success: true, data: null })
 })
 
 describe('SurveyAdmin', () => {

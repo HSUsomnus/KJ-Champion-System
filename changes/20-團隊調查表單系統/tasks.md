@@ -78,12 +78,12 @@
 
 ## Section 4：側邊欄（任務清單）+ 首屏完成狀況儀表板（副總核心，打開即見）
 
-- [ ] **20.25** `GET /api/survey/admin/forms`：列出所有 `survey_forms`（側邊欄＝任務清單用，需登入）
-- [ ] **20.26** `GET /api/survey/admin/forms/:id/attendance`：後端算好「已完成/未完成」+ 按推薦人分組 + 各組進度 + 整體完成率（全名單比對 `survey_members` vs `survey_submissions.answers.name`）
-- [ ] **20.27** 側邊欄元件：列出任務（表單）、顯示任務數、點選切換；手機收合為抽屜/下拉，桌面固定左欄
-- [ ] **20.28** 首屏儀表板元件：選定任務後**預設顯示完成進度**——頂部整體完成率 + 按推薦人分組的進度卡片（組標題進度條 `▓▓▓▓░░ 8/12`，組內姓名+星等+✅/❎）；手機單欄堆疊、桌面多欄
-- [ ] **20.29** vitest：分組/比對/進度計算正確性 + 儀表板依 attendance 資料正確渲染
-- [ ] **20.30** Section milestone：dev 環境用種子資料驗證進度與手算一致，手機視窗確認首屏即見完成狀況
+- [x] **20.25** `GET /api/survey/admin/forms`：列出所有 `survey_forms` + 各任務填寫筆數（`adminFormService.listForms`，需登入）
+- [x] **20.26** `GET /api/survey/admin/forms/:id/attendance`：後端算好「已完成/未完成」+ 按推薦人分組 + 各組進度 + 整體完成率（`adminFormService.computeAttendance`，全名單比對 `survey_members` vs `survey_submissions.answers.name`）
+- [x] **20.27** 側邊欄元件 `TaskSidebar`：列出任務、顯示任務數、點選切換；手機橫向捲動 chip、桌面固定左欄（單一 DOM 響應式）
+- [x] **20.28** 首屏儀表板元件 `AttendanceView` + 容器 `AdminDashboard`：選定任務預設顯示完成進度——頂部整體完成率 hero + 按推薦人分組進度卡片（`ProgressMeter` 進度條、組內姓名+星等點+✅/❎）；手機單欄、桌面 grid 多欄
+- [x] **20.29** vitest：`adminFormService` 分組/比對/進度計算 5 case + 前端 `AttendanceView`/`ProgressMeter`/`AdminDashboard` 依 attendance 渲染 12 case 全綠
+- [ ] **20.30** Section milestone：dev 環境用種子資料驗證進度與手算一致，手機視窗確認首屏即見完成狀況（待部署後由使用者驗，CCR 連不到 Zeabur）
 
 ---
 

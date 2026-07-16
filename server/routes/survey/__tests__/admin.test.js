@@ -7,8 +7,13 @@ jest.mock('../../../services/survey/adminAuthService', () => ({
   getMemberRole: jest.fn(),
   isAdminRole: jest.fn((role) => ['管理者', '負責人', '開發者'].includes(role)),
 }));
+jest.mock('../../../services/survey/adminFormService', () => ({
+  listForms: jest.fn(),
+  computeAttendance: jest.fn(),
+}));
 
 const { getMemberRole } = require('../../../services/survey/adminAuthService');
+const adminFormService = require('../../../services/survey/adminFormService');
 
 const buildApp = () => {
   const app = express();
@@ -41,5 +46,50 @@ describe('GET /api/survey/admin/me', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual({ lineId: 'U1234', role: '管理者' });
+  });
+});
+
+describe('後台任務清單 / 完成狀況（需登入）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    getMemberRole.mockResolvedValue('管理者');
+  });
+
+  test('GET /forms 未登入 → 401', async () => {
+    const res = await request(buildApp()).get('/api/survey/admin/forms');
+    expect(res.status).toBe(401);
+    expect(adminFormService.listForms).not.toHaveBeenCalled();
+  });
+
+  test('GET /forms 登入 → 200 + 任務清單', async () => {
+    adminFormService.listForms.mockResolvedValue([{ id: 1, title: '康九冠軍調查', submission_count: 3 }]);
+    const res = await request(buildApp())
+      .get('/api/survey/admin/forms')
+      .set('X-Line-User-Id', 'U1234');
+    expect(res.status).toBe(200);
+    expect(res.body.data[0].submission_count).toBe(3);
+  });
+
+  test('GET /forms/:id/attendance 登入 → 200 + 完成狀況', async () => {
+    adminFormService.computeAttendance.mockResolvedValue({
+      form: { id: 1, title: '康九冠軍調查', status: 'published' },
+      overall: { total: 40, done: 12, rate: 30 },
+      groups: [],
+    });
+    const res = await request(buildApp())
+      .get('/api/survey/admin/forms/1/attendance')
+      .set('X-Line-User-Id', 'U1234');
+    expect(res.status).toBe(200);
+    expect(res.body.data.overall).toEqual({ total: 40, done: 12, rate: 30 });
+  });
+
+  test('GET /forms/:id/attendance 任務不存在 → 404', async () => {
+    const err = new Error('找不到');
+    err.code = 'FORM_NOT_FOUND';
+    adminFormService.computeAttendance.mockRejectedValue(err);
+    const res = await request(buildApp())
+      .get('/api/survey/admin/forms/999/attendance')
+      .set('X-Line-User-Id', 'U1234');
+    expect(res.status).toBe(404);
   });
 });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getAdminMe } from '../../services/surveyApi'
+import AdminDashboard from './components/AdminDashboard'
 
 // [設計決策] 登入沿用主系統既有的 /api/auth/line-login（見 pages/Login.jsx），
 // 不自己做 OAuth 流程。原本自建的 callback + cookie session 因為 LINE 導回網域
@@ -13,17 +14,10 @@ export default function SurveyAdmin() {
   const [status, setStatus] = useState('checking') // checking | no-user | forbidden | ok
   const [admin, setAdmin] = useState(null)
 
-  // 後台是桌機優先（給管理者在電腦上看資料/篩選/匯出），跟全站手機優先的
-  // width=device-width 相反。掛載時把 viewport 換成固定寬度，手機開會整頁縮小顯示，
-  // 而不是被硬擠成手機版面；離開頁面時還原，不影響其他頁面。
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="viewport"]')
-    const original = meta?.getAttribute('content')
-    meta?.setAttribute('content', 'width=1280')
-    return () => {
-      if (original) meta?.setAttribute('content', original)
-    }
-  }, [])
+  // [設計決策] 後台改手機優先儀表板（Change 20 策略修訂）：管理者（副總）主要用手機看
+  // 完成進度，故不再強制 width=1280 桌機縮放版面，改用全站原生 width=device-width，
+  // 由 CSS 斷點（md:）在桌面自然拉寬為多欄。
+  // 若要修改：請先確認 spec.md「後台—手機優先儀表板」設計定位。
 
   // 檢查 URL 是否帶有主系統 OAuth 回調參數（比照 pages/Login.jsx 的處理方式）
   useEffect(() => {
@@ -115,35 +109,42 @@ export default function SurveyAdmin() {
   }
 
   return (
-    <div style={desktopPageStyle}>
-      <div style={{ width: '100%', maxWidth: 1200 }}>
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+    <div style={authedPageStyle}>
+      <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 20,
+          }}
+        >
+          <div>
             <h1 style={{ fontSize: 20, fontWeight: 600, color: '#2C2C2C', margin: 0 }}>
               調查表單後台
             </h1>
-            <button
-              type="button"
-              onClick={handleLogout}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 16,
-                border: '1.5px solid #E2DED8',
-                background: '#FFFFFF',
-                color: '#8A8680',
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              登出
-            </button>
+            <p style={{ fontSize: 12, color: '#8A8680', margin: '2px 0 0' }}>身分：{admin.role}</p>
           </div>
-          <p style={{ fontSize: 12, color: '#8A8680' }}>身分：{admin.role}</p>
-          <p style={{ fontSize: 14, color: '#2C2C2C', marginTop: 16 }}>
-            資料檢視、未填名冊、匯出、表單建立器功能開發中。
-          </p>
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 16,
+              border: '1.5px solid #E2DED8',
+              background: '#FFFFFF',
+              color: '#8A8680',
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            登出
+          </button>
         </div>
+
+        <AdminDashboard />
       </div>
     </div>
   )
@@ -158,13 +159,11 @@ const pageStyle = {
   overscrollBehavior: 'none',
 }
 
-// 已登入後的桌機版面：不置中限寬 448，撐開到 1200px，給表格/篩選/側邊欄空間
-const desktopPageStyle = {
+// 已登入後版面：手機優先，全寬內距 16px，桌面自然拉寬至 1200px（由 CSS 斷點多欄）
+const authedPageStyle = {
   minHeight: '100svh',
   background: '#F7F5F2',
-  display: 'flex',
-  justifyContent: 'center',
-  padding: '32px',
+  padding: '20px 16px 40px',
   overscrollBehavior: 'none',
 }
 
