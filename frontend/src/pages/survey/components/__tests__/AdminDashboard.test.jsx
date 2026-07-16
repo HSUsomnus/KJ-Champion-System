@@ -11,6 +11,7 @@ vi.mock('../../../../services/surveyApi', () => ({
   getAdminForms: (...a) => mockGetAdminForms(...a),
   getFormAttendance: (...a) => mockGetFormAttendance(...a),
   getFormSubmissions: (...a) => mockGetFormSubmissions(...a),
+  exportUrl: (id, fmt) => `/api/survey/admin/forms/${id}/export.${fmt}`,
 }))
 
 const FORMS = [
@@ -66,6 +67,19 @@ describe('AdminDashboard', () => {
 
     await waitFor(() => expect(mockGetFormAttendance).toHaveBeenCalledWith(2))
     expect(await screen.findByText('0%')).toBeInTheDocument()
+  })
+
+  it('選定任務 → 顯示 CSV / Excel 匯出連結，href 指向該任務匯出端點', async () => {
+    mockGetAdminForms.mockResolvedValue({ success: true, data: FORMS })
+    mockGetFormAttendance.mockResolvedValue({ success: true, data: ATTENDANCE_1 })
+
+    render(<AdminDashboard />)
+    await screen.findByText('50%')
+
+    const csv = screen.getByText('匯出 CSV').closest('a')
+    const xlsx = screen.getByText('匯出 Excel').closest('a')
+    expect(csv).toHaveAttribute('href', '/api/survey/admin/forms/1/export.csv')
+    expect(xlsx).toHaveAttribute('href', '/api/survey/admin/forms/1/export.xlsx')
   })
 
   it('沒有任何任務 → 顯示空狀態', async () => {

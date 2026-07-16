@@ -99,10 +99,10 @@
 
 ## Section 6：匯出
 
-- [ ] **20.36** `GET /api/survey/admin/forms/:id/export.csv`：後端直出 CSV
-- [ ] **20.37** `GET /api/survey/admin/forms/:id/export.xlsx`：後端用 `exceljs` 直出
-- [ ] **20.38** 前端匯出按鈕（CSV / Excel 各一顆）
-- [ ] **20.39** Section milestone：dev 環境下載兩種格式，人工開檔確認資料正確
+- [x] **20.36** `GET /api/survey/admin/forms/:id/export.csv`：後端直出 CSV（`exportService.buildCsv`，含 UTF-8 BOM + CSV 逃逸）
+- [x] **20.37** `GET /api/survey/admin/forms/:id/export.xlsx`：後端用 `exceljs` 直出（`exportService.buildXlsx`）
+- [x] **20.38** 前端匯出按鈕（CSV / Excel 各一顆，`<a>` 下載連結；因無法帶 header 改用 `?lineUserId` query，`requireAdminRole` 支援 query 帶入）
+- [ ] **20.39** Section milestone：dev 環境下載兩種格式，人工開檔確認資料正確（待部署後由使用者驗）
 
 ---
 

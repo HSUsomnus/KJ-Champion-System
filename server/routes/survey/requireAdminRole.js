@@ -12,7 +12,9 @@
 const { getMemberRole, isAdminRole } = require('../../services/survey/adminAuthService');
 
 const requireAdminRole = async (req, res, next) => {
-  const lineUserId = req.headers['x-line-user-id'];
+  // 一般 API 走 X-Line-User-Id header；下載連結（<a href>）無法帶 header，
+  // 改由 query.lineUserId 帶入（信任層級同 header，仍後端查角色）。
+  const lineUserId = req.headers['x-line-user-id'] || req.query?.lineUserId;
   if (!lineUserId) {
     return res.status(401).json({ success: false, message: '請先登入' });
   }

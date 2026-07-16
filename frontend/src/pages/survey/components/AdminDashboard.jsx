@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { getAdminForms, getFormAttendance, getFormSubmissions } from '../../../services/surveyApi'
+import { getAdminForms, getFormAttendance, getFormSubmissions, exportUrl } from '../../../services/surveyApi'
 import TaskSidebar from './TaskSidebar'
 import AttendanceView from './AttendanceView'
 import SubmissionsView from './SubmissionsView'
@@ -74,32 +74,57 @@ export default function AdminDashboard() {
           <p style={{ fontSize: 14, color: '#8A8680' }}>目前沒有任何任務。</p>
         ) : (
           <>
-            {/* 視圖切換 pill tab（儀表板 / 明細） */}
+            {/* 視圖切換 pill tab（儀表板 / 明細）+ 匯出按鈕 */}
             <div
-              style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3, marginBottom: 16, maxWidth: 240 }}
+              className="flex flex-wrap items-center justify-between"
+              style={{ gap: 12, marginBottom: 16 }}
             >
-              {VIEWS.map((v) => (
-                <button
-                  key={v.key}
-                  type="button"
-                  onClick={() => setView(v.key)}
-                  style={{
-                    flex: 1,
-                    textAlign: 'center',
-                    fontSize: 12,
-                    fontWeight: view === v.key ? 500 : 400,
-                    padding: '6px 4px',
-                    borderRadius: 16,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: view === v.key ? '#4A7C59' : 'transparent',
-                    color: view === v.key ? '#fff' : '#2C2C2C',
-                    transition: 'background 0.15s, color 0.15s',
-                  }}
-                >
-                  {v.label}
-                </button>
-              ))}
+              <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3, width: 240 }}>
+                {VIEWS.map((v) => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => setView(v.key)}
+                    style={{
+                      flex: 1,
+                      textAlign: 'center',
+                      fontSize: 12,
+                      fontWeight: view === v.key ? 500 : 400,
+                      padding: '6px 4px',
+                      borderRadius: 16,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: view === v.key ? '#4A7C59' : 'transparent',
+                      color: view === v.key ? '#fff' : '#2C2C2C',
+                      transition: 'background 0.15s, color 0.15s',
+                    }}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                {['csv', 'xlsx'].map((fmt) => (
+                  <a
+                    key={fmt}
+                    href={exportUrl(selectedId, fmt)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 16,
+                      border: '1.5px solid #E2DED8',
+                      background: '#FFFFFF',
+                      color: '#4A7C59',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    匯出 {fmt === 'csv' ? 'CSV' : 'Excel'}
+                  </a>
+                ))}
+              </div>
             </div>
 
             {error && <p style={{ fontSize: 13, color: '#C0392B', marginBottom: 12 }}>{error}</p>}

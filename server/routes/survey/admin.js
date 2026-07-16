@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAdminRole } = require('./requireAdminRole');
 const adminFormService = require('../../services/survey/adminFormService');
+const exportService = require('../../services/survey/exportService');
 
 // 所有後台路由統一先過權限閘門
 router.use(requireAdminRole);
@@ -62,6 +63,44 @@ router.get('/forms/:id/submissions', async (req, res) => {
     }
     console.error('❌ Survey 明細讀取失敗:', error);
     res.status(500).json({ success: false, message: '讀取明細失敗' });
+  }
+});
+
+/**
+ * GET /api/survey/admin/forms/:id/export.csv — 後端直出 CSV
+ */
+router.get('/forms/:id/export.csv', async (req, res) => {
+  try {
+    const data = await adminFormService.listSubmissions(req.params.id);
+    const csv = exportService.buildCsv(data);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${exportService.safeFileName(data.form.title, 'csv')}"`);
+    res.send(csv);
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey CSV 匯出失敗:', error);
+    res.status(500).json({ success: false, message: '匯出失敗' });
+  }
+});
+
+/**
+ * GET /api/survey/admin/forms/:id/export.xlsx — 後端用 exceljs 直出
+ */
+router.get('/forms/:id/export.xlsx', async (req, res) => {
+  try {
+    const data = await adminFormService.listSubmissions(req.params.id);
+    const buffer = await exportService.buildXlsx(data);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${exportService.safeFileName(data.form.title, 'xlsx')}"`);
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey Excel 匯出失敗:', error);
+    res.status(500).json({ success: false, message: '匯出失敗' });
   }
 });
 

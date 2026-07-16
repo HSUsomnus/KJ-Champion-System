@@ -13,6 +13,7 @@ vi.mock('../../../services/surveyApi', () => ({
   getAdminForms: (...args) => mockGetAdminForms(...args),
   getFormAttendance: (...args) => mockGetFormAttendance(...args),
   getFormSubmissions: (...args) => mockGetFormSubmissions(...args),
+  exportUrl: (id, fmt) => `/api/survey/admin/forms/${id}/export.${fmt}`,
 }))
 
 beforeEach(() => {

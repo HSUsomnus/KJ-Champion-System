@@ -12,6 +12,11 @@ jest.mock('../../../services/survey/adminFormService', () => ({
   computeAttendance: jest.fn(),
   listSubmissions: jest.fn(),
 }));
+jest.mock('../../../services/survey/exportService', () => ({
+  buildCsv: jest.fn(() => 'CSV_CONTENT'),
+  buildXlsx: jest.fn(async () => Buffer.from('XLSX')),
+  safeFileName: jest.fn((t, ext) => `file.${ext}`),
+}));
 
 const { getMemberRole } = require('../../../services/survey/adminAuthService');
 const adminFormService = require('../../../services/survey/adminFormService');
@@ -108,6 +113,45 @@ describe('後台任務清單 / 完成狀況（需登入）', () => {
 
   test('GET /forms/:id/submissions 未登入 → 401', async () => {
     const res = await request(buildApp()).get('/api/survey/admin/forms/1/submissions');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('匯出（下載連結用 query 帶 lineUserId）', () => {
+  const adminFormService = require('../../../services/survey/adminFormService');
+  beforeEach(() => {
+    jest.clearAllMocks();
+    getMemberRole.mockResolvedValue('管理者');
+    adminFormService.listSubmissions.mockResolvedValue({
+      form: { id: 1, title: '康九冠軍調查', fields: [] },
+      submissions: [],
+    });
+  });
+
+  test('export.csv 用 header 登入 → 200 + CSV', async () => {
+    const res = await request(buildApp())
+      .get('/api/survey/admin/forms/1/export.csv')
+      .set('X-Line-User-Id', 'U1234');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/csv');
+    expect(res.text).toBe('CSV_CONTENT');
+  });
+
+  test('export.csv 用 ?lineUserId query 登入（下載連結）→ 200', async () => {
+    const res = await request(buildApp()).get('/api/survey/admin/forms/1/export.csv?lineUserId=U1234');
+    expect(res.status).toBe(200);
+  });
+
+  test('export.xlsx → 200 + xlsx content-type', async () => {
+    const res = await request(buildApp())
+      .get('/api/survey/admin/forms/1/export.xlsx')
+      .set('X-Line-User-Id', 'U1234');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('spreadsheetml');
+  });
+
+  test('匯出未登入 → 401', async () => {
+    const res = await request(buildApp()).get('/api/survey/admin/forms/1/export.csv');
     expect(res.status).toBe(401);
   });
 });
