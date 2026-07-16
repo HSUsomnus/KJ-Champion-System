@@ -17,6 +17,8 @@ import FinancialPreview from './pages/FinancialPreview'
 import Management from './pages/Management'
 import MemberDetail from './pages/MemberDetail'
 import AgendaSettings from './pages/AgendaSettings'
+import SurveyFill from './pages/survey/SurveyFill'
+import SurveyAdmin from './pages/survey/SurveyAdmin'
 
 function ProtectedRoute() {
   const { user, loading, isProfileComplete, isStatsComplete } = useAuth()
@@ -55,6 +57,10 @@ function ProtectedRoute() {
 
 const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
+  // KJ Survey（Change 20）：與 /login 同層的獨立 route，不經 ProtectedRoute / AuthContext
+  //   /f/:token 免登入公開填表；/admin 自帶 LINE 登入閘門（不共用主系統持久登入）
+  { path: '/f/:token', element: <SurveyFill /> },
+  { path: '/admin', element: <SurveyAdmin /> },
   {
     element: <ProtectedRoute />,
     children: [

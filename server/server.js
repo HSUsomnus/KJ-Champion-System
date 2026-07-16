@@ -21,6 +21,9 @@ const financialRoutes = require('./routes/financial');
 const authRoutes = require('./routes/auth');
 const debugRoutes = require('./routes/debug');
 const adminRoutes = require('./routes/admin');
+// KJ Survey（Change 20）— 併入主後端，隨主系統一起部署，API 前綴 /api/survey/*
+const surveyPublicRoutes = require('./routes/survey/public');
+const surveyAdminRoutes = require('./routes/survey/admin');
 
 // 引入排程
 const dailyAgendaScheduler = require('./scheduler/dailyAgenda');
@@ -113,7 +116,11 @@ app.use('/api/auth', authRoutes);
 // 自檢端點（永遠開放 — 只回傳 ok/fail 狀態，不暴露 token 或私鑰）
 app.use('/api/debug', debugRoutes);
 app.use('/api/admin', adminRoutes);
+// KJ Survey（Change 20）：/api/survey/* 落在既有 /api/* 代理下，不需 _worker.js 新增代理
+app.use('/api/survey/admin', surveyAdminRoutes);
+app.use('/api/survey', surveyPublicRoutes);
 console.log('🔧 [debug] /api/debug/health 已啟用');
+console.log('📋 [survey] /api/survey/* 已啟用（Change 20 團隊調查表單）');
 
 // 健康檢查端點（供 Cloud Run 使用）
 app.get('/health', (req, res) => {

@@ -22,13 +22,13 @@
 
 > 把原 `kj-survey-server/` 的程式碼搬進主系統 `server/`，複用主後端 pg pool 與 LINE 驗簽。原 Section 1–3 的 `[x]` 是在獨立服務下完成的，搬遷後需在新位置重跑測試才算數。
 
-- [ ] **20.M1** 將 survey 路由搬入 `server/routes/survey/*.js`（`public.js` 前台、`admin.js` 後台、`adminAuth.js` 認證），API 前綴改 `/api/survey/*`；掛進 `server/server.js`
-- [ ] **20.M2** survey service 邏輯搬入 `server/services/survey/*.js`；DB 改用 `server/` 既有 pg pool（移除獨立 pool / 獨立 `server.js` 入口）
-- [ ] **20.M3** LINE 驗簽改複用 `server/` 既有工具（不再獨立實作一份）；survey 後台 session 模型維持獨立（短效 JWT／記憶體，關頁重登）
-- [ ] **20.M4** 相依套件（`exceljs`、`jsonwebtoken` 等）併入主 `server/package.json`（若主專案已有則沿用）；刪除 `kj-survey-server/` 目錄與其 `package.json`/`.env.example`
-- [ ] **20.M5** 前端 `surveyApi.js` 呼叫路徑 `/survey-api/*` → `/api/survey/*`
-- [ ] **20.M6** 搬遷後重跑後端 unit test（原 Section 1–3 測試）全綠；`GET /api/survey/health` 於本機 / dev 回 200
-- [ ] **20.M7** 移除 `_worker.js` 的 `/survey-api/*` 代理段（見 20.47 修訂）
+- [x] **20.M1** 將 survey 路由搬入 `server/routes/survey/*.js`（`public.js` 前台 health/forms/members/submit、`admin.js` 後台、`requireAdminRole.js` 權限閘門），API 前綴改 `/api/survey/*`；掛進 `server/server.js`
+- [x] **20.M2** survey service 邏輯搬入 `server/services/survey/*.js`（`formService.js` / `adminAuthService.js`）；DB 改用 `server/config/db` 既有 pg pool（移除獨立 pool / 獨立 `server.js` 入口）
+- [x] **20.M3** 權限比對複用同一個 DB 查 `members.role`；登入沿用主系統 `/api/auth/line-login`（原自建 OAuth callback + cookie session 因網域不符失敗，已於前一 session 定案改用主系統既有登入，見 requireAdminRole.js / surveyApi.js 設計決策註解）
+- [x] **20.M4** `exceljs` 併入主 `package.json`（`jsonwebtoken` 因改用 header 認證不需要）；工作區本無 `kj-survey-server/` 目錄（本分支未帶入，等同已無此目錄）
+- [x] **20.M5** 前端 `surveyApi.js` 呼叫路徑 `/survey-api/*` → `/api/survey/*`（`getAdminMe` → `/admin/me`）
+- [x] **20.M6** 搬遷後重跑後端 unit test 全綠（`npx jest server/*/survey`：26 case 全綠）；`GET /api/survey/health` 於 dev 回 200 待部署後由使用者驗（CCR 連不到 Zeabur）
+- [x] **20.M7** `_worker.js` 無 `/survey-api/*` 代理段（本分支未帶入該修改，等同已移除）；`/api/survey/*` 走既有 `/api/*` 代理
 
 ---
 
