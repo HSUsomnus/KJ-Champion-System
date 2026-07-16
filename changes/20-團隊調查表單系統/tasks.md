@@ -108,12 +108,12 @@
 
 ## Section 7：表單建立器（發佈新任務，供管理者用）
 
-- [ ] **20.40** `POST /api/survey/admin/forms`（建 draft）、`PATCH /api/survey/admin/forms/:id`（編輯欄位）、`POST /api/survey/admin/forms/:id/publish`（draft→published，若無 token 則產生）
-- [ ] **20.41** 前端建立器 UI：手打欄位（key/label/type/options）；欄位型態含 `text`/`searchable_select`/`yesno`（`upload` 為 Phase 2，見 spec.md）
-- [ ] **20.42** 預覽：套用 `SurveyFill` 的 render 邏輯，唯讀模式預覽
-- [ ] **20.43** 發佈鈕 + 發佈後顯示連結 + 複製連結按鈕
-- [ ] **20.44** vitest：建立器欄位增刪、預覽渲染、發佈後 token 顯示
-- [ ] **20.45** Section milestone：dev 環境手動建一張新表單（任務）、發佈、用產生的連結實際填一次
+- [x] **20.40** `POST /api/survey/admin/forms`（建 draft，建立時即產生 token）、`PATCH /api/survey/admin/forms/:id`（編輯欄位/標題）、`POST /api/survey/admin/forms/:id/publish`（draft→published，無 token 補產生）；含欄位驗證（`validateFields`：key/label 非空、type 合法、key 不重複 → 400）
+- [x] **20.41** 前端建立器 UI `FormBuilder`：手打欄位（key/label/type/options）；型態 `text`/`searchable_select`/`yesno`（`searchable_select` 可選「讀團隊名單 / 自訂選項」）；`upload` 為 Phase 2 不提供
+- [x] **20.42** 預覽 `FormPreview`：以夥伴視角唯讀渲染（沿用 SurveyFill 欄位型態呈現），即時反映標題與欄位
+- [x] **20.43** 發佈鈕（建立→發佈流程）+ 發佈後顯示 `/f/:token` 連結 + 複製連結按鈕
+- [x] **20.44** vitest：`FormBuilder` 5 case（欄位增刪、預覽即時渲染、缺標題擋下、發佈後 token 連結顯示、自訂選項 options 正確）全綠
+- [ ] **20.45** Section milestone：dev 環境手動建一張新表單（任務）、發佈、用產生的連結實際填一次（待部署後由使用者驗）
 
 ---
 

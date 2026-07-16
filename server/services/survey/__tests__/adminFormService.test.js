@@ -103,3 +103,84 @@ describe('adminFormService.listSubmissions', () => {
     expect(data.submissions[0].answers.name).toBe('徐毓紘');
   });
 });
+
+describe('adminFormService.validateFields', () => {
+  test('空陣列 → VALIDATION', () => {
+    expect(() => adminFormService.validateFields([])).toThrow(/至少需要一個欄位/);
+  });
+  test('缺 label → VALIDATION', () => {
+    expect(() => adminFormService.validateFields([{ key: 'a', type: 'text' }])).toThrow(/缺少標題/);
+  });
+  test('型態不合法 → VALIDATION', () => {
+    expect(() => adminFormService.validateFields([{ key: 'a', label: 'A', type: 'bogus' }])).toThrow(/型態不合法/);
+  });
+  test('key 重複 → VALIDATION', () => {
+    expect(() =>
+      adminFormService.validateFields([
+        { key: 'a', label: 'A', type: 'text' },
+        { key: 'a', label: 'B', type: 'yesno' },
+      ])
+    ).toThrow(/重複/);
+  });
+  test('合法 → 不丟', () => {
+    expect(() =>
+      adminFormService.validateFields([{ key: 'a', label: 'A', type: 'searchable_select' }])
+    ).not.toThrow();
+  });
+});
+
+describe('adminFormService.createForm', () => {
+  const VALID = { title: '七月回訓', fields: [{ key: 'name', label: '姓名', type: 'searchable_select' }] };
+
+  test('標題空白 → VALIDATION，不寫 DB', async () => {
+    await expect(adminFormService.createForm({ title: ' ', fields: VALID.fields })).rejects.toMatchObject({
+      code: 'VALIDATION',
+    });
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
+  test('合法 → INSERT draft、回傳含 token 的表單', async () => {
+    db.query.mockResolvedValue({
+      rows: [{ id: 5, title: '七月回訓', token: 'abcd', fields: VALID.fields, status: 'draft' }],
+    });
+    const form = await adminFormService.createForm(VALID);
+    expect(form.status).toBe('draft');
+    expect(form.token).toBeTruthy();
+    const sql = db.query.mock.calls[0][0];
+    expect(sql).toContain('INSERT INTO survey_forms');
+  });
+});
+
+describe('adminFormService.updateForm', () => {
+  test('表單不存在 → FORM_NOT_FOUND', async () => {
+    db.query.mockResolvedValueOnce({ rows: [] }); // getFormById
+    await expect(
+      adminFormService.updateForm(9, { title: 'x', fields: [{ key: 'a', label: 'A', type: 'text' }] })
+    ).rejects.toMatchObject({ code: 'FORM_NOT_FOUND' });
+  });
+
+  test('合法 → UPDATE 回傳新資料', async () => {
+    const fields = [{ key: 'a', label: 'A', type: 'yesno' }];
+    db.query
+      .mockResolvedValueOnce({ rows: [{ id: 5, title: '舊', token: 't', fields: [], status: 'draft' }] }) // getFormById
+      .mockResolvedValueOnce({ rows: [{ id: 5, title: '新', token: 't', fields, status: 'draft' }] }); // UPDATE
+    const form = await adminFormService.updateForm(5, { title: '新', fields });
+    expect(form.title).toBe('新');
+  });
+});
+
+describe('adminFormService.publishForm', () => {
+  test('表單不存在 → FORM_NOT_FOUND', async () => {
+    db.query.mockResolvedValueOnce({ rows: [] });
+    await expect(adminFormService.publishForm(9)).rejects.toMatchObject({ code: 'FORM_NOT_FOUND' });
+  });
+
+  test('發佈 → status=published，沿用既有 token', async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ id: 5, title: 'x', token: 'keep', fields: [], status: 'draft' }] }) // getFormById
+      .mockResolvedValueOnce({ rows: [{ id: 5, title: 'x', token: 'keep', fields: [], status: 'published' }] }); // UPDATE
+    const form = await adminFormService.publishForm(5);
+    expect(form.status).toBe('published');
+    expect(db.query.mock.calls[1][1]).toEqual(['keep', 5]);
+  });
+});

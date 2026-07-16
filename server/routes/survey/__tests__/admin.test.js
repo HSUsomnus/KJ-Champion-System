@@ -11,6 +11,9 @@ jest.mock('../../../services/survey/adminFormService', () => ({
   listForms: jest.fn(),
   computeAttendance: jest.fn(),
   listSubmissions: jest.fn(),
+  createForm: jest.fn(),
+  updateForm: jest.fn(),
+  publishForm: jest.fn(),
 }));
 jest.mock('../../../services/survey/exportService', () => ({
   buildCsv: jest.fn(() => 'CSV_CONTENT'),
@@ -114,6 +117,61 @@ describe('後台任務清單 / 完成狀況（需登入）', () => {
   test('GET /forms/:id/submissions 未登入 → 401', async () => {
     const res = await request(buildApp()).get('/api/survey/admin/forms/1/submissions');
     expect(res.status).toBe(401);
+  });
+});
+
+describe('表單建立器（發佈新任務）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    getMemberRole.mockResolvedValue('管理者');
+  });
+
+  test('POST /forms 未登入 → 401', async () => {
+    const res = await request(buildApp()).post('/api/survey/admin/forms').send({ title: 'x' });
+    expect(res.status).toBe(401);
+    expect(adminFormService.createForm).not.toHaveBeenCalled();
+  });
+
+  test('POST /forms 合法 → 201 + 草稿', async () => {
+    adminFormService.createForm.mockResolvedValue({ id: 5, title: '七月回訓', token: 'abc', status: 'draft' });
+    const res = await request(buildApp())
+      .post('/api/survey/admin/forms')
+      .set('X-Line-User-Id', 'U1234')
+      .send({ title: '七月回訓', fields: [{ key: 'name', label: '姓名', type: 'searchable_select' }] });
+    expect(res.status).toBe(201);
+    expect(res.body.data.status).toBe('draft');
+  });
+
+  test('POST /forms 驗證失敗 → 400', async () => {
+    const err = new Error('請填任務標題');
+    err.code = 'VALIDATION';
+    adminFormService.createForm.mockRejectedValue(err);
+    const res = await request(buildApp())
+      .post('/api/survey/admin/forms')
+      .set('X-Line-User-Id', 'U1234')
+      .send({ title: '' });
+    expect(res.status).toBe(400);
+  });
+
+  test('PATCH /forms/:id 不存在 → 404', async () => {
+    const err = new Error('找不到');
+    err.code = 'FORM_NOT_FOUND';
+    adminFormService.updateForm.mockRejectedValue(err);
+    const res = await request(buildApp())
+      .patch('/api/survey/admin/forms/9')
+      .set('X-Line-User-Id', 'U1234')
+      .send({ title: 'x' });
+    expect(res.status).toBe(404);
+  });
+
+  test('POST /forms/:id/publish → 200 + published', async () => {
+    adminFormService.publishForm.mockResolvedValue({ id: 5, token: 'abc', status: 'published' });
+    const res = await request(buildApp())
+      .post('/api/survey/admin/forms/5/publish')
+      .set('X-Line-User-Id', 'U1234');
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('published');
+    expect(res.body.data.token).toBe('abc');
   });
 });
 

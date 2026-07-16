@@ -121,13 +121,103 @@ const listSubmissions = async (formId) => {
   };
 };
 
+const generateToken = () => crypto.randomBytes(16).toString('hex');
+
+/**
+ * 驗證建立器送來的欄位陣列。不合法 → 丟 VALIDATION（400）。
+ * 每個欄位需有非空 key / label，type ∈ ADMIN_FIELD_TYPES，key 不可重複。
+ */
+const validateFields = (fields) => {
+  if (!Array.isArray(fields) || fields.length === 0) {
+    throwValidation('至少需要一個欄位');
+  }
+  const seen = new Set();
+  for (const f of fields) {
+    if (!f || typeof f.key !== 'string' || !f.key.trim()) throwValidation('欄位 key 不可為空');
+    if (typeof f.label !== 'string' || !f.label.trim()) throwValidation(`欄位「${f.key}」缺少標題`);
+    if (!ADMIN_FIELD_TYPES.includes(f.type)) throwValidation(`欄位「${f.key}」型態不合法`);
+    if (seen.has(f.key)) throwValidation(`欄位 key 重複：${f.key}`);
+    seen.add(f.key);
+  }
+};
+
+const throwValidation = (message) => {
+  const err = new Error(message);
+  err.code = 'VALIDATION';
+  throw err;
+};
+
+/**
+ * 建立草稿表單（發佈前）。建立時即產生 token（schema token NOT NULL）。
+ */
+const createForm = async ({ title, fields }) => {
+  if (typeof title !== 'string' || !title.trim()) throwValidation('請填任務標題');
+  validateFields(fields);
+
+  const result = await db.query(
+    `INSERT INTO survey_forms (title, token, fields, status)
+     VALUES ($1, $2, $3, 'draft')
+     RETURNING id, title, token, fields, status, created_at`,
+    [title.trim(), generateToken(), JSON.stringify(fields)]
+  );
+  return result.rows[0];
+};
+
+/**
+ * 編輯表單欄位 / 標題。
+ * @throws FORM_NOT_FOUND / VALIDATION
+ */
+const updateForm = async (id, { title, fields }) => {
+  const existing = await getFormById(id);
+  if (!existing) {
+    const err = new Error('表單不存在');
+    err.code = 'FORM_NOT_FOUND';
+    throw err;
+  }
+  const nextTitle = title != null ? title : existing.title;
+  const nextFields = fields != null ? fields : existing.fields;
+  if (typeof nextTitle !== 'string' || !nextTitle.trim()) throwValidation('請填任務標題');
+  validateFields(nextFields);
+
+  const result = await db.query(
+    `UPDATE survey_forms SET title = $1, fields = $2 WHERE id = $3
+     RETURNING id, title, token, fields, status, created_at`,
+    [nextTitle.trim(), JSON.stringify(nextFields), id]
+  );
+  return result.rows[0];
+};
+
+/**
+ * 發佈表單（draft → published）；若無 token 則補產生。
+ * @throws FORM_NOT_FOUND
+ */
+const publishForm = async (id) => {
+  const existing = await getFormById(id);
+  if (!existing) {
+    const err = new Error('表單不存在');
+    err.code = 'FORM_NOT_FOUND';
+    throw err;
+  }
+  const token = existing.token || generateToken();
+  const result = await db.query(
+    `UPDATE survey_forms SET status = 'published', token = $1 WHERE id = $2
+     RETURNING id, title, token, fields, status, created_at`,
+    [token, id]
+  );
+  return result.rows[0];
+};
+
 module.exports = {
   listForms,
   getFormById,
   computeAttendance,
   listSubmissions,
+  createForm,
+  updateForm,
+  publishForm,
+  validateFields,
   submissionName,
   UNGROUPED_LABEL,
   ADMIN_FIELD_TYPES,
-  _generateToken: () => crypto.randomBytes(16).toString('hex'),
+  _generateToken: generateToken,
 };

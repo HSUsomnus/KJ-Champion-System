@@ -12,6 +12,8 @@ vi.mock('../../../../services/surveyApi', () => ({
   getFormAttendance: (...a) => mockGetFormAttendance(...a),
   getFormSubmissions: (...a) => mockGetFormSubmissions(...a),
   exportUrl: (id, fmt) => `/api/survey/admin/forms/${id}/export.${fmt}`,
+  createForm: vi.fn(),
+  publishForm: vi.fn(),
 }))
 
 const FORMS = [
@@ -87,8 +89,20 @@ describe('AdminDashboard', () => {
 
     render(<AdminDashboard />)
 
-    expect(await screen.findByText('目前沒有任何任務。')).toBeInTheDocument()
+    expect(await screen.findByText(/目前沒有任何任務/)).toBeInTheDocument()
     expect(mockGetFormAttendance).not.toHaveBeenCalled()
+  })
+
+  it('點「+ 新任務」→ 進入表單建立器', async () => {
+    mockGetAdminForms.mockResolvedValue({ success: true, data: FORMS })
+    mockGetFormAttendance.mockResolvedValue({ success: true, data: ATTENDANCE_1 })
+
+    render(<AdminDashboard />)
+    await screen.findByText('50%')
+
+    fireEvent.click(screen.getByText('+ 新任務'))
+    expect(await screen.findByText('發佈任務')).toBeInTheDocument()
+    expect(screen.getByText('夥伴視角預覽')).toBeInTheDocument()
   })
 
   it('切到「明細」tab → 抓 submissions 並渲染明細', async () => {

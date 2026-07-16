@@ -9,6 +9,7 @@ import { getAdminForms, getFormAttendance, getFormSubmissions, exportUrl } from 
 import TaskSidebar from './TaskSidebar'
 import AttendanceView from './AttendanceView'
 import SubmissionsView from './SubmissionsView'
+import FormBuilder from './FormBuilder'
 
 const VIEWS = [
   { key: 'dashboard', label: '完成狀況' },
@@ -18,6 +19,7 @@ const VIEWS = [
 export default function AdminDashboard() {
   const [forms, setForms] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [mode, setMode] = useState('view') // view | builder
   const [view, setView] = useState('dashboard')
   const [attendance, setAttendance] = useState(null)
   const [detail, setDetail] = useState(null)
@@ -35,6 +37,16 @@ export default function AdminDashboard() {
       .catch((err) => setError(err.message || '讀取任務清單失敗'))
       .finally(() => setLoadingForms(false))
   }, [])
+
+  // 發佈新任務後：重載清單並切到該任務的完成狀況
+  const handlePublished = (form) => {
+    getAdminForms()
+      .then((res) => setForms(res.data))
+      .catch(() => {})
+    setSelectedId(form.id)
+    setView('dashboard')
+    setMode('view')
+  }
 
   // 切換任務或視圖 → 讀對應資料
   useEffect(() => {
@@ -59,6 +71,7 @@ export default function AdminDashboard() {
   const selectTask = (id) => {
     setSelectedId(id)
     setView('dashboard') // 切任務時回到首屏完成狀況
+    setMode('view')
   }
 
   if (loadingForms) {
@@ -67,11 +80,18 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row" style={{ gap: 24 }}>
-      <TaskSidebar forms={forms} selectedId={selectedId} onSelect={selectTask} />
+      <TaskSidebar
+        forms={forms}
+        selectedId={mode === 'builder' ? null : selectedId}
+        onSelect={selectTask}
+        onNewTask={() => setMode('builder')}
+      />
 
       <main className="flex-1 min-w-0">
-        {forms.length === 0 ? (
-          <p style={{ fontSize: 14, color: '#8A8680' }}>目前沒有任何任務。</p>
+        {mode === 'builder' ? (
+          <FormBuilder onPublished={handlePublished} />
+        ) : forms.length === 0 ? (
+          <p style={{ fontSize: 14, color: '#8A8680' }}>目前沒有任何任務。點側邊欄「+ 新任務」建立第一張表單。</p>
         ) : (
           <>
             {/* 視圖切換 pill tab（儀表板 / 明細）+ 匯出按鈕 */}

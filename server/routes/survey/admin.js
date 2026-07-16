@@ -35,6 +35,57 @@ router.get('/forms', async (req, res) => {
 });
 
 /**
+ * POST /api/survey/admin/forms — 建立草稿表單（發佈新任務前）
+ */
+router.post('/forms', async (req, res) => {
+  try {
+    const form = await adminFormService.createForm(req.body || {});
+    res.status(201).json({ success: true, data: form });
+  } catch (error) {
+    if (error.code === 'VALIDATION') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    console.error('❌ Survey 建立表單失敗:', error);
+    res.status(500).json({ success: false, message: '建立任務失敗' });
+  }
+});
+
+/**
+ * PATCH /api/survey/admin/forms/:id — 編輯欄位 / 標題
+ */
+router.patch('/forms/:id', async (req, res) => {
+  try {
+    const form = await adminFormService.updateForm(req.params.id, req.body || {});
+    res.json({ success: true, data: form });
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    if (error.code === 'VALIDATION') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    console.error('❌ Survey 編輯表單失敗:', error);
+    res.status(500).json({ success: false, message: '編輯任務失敗' });
+  }
+});
+
+/**
+ * POST /api/survey/admin/forms/:id/publish — 發佈（draft→published）
+ */
+router.post('/forms/:id/publish', async (req, res) => {
+  try {
+    const form = await adminFormService.publishForm(req.params.id);
+    res.json({ success: true, data: form });
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey 發佈表單失敗:', error);
+    res.status(500).json({ success: false, message: '發佈任務失敗' });
+  }
+});
+
+/**
  * GET /api/survey/admin/forms/:id/attendance — 完成狀況（首屏儀表板）
  */
 router.get('/forms/:id/attendance', async (req, res) => {
