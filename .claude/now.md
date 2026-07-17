@@ -13,6 +13,8 @@
 
 ## 最近推送
 
+規則類直推（2026-07-17）：新增 `.claude/指揮官架構.md`——記錄本次 CCR 評估 session 從 code-server 可行性一路落地的「指揮官架構」（Claude Code 當指揮官、在自有 VPS 用 `codex exec` 調度 Codex CLI 當工兵，繞開手機 CCR 沙箱）。含 Mermaid 架構圖、現況（VPS／codex 已裝登入、指揮鏈實測通過）、bubblewrap 沙箱注意事項（需 `--sandbox danger-full-access`）與待辦清單。供後續最高階模型 session 討論整體架構。
+
 規則類直推（2026-07-13）：change 28「殭屍分支與 role-guard 誤攔」——`role-guard.js` doctor 段修 2 個誤攔同型 bug：`git merge\b` 誤攔唯讀 `git merge-base`/`git merge-tree`（改 `git merge(\s|$)`）、`git tag\b` 誤攔唯讀列出（改 token 比對，放行 `-l`/`--contains` 等唯讀 flag，只攔建立/刪除）；deploy-release skill「直推流程」補「直推後刪功能分支」收尾小節，堵殭屍分支源頭（change 26、27 兩次規則類直推都漏刪來源分支，導致 `m_b_role-guard補強`、`m_b_打包繼續指令`、`claude/packing-continue-skills-audit-qr0c9z` 三條殘留分支）。詳見 `changes/28-殭屍分支與role-guard誤攔/spec.md`。
 
 規則類直推（2026-07-12）：change 27「role-guard 補強」——`role-guard.js` engineer 段 push-main 判定由 `\bmain\b` regex 改為 token 比對，修正誤攔含 main 字分支名（如 `fix-main-layout`）；新增 `session-role-notice.js`（SessionStart hook，殘留 `.session-role` 標記提示，fail-open）＋ `settings.json` 註冊；`實作.md` 補「使用者終端機指令紀律」四條（Termius／cd 絕對路徑寫死／&& 串接／指令自包含）；新增 `/vps新對話` 指令（管理 DevVps remote-control session 開新／關閉）。詳見 `changes/27-role-guard補強/spec.md`。
