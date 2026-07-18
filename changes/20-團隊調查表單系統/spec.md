@@ -1,188 +1,185 @@
-# Change 20 — 團隊調查表單系統（KJ Survey）
+# Change 20 — 團隊調查表單系統（KJ Survey）v4
 
-> 需求探索已於 CEO（Claude Web Chat）階段完成，產出 README.md / CLAUDE.md 兩份手冊（使用者已上傳，內容納入本 spec 整理）。本文件把手冊內容對應進本 repo 實際結構，並補齊手冊未指定的技術決策。
+> 版本沿革：v1 → v2（回應 `審查.md`）→ v3（回應 `審核.md`）→ **v4（本版，回應 `覆核.MD`：
+> 4 阻斷歧義 + 4 實作缺口 + 4 驗證項）**。覆核判定「架構正確、只差規格收斂，不需另開 change、不需
+> 動 schema、不需推翻架構」——v4 即把剩餘 HOW 全部**寫死到可機械實作**。本 spec 為唯一事實來源。
+>
+> DB 三表已建於 dev/prod/backup，schema 不動。原則不變：放棄舊 `[x]`、乾淨重規劃、保留已驗證 code。
 
-## 背景
+## 背景（未變）
 
-主系統（康九冠軍夥伴系統）功能完整但對部分成員（含副總/紫星 李冠陞）過於龐大、有抵觸感。副總長期苦惱團隊突發事件的「調查」該怎麼做。本功能是**折中方案**：獨立一套極簡調查表單工具，不強迫任何人學主系統。
-
-核心哲學——**兩端不對稱**：
-- 夥伴端：極簡，免登入，幾乎零打字，按按鈕即可。
-- 管理者端：不追求簡單，追求有力（篩選直覺、匯出齊全、資料清楚、揪出未填名單）。
-
-需求來源真實明確（副總本人指定要用），故**不做「先驗證採用率」的最小功能**，範圍一次做到位（含表單建立器）。詳細決策理由見使用者上傳的 README.md，不重複列出。
-
----
-
-## 範圍對應到本 repo（本 spec 新增的技術決策）
-
-手冊內容（README.md / CLAUDE.md）已完整定義需求與資料結構，以下是手冊未明講、需要落地到「這個 repo 長怎樣」的具體決策：
-
-### 1. 目錄結構
-
-- **後端**：新增獨立目錄 `kj-survey-server/`（獨立 Express app，自己的 `package.json`），不寫進既有 `server/`。維持獨立部署（服務層切開），但**不需要獨立 DB、不需要獨立 Zeabur 專案**（見下方 DB 決策修正）。
-- **前端**：**不開新 repo、不開新 Cloudflare Pages 專案**，沿用既有 `frontend/`，新增路由與頁面：
-  - `frontend/src/pages/survey/SurveyFill.jsx` → 路由 `/f/:token`（免登入，公開）
-  - `frontend/src/pages/survey/SurveyAdmin.jsx` → 路由 `/admin`（獨立 LINE 登入閘門，不經過主系統 `ProtectedRoute`/`AuthContext`）
-  - `frontend/src/services/surveyApi.js`（獨立 API 呼叫層，不共用 `api.js`，呼叫路徑前綴 `/survey-api/*`）
-  - 原因：手冊明講「沿用主系統既有前端風格」「後台掛在現有系統網域下」，代表同一個前端部署、同一個網域，只是路由與 API 層分開。
-
-  路由掛法：`/f/:token` 與 `/admin` 都是**與 `/login` 同層的獨立 route**（不包在 `ProtectedRoute` 裡），因為：
-  - `/f/:token` 必須免登入。
-  - `/admin` 用自己的 LINE 登入流程（不落地 session），跟主系統的持久登入邏輯不同，不能共用 `AuthContext`。
-
-- **DB（使用者已修正本點）**：**不建新 DB、不建新 Zeabur 專案**。KJ Survey 的三張表直接建在**既有 PostgreSQL**（沿用 `database.md` 既有 dev/prod 雙庫架構）：
-  - dev：`kj-champion-dev` 專案 → `postgresql-dev`
-  - prod：`kj-champion` 專案 → `postgresql`
-  - 表名加 `survey_` 前綴（`survey_members` / `survey_forms` / `survey_submissions`），避免跟主系統既有 `members` 表撞名。
-  - `kj-survey-server`（後端服務本身）比照同一 Zeabur 專案模式新增為**新服務**（`kj-champion-dev` 專案內新增服務、`kj-champion` 專案內新增服務），透過 Zeabur 內網連線同一個 `postgresql-dev` / `postgresql`，連線字串比照現有 `DATABASE_URL` / `DEV_DATABASE_URL` 模式（不需公網、不需另外申請）。
-  - 使用者仍需在 Zeabur Dashboard 手動新增這兩個「服務」（dev 一個、prod 一個），但**不需要新增專案、不需要新增資料庫**——這是本次修正後唯一還需要人工在 Zeabur 操作的部分。
-
-### 2. `_worker.js` 新增代理規則
-
-現有 `frontend/public/_worker.js` 只代理 `/api/*` → 主系統 Zeabur 後端。新增一段：`/survey-api/*` → KJ Survey 的 Zeabur 後端（prod / dev 依 hostname 判斷，比照現有 `resolveBackend()` 寫法）。
-
-```
-ZEABUR_SURVEY_BACKEND_PROD = 'https://kj-survey.zeabur.app'       // 待建立後確認實際網址
-ZEABUR_SURVEY_BACKEND_DEV  = 'https://kj-survey-dev.zeabur.app'   // 待建立後確認實際網址
-```
-
-### 3. 後台權限比對（因 DB 共用而簡化）
-
-手冊要求後台需讀主系統「以 LINE ID 為核心的會員/權限資料」。已確認主系統 schema（`database/schema.sql` + `server/migrations/add_member_role.sql`）：`members.line_id`、`members.role`（`一般人` / `管理者` / `負責人` / `開發者`）。
-
-因 DB 已改為共用（見上），`kj-survey-server` 與主系統 `server/` 連的是**同一個 PostgreSQL**，不需要額外的內部 API，直接下 SQL 查詢即可：
-
-```sql
-SELECT role FROM members WHERE line_id = $1
-```
-
-- `kj-survey-server` 後台登入流程：LINE ID token 驗簽通過後，直接查 `members.role`，確認 `role ∈ {管理者, 負責人, 開發者}` 才放行。
-- 只唯讀既有 `members` 表，不寫入、不動其結構，符合「過渡期不碰主系統既有資料表結構」的鐵律。
-
-### 4. LINE Login 憑證（手冊列為「必須停下回報」，本 spec 已解法）
-
-**沿用主系統既有 LINE Login channel**（`LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET`，同一個 LINE channel），不必使用者另外去 LINE Developers 開新 channel。`kj-survey-server/.env` 需填同一組值（由使用者從主系統 `.env` 複製）。ID token 驗簽邏輯獨立寫在 `kj-survey-server`（不 import 主系統程式碼，保持部署獨立）。
-
-理由：手冊本身沒說要新 channel，只說「因為夥伴本就用 LINE」；沿用同一 channel 對使用者無新開銷，且登入體驗一致。**若使用者希望用獨立 channel，需另外提供 Channel ID/Secret**——本 spec 先以「沿用既有」為預設，執行時遇到才回頭確認。
-
-### 5. 種子資料匯入方式
-
-比照 `database.md` 既有模式：Claude 產生 SQL migration（建表 + 40 人 INSERT），使用者到 Zeabur Console 貼上執行（Claude 無法直連 dev/prod DB 公網）。因是全新表、不影響既有資料，仍依 `database.md` 規則同時提供 **dev / prod / backup** 三份：
-- dev：`kj-champion-dev` → `postgresql-dev` → Console
-- prod：`kj-champion` → `postgresql` → Console
-- backup：`kj-champion` → `postgresql-backup` → Console
+主系統對部分成員過於龐大；本功能是折中的獨立極簡調查表單。兩端不對稱：夥伴端免登入零打字；
+管理者端求有力（篩選/匯出/揪未填）。範圍一次到位（含建立器）。
 
 ---
 
-## 資料結構（沿用手冊定義，逐字對齊）
+## 一、地基決策（2026-07-18 定案）
 
-三張表，建在既有 PostgreSQL（dev: `postgresql-dev`／prod: `postgresql`），表名加 `survey_` 前綴避免撞名：
-
-### `survey_members`（KJ Survey 自己的名單庫，與主系統 `members` 是兩張獨立表）
-- `id`, `name`, `star_rank`（enum: 白/綠/橙/紅/紫）, `recommender_name`（字串，v1 不正規化關聯）, `status`（`confirmed`/`pending`）, `created_at`
-
-### `survey_forms`（一張調查表單一筆）
-- `id`, `title`, `token`（隨機不可猜字串，前台連結用，不可流水號）, `fields`（JSON 陣列 `{ key, label, type, options? }`）, `status`（`draft`/`published`）, `created_at`
-
-### `survey_submissions`（一筆填寫一筆）
-- `id`, `form_id`, `answers`（JSON）, `review_status`（Phase 2 預留，Phase 1 留空）, `reviewer_note`（Phase 2 預留）, `created_at`
-
-欄位型態：`text` / `searchable_select`（可搜尋下拉，找不到選「其他」手動輸入入庫 pending）/ `yesno`（大按鈕二選一）/ `upload`（Phase 2 預留，本次不 render）。
-
----
-
-## Phase 1 固定表單欄位
-
-寫入一筆 `survey_forms`（`status = published`）：
-
-| key | label | type | 備註 |
-|---|---|---|---|
-| name | 姓名 | searchable_select | 讀 survey_members；其他→手動輸入→入庫 pending |
-| star_rank | 夥伴星等 | searchable_select | 白/綠/橙/紅/紫 |
-| recommender | 推薦人 | searchable_select | 讀 survey_members |
-| join_master | 天驥加盟主 | yesno | |
-| tree_finance_d2 | 財務進化樹Day2 | yesno | |
-| tree_path | 實踐路徑樹 | yesno | |
-| tree_abundance | 富足人生樹 | yesno | |
-| tree_decode | 人生解碼樹 | yesno | |
+| # | 決策 |
+|---|---|
+| **D-A 認證** | Survey 真驗簽：LINE 官方 verify → 自簽短效 bearer JWT（記憶體，非 cookie） |
+| **D-B token** | 建 draft 即發 token，不動 schema |
+| **D-C 範圍** | 乾淨重規劃、保留已驗證 code |
+| **D-D members 揭露** | 綁 published token + 只回 confirmed + 僅 `name`+`star_rank` |
+| **D-E 濫用防護** | body size 上限 + rate limit + 重複送出並存 |
+| **D-F OAuth state** | 簽章式 state：HMAC(`SESSION_SECRET`) + nonce + 10 分 exp + 一次性 |
+| **D-G 撤權延遲** | `requireAdminSession` 每次重查 DB role；JWT 不放 role |
+| **D-H callback origin（覆核 B-1）** | **經 Worker proxy**：callback 登記 `{FRONTEND_URL}/survey-api/admin-auth/line-callback`，token 交換 `redirect_uri` 用同一字串。**不用**後端裸 origin |
+| **D-I nonce store（覆核 B-2）** | **process memory `Map`（單 instance）** + 10 分 TTL + callback 原子 consume；接受「服務重啟使未完成登入失效」。**前提：Survey 後端單 instance**（此規模成立；若日後多 instance 需指揮官改共享 store） |
+| **D-J rate-limit 政策（覆核 B-3）** | `app.set('trust proxy', 1)`（Zeabur/CF 前有 proxy）；key = 已解析 client IP + form id；`windowMs`=15 分；`max`=10；超限 `429 {error:'too_many_requests'}`；無效 token → 仍按 IP 計，不因換 token 規避 |
 
 ---
 
-## 前台（`/f/:token`）
+## 二、三輪審核處置對照（摘要）
 
-- 免登入，動態依 `survey_forms.fields` render。手機零打字體驗。
-- 送出寫入 `survey_submissions`；`name`/`recommender` 選「其他」時新名字寫入 `survey_members`（`status = pending`）。
-- token 無效 / 表單非 published / 不存在 → 統一友善錯誤頁，不洩漏細節（不區分「token 錯」與「表單被下架」）。
-
----
-
-## 後台（`/admin`）
-
-### 認證（甲案）
-1. 開 `/admin` → 強制 LINE 登入（沿用主系統 channel）。
-2. 取得 LINE ID → 後端**驗簽**（絕不信前端傳值）。
-3. 直接查同一個 DB 的 `SELECT role FROM members WHERE line_id = $1`，確認角色 ∈ {管理者, 負責人, 開發者}。
-4. 通過才放行；session **只存記憶體，不落地**（不寫 localStorage），關頁重開需重登。
-5. 管理者本人透過專屬設定連結，自行把 LINE ID 綁進 KJ Survey 的 `survey_members`（比照手冊）。
-
-### 側邊欄
-列出所有 `survey_forms`，點選切換 Table 1 資料來源。
-
-### Table 1：資料檢視
-- 全展開表格。
-- 「篩選」按鈕：開啟後，欄位標題與每個姓名變按鈕（推薦人欄位不變按鈕）。
-  - 點姓名 → 篩「推薦人=該人」+ 本人。
-  - 點課程/樹欄位 → 篩該欄 Yes。
-  - 點星等 → 篩該星等。
-  - 同鈕再點 = 取消篩選（單條件，新條件取代舊條件）。
-- 是非型狀態一律 ✅/❎。
-
-### Table 1 進階：未填名冊（副總核心需求）
-- 切換鈕：已填資料 ⇄ 點名表。
-- 應填名單 = 整份 `survey_members`（甲案全名單比對）；出現在該表單 `survey_submissions.answers.name` = 已填。
-- 比對鍵：`survey_submissions.answers.name` vs `survey_members.name`（靠前台姓名下拉保證寫法一致）。
-- 按推薦人分組，組標題含進度條（如 `李冠陞 ▓▓▓▓░░ 8/12`），組內列出姓名+星等+✅/❎。
-
-### Table 2：表單建立器
-- 手打欄位設定（key/label/type/options）。
-- 預覽（夥伴視角渲染）。
-- 發佈（`draft`→`published`，產生 token）。
-- 發佈後顯示連結 + 複製連結按鈕。
-
-### 匯出（Table 1）
-- CSV：後端直出。
-- Excel：後端用 `exceljs` 直出。
-- **不做 Google Sheet 匯出**（手冊明確捨棄）。
+審查（B-1/B-2/H-1~3/D-1）、審核（B-1~3/H-1~5/M-1~4）已於 v2/v3 落實。**覆核（本版 v4）**：
+B-1 callback origin→D-H；B-2 nonce store→D-I；B-3 rate-limit→D-J；B-4 tasks 排序→八節重排 + tasks 依執行順序；
+H-1 驗證數值→六節；H-2 state 白名單→三節（無 returnMeta，防 open redirect）；H-3 transaction client 邊界→四節+tasks；
+H-4 PUB 所有權拆分→八節 PUB-A~D；M-1~4→十節 milestone 驗證項。
 
 ---
 
-## 種子資料：40 人名單
+## 三、後台認證（重建，Claude 親自）
 
-灌入 `survey_members`（`status = confirmed`），星等保留「紅」（目前無人）。名單內容見使用者上傳的 CLAUDE.md 表格（40 筆，逐字沿用，不重複貼於此）。
+### 前置依賴（H-1 審核）
+`package.json`+lockfile 加 `jsonwebtoken`；`.env.example` 補 `LINE_CHANNEL_ID`/`LINE_CHANNEL_SECRET`/`APP_URL`/`FRONTEND_URL`/`SESSION_SECRET`/callback URL 並移除舊 header 註解；啟動缺 `SESSION_SECRET` 等 fail-fast；測試用獨立測試 secret。
 
-**發佈前必做**：請使用者核對 OCR 罕用字與推薦人歸屬（手冊已標註此為留意事項）。
+### URL（D-H，全程一致，dev/prod 各一組佔位待 Section 0 校準）
+- 瀏覽器登入入口：`{FRONTEND_URL}/survey-api/admin-auth/line-login`
+- LINE 登記 callback（= token 交換 `redirect_uri`）：`{FRONTEND_URL}/survey-api/admin-auth/line-callback`（**經 Worker proxy 去前綴 → 後端 `/admin-auth/line-callback`**）
+- 範例 dev：`https://kjcs-dev.pages.dev/survey-api/admin-auth/line-callback`；prod：`https://kj-champion-system.pages.dev/survey-api/admin-auth/line-callback`
+- 成功返回：`{FRONTEND_URL}/admin#token=<jwt>`；失敗：`{FRONTEND_URL}/admin?authError=<code>`
+
+### state（D-F + H-2 審核：白名單，防 open redirect）
+- **state payload schema 僅 `{ nonce, iat, exp }`**（**不含任何使用者可控 return URL / origin**）。成功/失敗目的地由後端 `FRONTEND_URL` 固定組出 `/admin`，state 不參與決定 redirect 目標。
+- 產生：`state = base64url(payload) + '.' + HMAC-SHA256(payload, SESSION_SECRET)`。
+- nonce 存 process memory `Map<nonce,{exp}>`（D-I），10 分 TTL，定時清理。
+- callback 驗：簽章正確 + 未過期 + **nonce 存在且原子 consume（驗證前刪除，重放第二次即失敗）**；任一失敗導 `?authError=`，不洩細節。
+
+### 驗簽 + JWT + middleware
+1. callback 以 code 換 id_token（`redirect_uri` = D-H 登記值）→ LINE `oauth2/v2.1/verify` 驗簽。
+2. `sub` → `SELECT role FROM members WHERE line_id=$1` → `role ∈ {管理者,負責人,開發者}`。
+3. 通過 → 自簽 JWT（exp 4h，payload `lineId`，不放 role）→ `/admin#token=`。
+4. 前端讀 fragment → 記憶體存 → 清 fragment → 帶 `Authorization: Bearer`。
+5. `requireAdminSession`：驗 JWT 簽章+exp → 取 lineId → **重查 DB role**（D-G）→ 掛 req.admin；401/403。廢棄 `requireAdminRole.js`。
 
 ---
 
-## Phase 2（本次不做，僅資料結構預留）
+## 四、前台（`/f/:token`，保留骨架 + 硬化）
 
-截圖上傳審核（`upload` 型態 render、Cloudflare R2、`submissions.review_status` 流程、LINE 推播）。本次只確保欄位/狀態存在，UI 不做。
+### 送出驗證（H-2 審核，見六節 schema）
+`validateAnswers(form, answers)` 純函式：object、required 齊全、key 白名單、`yesno∈{'yes','no'}`、static select∈`options.values`、text≤500。失敗 → **400 `{ error:'validation_failed', field, reason }`**，不寫 DB。
+
+### transaction（H-3 審核，client 邊界）
+「查 form → 建 pending members → 寫 submission」用**單一 client**：`pool.connect()` 取 client → `BEGIN` → 全程同一 client → error 一律 `ROLLBACK`（保留原 error 主體）→ `finally client.release()`。**`getPublishedFormByToken`/`listMembers` 等 helper 在 transaction 內須接受傳入 client 參數，不得回頭用全域 pool**（避免假 transaction）。
+
+### 濫用防護（D-E + D-J）
+`express.json({ limit:'32kb' })`；`express-rate-limit`（Claude 加套件）依 D-J 政策掛 `/forms/:token/submit`；`trust proxy` 設定。同名重複送出**並存**（Table 1 多筆、匯出全列；attendance 只判「至少一筆」）；管理者刪除 submission 本版不做（已知限制）。
+
+### members（D-D）
+`GET /forms/:token/members`（綁 token）：無效/非 published→404；只回 `status='confirmed'`；**僅 `name`+`star_rank`**。舊無 token 全欄 `/members` + `listMembers()` **重建**。
+
+### 其餘
+`SurveyFill.jsx` 重驗保留；token 無效/非 published/不存在→統一友善錯誤。
 
 ---
 
-## 已知限制（沿用手冊）
+## 五、後台（`/admin`，全部經 `requireAdminSession`）
 
-1. `survey_members` 與主系統 `members` 過渡期不同步（不影響安全，後台鑰匙全靠主系統 `role` 比對）。
-2. 40 人種子名單需人工核對罕用字。
-3. 單條件篩選，不疊加。
-4. 未填名冊採全名單比對，不可指定部分應填對象。
-5. 推薦人為字串比對，未正規化關聯。
+側邊欄列 forms 切換；Table 1 全展開 ✅/❎ + 篩選（姓名/課程/星等按鈕，推薦人欄不變，單條件互斥，同鈕取消）；
+未填名冊（confirmed 母數、recommender 分組 + 進度條）；建立器見下。
+
+### 建立器 form 驗證（H-4 審核 + H-1 覆核：精確數值）
+- `title`：非空、≤ 200 字。
+- `fields`：陣列、**≤ 50 個**。
+- field `key`：regex `^[a-z][a-z0-9_]*$`、≤ 40 字、**同表單內唯一**。
+- field `label`：非空、≤ 100 字。
+- `type ∈ {text, searchable_select, yesno}`（`upload` Phase 2、**不可發布**）。
+- static `searchable_select` `options.values`：陣列、≤ 100 項、單項 ≤ 100 字、**去重、不允許空字串**。
+- `patchForm`：空 object → 400（無可改）；未知欄位/`null` → 400 `{error:'invalid_form', field, reason}`；找不到 id → 404；**published 表單不可 patch → 409**。
+- `publishForm`：找不到 id → 404；**空 fields 不可 publish → 400**；已 published 再 publish → 不重產 token、回現狀。
+- 驗證失敗統一 body：`{ error, field?, reason }`。
+
+### 匯出（M-2 審核）
+CSV：依 fields 欄序、逸出逗號/引號/換行、**公式字首 `= + - @` 前置 `'` 中和**；xlsx `exceljs`。不做 Google Sheet。
 
 ---
 
-## 待使用者提供 / 確認（執行前必做）
+## 六、欄位 / answer schema（唯一定義）
 
-1. **Zeabur 新服務**（不需新專案、不需新 DB，已修正）：`kj-champion-dev` 專案內新增 `kj-survey-server` 服務（dev）、`kj-champion` 專案內新增 `kj-survey-server` 服務（prod），指向本 repo 的 `kj-survey-server/` 目錄部署，並設定 Zeabur 內網連線同一個 `postgresql-dev` / `postgresql`。
-2. **確認沿用主系統既有 LINE Login channel**（本 spec 預設方案）——若要獨立 channel 請另行提供 Channel ID/Secret。
-3. ~~spec.md 第 1～4 節技術決策~~ 已由使用者確認直接開始（2026-07-08）。
+| type | 必要屬性 | answer 合法型態 |
+|---|---|---|
+| `text` | key,label | string ≤ 500 |
+| `yesno` | key,label | `'yes'`\|`'no'` |
+| `searchable_select` | key,label,options | string；static：∈`options.values`；member-sourced：`options.source='survey_members'` |
+| `upload` | — | — Phase 2 預留，不 render、不可發布 |
+
+- **legacy `required` 相容**：缺 `required` → 視為 `true`（同現有 `SurveyFill` 全必填）。建立器可編輯 `required` 存入 fields JSON。
+- Phase 1 固定表單 8 欄沿用，視為全 required。
+
+---
+
+## 七、既有 code 去留
+
+`config/db.js`/`server.js`/`health.js` 保留（重驗，補共用 async error middleware，M-3 審核）；`formService.js` 保留+擴充；
+`routes/members.js`+`listMembers()` **重建**（D-D）；migration+三庫保留（不動 schema）；`SurveyFill.jsx`+`surveyApi.js`(前台) 保留(重驗)；
+`adminAuth.js(/me)`/`requireAdminRole.js`/`adminAuthService.js` 重建（真驗簽+JWT+`requireAdminSession`）；`SurveyAdmin.jsx`(登入) 重建。
+
+> M-4 覆核：靜態掃描仍見 v1/v2 舊模式（header 認證、無 token members、舊 env）**屬預期**——它們已列重建/更新 task；
+> 真正 gate 是對應 task 完成後的 jest + diff review，不因掃到舊 code 判 spec 未落實。
+
+---
+
+## 八、Codex 委派 + 執行順序（覆核 B-4 重排 + H-4 拆包）
+
+分工依 `AGENTS.md`：Codex 做機械性後端純函式 + jest；**認證/UI/部署/DB/加套件一律 Claude 或使用者**。
+
+### 兩道 gate（M-4 審核）
+- **實作 gate**：spec v4 各決策 + deps/env 更新完成即過 → 離線 code+jest 不被部署卡住。
+- **milestone gate**：服務 URL/env/DB/部署完成 → 才跑 dev integration。
+
+### 工作包（PUB 依覆核 H-4 拆成不重疊所有權子包）
+| 包 | 內容 | 所有權檔案 |
+|---|---|---|
+| **AUTH**（Claude） | 三節：deps/env/state/verify/JWT/middleware/前端登入 | `package.json`、`.env.example`、`routes/adminAuth.js`、`middleware/requireAdminSession.js`、`services/adminAuthService.js`、`SurveyAdmin.jsx`、`surveyApi.js`(admin 部分) |
+| **PUB-A**（Claude） | deps(`express-rate-limit`)、rate-limit 設定、`trust proxy`、body limit、async error middleware | `package.json`、`server.js` |
+| **PUB-B**（Codex） | `validateAnswers` + 送出 transaction（client 邊界）+ jest | `services/formService.js`(+helper client 參數)、其 test |
+| **PUB-C**（Codex） | members 重建（綁 token/confirmed/最小欄位）+ jest | `services/formService.js`(members 查詢)、`routes/forms.js`(members route)、其 test |
+| **PUB-D**（Claude） | 送出/ members route 接線 + 前端配合 + integration | `routes/forms.js`(送出)、`SurveyFill.jsx`、`surveyApi.js`(前台) |
+| **CX-1**（Codex） | admin 讀取 + 建 `routes/admin.js` + server.js 唯一註冊 | `routes/admin.js`(新)、`server.js`(註冊行)、`formService.js`、test |
+| **CX-2**（Codex） | `computeAttendance`(confirmed) + attendance route | `services/attendanceService.js`(新)、`routes/admin.js`(追加)、test |
+| **CX-3**（Codex） | 匯出 CSV(公式中和)/xlsx | `services/exportService.js`(新)、`routes/admin.js`(追加)、test |
+| **CX-4**（Codex） | 建立器 create(token)/patch/publish + form 驗證 | `formService.js`、`routes/admin.js`(追加)、test |
+| 前端（Claude） | 側邊欄/Table1/篩選/未填名冊/建立器 UI/匯出鈕 | `frontend/` |
+| 部署/milestone（使用者） | Section 0 + dev 實測 | — |
+
+> 共用檔紀律：`server.js` 只 PUB-A 與 CX-1 動（PUB-A 掛中介、CX-1 加 `/admin` 註冊，兩者不同區塊）；`routes/admin.js` CX-1 建、CX-2/3/4 追加不覆蓋；`formService.js` 多包動 → **序列**，每包先 pull 最新。
+
+### 唯一執行順序（機械可循，不靠解讀例外）
+AUTH → PUB-A → PUB-B → PUB-C → PUB-D → CX-1 → CX-2 → CX-3 → CX-4 → 前端 UI → milestone。
+每包 jest 綠 + 指揮官 review diff 才發下一包。
+
+---
+
+## 九、Sub-agent 平行執行配置
+
+Claude 自身 sub-agent **單線**（共用 `server.js`/`routes/admin.js`/`formService.js`/`SurveyAdmin.jsx`，且認證屬安全核心，平行只增衝突）；Codex 跨進程**序列**點狀委派，每包指揮官 gate；收尾全完成後才交收尾員（Haiku）。
+
+## 十、驗證 gate（誰跑 + M-1~3 覆核驗證項）
+
+| Gate | 執行者 | 方式 / 驗證項 |
+|---|---|---|
+| 後端 jest（每包） | Claude(AUTH/PUB-A) / Codex(純函式包) | `cd kj-survey-server && npx jest <模組>` |
+| 前端 vitest | 使用者 PC | `cd frontend && npx vitest run` |
+| milestone（dev） | 使用者/Zeabur | Survey dev 服務 + `SESSION_SECRET` 到位後手動 |
+
+milestone 須額外人眼驗證（覆核 M-1~3）：① confirmed 名單經 token 分享後仍全揭露 → 使用者確認可接受（M-1）；
+② **F5/PWA reload/crash 後登出**屬預期非 bug，須實測（M-2）；③ 同名兩筆 submission → attendance `filled` 不會變 2、進度不超過 total（列入 CX-2 jest + milestone，M-3）。
+
+> 規劃者說明：本機 win32 + CCR 沙箱 npm/node 不可用（`.claude/now.md`），jest/vitest 規劃者未在本機實跑；
+> 後端 jest 由 VPS Codex/使用者跑、前端 vitest 由使用者 PC 跑並回報綠燈。環境限制下的誠實標註。
+
+## 十一、commit 與驗收
+
+每包由指揮官 review 後 commit，訊息標 `(auth)`/`(pub-x)`/`(codex CX-N)`；不要求 Codex 自行 commit/push。
+不以 commit 數驗收；**使用者手動 commit 屬正常例外**，不得為湊數 squash/拆分。驗收看 tasks 勾選 + jest/vitest 綠 + review + dev milestone。
