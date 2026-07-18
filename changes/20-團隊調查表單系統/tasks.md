@@ -34,7 +34,7 @@
 ## Section 2：PUB（前台硬化，覆核 H-4 拆不重疊子包）
 
 ### PUB-A（Claude：infra/套件）
-- [ ] **20.11** `[Claude]` `server.js`：`express.json({limit:'32kb'})`、`app.set('trust proxy',1)`、加 `express-rate-limit`（依 D-J：key=client IP+form id、window 15m、max 10、429 JSON）掛 `/forms/:token/submit`
+- [x] **20.11** `[Claude]` `server.js`：`express.json({limit:'32kb'})`、`app.set('trust proxy',1)`、加 `express-rate-limit`（依 D-J：key=client IP+form id、window 15m、max 10、429 JSON）掛 `/forms/:token/submit`
 
 ### PUB-B（Codex：送出驗證 + transaction）
 - [ ] **20.12** `[Codex CX-PUB-B]` `validateAnswers(form,answers)` 純函式（六節 schema：required 齊全/key 白名單/yesno∈{yes,no}/static∈options.values/text≤500；缺 required 視為 true）
