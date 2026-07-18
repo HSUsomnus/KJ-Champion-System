@@ -13,6 +13,8 @@
 
 ## 最近推送
 
+規則類直推（2026-07-18）：change 29「Codex 整合 VPS：AGENTS.md 規則檔」——repo root 新建 `AGENTS.md`（Codex CLI 讀取的規則檔，完整版：doom-loop 五要點〔失敗停損／動手前讀 root cause／不假設 API／測試最小化／context 控制〕＋繼承 CLAUDE.md 既有鐵律）；deploy-release skill 直推允許清單補 `AGENTS.md`（與 `CLAUDE.md`、`CHANGELOG.md` 並列）。起因：VPS 上 Codex CLI 讀 `AGENTS.md` 不讀 `CLAUDE.md`，需獨立規則檔防其陷入 doom loop 燒 ChatGPT Plus 額度。詳見 `changes/29-Codex整合AGENTS規則/spec.md`。
+
 規則類直推（2026-07-17）：新增 `.claude/指揮官架構.md`——記錄本次 CCR 評估 session 從 code-server 可行性一路落地的「指揮官架構」（Claude Code 當指揮官、在自有 VPS 用 `codex exec` 調度 Codex CLI 當工兵，繞開手機 CCR 沙箱）。含 Mermaid 架構圖、現況（VPS／codex 已裝登入、指揮鏈實測通過）、bubblewrap 沙箱注意事項（需 `--sandbox danger-full-access`）與待辦清單。供後續最高階模型 session 討論整體架構。
 
 規則類直推（2026-07-13）：change 28「殭屍分支與 role-guard 誤攔」——`role-guard.js` doctor 段修 2 個誤攔同型 bug：`git merge\b` 誤攔唯讀 `git merge-base`/`git merge-tree`（改 `git merge(\s|$)`）、`git tag\b` 誤攔唯讀列出（改 token 比對，放行 `-l`/`--contains` 等唯讀 flag，只攔建立/刪除）；deploy-release skill「直推流程」補「直推後刪功能分支」收尾小節，堵殭屍分支源頭（change 26、27 兩次規則類直推都漏刪來源分支，導致 `m_b_role-guard補強`、`m_b_打包繼續指令`、`claude/packing-continue-skills-audit-qr0c9z` 三條殘留分支）。詳見 `changes/28-殭屍分支與role-guard誤攔/spec.md`。
