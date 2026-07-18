@@ -129,7 +129,7 @@ README 必須包含以下區塊（依分支性質調整內容）：
 - `.claude/` 內所有檔案（rules、commands、context、settings）
 - `.gitignore`
 - `scripts/` 中的工具腳本（非業務邏輯）
-- `CLAUDE.md`、`CHANGELOG.md`
+- `CLAUDE.md`、`CHANGELOG.md`、`AGENTS.md`
 
 **不得直推 main 的變更**（必須走功能分支 → merge 流程）：
 
