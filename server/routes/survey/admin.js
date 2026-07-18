@@ -1,0 +1,158 @@
+/**
+ * KJ Survey 後台路由（Change 20）— 全部需登入（requireAdminRole）
+ * 掛在 /api/survey/admin，隨主後端一起部署。
+ *   GET  /api/survey/admin/me   確認目前 LINE ID 是否有後台權限（回傳身分）
+ * （Section 4–7 的儀表板 / 明細 / 匯出 / 建立器端點於後續 Phase 加入）
+ */
+
+const express = require('express');
+const router = express.Router();
+const { requireAdminRole } = require('./requireAdminRole');
+const adminFormService = require('../../services/survey/adminFormService');
+const exportService = require('../../services/survey/exportService');
+
+// 所有後台路由統一先過權限閘門
+router.use(requireAdminRole);
+
+/**
+ * GET /api/survey/admin/me — 確認目前這個 LINE ID 是否有後台權限
+ */
+router.get('/me', (req, res) => {
+  res.json({ success: true, data: req.admin });
+});
+
+/**
+ * GET /api/survey/admin/forms — 列出所有表單（側邊欄＝任務清單）
+ */
+router.get('/forms', async (req, res) => {
+  try {
+    const forms = await adminFormService.listForms();
+    res.json({ success: true, data: forms });
+  } catch (error) {
+    console.error('❌ Survey 列出任務失敗:', error);
+    res.status(500).json({ success: false, message: '讀取任務清單失敗' });
+  }
+});
+
+/**
+ * POST /api/survey/admin/forms — 建立草稿表單（發佈新任務前）
+ */
+router.post('/forms', async (req, res) => {
+  try {
+    const form = await adminFormService.createForm(req.body || {});
+    res.status(201).json({ success: true, data: form });
+  } catch (error) {
+    if (error.code === 'VALIDATION') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    console.error('❌ Survey 建立表單失敗:', error);
+    res.status(500).json({ success: false, message: '建立任務失敗' });
+  }
+});
+
+/**
+ * PATCH /api/survey/admin/forms/:id — 編輯欄位 / 標題
+ */
+router.patch('/forms/:id', async (req, res) => {
+  try {
+    const form = await adminFormService.updateForm(req.params.id, req.body || {});
+    res.json({ success: true, data: form });
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    if (error.code === 'VALIDATION') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    console.error('❌ Survey 編輯表單失敗:', error);
+    res.status(500).json({ success: false, message: '編輯任務失敗' });
+  }
+});
+
+/**
+ * POST /api/survey/admin/forms/:id/publish — 發佈（draft→published）
+ */
+router.post('/forms/:id/publish', async (req, res) => {
+  try {
+    const form = await adminFormService.publishForm(req.params.id);
+    res.json({ success: true, data: form });
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey 發佈表單失敗:', error);
+    res.status(500).json({ success: false, message: '發佈任務失敗' });
+  }
+});
+
+/**
+ * GET /api/survey/admin/forms/:id/attendance — 完成狀況（首屏儀表板）
+ */
+router.get('/forms/:id/attendance', async (req, res) => {
+  try {
+    const attendance = await adminFormService.computeAttendance(req.params.id);
+    res.json({ success: true, data: attendance });
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey 完成狀況計算失敗:', error);
+    res.status(500).json({ success: false, message: '讀取完成狀況失敗' });
+  }
+});
+
+/**
+ * GET /api/survey/admin/forms/:id/submissions — 該任務逐筆明細（含欄位定義）
+ */
+router.get('/forms/:id/submissions', async (req, res) => {
+  try {
+    const data = await adminFormService.listSubmissions(req.params.id);
+    res.json({ success: true, data });
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey 明細讀取失敗:', error);
+    res.status(500).json({ success: false, message: '讀取明細失敗' });
+  }
+});
+
+/**
+ * GET /api/survey/admin/forms/:id/export.csv — 後端直出 CSV
+ */
+router.get('/forms/:id/export.csv', async (req, res) => {
+  try {
+    const data = await adminFormService.listSubmissions(req.params.id);
+    const csv = exportService.buildCsv(data);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${exportService.safeFileName(data.form.title, 'csv')}"`);
+    res.send(csv);
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey CSV 匯出失敗:', error);
+    res.status(500).json({ success: false, message: '匯出失敗' });
+  }
+});
+
+/**
+ * GET /api/survey/admin/forms/:id/export.xlsx — 後端用 exceljs 直出
+ */
+router.get('/forms/:id/export.xlsx', async (req, res) => {
+  try {
+    const data = await adminFormService.listSubmissions(req.params.id);
+    const buffer = await exportService.buildXlsx(data);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${exportService.safeFileName(data.form.title, 'xlsx')}"`);
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    if (error.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此任務' });
+    }
+    console.error('❌ Survey Excel 匯出失敗:', error);
+    res.status(500).json({ success: false, message: '匯出失敗' });
+  }
+});
+
+module.exports = router;

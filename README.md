@@ -65,6 +65,42 @@ kj-champion-dev 專案（dev 後端）
 | **桌機版面置中**（v2.9.0） | 桌機橫式螢幕以手機直式欄框居中；欄寬依視窗高度從標準比例反推（~430px）；手機直接全寬零回歸 | 所有人 |
 | **主頁快捷資訊**（v2.10.0） | 歡迎卡整合財力金額（空值顯示「尚未填寫」）與「上傳財力」按鈕；系統連結區三個圖示方塊（LINE 事業部小幫手、康九冠軍 google 日曆、安裝到手機/PC）；PWA 安裝依狀態彈出 dialog | 所有人 |
 | PWA | 可安裝至手機桌面（Chrome / iOS Safari）；安裝按鈕依狀態提示（已安裝 / 不支援瀏覽器） | 所有人 |
+| **團隊調查表單系統**（KJ Survey，Change 20） | 副總／管理者發佈調查表單＝發佈任務，登入後台即時追蹤「誰完成／誰沒完成」。夥伴端免登入零打字、管理者端手機優先儀表板。詳見下方專章 | 夥伴端所有人 / 後台限管理者·負責人·開發者 |
+
+---
+
+## 團隊調查表單系統（KJ Survey，Change 20）
+
+主系統對部分成員過於龐大，本子系統是**折中方案**：一套極簡調查表單工具，讓副總（或指定管理者）發佈任務並追蹤團隊完成狀況，不強迫任何人學主系統。
+
+**核心哲學——兩端不對稱：**
+
+- **夥伴端**（`/f/:token`）：免登入、幾乎零打字，依表單定義動態渲染（可搜尋下拉 / 是非大按鈕 / 文字），手機體驗優先。
+- **管理者端**（`/admin`）：手機優先儀表板，打開即見完成進度。側邊欄＝任務清單、首屏＝按推薦人分組的完成狀況（整體完成率 hero + 各組進度條 + ✅/❎），另有明細檢視（單條件互斥篩選：姓名／星等／課程欄）、CSV·Excel 匯出、表單建立器（發佈新任務 + 唯讀預覽 + 產生分享連結）。
+
+**架構要點（策略修訂：後端合併）：**
+
+| 面向 | 決策 |
+|---|---|
+| 後端 | 併入主系統 `server/`，路由 `server/routes/survey/*`、service `server/services/survey/*`，API 前綴 `/api/survey/*`（隨主後端一起部署，`_worker.js` 無需新增代理） |
+| 前端 | 沿用既有 `frontend/`，頁面 `frontend/src/pages/survey/*`，`/f/:token` 與 `/admin` 為與 `/login` 同層的獨立 route（不經 `ProtectedRoute`/`AuthContext`） |
+| 資料庫 | 沿用既有 PostgreSQL，三張表 `survey_members` / `survey_forms` / `survey_submissions`（`survey_` 前綴避免撞名） |
+| 後台認證 | 沿用主系統 LINE Login，後端查同一個 DB 的 `members.role ∈ {管理者, 負責人, 開發者}` 才放行；session 不落地（關頁重登） |
+| 圖片上傳審核 | Phase 2 預留（`survey_submissions.review_status` / `reviewer_note` 欄位已存在），本次固定表單不含 |
+
+**API 一覽（`/api/survey/*`）：**
+
+| 端點 | 說明 | 登入 |
+|---|---|---|
+| `GET /forms/:token` | 前台查已發佈表單（查無/非 published 一律友善 404） | 免 |
+| `GET /members` | 名單（姓名/推薦人下拉用） | 免 |
+| `POST /forms/:token/submit` | 送出填寫（新姓名寫入 `survey_members` pending） | 免 |
+| `GET /admin/me` | 確認後台權限 | 需 |
+| `GET /admin/forms` | 任務清單 + 各任務筆數 | 需 |
+| `GET /admin/forms/:id/attendance` | 完成狀況（分組 + 進度 + 完成率） | 需 |
+| `GET /admin/forms/:id/submissions` | 逐筆明細 + 欄位定義 | 需 |
+| `GET /admin/forms/:id/export.csv` · `export.xlsx` | 匯出（下載連結用 `?lineUserId=` 帶入身分） | 需 |
+| `POST /admin/forms` · `PATCH /admin/forms/:id` · `POST /admin/forms/:id/publish` | 建立器：建草稿 / 編輯 / 發佈 | 需 |
 
 ---
 
@@ -95,7 +131,7 @@ kj-champion-dev 專案（dev 後端）
 npm install
 npm run dev
 # 後端啟動於 http://localhost:8080
-npm test            # Jest 後端單元測試（28 個 test）
+npm test            # Jest 後端單元測試（含 KJ Survey 子系統：npx jest server/*/survey 共 65 test）
 npm run diagnose    # Google Auth 6 步驟 CLI 診斷
 ```
 
@@ -142,7 +178,7 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   ├── src/
 │   │   ├── main.jsx             # pickColWidth() 設定欄寬變數；預攔截 beforeinstallprompt 存 window.__pwaInstallPrompt
 │   │   ├── App.jsx              # React Router + ProtectedRoute + Layout 三層巢狀
-│   │   ├── pages/               # 15 個活躍頁面
+│   │   ├── pages/               # 活躍頁面（含 survey/：SurveyFill 前台 · SurveyAdmin 後台 + components 儀表板/明細/建立器）
 │   │   ├── components/
 │   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（漢堡按鈕對齊欄左緣）
 │   │   │   ├── Layout.jsx       # Outlet 置中欄包裹器（width:100% + maxWidth:--col-max-w）
@@ -161,7 +197,10 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   │   ├── line.js              # LINE BOT + 每日推播 API
 │   │   ├── financial.js         # 財務（限 manager）
 │   │   ├── debug.js             # GET /api/debug/health 自檢
-│   │   └── admin.js             # Admin API（Bearer token，v2.8.0）
+│   │   ├── admin.js             # Admin API（Bearer token，v2.8.0）
+│   │   └── survey/              # KJ Survey（Change 20）：public.js 前台 / admin.js 後台 / requireAdminRole.js 閘門
+│   ├── migrations/
+│   │   └── 001_init_survey_tables.sql  # survey 三表 + 40 人種子 + Phase 1 固定表單（Change 20）
 │   ├── services/
 │   │   ├── calendarService.js
 │   │   ├── calendarSyncService.js
@@ -169,7 +208,8 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 │   │   ├── memberDbService.js
 │   │   ├── lineService.js
 │   │   ├── agendaService.js
-│   │   └── backupSyncService.js # prod → backup 全量覆蓋（v2.7.0）
+│   │   ├── backupSyncService.js # prod → backup 全量覆蓋（v2.7.0）
+│   │   └── survey/              # KJ Survey service：formService / adminFormService / adminAuthService / exportService（Change 20）
 │   ├── scheduler/
 │   │   ├── calendarSync.js      # 每分鐘同步（v2.4.0）
 │   │   ├── dailyAgenda.js       # 每日推播
