@@ -8,10 +8,18 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+try {
+  require('./config/env');
+} catch (err) {
+  console.error('❌ 啟動失敗:', err.message);
+  process.exit(1);
+}
+
 const healthRoutes = require('./routes/health');
 const formsRoutes = require('./routes/forms');
 const membersRoutes = require('./routes/members');
 const adminAuthRoutes = require('./routes/adminAuth');
+const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -30,6 +38,8 @@ app.use('/health', healthRoutes);
 app.use('/forms', formsRoutes);
 app.use('/members', membersRoutes);
 app.use('/admin-auth', adminAuthRoutes);
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`✅ kj-survey-server 已啟動，PORT=${PORT}`);

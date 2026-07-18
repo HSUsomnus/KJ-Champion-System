@@ -16,18 +16,18 @@
 ## Section 1：AUTH（Claude 親自，spec 三節）
 
 ### 前置依賴（H-1 審核）
-- [ ] **20.1** `[Claude]` 重驗 `config/db.js`/`server.js`/`health.js` + 新增共用 async error middleware（M-3）；既有 route 包 asyncHandler，補 DB failure 路徑 jest
-- [ ] **20.2** `[Claude]` `package.json`+lockfile 加 `jsonwebtoken`；`.env.example` 補 LINE_CHANNEL_ID/SECRET/APP_URL/FRONTEND_URL/SESSION_SECRET/callback URL（移除舊 header 註解）
-- [ ] **20.3** `[Claude]` 啟動缺 `SESSION_SECRET` 等必要 secret → fail-fast；測試用獨立測試 secret
+- [x] **20.1** `[Claude]` 重驗 `config/db.js`/`server.js`/`health.js` + 新增共用 async error middleware（M-3）；既有 route 包 asyncHandler，補 DB failure 路徑 jest
+- [x] **20.2** `[Claude]` `package.json`+lockfile 加 `jsonwebtoken`；`.env.example` 補 LINE_CHANNEL_ID/SECRET/APP_URL/FRONTEND_URL/SESSION_SECRET/callback URL（移除舊 header 註解）
+- [x] **20.3** `[Claude]` 啟動缺 `SESSION_SECRET` 等必要 secret → fail-fast；測試用獨立測試 secret
 
 ### OAuth + state + JWT（spec 三節，全數值已定死）
-- [ ] **20.4** `[Claude]` `GET /admin-auth/line-login`：state payload `{nonce,iat,exp}` + HMAC 簽章；nonce 進 process memory Map(10m TTL)；導 LINE authorize，`redirect_uri`=`{FRONTEND_URL}/survey-api/admin-auth/line-callback`（D-H）
-- [ ] **20.5** `[Claude]` `GET /admin-auth/line-callback`：驗 state（簽章/exp/**原子 consume nonce**）→ code 換 id_token（redirect_uri 同上）→ LINE `oauth2/v2.1/verify`；error/缺 code/state 失敗 → `{FRONTEND_URL}/admin?authError=`
-- [ ] **20.6** `[Claude]` 驗簽 sub → 查 members.role → 自簽 JWT（exp 4h，payload lineId，不放 role）→ `/admin#token=`
-- [ ] **20.7** `[Claude]` `middleware/requireAdminSession.js`：驗 JWT 簽章+exp → **重查 DB role**（D-G）→ req.admin；廢棄 `requireAdminRole.js`
-- [ ] **20.8** `[Claude]` jest：state 成功/缺/竄改/過期/**重放(consume 後第二次失敗)**、LINE 驗簽成敗、角色比對、JWT 簽發/驗證、middleware 放行/擋(無/過期/竄改/已撤權)、**state 不含 return URL → 無 open redirect**
-- [ ] **20.9** `[Claude]` `SurveyAdmin.jsx` 登入改造：讀 `#token`→記憶體存→清 fragment→帶 Bearer；未登入導 `{FRONTEND_URL}/survey-api/admin-auth/line-login`；`authError` 顯示
-- [ ] **20.10** `[Claude]` `surveyApi.js` admin 請求改帶 Bearer（移除 X-Line-User-Id）；vitest
+- [x] **20.4** `[Claude]` `GET /admin-auth/line-login`：state payload `{nonce,iat,exp}` + HMAC 簽章；nonce 進 process memory Map(10m TTL)；導 LINE authorize，`redirect_uri`=`{FRONTEND_URL}/survey-api/admin-auth/line-callback`（D-H）
+- [x] **20.5** `[Claude]` `GET /admin-auth/line-callback`：驗 state（簽章/exp/**原子 consume nonce**）→ code 換 id_token（redirect_uri 同上）→ LINE `oauth2/v2.1/verify`；error/缺 code/state 失敗 → `{FRONTEND_URL}/admin?authError=`
+- [x] **20.6** `[Claude]` 驗簽 sub → 查 members.role → 自簽 JWT（exp 4h，payload lineId，不放 role）→ `/admin#token=`
+- [x] **20.7** `[Claude]` `middleware/requireAdminSession.js`：驗 JWT 簽章+exp → **重查 DB role**（D-G）→ req.admin；廢棄 `requireAdminRole.js`
+- [x] **20.8** `[Claude]` jest：state 成功/缺/竄改/過期/**重放(consume 後第二次失敗)**、LINE 驗簽成敗、角色比對、JWT 簽發/驗證、middleware 放行/擋(無/過期/竄改/已撤權)、**state 不含 return URL → 無 open redirect**
+- [x] **20.9** `[Claude]` `SurveyAdmin.jsx` 登入改造：讀 `#token`→記憶體存→清 fragment→帶 Bearer；未登入導 `{FRONTEND_URL}/survey-api/admin-auth/line-login`；`authError` 顯示
+- [x] **20.10** `[Claude]` `surveyApi.js` admin 請求改帶 Bearer（移除 X-Line-User-Id）；vitest
 
 ---
 

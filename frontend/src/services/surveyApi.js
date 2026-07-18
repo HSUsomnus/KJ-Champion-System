@@ -1,18 +1,10 @@
 /**
  * KJ Survey API 服務層 — 獨立於主系統 api.js，呼叫 /survey-api/*（見 change 20 spec.md）
  */
-
-function getLineUserId() {
-  return localStorage.getItem('lineUserId')
-}
+import { getAdminToken } from './adminSession'
 
 async function request(path, options = {}) {
-  const userId = getLineUserId()
   const headers = { ...options.headers }
-
-  if (userId) {
-    headers['X-Line-User-Id'] = userId
-  }
 
   if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
@@ -31,6 +23,19 @@ async function request(path, options = {}) {
   return data
 }
 
+// [設計決策] Change 20 v4 D-A：後台改真驗簽自簽 JWT，記憶體存、Authorization: Bearer 帶入。
+// 不放 localStorage/cookie，reload 即失效（M-2 milestone 覆核：預期非 bug）。
+async function adminRequest(path, options = {}) {
+  const token = getAdminToken()
+  const headers = { ...options.headers }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  return request(path, { ...options, headers })
+}
+
 export function getFormByToken(token) {
   return request(`/forms/${token}`)
 }
@@ -46,13 +51,6 @@ export function submitForm(token, answers) {
   })
 }
 
-// ========== 後台認證 ==========
-// [設計決策] 不自己做登入流程，沿用主系統既有的 /api/auth/line-login
-// （見 pages/Login.jsx handleLineLogin），登入完成後帶著同一個 lineUserId
-// 打這支 API 確認角色。原本自建 OAuth callback + cookie session 的做法
-// 因為 LINE 導回網域跟前端網域對不上，session cookie 設錯地方，一直失敗。
-// 若要修改：確認不會重新引入「後端自己發 OAuth callback」的設計
+// ========== 後台（Section 3+ 陸續加入 forms/submissions/export 等呼叫，一律走 adminRequest 帶 Bearer） ==========
 
-export function getAdminMe() {
-  return request('/admin-auth/me')
-}
+export { adminRequest }

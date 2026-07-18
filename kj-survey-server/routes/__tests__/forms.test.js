@@ -9,16 +9,20 @@ jest.mock('../../services/formService', () => ({
 }));
 
 const formService = require('../../services/formService');
+const { errorHandler } = require('../../middleware/errorHandler');
 
 const buildApp = () => {
   const app = express();
   app.use(express.json());
   app.use('/forms', require('../forms'));
+  app.use(errorHandler);
   return app;
 };
 
 describe('GET /forms/:token', () => {
   beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => jest.spyOn(console, 'error').mockImplementation(() => {}));
+  afterEach(() => console.error.mockRestore());
 
   test('token 有效 → 200 + 表單資料', async () => {
     formService.getPublishedFormByToken.mockResolvedValue({ id: 1, title: '康九冠軍調查', fields: [] });
@@ -33,10 +37,19 @@ describe('GET /forms/:token', () => {
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
   });
+
+  test('DB 連線失敗 → 500，不是無回應掛起', async () => {
+    formService.getPublishedFormByToken.mockRejectedValue(new Error('connect ETIMEDOUT'));
+    const res = await request(buildApp()).get('/forms/abc123');
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+  });
 });
 
 describe('POST /forms/:token/submit', () => {
   beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => jest.spyOn(console, 'error').mockImplementation(() => {}));
+  afterEach(() => console.error.mockRestore());
 
   test('送出成功 → 200', async () => {
     formService.submitForm.mockResolvedValue({ id: 99, created_at: '2026-07-08T00:00:00Z' });
@@ -55,5 +68,15 @@ describe('POST /forms/:token/submit', () => {
       .post('/forms/bad-token/submit')
       .send({ answers: {} });
     expect(res.status).toBe(404);
+  });
+
+  test('未預期錯誤（如 DB 掛了）→ 500，不洩漏內部訊息', async () => {
+    formService.submitForm.mockRejectedValue(new Error('connect ETIMEDOUT'));
+    const res = await request(buildApp())
+      .post('/forms/abc123/submit')
+      .send({ answers: {} });
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).not.toMatch(/ETIMEDOUT/);
   });
 });
