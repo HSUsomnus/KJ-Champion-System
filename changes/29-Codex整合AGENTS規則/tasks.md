@@ -13,7 +13,7 @@
 - [x] 1.1 於 repo root 新建 `AGENTS.md`，依 spec Phase 1 大綱撰寫（繁中；doom-loop 五要點 + 繼承鐵律）
 - [x] 1.2 Gate：`test -f AGENTS.md && echo EXISTS`（EXISTS）；`grep -cE "失敗停損|連續失敗|停手" AGENTS.md`（≥1）；`grep -cE "git add -A|main 直接 commit|繁體中文" AGENTS.md`（≥1）
 - [x] 1.3 確認五要點齊全：失敗停損（連續失敗 2 次停手）/ 動手前讀 root cause / 不假設 API / 測試最小化 / context 控制
-- [ ] 1.4 commit（規則類，可與 Phase 2/3 合併為單 commit）
+- [x] 1.4 commit（規則類，可與 Phase 2/3 合併為單 commit）
 
 ## Phase 2 — deploy-release skill 直推允許清單補 AGENTS.md
 
@@ -33,10 +33,10 @@
 
 ## 驗收（全 ✅ 才收尾）
 
-- [ ] V1 範圍 A/A/A 已定案，AGENTS.md 完整版、規則類直推
-- [ ] V2 三個 Phase gate 全綠
-- [ ] V3 AGENTS.md doom-loop 五要點齊全 + 繼承鐵律內嵌
-- [ ] V4 deploy-release 允許清單已含 AGENTS.md
+- [x] V1 範圍 A/A/A 已定案，AGENTS.md 完整版、規則類直推
+- [x] V2 三個 Phase gate 全綠
+- [x] V3 AGENTS.md doom-loop 五要點齊全 + 繼承鐵律內嵌
+- [x] V4 deploy-release 允許清單已含 AGENTS.md
 - [ ] V5 change 29 進 main，本 change 實作分支已刪
-- [ ] V6 零產品程式碼異動、未建立任何 `.github/workflows`（CI/CD 非目標）
+- [x] V6 零產品程式碼異動、未建立任何 `.github/workflows`（CI/CD 非目標）
 - [ ] V7 收尾員：CHANGELOG / context 版本檔 / now.md 記錄
