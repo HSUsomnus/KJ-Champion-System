@@ -5,6 +5,7 @@ const express = require('express');
 
 jest.mock('../../services/formService', () => ({
   getPublishedFormByToken: jest.fn(),
+  listConfirmedMembers: jest.fn(),
   submitForm: jest.fn(),
 }));
 
@@ -43,6 +44,57 @@ describe('GET /forms/:token', () => {
     const res = await request(buildApp()).get('/forms/abc123');
     expect(res.status).toBe(500);
     expect(res.body.success).toBe(false);
+  });
+});
+
+describe('GET /forms/:token/members', () => {
+  beforeEach(() => jest.resetAllMocks());
+
+  test('無效 token → 404，且不查詢成員', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue(null);
+
+    const res = await request(buildApp()).get('/forms/bad-token/members');
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ success: false, message: '找不到此表單，請確認連結是否正確' });
+    expect(formService.listConfirmedMembers).not.toHaveBeenCalled();
+  });
+
+  test('有效 token → 200，只回傳 confirmed 成員', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, status: 'published' });
+    formService.listConfirmedMembers.mockResolvedValue([
+      { name: '王小明', star_rank: '一星' },
+      { name: '陳小華', star_rank: '二星' },
+    ]);
+
+    const res = await request(buildApp()).get('/forms/abc123/members');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      data: [
+        { name: '王小明', star_rank: '一星' },
+        { name: '陳小華', star_rank: '二星' },
+      ],
+    });
+  });
+
+  test('每筆資料只保留 name 與 star_rank', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, status: 'published' });
+    formService.listConfirmedMembers.mockResolvedValue([
+      {
+        id: 9,
+        name: '王小明',
+        star_rank: '一星',
+        status: 'confirmed',
+        recommender_name: '陳推薦人',
+      },
+    ]);
+
+    const res = await request(buildApp()).get('/forms/abc123/members');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual([{ name: '王小明', star_rank: '一星' }]);
   });
 });
 

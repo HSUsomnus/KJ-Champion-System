@@ -22,6 +22,16 @@ const listMembers = async (executor = db) => {
   return result.rows;
 };
 
+/**
+ * 取得已確認的團隊成員，僅提供前台選單需要的公開欄位。
+ */
+const listConfirmedMembers = async (executor = db) => {
+  const result = await executor.query(
+    `SELECT name, star_rank FROM survey_members WHERE status = 'confirmed' ORDER BY name`
+  );
+  return result.rows;
+};
+
 const isPlainObject = (value) => {
   if (value === null || typeof value !== 'object') return false;
   const prototype = Object.getPrototypeOf(value);
@@ -139,6 +149,7 @@ const submitForm = async (token, answers) => {
 module.exports = {
   getPublishedFormByToken,
   listMembers,
+  listConfirmedMembers,
   validateAnswers,
   submitForm,
 };

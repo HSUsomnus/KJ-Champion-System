@@ -16,6 +16,21 @@ router.get('/:token', asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /forms/:token/members
+ * 前台選單用：僅在 token 對應已發佈表單時回傳已確認成員的公開欄位。
+ */
+router.get('/:token/members', asyncHandler(async (req, res) => {
+  const form = await formService.getPublishedFormByToken(req.params.token);
+  if (!form) {
+    return res.status(404).json({ success: false, message: '找不到此表單，請確認連結是否正確' });
+  }
+
+  const members = await formService.listConfirmedMembers();
+  const data = members.map(({ name, star_rank }) => ({ name, star_rank }));
+  res.json({ success: true, data });
+}));
+
+/**
  * POST /forms/:token/submit
  */
 router.post('/:token/submit', asyncHandler(async (req, res) => {

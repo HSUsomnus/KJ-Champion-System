@@ -46,6 +46,24 @@ describe('formService helpers', () => {
     expect(db.query).toHaveBeenCalledWith(expect.stringContaining('FROM survey_members'));
   });
 
+  test('listConfirmedMembers 未傳 executor 時使用 db.query 並只查 confirmed', async () => {
+    const members = [{ name: '王小明', star_rank: '一星' }];
+    db.query.mockResolvedValue({ rows: members });
+
+    await expect(formService.listConfirmedMembers()).resolves.toEqual(members);
+    expect(db.query).toHaveBeenCalledWith(expect.stringContaining("WHERE status = 'confirmed'"));
+  });
+
+  test('listConfirmedMembers 可改用傳入的 client', async () => {
+    const client = createClient();
+    const members = [{ name: '王小明', star_rank: '一星' }];
+    client.query.mockResolvedValue({ rows: members });
+
+    await expect(formService.listConfirmedMembers(client)).resolves.toEqual(members);
+    expect(client.query).toHaveBeenCalledWith(expect.stringContaining("WHERE status = 'confirmed'"));
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
   test('helpers 可改用傳入的 client', async () => {
     const client = createClient();
     client.query

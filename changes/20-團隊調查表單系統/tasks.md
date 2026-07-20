@@ -42,8 +42,8 @@
 - [x] **20.14** `[Codex CX-PUB-B]` jest：各驗證 pass/fail、transaction rollback（pending 寫入後 submission 失敗 → 無孤兒 pending）、helper 用傳入 client
 
 ### PUB-C（Codex：members 重建）
-- [ ] **20.15** `[Codex CX-PUB-C]` `GET /forms/:token/members`：綁 published token（無效/非 published→404）、只回 confirmed、僅 name+star_rank
-- [ ] **20.16** `[Codex CX-PUB-C]` jest：無 token/無效 token→404、只回 confirmed、欄位白名單（無 id/status/recommender/pending）
+- [x] **20.15** `[Codex CX-PUB-C]` `GET /forms/:token/members`：綁 published token（無效/非 published→404）、只回 confirmed、僅 name+star_rank
+- [x] **20.16** `[Codex CX-PUB-C]` jest：無 token/無效 token→404、只回 confirmed、欄位白名單（無 id/status/recommender/pending）
 
 ### PUB-D（Claude：接線 + 前端）
 - [ ] **20.17** `[Claude]` `routes/forms.js` 送出路由接 validateAnswers+transaction（失敗 400 `{error,field,reason}`）；`SurveyFill.jsx`/`surveyApi.js` 改帶 token 取名單
