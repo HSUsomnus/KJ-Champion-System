@@ -37,9 +37,9 @@
 - [x] **20.11** `[Claude]` `server.js`：`express.json({limit:'32kb'})`、`app.set('trust proxy',1)`、加 `express-rate-limit`（依 D-J：key=client IP+form id、window 15m、max 10、429 JSON）掛 `/forms/:token/submit`
 
 ### PUB-B（Codex：送出驗證 + transaction）
-- [ ] **20.12** `[Codex CX-PUB-B]` `validateAnswers(form,answers)` 純函式（六節 schema：required 齊全/key 白名單/yesno∈{yes,no}/static∈options.values/text≤500；缺 required 視為 true）
-- [ ] **20.13** `[Codex CX-PUB-B]` 送出 transaction：`pool.connect()` client → BEGIN → 全程同 client → error ROLLBACK(保留原 error) → finally release；`getPublishedFormByToken`/`listMembers` helper 接受傳入 client（不回頭用 pool）
-- [ ] **20.14** `[Codex CX-PUB-B]` jest：各驗證 pass/fail、transaction rollback（pending 寫入後 submission 失敗 → 無孤兒 pending）、helper 用傳入 client
+- [x] **20.12** `[Codex CX-PUB-B]` `validateAnswers(form,answers)` 純函式（六節 schema：required 齊全/key 白名單/yesno∈{yes,no}/static∈options.values/text≤500；缺 required 視為 true）
+- [x] **20.13** `[Codex CX-PUB-B]` 送出 transaction：`pool.connect()` client → BEGIN → 全程同 client → error ROLLBACK(保留原 error) → finally release；`getPublishedFormByToken`/`listMembers` helper 接受傳入 client（不回頭用 pool）
+- [x] **20.14** `[Codex CX-PUB-B]` jest：各驗證 pass/fail、transaction rollback（pending 寫入後 submission 失敗 → 無孤兒 pending）、helper 用傳入 client
 
 ### PUB-C（Codex：members 重建）
 - [ ] **20.15** `[Codex CX-PUB-C]` `GET /forms/:token/members`：綁 published token（無效/非 published→404）、只回 confirmed、僅 name+star_rank
