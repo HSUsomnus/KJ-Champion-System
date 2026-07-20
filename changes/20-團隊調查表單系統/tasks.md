@@ -4,8 +4,9 @@
 > 部署/milestone 外部依賴移到最後且標非阻塞。標註 `[Codex CX-N]`/`[Claude]`/`[使用者]`。
 > 數值/HOW 全在 `spec.md` v4 寫死，實作者不需自補。分支 `m_b_調查表單`。
 >
-> **「下一個未完成 task」= 20.2（AUTH 前置依賴）**。Section U（使用者外部依賴）非阻塞離線實作，
-> 與程式碼並行進行，只在 dev milestone 前完成即可。
+> Section 1 AUTH（20.1-20.10）與 Section 2 PUB（20.11-20.17）已完成。
+> **「下一個未完成 task」= 20.18（Section 3 CX-1，後台 Table 1 讀取）**。Section U（使用者外部依賴）
+> 非阻塞離線實作，與程式碼並行進行，只在 dev milestone 前完成即可。
 
 ## Section A：實作 gate（規格已定案）
 
@@ -46,7 +47,7 @@
 - [x] **20.16** `[Codex CX-PUB-C]` jest：無 token/無效 token→404、只回 confirmed、欄位白名單（無 id/status/recommender/pending）
 
 ### PUB-D（Claude：接線 + 前端）
-- [ ] **20.17** `[Claude]` `routes/forms.js` 送出路由接 validateAnswers+transaction（失敗 400 `{error,field,reason}`）；`SurveyFill.jsx`/`surveyApi.js` 改帶 token 取名單
+- [x] **20.17** `[Claude]` `routes/forms.js` 送出路由接 validateAnswers+transaction（失敗 400 `{error,field,reason}`）；`SurveyFill.jsx`/`surveyApi.js` 改帶 token 取名單
 
 ---
 

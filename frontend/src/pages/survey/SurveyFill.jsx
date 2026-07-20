@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getFormByToken, getMembers, submitForm } from '../../services/surveyApi'
+import { getFormByToken, getMembersByToken, submitForm } from '../../services/surveyApi'
 
 const OTHER_VALUE = '__other__'
 
@@ -182,7 +182,7 @@ export default function SurveyFill() {
   const fieldRefs = useRef({})
 
   useEffect(() => {
-    Promise.all([getFormByToken(token), getMembers()])
+    Promise.all([getFormByToken(token), getMembersByToken(token)])
       .then(([formRes, membersRes]) => {
         setForm(formRes.data)
         setMembers(membersRes.data)

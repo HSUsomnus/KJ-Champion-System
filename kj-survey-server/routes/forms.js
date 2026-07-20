@@ -32,10 +32,26 @@ router.get('/:token/members', asyncHandler(async (req, res) => {
 
 /**
  * POST /forms/:token/submit
+ * 送出前先驗證（H-2）：失敗回 400，不寫 DB。
  */
 router.post('/:token/submit', asyncHandler(async (req, res) => {
+  const form = await formService.getPublishedFormByToken(req.params.token);
+  if (!form) {
+    return res.status(404).json({ success: false, message: '找不到此表單，請確認連結是否正確' });
+  }
+
+  const answers = req.body.answers || {};
+  const validation = formService.validateAnswers(form, answers);
+  if (!validation.valid) {
+    return res.status(400).json({
+      error: 'validation_failed',
+      field: validation.field,
+      reason: validation.reason,
+    });
+  }
+
   try {
-    const submission = await formService.submitForm(req.params.token, req.body.answers || {});
+    const submission = await formService.submitForm(req.params.token, answers);
     res.json({ success: true, data: submission });
   } catch (error) {
     if (error.code === 'FORM_NOT_FOUND') {

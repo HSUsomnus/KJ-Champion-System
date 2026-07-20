@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getFormByToken, getMembers, submitForm, adminRequest } from '../surveyApi'
+import { getFormByToken, getMembersByToken, submitForm, adminRequest } from '../surveyApi'
 import { clearAdminToken, setAdminToken } from '../adminSession'
 
 beforeEach(() => {
@@ -27,12 +27,12 @@ describe('request（公開端點）', () => {
     expect(options.headers.Authorization).toBeUndefined()
   })
 
-  it('getMembers 打 /survey-api/members', async () => {
+  it('getMembersByToken 打 /survey-api/forms/:token/members（D-D 綁 token，不再打無 token 的 /members）', async () => {
     global.fetch.mockResolvedValue(mockJsonResponse({ success: true, data: [] }))
 
-    await getMembers()
+    await getMembersByToken('abc123')
 
-    expect(global.fetch).toHaveBeenCalledWith('/survey-api/members', expect.any(Object))
+    expect(global.fetch).toHaveBeenCalledWith('/survey-api/forms/abc123/members', expect.any(Object))
   })
 
   it('回應 !ok → throw，帶 status/data', async () => {

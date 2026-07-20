@@ -4,8 +4,10 @@ const request = require('supertest');
 
 jest.mock('../services/formService', () => ({
   getPublishedFormByToken: jest.fn(),
+  validateAnswers: jest.fn(),
   submitForm: jest.fn(),
   listMembers: jest.fn(),
+  listConfirmedMembers: jest.fn(),
 }));
 
 describe('server.js — PUB-A 濫用防護（20.11）', () => {
@@ -39,6 +41,7 @@ describe('server.js — PUB-A 濫用防護（20.11）', () => {
 
   test('合法 token 送出超過 15 分 10 次 → 第 11 次 429，不再進 handler', async () => {
     formService.getPublishedFormByToken.mockResolvedValue({ id: 1, title: 't', fields: [] });
+    formService.validateAnswers.mockReturnValue({ valid: true });
     formService.submitForm.mockResolvedValue({ id: 1, created_at: 'now' });
 
     let lastRes;

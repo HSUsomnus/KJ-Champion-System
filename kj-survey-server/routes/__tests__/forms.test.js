@@ -6,6 +6,7 @@ const express = require('express');
 jest.mock('../../services/formService', () => ({
   getPublishedFormByToken: jest.fn(),
   listConfirmedMembers: jest.fn(),
+  validateAnswers: jest.fn(),
   submitForm: jest.fn(),
 }));
 
@@ -103,30 +104,68 @@ describe('POST /forms/:token/submit', () => {
   beforeEach(() => jest.spyOn(console, 'error').mockImplementation(() => {}));
   afterEach(() => console.error.mockRestore());
 
-  test('送出成功 → 200', async () => {
-    formService.submitForm.mockResolvedValue({ id: 99, created_at: '2026-07-08T00:00:00Z' });
-    const res = await request(buildApp())
-      .post('/forms/abc123/submit')
-      .send({ answers: { name: '徐毓紘' } });
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-  });
+  test('token 無效（查無已發佈表單）→ 404，不驗證也不送出', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue(null);
 
-  test('表單不存在 → 404', async () => {
-    const err = new Error('找不到');
-    err.code = 'FORM_NOT_FOUND';
-    formService.submitForm.mockRejectedValue(err);
     const res = await request(buildApp())
       .post('/forms/bad-token/submit')
       .send({ answers: {} });
+
+    expect(res.status).toBe(404);
+    expect(formService.validateAnswers).not.toHaveBeenCalled();
+    expect(formService.submitForm).not.toHaveBeenCalled();
+  });
+
+  test('驗證失敗 → 400 { error, field, reason }，不呼叫 submitForm（H-2：失敗不寫 DB）', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, fields: [] });
+    formService.validateAnswers.mockReturnValue({ valid: false, field: 'name', reason: 'required' });
+
+    const res = await request(buildApp())
+      .post('/forms/abc123/submit')
+      .send({ answers: {} });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'validation_failed', field: 'name', reason: 'required' });
+    expect(formService.submitForm).not.toHaveBeenCalled();
+  });
+
+  test('驗證通過 → 送出成功 200', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, fields: [] });
+    formService.validateAnswers.mockReturnValue({ valid: true });
+    formService.submitForm.mockResolvedValue({ id: 99, created_at: '2026-07-08T00:00:00Z' });
+
+    const res = await request(buildApp())
+      .post('/forms/abc123/submit')
+      .send({ answers: { name: '徐毓紘' } });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(formService.submitForm).toHaveBeenCalledWith('abc123', { name: '徐毓紘' });
+  });
+
+  test('驗證通過但 submitForm 內部才發現表單不存在（TOCTOU）→ 404', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, fields: [] });
+    formService.validateAnswers.mockReturnValue({ valid: true });
+    const err = new Error('找不到');
+    err.code = 'FORM_NOT_FOUND';
+    formService.submitForm.mockRejectedValue(err);
+
+    const res = await request(buildApp())
+      .post('/forms/abc123/submit')
+      .send({ answers: {} });
+
     expect(res.status).toBe(404);
   });
 
   test('未預期錯誤（如 DB 掛了）→ 500，不洩漏內部訊息', async () => {
+    formService.getPublishedFormByToken.mockResolvedValue({ id: 1, fields: [] });
+    formService.validateAnswers.mockReturnValue({ valid: true });
     formService.submitForm.mockRejectedValue(new Error('connect ETIMEDOUT'));
+
     const res = await request(buildApp())
       .post('/forms/abc123/submit')
       .send({ answers: {} });
+
     expect(res.status).toBe(500);
     expect(res.body.success).toBe(false);
     expect(res.body.message).not.toMatch(/ETIMEDOUT/);

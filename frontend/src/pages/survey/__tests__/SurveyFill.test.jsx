@@ -19,12 +19,12 @@ const FORM = {
 const MEMBERS = [{ id: 1, name: '徐毓紘', star_rank: '橙', recommender_name: '李冠陞' }]
 
 const mockGetFormByToken = vi.fn()
-const mockGetMembers = vi.fn()
+const mockGetMembersByToken = vi.fn()
 const mockSubmitForm = vi.fn()
 
 vi.mock('../../../services/surveyApi', () => ({
   getFormByToken: (...args) => mockGetFormByToken(...args),
-  getMembers: (...args) => mockGetMembers(...args),
+  getMembersByToken: (...args) => mockGetMembersByToken(...args),
   submitForm: (...args) => mockSubmitForm(...args),
 }))
 
@@ -36,7 +36,7 @@ beforeEach(() => {
 describe('SurveyFill', () => {
   it('載入後依 fields render 正確欄位數（+ 標題）', async () => {
     mockGetFormByToken.mockResolvedValue({ success: true, data: FORM })
-    mockGetMembers.mockResolvedValue({ success: true, data: MEMBERS })
+    mockGetMembersByToken.mockResolvedValue({ success: true, data: MEMBERS })
 
     render(<SurveyFill />)
 
@@ -44,11 +44,12 @@ describe('SurveyFill', () => {
     expect(screen.getByText('姓名')).toBeInTheDocument()
     expect(screen.getByText('天驥加盟主')).toBeInTheDocument()
     expect(screen.getByAltText('KJ Champion')).toHaveAttribute('src', '/康九_logo.png')
+    expect(mockGetMembersByToken).toHaveBeenCalledWith('abc123')
   })
 
   it('token 無效 → 顯示友善錯誤，不顯示表單', async () => {
     mockGetFormByToken.mockRejectedValue(new Error('找不到此表單'))
-    mockGetMembers.mockResolvedValue({ success: true, data: [] })
+    mockGetMembersByToken.mockResolvedValue({ success: true, data: [] })
 
     render(<SurveyFill />)
 
@@ -57,7 +58,7 @@ describe('SurveyFill', () => {
 
   it('送出時呼叫 submitForm 並帶正確 token + answers', async () => {
     mockGetFormByToken.mockResolvedValue({ success: true, data: FORM })
-    mockGetMembers.mockResolvedValue({ success: true, data: MEMBERS })
+    mockGetMembersByToken.mockResolvedValue({ success: true, data: MEMBERS })
     mockSubmitForm.mockResolvedValue({ success: true, data: { id: 1 } })
 
     render(<SurveyFill />)
@@ -75,7 +76,7 @@ describe('SurveyFill', () => {
 
   it('有欄位未填 → 擋下送出、顯示錯誤訊息，不呼叫 submitForm', async () => {
     mockGetFormByToken.mockResolvedValue({ success: true, data: FORM })
-    mockGetMembers.mockResolvedValue({ success: true, data: MEMBERS })
+    mockGetMembersByToken.mockResolvedValue({ success: true, data: MEMBERS })
 
     render(<SurveyFill />)
     await screen.findByText('康九冠軍調查')
@@ -90,7 +91,7 @@ describe('SurveyFill', () => {
 
   it('補填欄位後，該欄位的錯誤訊息會消失', async () => {
     mockGetFormByToken.mockResolvedValue({ success: true, data: FORM })
-    mockGetMembers.mockResolvedValue({ success: true, data: MEMBERS })
+    mockGetMembersByToken.mockResolvedValue({ success: true, data: MEMBERS })
     mockSubmitForm.mockResolvedValue({ success: true, data: { id: 1 } })
 
     render(<SurveyFill />)

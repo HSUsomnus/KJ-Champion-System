@@ -40,8 +40,10 @@ export function getFormByToken(token) {
   return request(`/forms/${token}`)
 }
 
-export function getMembers() {
-  return request(`/members`)
+// [設計決策] Change 20 v4 D-D：舊版 /members 不需 token 就能撈全隊名單，是隱私漏洞。
+// 前台改綁定「已發佈表單的 token」+ 只回 confirmed 狀態（新姓名/待核對名單不外洩）。
+export function getMembersByToken(token) {
+  return request(`/forms/${token}/members`)
 }
 
 export function submitForm(token, answers) {
