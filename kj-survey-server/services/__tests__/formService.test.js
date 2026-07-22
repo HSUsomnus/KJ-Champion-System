@@ -76,6 +76,52 @@ describe('formService helpers', () => {
     expect(client.query).toHaveBeenCalledTimes(2);
     expect(db.query).not.toHaveBeenCalled();
   });
+
+  test('listForms 未傳 executor 時使用 db.query', async () => {
+    const forms = [{ id: 1, title: '團隊調查' }];
+    db.query.mockResolvedValue({ rows: forms });
+
+    await expect(formService.listForms()).resolves.toEqual(forms);
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringMatching(/FROM survey_forms ORDER BY created_at DESC/)
+    );
+  });
+
+  test('listForms 可改用傳入的 client', async () => {
+    const client = createClient();
+    const forms = [{ id: 1, title: '團隊調查' }];
+    client.query.mockResolvedValue({ rows: forms });
+
+    await expect(formService.listForms(client)).resolves.toEqual(forms);
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringMatching(/FROM survey_forms ORDER BY created_at DESC/)
+    );
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
+  test('listSubmissionsByFormId 未傳 executor 時使用 db.query', async () => {
+    const submissions = [{ id: 9, form_id: 1, answers: {} }];
+    db.query.mockResolvedValue({ rows: submissions });
+
+    await expect(formService.listSubmissionsByFormId('1')).resolves.toEqual(submissions);
+    expect(db.query).toHaveBeenCalledWith(
+      expect.stringMatching(/FROM survey_submissions WHERE form_id = \$1 ORDER BY created_at DESC/),
+      ['1']
+    );
+  });
+
+  test('listSubmissionsByFormId 可改用傳入的 client', async () => {
+    const client = createClient();
+    const submissions = [{ id: 9, form_id: 1, answers: {} }];
+    client.query.mockResolvedValue({ rows: submissions });
+
+    await expect(formService.listSubmissionsByFormId('1', client)).resolves.toEqual(submissions);
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringMatching(/FROM survey_submissions WHERE form_id = \$1 ORDER BY created_at DESC/),
+      ['1']
+    );
+    expect(db.query).not.toHaveBeenCalled();
+  });
 });
 
 describe('formService.validateAnswers', () => {

@@ -20,6 +20,7 @@ const healthRoutes = require('./routes/health');
 const formsRoutes = require('./routes/forms');
 const membersRoutes = require('./routes/members');
 const adminAuthRoutes = require('./routes/adminAuth');
+const adminRoutes = require('./routes/admin');
 const { errorHandler } = require('./middleware/errorHandler');
 const formService = require('./services/formService');
 
@@ -69,6 +70,7 @@ app.use('/forms/:token/submit', submitRateLimiter);
 app.use('/forms', formsRoutes);
 app.use('/members', membersRoutes);
 app.use('/admin-auth', adminAuthRoutes);
+app.use('/admin', adminRoutes);
 
 app.use(errorHandler);
 

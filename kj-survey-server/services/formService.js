@@ -32,6 +32,27 @@ const listConfirmedMembers = async (executor = db) => {
   return result.rows;
 };
 
+/**
+ * 取得全部調查表單，依建立時間由新到舊排列。
+ */
+const listForms = async (executor = db) => {
+  const result = await executor.query(
+    `SELECT id, title, token, status, created_at FROM survey_forms ORDER BY created_at DESC`
+  );
+  return result.rows;
+};
+
+/**
+ * 取得指定表單的所有提交，依建立時間由新到舊排列。
+ */
+const listSubmissionsByFormId = async (formId, executor = db) => {
+  const result = await executor.query(
+    `SELECT id, form_id, answers, created_at FROM survey_submissions WHERE form_id = $1 ORDER BY created_at DESC`,
+    [formId]
+  );
+  return result.rows;
+};
+
 const isPlainObject = (value) => {
   if (value === null || typeof value !== 'object') return false;
   const prototype = Object.getPrototypeOf(value);
@@ -150,6 +171,8 @@ module.exports = {
   getPublishedFormByToken,
   listMembers,
   listConfirmedMembers,
+  listForms,
+  listSubmissionsByFormId,
   validateAnswers,
   submitForm,
 };
