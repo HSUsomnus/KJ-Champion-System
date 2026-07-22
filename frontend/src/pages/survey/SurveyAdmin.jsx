@@ -4,6 +4,7 @@ import { getAdminForms, getAdminSubmissions, getAdminAttendance } from '../../se
 import FormsSidebar from './admin/FormsSidebar'
 import SubmissionsTable from './admin/SubmissionsTable'
 import AttendanceRoster from './admin/AttendanceRoster'
+import ExportButtons from './admin/ExportButtons'
 
 const TABS = [
   { key: 'table', label: '送出紀錄' },
@@ -214,29 +215,32 @@ export default function SurveyAdmin() {
             <FormsSidebar forms={forms} selectedId={selectedFormId} onSelect={setSelectedFormId} />
             <div style={{ flex: 1, minWidth: 0 }}>
               {selectedForm && (
-                <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3, marginBottom: 16, maxWidth: 280 }}>
-                  {TABS.map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setActiveTab(tab.key)}
-                      style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        fontSize: 12,
-                        fontWeight: activeTab === tab.key ? 500 : 400,
-                        padding: '6px 4px',
-                        borderRadius: 16,
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: activeTab === tab.key ? '#4A7C59' : 'transparent',
-                        color: activeTab === tab.key ? '#fff' : '#2C2C2C',
-                        transition: 'background 0.15s, color 0.15s',
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3, maxWidth: 280 }}>
+                    {TABS.map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveTab(tab.key)}
+                        style={{
+                          flex: 1,
+                          textAlign: 'center',
+                          fontSize: 12,
+                          fontWeight: activeTab === tab.key ? 500 : 400,
+                          padding: '6px 4px',
+                          borderRadius: 16,
+                          border: 'none',
+                          cursor: 'pointer',
+                          background: activeTab === tab.key ? '#4A7C59' : 'transparent',
+                          color: activeTab === tab.key ? '#fff' : '#2C2C2C',
+                          transition: 'background 0.15s, color 0.15s',
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                  <ExportButtons formId={selectedForm.id} />
                 </div>
               )}
 

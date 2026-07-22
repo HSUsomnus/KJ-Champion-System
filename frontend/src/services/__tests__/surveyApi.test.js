@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getFormByToken, getMembersByToken, submitForm, adminRequest } from '../surveyApi'
+import { getFormByToken, getMembersByToken, submitForm, adminRequest, downloadAdminExport } from '../surveyApi'
 import { clearAdminToken, setAdminToken } from '../adminSession'
 
 beforeEach(() => {
@@ -74,5 +74,56 @@ describe('adminRequest（後台端點，D-A Bearer）', () => {
 
     const [, options] = global.fetch.mock.calls[0]
     expect(options.headers.Authorization).toBeUndefined()
+  })
+})
+
+describe('downloadAdminExport（匯出，回應是 blob 不是 JSON）', () => {
+  const mockBlobResponse = (headers = {}) => ({
+    ok: true,
+    status: 200,
+    blob: async () => new Blob(['csv content']),
+    headers: { get: (key) => headers[key] ?? null },
+  })
+
+  it('帶 Authorization: Bearer，打對應 export.<format> 路徑', async () => {
+    setAdminToken('fake.jwt.token')
+    global.fetch.mockResolvedValue(mockBlobResponse())
+
+    await downloadAdminExport(7, 'csv')
+
+    const [url, options] = global.fetch.mock.calls[0]
+    expect(url).toBe('/survey-api/admin/forms/7/export.csv')
+    expect(options.headers.Authorization).toBe('Bearer fake.jwt.token')
+  })
+
+  it('從 Content-Disposition 的 filename* 取出 UTF-8 檔名', async () => {
+    global.fetch.mockResolvedValue(
+      mockBlobResponse({ 'Content-Disposition': `attachment; filename="export.csv"; filename*=UTF-8''%E5%BA%B7%E4%B9%9D.csv` })
+    )
+
+    const { filename } = await downloadAdminExport(7, 'csv')
+
+    expect(filename).toBe('康九.csv')
+  })
+
+  it('沒有 filename* 時退回 export.<format>', async () => {
+    global.fetch.mockResolvedValue(mockBlobResponse())
+
+    const { filename } = await downloadAdminExport(7, 'xlsx')
+
+    expect(filename).toBe('export.xlsx')
+  })
+
+  it('回應 !ok → throw 帶 status', async () => {
+    global.fetch.mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({ success: false, message: '找不到此表單' }),
+    })
+
+    await expect(downloadAdminExport(999, 'csv')).rejects.toMatchObject({
+      status: 404,
+      message: '找不到此表單',
+    })
   })
 })

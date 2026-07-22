@@ -12,6 +12,7 @@ vi.mock('../../../services/surveyApi', () => ({
   getAdminForms: (...args) => mockGetAdminForms(...args),
   getAdminSubmissions: (...args) => mockGetAdminSubmissions(...args),
   getAdminAttendance: (...args) => mockGetAdminAttendance(...args),
+  downloadAdminExport: vi.fn(),
 }))
 
 beforeEach(() => {

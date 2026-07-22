@@ -67,4 +67,38 @@ export function getAdminAttendance(formId) {
   return adminRequest(`/admin/forms/${formId}/attendance`)
 }
 
+// [設計決策] 匯出回應是檔案 blob 不是 JSON，不能走 request()/adminRequest()
+// （兩者都固定 res.json()）。檔名優先讀後端 Content-Disposition 的 filename*
+// （UTF-8 表單標題），讀不到才退回 export.<format>。
+export async function downloadAdminExport(formId, format) {
+  const token = getAdminToken()
+  const headers = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`/survey-api/admin/forms/${formId}/export.${format}`, { headers })
+
+  if (!res.ok) {
+    let message = `匯出失敗 ${res.status}`
+    try {
+      const data = await res.json()
+      message = data.message || message
+    } catch {
+      // 回應不是 JSON（例如伺服器層級錯誤頁），用預設訊息
+    }
+    const err = new Error(message)
+    err.status = res.status
+    throw err
+  }
+
+  const blob = await res.blob()
+  const disposition = res.headers.get('Content-Disposition') || ''
+  const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/)
+  const asciiMatch = disposition.match(/filename="([^"]+)"/)
+  const filename = utf8Match
+    ? decodeURIComponent(utf8Match[1])
+    : asciiMatch?.[1] || `export.${format}`
+
+  return { blob, filename }
+}
+
 export { adminRequest }
