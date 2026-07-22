@@ -63,9 +63,9 @@
 
 ## Section 4：未填名冊（confirmed 母數）
 
-- [ ] **20.23** `[Codex CX-2]` `attendanceService.js` `computeAttendance`（應填=confirmed、已填=精確比對、recommender 分組+進度、無推薦人歸一組、**同名兩筆 filled 不變 2**）
-- [ ] **20.24** `[Codex CX-2]` `GET /admin/forms/:id/attendance`（過 `requireAdminSession`）追加 `routes/admin.js`（勿重複註冊/覆蓋）
-- [ ] **20.25** `[Codex CX-2]` jest：pending 不計母數、分組/進度、未填 false、罕用字精確、無推薦人分組、**同名重複不超 total**（M-3 覆核）
+- [x] **20.23** `[Codex CX-2]` `attendanceService.js` `computeAttendance`（應填=confirmed、已填=精確比對、recommender 分組+進度、無推薦人歸一組、**同名兩筆 filled 不變 2**）
+- [x] **20.24** `[Codex CX-2]` `GET /admin/forms/:id/attendance`（過 `requireAdminSession`）追加 `routes/admin.js`（勿重複註冊/覆蓋）
+- [x] **20.25** `[Codex CX-2]` jest：pending 不計母數、分組/進度、未填 false、罕用字精確、無推薦人分組、**同名重複不超 total**（M-3 覆核）
 - [ ] **20.26** `[Claude]` 切換鈕 + 點名表 UI（分組/進度條/姓名星等✅❎）
 
 ---

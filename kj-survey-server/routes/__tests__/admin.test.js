@@ -21,7 +21,13 @@ jest.mock('../../services/formService', () => ({
   listSubmissionsByFormId: jest.fn(),
 }));
 
+jest.mock('../../services/attendanceService', () => ({
+  listConfirmedMembersWithRecommender: jest.fn(),
+  computeAttendance: jest.fn(),
+}));
+
 const formService = require('../../services/formService');
+const attendanceService = require('../../services/attendanceService');
 
 const buildApp = () => {
   const app = express();
@@ -74,5 +80,43 @@ describe('admin routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(submissions.length);
     expect(formService.listSubmissionsByFormId).toHaveBeenCalledWith('7');
+  });
+
+  test('未通過 requireAdminSession → GET attendance 回傳 401 且不查資料', async () => {
+    const res = await request(buildApp()).get('/admin/forms/7/attendance');
+
+    expect(res.status).toBe(401);
+    expect(attendanceService.listConfirmedMembersWithRecommender).not.toHaveBeenCalled();
+    expect(formService.listSubmissionsByFormId).not.toHaveBeenCalled();
+    expect(attendanceService.computeAttendance).not.toHaveBeenCalled();
+  });
+
+  test('角色不足 → GET attendance 回傳 403 且不查資料', async () => {
+    const res = await request(buildApp())
+      .get('/admin/forms/7/attendance')
+      .set('Authorization', 'Bearer insufficient-role');
+
+    expect(res.status).toBe(403);
+    expect(attendanceService.listConfirmedMembersWithRecommender).not.toHaveBeenCalled();
+    expect(formService.listSubmissionsByFormId).not.toHaveBeenCalled();
+    expect(attendanceService.computeAttendance).not.toHaveBeenCalled();
+  });
+
+  test('角色足夠 → GET attendance 回傳 computeAttendance 結果', async () => {
+    const members = [{ name: '王小明', recommender_name: '推薦人' }];
+    const submissions = [{ answers: { name: '王小明' } }];
+    const attendance = { totalMembers: 1, totalFilled: 1, groups: [] };
+    attendanceService.listConfirmedMembersWithRecommender.mockResolvedValue(members);
+    formService.listSubmissionsByFormId.mockResolvedValue(submissions);
+    attendanceService.computeAttendance.mockReturnValue(attendance);
+
+    const res = await request(buildApp())
+      .get('/admin/forms/7/attendance')
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, data: attendance });
+    expect(formService.listSubmissionsByFormId).toHaveBeenCalledWith('7');
+    expect(attendanceService.computeAttendance).toHaveBeenCalledWith(members, submissions);
   });
 });
