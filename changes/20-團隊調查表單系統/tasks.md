@@ -100,10 +100,10 @@
 
 > 這些不擋 Section 1-7 的離線 code+jest（覆核 B-4 / M-4）；與實作並行，dev 實測前到位即可。
 
-- [ ] **U.1** `[使用者]` Survey dev/prod 服務網址 + Root Directory=`kj-survey-server/` + start command
-- [ ] **U.2** `[使用者]` 環境變數：DB 內網、LINE_CHANNEL_ID/SECRET、APP_URL/FRONTEND_URL、強隨機 SESSION_SECRET、callback URL
-- [ ] **U.3** `[使用者]` LINE Developers 登記 dev/prod callback URL（= `{FRONTEND_URL}/survey-api/admin-auth/line-callback`，與程式完全一致）
-- [ ] **U.4** `[使用者]` dev DB 種子 40 人罕用字 + 推薦人歸屬人工核對
+- [x] **U.1** `[使用者]` Survey dev/prod 服務網址 + Root Directory=`kj-survey-server/` + start command（dev：`kj-survey-dev.zeabur.app`，建於 `kj-champion-dev` 專案內）
+- [x] **U.2** `[使用者]` 環境變數：DB 內網、LINE_CHANNEL_ID/SECRET、APP_URL/FRONTEND_URL、強隨機 SESSION_SECRET、callback URL（dev 已填齊，`PORT=8080` 對齊 Zeabur 容器埠）
+- [x] **U.3** `[使用者]` LINE Developers 登記 dev/prod callback URL（= `{FRONTEND_URL}/survey-api/admin-auth/line-callback`，與程式完全一致）——**沿用主系統既有 LINE Login Channel（`2008916605`）而非獨立新建**，屬使用者本次明確決定，與 spec/README 原「獨立於主系統 Channel」描述不同，待收尾一併記錄
+- [x] **U.4** `[使用者]` dev DB 種子 40 人罕用字 + 推薦人歸屬人工核對（`survey_members` 表已存在 40 筆，內容與 `001_init_survey_tables.sql` 種子完全吻合，使用者已核對組織圖無誤）
 
 ---
 
