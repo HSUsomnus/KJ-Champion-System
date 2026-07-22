@@ -4,9 +4,9 @@
 > 部署/milestone 外部依賴移到最後且標非阻塞。標註 `[Codex CX-N]`/`[Claude]`/`[使用者]`。
 > 數值/HOW 全在 `spec.md` v4 寫死，實作者不需自補。分支 `m_b_調查表單`。
 >
-> Section 1-6（AUTH → PUB → Table1 → 未填名冊 → 匯出 → 建立器前後端）已完成。
-> **「下一個未完成 task」= 20.36（Section 7，`_worker.js` 代理確認）**。Section U（使用者外部依賴）
-> 非阻塞離線實作，與程式碼並行進行，只在 dev milestone 前完成即可。
+> Section 1-7（AUTH → PUB → Table1 → 未填名冊 → 匯出 → 建立器前後端 → `_worker.js` 確認 + README）
+> 全數完成。**剩下只有 Section U（使用者外部依賴）與 Section M（dev milestone）**，兩者皆非阻塞、
+> 由使用者離線完成，不需 Claude 繼續動手。
 
 ## Section A：實作 gate（規格已定案）
 
@@ -91,8 +91,8 @@
 
 ## Section 7：`_worker.js` + 收尾
 
-- [ ] **20.36** `[Claude]` 確認 `_worker.js` `/survey-api/*`（含 `/survey-api/admin-auth/*`）代理 + SPA fallback（`/f/:token`、`/admin`→index.html）
-- [ ] **20.37** `[Claude]` README.md 更新（推送前必做）
+- [x] **20.36** `[Claude]` 確認 `_worker.js` `/survey-api/*`（含 `/survey-api/admin-auth/*`）代理 + SPA fallback（`/f/:token`、`/admin`→index.html）——既有通用邏輯已涵蓋，無需改動程式碼
+- [x] **20.37** `[Claude]` README.md 更新（推送前必做）
 
 ---
 

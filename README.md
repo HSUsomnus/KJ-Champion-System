@@ -38,8 +38,23 @@ kj-champion-dev 專案（dev 後端）
 ```
 瀏覽器（React SPA）
   └─ /api/* → Cloudflare Worker (_worker.js) → Zeabur 後端（內網連線 PostgreSQL）
-  └─ 靜態資源 → Cloudflare Pages（Vite build output）
+  └─ /survey-api/* → Cloudflare Worker (_worker.js) → kj-survey-server（獨立 Zeabur 服務，見下）
+  └─ 靜態資源 → Cloudflare Pages（Vite build output），找不到（404）→ SPA fallback 到 index.html
 ```
+
+### KJ Survey 子系統（change 20）
+
+團隊調查表單系統是**獨立後端服務**（`kj-survey-server/`），與主系統共用 DB 但自成一組 Express app、自己的 LINE OAuth Channel、自己的 `package.json`：
+
+| 層級 | 說明 |
+|---|---|
+| 前端路由 | `/f/:token`（前台填表，`SurveyFill.jsx`）、`/admin`（後台，`SurveyAdmin.jsx`），皆掛在同一個 Cloudflare Pages 站台 |
+| Proxy | `_worker.js` 攔截 `/survey-api/*` → 去除前綴 → 轉發到 `kj-survey-server`（含 `/survey-api/admin-auth/*` 子路徑） |
+| 後端服務 | 獨立 Zeabur 服務（prod：`kj-survey.zeabur.app`；dev：`kj-survey-dev.zeabur.app`，實際網址依 Zeabur 服務建立結果為準，見 `_worker.js` 頂部常數） |
+| 資料庫 | 沿用主系統既有 DB（不建新 DB），schema 見 `kj-survey-server/migrations/001_init_survey_tables.sql` |
+| 後台認證 | 自製 LINE OAuth（獨立 Channel）+ 自簽 JWT（`Authorization: Bearer`，記憶體存，不落地 cookie/localStorage） |
+
+詳細規格見 [`changes/20-團隊調查表單系統/spec.md`](./changes/20-團隊調查表單系統/spec.md)。
 
 ---
 
@@ -65,6 +80,7 @@ kj-champion-dev 專案（dev 後端）
 | **桌機版面置中**（v2.9.0） | 桌機橫式螢幕以手機直式欄框居中；欄寬依視窗高度從標準比例反推（~430px）；手機直接全寬零回歸 | 所有人 |
 | **主頁快捷資訊**（v2.10.0） | 歡迎卡整合財力金額（空值顯示「尚未填寫」）與「上傳財力」按鈕；系統連結區三個圖示方塊（LINE 事業部小幫手、康九冠軍 google 日曆、安裝到手機/PC）；PWA 安裝依狀態彈出 dialog | 所有人 |
 | PWA | 可安裝至手機桌面（Chrome / iOS Safari）；安裝按鈕依狀態提示（已安裝 / 不支援瀏覽器） | 所有人 |
+| **團隊調查表單系統**（change 20，`kj-survey-server` 獨立後端） | `/f/:token` 前台填表（送出濫用防護 + 欄位驗證）；`/admin` 後台：Table 1 篩選、未填名冊（依推薦人分組）、CSV/xlsx 匯出、表單建立器（欄位編輯 + 預覽 + 發佈 + 分享連結） | 前台：任何人（需連結）；後台：kj-survey-server 自建 LINE OAuth 白名單角色 |
 
 ---
 
@@ -84,6 +100,17 @@ kj-champion-dev 專案（dev 後端）
 | `FRONTEND_URL` | 前端公開網址 | 是 |
 | `APP_URL` | 後端公開網址 | 是 |
 | `NODE_ENV` | 環境（`production` / `development`） | 是 |
+
+### `kj-survey-server`（獨立服務，自己的 `.env`，見 `kj-survey-server/.env.example`）
+
+| 變數名稱 | 說明 | 必填 |
+|---------|------|------|
+| `DATABASE_URL` | 共用主系統既有 DB（不建新 DB）；本機/dev 填 dev DB 公網連線字串，prod 填內網連線字串 | 是 |
+| `PORT` | 服務埠（本機預設 8081） | 否 |
+| `LINE_CHANNEL_ID` / `LINE_CHANNEL_SECRET` | 後台登入用 LINE Channel（獨立於主系統 Channel） | 是 |
+| `APP_URL` | 本服務對外網址（組 callback/redirect_uri 用，不含結尾斜線） | 是 |
+| `FRONTEND_URL` | 前端網址（OAuth 成功/失敗導轉目的地，不含結尾斜線） | 是 |
+| `SESSION_SECRET` | state HMAC 簽章 + JWT 簽發用強隨機密鑰 | 是 |
 
 ---
 
@@ -109,6 +136,24 @@ npm --prefix frontend run dev
 
 開發模式測試登入：URL 帶 `?dev=1` 自動模擬 LINE 登入。
 測試前先清 Service Worker（DevTools → Application → Service Workers → Unregister）。
+
+```bash
+npm --prefix frontend run test:run   # vitest 全部
+npm --prefix frontend run test:e2e   # playwright e2e
+```
+
+### KJ Survey 獨立後端（`kj-survey-server/`）
+
+```bash
+npm --prefix kj-survey-server install
+cp kj-survey-server/.env.example kj-survey-server/.env   # 填入實際值
+npm --prefix kj-survey-server run dev
+# 服務啟動於 http://localhost:8081
+npm --prefix kj-survey-server test   # Jest 單元測試
+```
+
+前端本機測試 `/f/:token`、`/admin` 時，需另外設定 Vite proxy 或直接打 `http://localhost:8081`，
+正式環境則透過 `_worker.js` 的 `/survey-api/*` 轉發，不需前端額外設定。
 
 ### DB Schema 初始化腳本
 
@@ -136,21 +181,35 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 ```text
 ├── frontend/                    # 前端（React 19 + Vite 8 + Tailwind CSS 4 + PWA）
 │   ├── public/
-│   │   ├── _worker.js           # Cloudflare Worker（/api/* proxy + dev/prod 分流）
+│   │   ├── _worker.js           # Cloudflare Worker（/api/* proxy + /survey-api/* proxy + dev/prod 分流 + SPA fallback）
 │   │   ├── favicon.svg
 │   │   └── icons/               # PWA 圖示
 │   ├── src/
 │   │   ├── main.jsx             # pickColWidth() 設定欄寬變數；預攔截 beforeinstallprompt 存 window.__pwaInstallPrompt
-│   │   ├── App.jsx              # React Router + ProtectedRoute + Layout 三層巢狀
+│   │   ├── App.jsx              # React Router + ProtectedRoute + Layout 三層巢狀（含 /f/:token、/admin）
 │   │   ├── pages/               # 15 個活躍頁面
+│   │   │   └── survey/          # KJ Survey 子系統（change 20）
+│   │   │       ├── SurveyFill.jsx        # 前台填表（/f/:token）
+│   │   │       ├── SurveyAdmin.jsx       # 後台主頁（/admin）
+│   │   │       ├── FormFieldsPreview.jsx # 欄位渲染（填表 + 建立器預覽共用，含 readOnly 模式）
+│   │   │       └── admin/                # FormsSidebar / SubmissionsTable / AttendanceRoster / ExportButtons / FormBuilder
 │   │   ├── components/
 │   │   │   ├── SidebarNav.jsx   # 左側抽屜導覽（漢堡按鈕對齊欄左緣）
 │   │   │   ├── Layout.jsx       # Outlet 置中欄包裹器（width:100% + maxWidth:--col-max-w）
 │   │   │   └── FabAction.jsx    # 浮動操作按鈕（right 對齊欄右緣）
 │   │   ├── contexts/AuthContext.jsx
-│   │   ├── services/api.js
+│   │   ├── services/
+│   │   │   ├── api.js           # 主系統 API 呼叫層
+│   │   │   └── surveyApi.js     # KJ Survey 獨立 API 呼叫層（/survey-api/*）
 │   │   └── utils/shareEvent.js
 │   └── vite.config.js
+├── kj-survey-server/             # KJ Survey 獨立後端（change 20，自己的 package.json + DB 連線設定）
+│   ├── server.js                 # 主入口（/health、/forms、/members、/admin-auth、/admin）
+│   ├── routes/                   # forms.js（前台）/ members.js / adminAuth.js（LINE OAuth）/ admin.js（後台 CRUD+匯出+建立器）/ health.js
+│   ├── services/                 # formService.js / attendanceService.js / exportService.js / adminAuthService.js
+│   ├── middleware/                # requireAdminSession.js / asyncHandler.js / errorHandler.js
+│   ├── migrations/001_init_survey_tables.sql
+│   └── .env.example
 ├── server/                      # 後端（Express + Node.js）
 │   ├── server.js                # 主入口 + migration + schedulers 啟停
 │   ├── routes/
@@ -212,6 +271,13 @@ $env:TARGET_DB_URL="postgresql://root:<password>@<host>:<port>/zeabur"; node scr
 - 連接 GitHub `main` branch，自動部署 Node.js 容器
 - 啟動時自動執行 migration + 啟動 3 個排程（calendarSync / dailyAgenda / backupSync）
 - 必填環境變數：`DATABASE_URL`、`BACKUP_DATABASE_URL`、`DEV_DATABASE_URL`、`ADMIN_SECRET`
+
+### KJ Survey 後端（Zeabur — 獨立服務，`kj-survey-server/`）
+
+- 與主後端**分開的 Zeabur 服務**（不同 Root Directory），Root Directory 設為 `kj-survey-server/`
+- Start command：`npm start`（`node server.js`）
+- 必填環境變數：見上方「`kj-survey-server`（獨立服務）」環境變數表
+- LINE Developers Console 需另外登記此服務專用的 callback URL：`{FRONTEND_URL}/survey-api/admin-auth/line-callback`
 
 ---
 
