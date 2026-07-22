@@ -7,10 +7,11 @@
 
 ## 當前 Change
 
-- change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，實作中。規格文件在 `changes/20-團隊調查表單系統/spec.md`（v4），進度見 `tasks.md`。
-  Section 1-5（AUTH／PUB／Table1／未填名冊／匯出）+ Section 6 後端（CX-4 建立器 create/patch/publish）已全數完成並 push（最新 commit `fbd01e2`）。
-  剩：**20.35**（Section 6 前端，建立器 UI + 預覽 + 發佈鈕/連結/複製 + vitest，`[Claude]` 自己做）→ Section 7（`_worker.js` 確認 + README）→ Section U/M（使用者外部依賴 + dev milestone，非阻塞）。
+- change 20「團隊調查表單系統」— 分支 `m_b_調查表單`，**Section 1-7（全部 `[Claude]` task）已全數完成並 push**（最新 commit `495439b`）。規格文件在 `changes/20-團隊調查表單系統/spec.md`（v4），進度見 `tasks.md`。
+  剩：Section U（使用者外部依賴：Zeabur 服務網址/env/LINE callback 登記/dev DB 種子）→ Section M（使用者 dev milestone 人眼驗收）。兩段皆 `[使用者]`，非阻塞，Claude 這邊已無待辦。
+  下次接手時機：使用者完成 Section U 部署設定後，若驗收（Section M）發現問題再回來修，或視需要規劃 merge main。
   復工時注意 `.claude/` 變更一律取 main 版本。
+- **同分支工作區內有另一份未 commit 的規劃文件 `changes/30-AI工作流Token與中斷恢復補丁/`**（spec.md/tasks.md/補丁報告.md，untracked，非本 change 20 session 產物）：這是另一個 session 診斷「AI 工作流 token/中斷恢復」議題的規劃輸出，其 spec 明載「禁止在目前分支執行本補丁」「待 change 20 merge main 後另開 `m_b_AI工作流Token中斷恢復` 分支實作」。這批檔案**不屬於 change 20 範圍**，暫時擱置在工作區未 commit，處置（何時 commit、要不要獨立分支）由使用者決定，勿自行 commit 或刪除。
 
 （change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除，成品在 tag `archive/change-12`；change 24「收尾清理」、change 25「三層流程補強」、change 26「/打包、/繼續 指令實作」、change 27「role-guard 補強」、change 28「殭屍分支清理＋role-guard誤攔修復」均已上線 main）
 
