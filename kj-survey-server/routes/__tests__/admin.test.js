@@ -26,8 +26,14 @@ jest.mock('../../services/attendanceService', () => ({
   computeAttendance: jest.fn(),
 }));
 
+jest.mock('../../services/exportService', () => ({
+  toCsv: jest.fn(),
+  toXlsxBuffer: jest.fn(),
+}));
+
 const formService = require('../../services/formService');
 const attendanceService = require('../../services/attendanceService');
+const exportService = require('../../services/exportService');
 
 const buildApp = () => {
   const app = express();
@@ -118,5 +124,72 @@ describe('admin routes', () => {
     expect(res.body).toEqual({ success: true, data: attendance });
     expect(formService.listSubmissionsByFormId).toHaveBeenCalledWith('7');
     expect(attendanceService.computeAttendance).toHaveBeenCalledWith(members, submissions);
+  });
+
+  test.each([
+    ['/admin/forms/7/export.csv', 'toCsv'],
+    ['/admin/forms/7/export.xlsx', 'toXlsxBuffer'],
+  ])('表單 id 不存在 → %s 回傳 404 且不匯出', async (url, exportMethod) => {
+    formService.listForms.mockResolvedValue([{ id: 8, title: '其他表單' }]);
+
+    const res = await request(buildApp())
+      .get(url)
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ success: false, message: '找不到此表單' });
+    expect(exportService[exportMethod]).not.toHaveBeenCalled();
+    expect(formService.listSubmissionsByFormId).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['/admin/forms/7/export.csv', undefined, 401],
+    ['/admin/forms/7/export.xlsx', 'Bearer insufficient-role', 403],
+  ])('未通過權限 → %s 回傳 %i/%i 且不匯出', async (url, authorization, expectedStatus) => {
+    const pendingRequest = request(buildApp()).get(url);
+    if (authorization) pendingRequest.set('Authorization', authorization);
+
+    const res = await pendingRequest;
+
+    expect(res.status).toBe(expectedStatus);
+    expect(formService.listForms).not.toHaveBeenCalled();
+    expect(exportService.toCsv).not.toHaveBeenCalled();
+    expect(exportService.toXlsxBuffer).not.toHaveBeenCalled();
+  });
+
+  test('找到表單 → CSV 路由回傳匯出內容與正確 Content-Type', async () => {
+    const form = { id: 7, title: '中文表單', fields: [] };
+    const submissions = [{ id: 1, answers: {} }];
+    formService.listForms.mockResolvedValue([form]);
+    formService.listSubmissionsByFormId.mockResolvedValue(submissions);
+    exportService.toCsv.mockReturnValue('mock csv');
+
+    const res = await request(buildApp())
+      .get('/admin/forms/7/export.csv')
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/csv');
+    expect(res.text).toBe('mock csv');
+    expect(exportService.toCsv).toHaveBeenCalledWith(form, submissions);
+  });
+
+  test('找到表單 → xlsx 路由回傳 Buffer 與正確 Content-Type', async () => {
+    const form = { id: '7', title: '中文表單', fields: [] };
+    const submissions = [{ id: 1, answers: {} }];
+    const buffer = Buffer.from('mock xlsx');
+    formService.listForms.mockResolvedValue([form]);
+    formService.listSubmissionsByFormId.mockResolvedValue(submissions);
+    exportService.toXlsxBuffer.mockResolvedValue(buffer);
+
+    const res = await request(buildApp())
+      .get('/admin/forms/7/export.xlsx')
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain(
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    expect(exportService.toXlsxBuffer).toHaveBeenCalledWith(form, submissions);
   });
 });

@@ -72,9 +72,9 @@
 
 ## Section 5：匯出（M-2）
 
-- [ ] **20.27** `[Codex CX-3]` `exportService.js`：`toCsv`（欄序/逸出/**公式字首中和**）、`toXlsxBuffer`（exceljs）
-- [ ] **20.28** `[Codex CX-3]` `GET /admin/forms/:id/export.csv`/`.xlsx`（過 `requireAdminSession`，Content-Type/Disposition）追加 `routes/admin.js`
-- [ ] **20.29** `[Codex CX-3]` jest：欄序、yesno、逸出、**公式中和**、xlsx buffer 非空
+- [x] **20.27** `[Codex CX-3]` `exportService.js`：`toCsv`（欄序/逸出/**公式字首中和**）、`toXlsxBuffer`（exceljs）
+- [x] **20.28** `[Codex CX-3]` `GET /admin/forms/:id/export.csv`/`.xlsx`（過 `requireAdminSession`，Content-Type/Disposition）追加 `routes/admin.js`
+- [x] **20.29** `[Codex CX-3]` jest：欄序、yesno、逸出、**公式中和**、xlsx buffer 非空
 - [ ] **20.30** `[Claude]` 匯出鈕（CSV/Excel，blob 帶 bearer）
 
 ---
