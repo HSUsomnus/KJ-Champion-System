@@ -67,6 +67,24 @@ export function getAdminAttendance(formId) {
   return adminRequest(`/admin/forms/${formId}/attendance`)
 }
 
+export function createAdminForm(title, fields) {
+  return adminRequest('/admin/forms', {
+    method: 'POST',
+    body: JSON.stringify({ title, fields }),
+  })
+}
+
+export function patchAdminForm(formId, patch) {
+  return adminRequest(`/admin/forms/${formId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+}
+
+export function publishAdminForm(formId) {
+  return adminRequest(`/admin/forms/${formId}/publish`, { method: 'POST' })
+}
+
 // [設計決策] 匯出回應是檔案 blob 不是 JSON，不能走 request()/adminRequest()
 // （兩者都固定 res.json()）。檔名優先讀後端 Content-Disposition 的 filename*
 // （UTF-8 表單標題），讀不到才退回 export.<format>。

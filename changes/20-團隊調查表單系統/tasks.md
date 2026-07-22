@@ -4,8 +4,8 @@
 > 部署/milestone 外部依賴移到最後且標非阻塞。標註 `[Codex CX-N]`/`[Claude]`/`[使用者]`。
 > 數值/HOW 全在 `spec.md` v4 寫死，實作者不需自補。分支 `m_b_調查表單`。
 >
-> Section 1-5（AUTH → PUB → Table1 → 未填名冊 → 匯出）與 Section 6 後端（20.31-20.34）已完成。
-> **「下一個未完成 task」= 20.35（Section 6 前端，建立器 UI）**。Section U（使用者外部依賴）
+> Section 1-6（AUTH → PUB → Table1 → 未填名冊 → 匯出 → 建立器前後端）已完成。
+> **「下一個未完成 task」= 20.36（Section 7，`_worker.js` 代理確認）**。Section U（使用者外部依賴）
 > 非阻塞離線實作，與程式碼並行進行，只在 dev milestone 前完成即可。
 
 ## Section A：實作 gate（規格已定案）
@@ -85,7 +85,7 @@
 - [x] **20.32** `[Codex CX-4]` form 驗證（title≤200；fields 陣列≤50；key `^[a-z][a-z0-9_]*$`≤40 唯一；label≤100；type∈{text,searchable_select,yesno}；options.values≤100 項/≤100 字/去重/非空；patch 空/未知/null→400；published patch→409；空 fields publish→400；無 id→404）
 - [x] **20.33** `[Codex CX-4]` `POST /admin/forms`、`PATCH /admin/forms/:id`、`POST /admin/forms/:id/publish`（過 `requireAdminSession`）追加 `routes/admin.js`
 - [x] **20.34** `[Codex CX-4]` jest：draft 有 token+draft、patch 只改帶入、publish 切 published 不重產、已 published 再 publish 不變、各 form 驗證 fail、published patch→409、空表單 publish→400
-- [ ] **20.35** `[Claude]` 建立器 UI（欄位 key/label/type/options/required）+ 預覽（SurveyFill 唯讀）+ 發佈鈕/連結/複製 + vitest
+- [x] **20.35** `[Claude]` 建立器 UI（欄位 key/label/type/options/required）+ 預覽（SurveyFill 唯讀）+ 發佈鈕/連結/複製 + vitest
 
 ---
 

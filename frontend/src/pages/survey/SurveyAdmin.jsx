@@ -5,6 +5,7 @@ import FormsSidebar from './admin/FormsSidebar'
 import SubmissionsTable from './admin/SubmissionsTable'
 import AttendanceRoster from './admin/AttendanceRoster'
 import ExportButtons from './admin/ExportButtons'
+import FormBuilder from './admin/FormBuilder'
 
 const TABS = [
   { key: 'table', label: '送出紀錄' },
@@ -33,6 +34,7 @@ export default function SurveyAdmin() {
   const [forms, setForms] = useState([])
   const [selectedFormId, setSelectedFormId] = useState(null)
   const [activeTab, setActiveTab] = useState('table')
+  const [creatingNew, setCreatingNew] = useState(false)
   const [submissions, setSubmissions] = useState([])
   const [attendance, setAttendance] = useState(null)
   const [dashLoading, setDashLoading] = useState(false)
@@ -126,7 +128,29 @@ export default function SurveyAdmin() {
     setStatus('no-user')
   }
 
+  const handleSelectForm = (id) => {
+    setCreatingNew(false)
+    setSelectedFormId(id)
+  }
+
+  const handleCreateNew = () => {
+    setCreatingNew(true)
+    setSelectedFormId(null)
+  }
+
+  // 建立/儲存草稿/發佈成功後，把回傳的表單塞回清單並選取它；新表單就新增一筆，
+  // 既有表單（patch/publish）就地覆蓋，兩種情境共用同一段合併邏輯。
+  const handleFormSaved = (savedForm) => {
+    setCreatingNew(false)
+    setForms((prev) => {
+      const exists = prev.some((f) => f.id === savedForm.id)
+      return exists ? prev.map((f) => (f.id === savedForm.id ? savedForm : f)) : [...prev, savedForm]
+    })
+    setSelectedFormId(savedForm.id)
+  }
+
   const selectedForm = forms.find((f) => f.id === selectedFormId)
+  const builderActive = creatingNew || selectedForm?.status === 'draft'
 
   if (status === 'checking') {
     return (
@@ -212,9 +236,14 @@ export default function SurveyAdmin() {
           )}
 
           <div style={{ display: 'flex', gap: 24 }}>
-            <FormsSidebar forms={forms} selectedId={selectedFormId} onSelect={setSelectedFormId} />
+            <FormsSidebar
+              forms={forms}
+              selectedId={creatingNew ? null : selectedFormId}
+              onSelect={handleSelectForm}
+              onCreateNew={handleCreateNew}
+            />
             <div style={{ flex: 1, minWidth: 0 }}>
-              {selectedForm && (
+              {!builderActive && selectedForm && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 16, flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3, maxWidth: 280 }}>
                     {TABS.map((tab) => (
@@ -244,16 +273,23 @@ export default function SurveyAdmin() {
                 </div>
               )}
 
-              {dashLoading && (
+              {builderActive && (
+                <FormBuilder
+                  key={creatingNew ? 'new' : selectedForm?.id}
+                  form={creatingNew ? null : selectedForm}
+                  onSaved={handleFormSaved}
+                />
+              )}
+              {!builderActive && dashLoading && (
                 <p style={{ fontSize: 13, color: '#8A8680' }}>載入中...</p>
               )}
-              {!dashLoading && selectedForm && activeTab === 'table' && (
+              {!builderActive && !dashLoading && selectedForm && activeTab === 'table' && (
                 <SubmissionsTable form={selectedForm} submissions={submissions} />
               )}
-              {!dashLoading && selectedForm && activeTab === 'attendance' && attendance && (
+              {!builderActive && !dashLoading && selectedForm && activeTab === 'attendance' && attendance && (
                 <AttendanceRoster attendance={attendance} />
               )}
-              {!dashLoading && !selectedForm && forms.length === 0 && (
+              {!builderActive && !dashLoading && !selectedForm && forms.length === 0 && (
                 <p style={{ fontSize: 13, color: '#8A8680' }}>尚無表單，請先到建立器新增一份</p>
               )}
             </div>

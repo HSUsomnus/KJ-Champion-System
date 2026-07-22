@@ -3,10 +3,17 @@ const STATUS_LABEL = {
   draft: '草稿',
 }
 
-export default function FormsSidebar({ forms, selectedId, onSelect }) {
+export default function FormsSidebar({ forms, selectedId, onSelect, onCreateNew }) {
   return (
     <div style={containerStyle}>
-      <h2 style={titleStyle}>表單</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={titleStyle}>表單</h2>
+        {onCreateNew && (
+          <button type="button" onClick={onCreateNew} aria-label="新增表單" style={newBtnStyle}>
+            + 新增
+          </button>
+        )}
+      </div>
       {forms.length === 0 && (
         <p style={{ fontSize: 12, color: '#8A8680' }}>尚無表單</p>
       )}
@@ -55,6 +62,18 @@ const titleStyle = {
   color: '#8A8680',
   letterSpacing: '0.06em',
   margin: '0 0 4px',
+}
+
+const newBtnStyle = {
+  padding: '4px 10px',
+  borderRadius: 14,
+  border: '1.5px dashed #E2DED8',
+  background: '#FFFFFF',
+  color: '#4A7C59',
+  fontSize: 11,
+  fontWeight: 500,
+  cursor: 'pointer',
+  marginBottom: 4,
 }
 
 const itemStyle = {
