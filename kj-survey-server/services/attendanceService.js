@@ -7,7 +7,7 @@ const compareZhHant = (left, right) => left.localeCompare(right, 'zh-Hant');
  */
 const listConfirmedMembersWithRecommender = async (executor = db) => {
   const result = await executor.query(
-    `SELECT name, recommender_name FROM survey_members WHERE status = 'confirmed' ORDER BY name`
+    `SELECT name, star_rank, recommender_name FROM survey_members WHERE status = 'confirmed' ORDER BY name`
   );
   return result.rows;
 };
@@ -29,6 +29,7 @@ const computeAttendance = (members, submissions, nameFieldKey = 'name') => {
     const groupMembers = groupedMembers.get(recommender) || [];
     groupMembers.push({
       name: member.name,
+      star_rank: member.star_rank,
       filled: submittedNames.has(member.name),
     });
     groupedMembers.set(recommender, groupMembers);

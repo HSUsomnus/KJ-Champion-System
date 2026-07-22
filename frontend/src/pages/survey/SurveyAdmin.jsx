@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
 import { getAdminToken, setAdminToken, clearAdminToken } from '../../services/adminSession'
-import { getAdminForms, getAdminSubmissions } from '../../services/surveyApi'
+import { getAdminForms, getAdminSubmissions, getAdminAttendance } from '../../services/surveyApi'
 import FormsSidebar from './admin/FormsSidebar'
 import SubmissionsTable from './admin/SubmissionsTable'
+import AttendanceRoster from './admin/AttendanceRoster'
+
+const TABS = [
+  { key: 'table', label: '送出紀錄' },
+  { key: 'attendance', label: '未填名冊' },
+]
 
 // [設計決策] 後台登入改為 kj-survey-server 自己的 LINE OAuth（Change 20 v4，D-A），
 // 不再沿用主系統 /api/auth/line-login。舊版曾嘗試自建 callback + cookie session，
@@ -25,7 +31,9 @@ export default function SurveyAdmin() {
   const [authError, setAuthError] = useState(null)
   const [forms, setForms] = useState([])
   const [selectedFormId, setSelectedFormId] = useState(null)
+  const [activeTab, setActiveTab] = useState('table')
   const [submissions, setSubmissions] = useState([])
+  const [attendance, setAttendance] = useState(null)
   const [dashLoading, setDashLoading] = useState(false)
   const [dashError, setDashError] = useState('')
 
@@ -95,8 +103,11 @@ export default function SurveyAdmin() {
     if (!selectedFormId) return
     setDashLoading(true)
     setDashError('')
-    getAdminSubmissions(selectedFormId)
-      .then((res) => setSubmissions(res.data || []))
+    Promise.all([getAdminSubmissions(selectedFormId), getAdminAttendance(selectedFormId)])
+      .then(([submissionsRes, attendanceRes]) => {
+        setSubmissions(submissionsRes.data || [])
+        setAttendance(attendanceRes.data || null)
+      })
       .catch((err) => {
         if (err.status === 401) {
           clearAdminToken()
@@ -202,11 +213,41 @@ export default function SurveyAdmin() {
           <div style={{ display: 'flex', gap: 24 }}>
             <FormsSidebar forms={forms} selectedId={selectedFormId} onSelect={setSelectedFormId} />
             <div style={{ flex: 1, minWidth: 0 }}>
+              {selectedForm && (
+                <div style={{ display: 'flex', background: '#EFEDE9', borderRadius: 20, padding: 3, marginBottom: 16, maxWidth: 280 }}>
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTab(tab.key)}
+                      style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        fontSize: 12,
+                        fontWeight: activeTab === tab.key ? 500 : 400,
+                        padding: '6px 4px',
+                        borderRadius: 16,
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: activeTab === tab.key ? '#4A7C59' : 'transparent',
+                        color: activeTab === tab.key ? '#fff' : '#2C2C2C',
+                        transition: 'background 0.15s, color 0.15s',
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {dashLoading && (
                 <p style={{ fontSize: 13, color: '#8A8680' }}>載入中...</p>
               )}
-              {!dashLoading && selectedForm && (
+              {!dashLoading && selectedForm && activeTab === 'table' && (
                 <SubmissionsTable form={selectedForm} submissions={submissions} />
+              )}
+              {!dashLoading && selectedForm && activeTab === 'attendance' && attendance && (
+                <AttendanceRoster attendance={attendance} />
               )}
               {!dashLoading && !selectedForm && forms.length === 0 && (
                 <p style={{ fontSize: 13, color: '#8A8680' }}>尚無表單，請先到建立器新增一份</p>

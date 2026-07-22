@@ -63,4 +63,8 @@ export function getAdminSubmissions(formId) {
   return adminRequest(`/admin/forms/${formId}/submissions`)
 }
 
+export function getAdminAttendance(formId) {
+  return adminRequest(`/admin/forms/${formId}/attendance`)
+}
+
 export { adminRequest }

@@ -19,7 +19,7 @@ describe('attendanceService.listConfirmedMembersWithRecommender', () => {
 
     await expect(listConfirmedMembersWithRecommender()).resolves.toEqual(members);
     expect(db.query).toHaveBeenCalledWith(
-      "SELECT name, recommender_name FROM survey_members WHERE status = 'confirmed' ORDER BY name"
+      "SELECT name, star_rank, recommender_name FROM survey_members WHERE status = 'confirmed' ORDER BY name"
     );
   });
 
@@ -30,7 +30,7 @@ describe('attendanceService.listConfirmedMembersWithRecommender', () => {
 
     await expect(listConfirmedMembersWithRecommender(client)).resolves.toEqual(members);
     expect(client.query).toHaveBeenCalledWith(
-      "SELECT name, recommender_name FROM survey_members WHERE status = 'confirmed' ORDER BY name"
+      "SELECT name, star_rank, recommender_name FROM survey_members WHERE status = 'confirmed' ORDER BY name"
     );
     expect(db.query).not.toHaveBeenCalled();
   });
@@ -106,6 +106,15 @@ describe('attendanceService.computeAttendance', () => {
     );
 
     expect(result.totalFilled).toBe(1);
+  });
+
+  test('member 的 star_rank 會原樣帶到輸出（點名表 UI 需要顯示星等）', () => {
+    const result = computeAttendance(
+      [{ name: '王小明', star_rank: '橙', recommender_name: '推薦人' }],
+      []
+    );
+
+    expect(result.groups[0].members[0]).toEqual({ name: '王小明', star_rank: '橙', filled: false });
   });
 
   test('同名重複送出只算一次，總進度與組進度都不超過 total', () => {

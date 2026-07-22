@@ -6,10 +6,12 @@ import { clearAdminToken, getAdminToken, setAdminToken } from '../../../services
 
 const mockGetAdminForms = vi.fn()
 const mockGetAdminSubmissions = vi.fn()
+const mockGetAdminAttendance = vi.fn()
 
 vi.mock('../../../services/surveyApi', () => ({
   getAdminForms: (...args) => mockGetAdminForms(...args),
   getAdminSubmissions: (...args) => mockGetAdminSubmissions(...args),
+  getAdminAttendance: (...args) => mockGetAdminAttendance(...args),
 }))
 
 beforeEach(() => {
@@ -18,6 +20,10 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockGetAdminForms.mockResolvedValue({ success: true, data: [] })
   mockGetAdminSubmissions.mockResolvedValue({ success: true, data: [] })
+  mockGetAdminAttendance.mockResolvedValue({
+    success: true,
+    data: { totalMembers: 0, totalFilled: 0, groups: [] },
+  })
 })
 
 describe('SurveyAdmin', () => {
@@ -116,5 +122,33 @@ describe('SurveyAdmin', () => {
     render(<SurveyAdmin />)
 
     expect(await screen.findByText('尚無表單，請先到建立器新增一份')).toBeInTheDocument()
+  })
+
+  it('點「未填名冊」切換鈕 → 顯示點名表而非送出紀錄表格', async () => {
+    mockGetAdminForms.mockResolvedValue({
+      success: true,
+      data: [{ id: 1, title: '康九冠軍調查', token: 'abc', status: 'published', fields: [{ key: 'name', label: '姓名', type: 'text' }] }],
+    })
+    mockGetAdminSubmissions.mockResolvedValue({
+      success: true,
+      data: [{ id: 100, answers: { name: '徐毓紘' } }],
+    })
+    mockGetAdminAttendance.mockResolvedValue({
+      success: true,
+      data: {
+        totalMembers: 1,
+        totalFilled: 0,
+        groups: [{ recommender: null, total: 1, filled: 0, members: [{ name: '徐毓紘', star_rank: '橙', filled: false }] }],
+      },
+    })
+
+    setAdminToken('fake.jwt.token')
+    render(<SurveyAdmin />)
+
+    await screen.findByRole('table') // 預設先看到送出紀錄表格
+    fireEvent.click(screen.getByText('未填名冊'))
+
+    expect(await screen.findByText('整體進度')).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 })
