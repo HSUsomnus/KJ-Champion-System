@@ -19,6 +19,9 @@ jest.mock('../../middleware/requireAdminSession', () => ({
 jest.mock('../../services/formService', () => ({
   listForms: jest.fn(),
   listSubmissionsByFormId: jest.fn(),
+  createDraftForm: jest.fn(),
+  patchForm: jest.fn(),
+  publishForm: jest.fn(),
 }));
 
 jest.mock('../../services/attendanceService', () => ({
@@ -37,6 +40,7 @@ const exportService = require('../../services/exportService');
 
 const buildApp = () => {
   const app = express();
+  app.use(express.json());
   app.use('/admin', require('../admin'));
   return app;
 };
@@ -191,5 +195,90 @@ describe('admin routes', () => {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
     expect(exportService.toXlsxBuffer).toHaveBeenCalledWith(form, submissions);
+  });
+});
+
+describe('admin form builder routes', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test.each([
+    ['post', '/admin/forms'],
+    ['patch', '/admin/forms/7'],
+    ['post', '/admin/forms/7/publish'],
+  ])('%s %s 無認證回 401', async (method, url) => {
+    const res = await request(buildApp())[method](url).send({ title: '表單' });
+    expect(res.status).toBe(401);
+  });
+
+  test.each([
+    ['post', '/admin/forms'],
+    ['patch', '/admin/forms/7'],
+    ['post', '/admin/forms/7/publish'],
+  ])('%s %s 權限不足回 403', async (method, url) => {
+    const res = await request(buildApp())[method](url)
+      .set('Authorization', 'Bearer insufficient-role').send({ title: '表單' });
+    expect(res.status).toBe(403);
+  });
+
+  test('POST /forms 成功回 201', async () => {
+    const form = { id: 1, title: '表單', status: 'draft' };
+    formService.createDraftForm.mockResolvedValue(form);
+    const res = await request(buildApp()).post('/admin/forms')
+      .set('Authorization', 'Bearer admin-token').send({ title: '表單' });
+    expect(res.status).toBe(201);
+    expect(res.body).toEqual({ success: true, data: form });
+    expect(formService.createDraftForm).toHaveBeenCalledWith({ title: '表單' });
+  });
+
+  test('POST /forms INVALID_FORM 回 400', async () => {
+    formService.createDraftForm.mockRejectedValue(Object.assign(new Error(), {
+      code: 'INVALID_FORM', field: 'title', reason: 'required',
+    }));
+    const res = await request(buildApp()).post('/admin/forms')
+      .set('Authorization', 'Bearer admin-token').send({ title: '' });
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'invalid_form', field: 'title', reason: 'required' });
+  });
+
+  test.each([
+    ['FORM_NOT_FOUND', 404, { success: false, message: '找不到此表單' }],
+    ['FORM_ALREADY_PUBLISHED', 409, { success: false, message: '已發佈的表單無法編輯' }],
+    ['INVALID_FORM', 400, { error: 'invalid_form', field: 'fields', reason: 'invalid_type' }],
+  ])('PATCH /forms/:id %s 分流', async (code, status, body) => {
+    formService.patchForm.mockRejectedValue(Object.assign(new Error(), {
+      code, field: 'fields', reason: 'invalid_type',
+    }));
+    const res = await request(buildApp()).patch('/admin/forms/7')
+      .set('Authorization', 'Bearer admin-token').send({ fields: 'bad' });
+    expect(res.status).toBe(status);
+    expect(res.body).toEqual(body);
+  });
+
+  test('PATCH /forms/:id 成功回 200', async () => {
+    const form = { id: 7, title: '更新後', status: 'draft' };
+    formService.patchForm.mockResolvedValue(form);
+    const res = await request(buildApp()).patch('/admin/forms/7')
+      .set('Authorization', 'Bearer admin-token').send({ title: '更新後' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, data: form });
+    expect(formService.patchForm).toHaveBeenCalledWith('7', { title: '更新後' });
+  });
+
+  test('POST /forms/:id/publish FORM_NOT_FOUND 回 404', async () => {
+    formService.publishForm.mockRejectedValue(Object.assign(new Error(), { code: 'FORM_NOT_FOUND' }));
+    const res = await request(buildApp()).post('/admin/forms/7/publish')
+      .set('Authorization', 'Bearer admin-token');
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ success: false, message: '找不到此表單' });
+  });
+
+  test('POST /forms/:id/publish 成功回 200', async () => {
+    const form = { id: 7, status: 'published' };
+    formService.publishForm.mockResolvedValue(form);
+    const res = await request(buildApp()).post('/admin/forms/7/publish')
+      .set('Authorization', 'Bearer admin-token');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, data: form });
+    expect(formService.publishForm).toHaveBeenCalledWith('7');
   });
 });

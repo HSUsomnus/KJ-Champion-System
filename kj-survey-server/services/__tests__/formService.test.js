@@ -255,3 +255,151 @@ describe('formService.submitForm transaction', () => {
     expect(db.query).not.toHaveBeenCalled();
   });
 });
+
+describe('formService form builder validators', () => {
+  const textField = { key: 'note', label: '備註', type: 'text' };
+  const validateFields = (fields) => formService.validateFormFields(fields);
+
+  test.each([
+    ['有效標題', { valid: true }],
+    ['a'.repeat(200), { valid: true }],
+    ['', { valid: false, field: 'title', reason: 'required' }],
+    ['   ', { valid: false, field: 'title', reason: 'required' }],
+    [null, { valid: false, field: 'title', reason: 'required' }],
+    ['a'.repeat(201), { valid: false, field: 'title', reason: 'too_long' }],
+  ])('validateFormTitle(%p)', (title, expected) => {
+    expect(formService.validateFormTitle(title)).toEqual(expected);
+  });
+
+  test('fields 必須是陣列，空陣列與 50 欄合法，51 欄失敗', () => {
+    expect(validateFields(null)).toEqual({ valid: false, field: 'fields', reason: 'invalid_type' });
+    expect(validateFields([])).toEqual({ valid: true });
+    expect(validateFields(Array.from({ length: 50 }, (_, i) => ({ ...textField, key: `field_${i}` })))).toEqual({ valid: true });
+    expect(validateFields(Array.from({ length: 51 }, (_, i) => ({ ...textField, key: `field_${i}` })))).toEqual({ valid: false, field: 'fields', reason: 'too_many' });
+  });
+
+  test.each([
+    [[textField], { valid: true }],
+    [[null], { valid: false, field: 'fields', reason: 'invalid_key' }],
+    [[{ ...textField, key: 'Bad-key' }], { valid: false, field: 'fields', reason: 'invalid_key' }],
+    [[{ ...textField, key: `a${'b'.repeat(40)}` }], { valid: false, field: 'fields', reason: 'invalid_key' }],
+    [[textField, { ...textField }], { valid: false, field: 'fields', reason: 'duplicate_key' }],
+    [[{ ...textField, label: '' }], { valid: false, field: 'fields', reason: 'invalid_label' }],
+    [[{ ...textField, label: 'a'.repeat(101) }], { valid: false, field: 'fields', reason: 'invalid_label' }],
+    [[{ ...textField, type: 'upload' }], { valid: false, field: 'fields', reason: 'invalid_type_value' }],
+    [[{ ...textField, type: 'yesno' }], { valid: true }],
+  ])('field key/label/type 規則 %#', (fields, expected) => {
+    expect(validateFields(fields)).toEqual(expected);
+  });
+
+  test('static searchable_select 接受最多 100 個唯一非空短字串', () => {
+    const values = Array.from({ length: 100 }, (_, i) => `選項${i}`);
+    expect(validateFields([{ key: 'rank', label: '星等', type: 'searchable_select', options: { source: 'static', values } }])).toEqual({ valid: true });
+  });
+
+  test.each([
+    [{ source: 'other', values: [] }],
+    [{ source: 'static', values: 'not-array' }],
+    [{ source: 'static', values: Array.from({ length: 101 }, (_, i) => `v${i}`) }],
+    [{ source: 'static', values: [''] }],
+    [{ source: 'static', values: ['a'.repeat(101)] }],
+    [{ source: 'static', values: ['重複', '重複'] }],
+  ])('不合法 searchable_select options：%p', (options) => {
+    expect(validateFields([{ key: 'rank', label: '星等', type: 'searchable_select', options }]))
+      .toEqual({ valid: false, field: 'fields', reason: 'invalid_options' });
+  });
+
+  test('survey_members 只檢查 source，不檢查 values', () => {
+    expect(validateFields([{
+      key: 'name', label: '姓名', type: 'searchable_select',
+      options: { source: 'survey_members', values: 'ignored' },
+    }])).toEqual({ valid: true });
+  });
+});
+
+describe('formService create/patch/publish', () => {
+  beforeEach(() => jest.resetAllMocks());
+
+  test('createDraftForm 產生 32 字元 token 並回傳 draft', async () => {
+    db.query.mockImplementation(async (sql, params) => ({
+      rows: [{ id: 1, title: params[0], token: params[1], fields: [], status: 'draft' }],
+    }));
+    const result = await formService.createDraftForm({ title: '新表單' });
+    expect(result).toMatchObject({ title: '新表單', status: 'draft' });
+    expect(result.token).toMatch(/^[a-f0-9]{32}$/);
+    expect(db.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO survey_forms'), [
+      '新表單', result.token, '[]',
+    ]);
+  });
+
+  test('createDraftForm title 不合法時帶 INVALID_FORM 資訊且不查 DB', async () => {
+    await expect(formService.createDraftForm({ title: ' ' })).rejects.toMatchObject({
+      code: 'INVALID_FORM', field: 'title', reason: 'required',
+    });
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    [undefined, null, 'empty_patch'],
+    [{}, null, 'empty_patch'],
+    [{ status: 'draft' }, 'status', 'unknown_field'],
+    [{ title: null }, 'title', 'null_value'],
+    [{ fields: null }, 'fields', 'null_value'],
+  ])('patchForm 拒絕 patch %#', async (patch, field, reason) => {
+    await expect(formService.patchForm(1, patch)).rejects.toMatchObject({ code: 'INVALID_FORM', field, reason });
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
+  test('patchForm 只更新 title，fields 以 null 交給 COALESCE 保留', async () => {
+    const updated = { id: 1, title: '新標題', fields: [{ key: 'old', label: '舊欄', type: 'text' }], status: 'draft' };
+    db.query
+      .mockResolvedValueOnce({ rows: [{ ...updated, title: '舊標題' }] })
+      .mockResolvedValueOnce({ rows: [updated] });
+    await expect(formService.patchForm(1, { title: '新標題' })).resolves.toEqual(updated);
+    expect(db.query).toHaveBeenNthCalledWith(2, expect.stringContaining('title=COALESCE($1,title)'), ['新標題', null, 1]);
+  });
+
+  test('patchForm 只更新 fields，title 維持原值', async () => {
+    const fields = [{ key: 'new_field', label: '新欄', type: 'yesno' }];
+    const updated = { id: 1, title: '原標題', fields, status: 'draft' };
+    db.query.mockResolvedValueOnce({ rows: [updated] }).mockResolvedValueOnce({ rows: [updated] });
+    await expect(formService.patchForm(1, { fields })).resolves.toEqual(updated);
+    expect(db.query).toHaveBeenNthCalledWith(2, expect.any(String), [null, JSON.stringify(fields), 1]);
+  });
+
+  test('patchForm id 找不到時 FORM_NOT_FOUND', async () => {
+    db.query.mockResolvedValue({ rows: [] });
+    await expect(formService.patchForm(404, { title: '合法' })).rejects.toMatchObject({ code: 'FORM_NOT_FOUND' });
+  });
+
+  test('patchForm 已發佈時 FORM_ALREADY_PUBLISHED 且不 UPDATE', async () => {
+    db.query.mockResolvedValue({ rows: [{ id: 1, status: 'published' }] });
+    await expect(formService.patchForm(1, { title: '' })).rejects.toMatchObject({ code: 'FORM_ALREADY_PUBLISHED' });
+    expect(db.query).toHaveBeenCalledTimes(1);
+  });
+
+  test('publishForm 將 draft 發佈且 token 不變', async () => {
+    const draft = { id: 1, token: 'draft-token', status: 'draft', fields: [{ key: 'note' }] };
+    const published = { ...draft, status: 'published' };
+    db.query.mockResolvedValueOnce({ rows: [draft] }).mockResolvedValueOnce({ rows: [published] });
+    await expect(formService.publishForm(1)).resolves.toEqual(published);
+    expect(db.query).toHaveBeenNthCalledWith(2, expect.stringContaining("SET status='published'"), [1]);
+    expect(published.token).toBe(draft.token);
+  });
+
+  test('publishForm 已 published 直接回現狀，不 UPDATE', async () => {
+    const published = { id: 1, token: 'same-token', status: 'published', fields: [{ key: 'note' }] };
+    db.query.mockResolvedValue({ rows: [published] });
+    await expect(formService.publishForm(1)).resolves.toBe(published);
+    expect(db.query).toHaveBeenCalledTimes(1);
+    expect(db.query.mock.calls[0][0]).toContain('SELECT');
+  });
+
+  test.each([[], undefined, null])('publishForm draft fields=%p 時拒絕發佈', async (fields) => {
+    db.query.mockResolvedValue({ rows: [{ id: 1, status: 'draft', fields }] });
+    await expect(formService.publishForm(1)).rejects.toMatchObject({
+      code: 'INVALID_FORM', field: 'fields', reason: 'empty',
+    });
+    expect(db.query).toHaveBeenCalledTimes(1);
+  });
+});

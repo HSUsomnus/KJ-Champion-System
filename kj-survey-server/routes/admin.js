@@ -55,4 +55,49 @@ router.get('/forms/:id/export.xlsx', asyncHandler(async (req, res) => {
   return res.send(buffer);
 }));
 
+router.post('/forms', asyncHandler(async (req, res) => {
+  try {
+    const form = await formService.createDraftForm(req.body);
+    return res.status(201).json({ success: true, data: form });
+  } catch (err) {
+    if (err.code === 'INVALID_FORM') {
+      return res.status(400).json({ error: 'invalid_form', field: err.field, reason: err.reason });
+    }
+    throw err;
+  }
+}));
+
+router.patch('/forms/:id', asyncHandler(async (req, res) => {
+  try {
+    const form = await formService.patchForm(req.params.id, req.body);
+    return res.status(200).json({ success: true, data: form });
+  } catch (err) {
+    if (err.code === 'INVALID_FORM') {
+      return res.status(400).json({ error: 'invalid_form', field: err.field, reason: err.reason });
+    }
+    if (err.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此表單' });
+    }
+    if (err.code === 'FORM_ALREADY_PUBLISHED') {
+      return res.status(409).json({ success: false, message: '已發佈的表單無法編輯' });
+    }
+    throw err;
+  }
+}));
+
+router.post('/forms/:id/publish', asyncHandler(async (req, res) => {
+  try {
+    const form = await formService.publishForm(req.params.id);
+    return res.status(200).json({ success: true, data: form });
+  } catch (err) {
+    if (err.code === 'FORM_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: '找不到此表單' });
+    }
+    if (err.code === 'INVALID_FORM') {
+      return res.status(400).json({ error: 'invalid_form', field: err.field, reason: err.reason });
+    }
+    throw err;
+  }
+}));
+
 module.exports = router;
