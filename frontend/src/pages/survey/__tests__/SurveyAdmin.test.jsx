@@ -1,11 +1,23 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { vi } from 'vitest'
 import SurveyAdmin from '../SurveyAdmin'
 import { clearAdminToken, getAdminToken, setAdminToken } from '../../../services/adminSession'
+
+const mockGetAdminForms = vi.fn()
+const mockGetAdminSubmissions = vi.fn()
+
+vi.mock('../../../services/surveyApi', () => ({
+  getAdminForms: (...args) => mockGetAdminForms(...args),
+  getAdminSubmissions: (...args) => mockGetAdminSubmissions(...args),
+}))
 
 beforeEach(() => {
   clearAdminToken()
   window.history.replaceState({}, '', '/admin')
+  vi.clearAllMocks()
+  mockGetAdminForms.mockResolvedValue({ success: true, data: [] })
+  mockGetAdminSubmissions.mockResolvedValue({ success: true, data: [] })
 })
 
 describe('SurveyAdmin', () => {
@@ -62,5 +74,47 @@ describe('SurveyAdmin', () => {
 
     await waitFor(() => expect(screen.getByText('LINE 登入驗證')).toBeInTheDocument())
     expect(getAdminToken()).toBeNull()
+  })
+
+  it('登入後載入表單清單，預設選第一筆並顯示對應 Table 1', async () => {
+    mockGetAdminForms.mockResolvedValue({
+      success: true,
+      data: [
+        { id: 1, title: '康九冠軍調查', token: 'abc', status: 'published', fields: [{ key: 'name', label: '姓名', type: 'text' }] },
+        { id: 2, title: '另一份表單', token: 'def', status: 'draft', fields: [] },
+      ],
+    })
+    mockGetAdminSubmissions.mockResolvedValue({
+      success: true,
+      data: [{ id: 100, answers: { name: '徐毓紘' } }],
+    })
+
+    setAdminToken('fake.jwt.token')
+    render(<SurveyAdmin />)
+
+    await screen.findByText('康九冠軍調查')
+    expect(screen.getByText('另一份表單')).toBeInTheDocument()
+    expect(mockGetAdminSubmissions).toHaveBeenCalledWith(1)
+    const table = await screen.findByRole('table')
+    expect(within(table).getByText('徐毓紘')).toBeInTheDocument()
+  })
+
+  it('token 過期（getAdminForms 回 401）→ 視同登出，回到登入畫面', async () => {
+    const err = new Error('登入已過期')
+    err.status = 401
+    mockGetAdminForms.mockRejectedValue(err)
+
+    setAdminToken('expired.token')
+    render(<SurveyAdmin />)
+
+    await waitFor(() => expect(screen.getByText('LINE 登入驗證')).toBeInTheDocument())
+    expect(getAdminToken()).toBeNull()
+  })
+
+  it('尚無表單時顯示提示文字', async () => {
+    setAdminToken('fake.jwt.token')
+    render(<SurveyAdmin />)
+
+    expect(await screen.findByText('尚無表單，請先到建立器新增一份')).toBeInTheDocument()
   })
 })

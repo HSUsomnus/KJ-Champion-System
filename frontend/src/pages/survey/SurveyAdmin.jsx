@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getAdminToken, setAdminToken, clearAdminToken } from '../../services/adminSession'
+import { getAdminForms, getAdminSubmissions } from '../../services/surveyApi'
+import FormsSidebar from './admin/FormsSidebar'
+import SubmissionsTable from './admin/SubmissionsTable'
 
 // [設計決策] 後台登入改為 kj-survey-server 自己的 LINE OAuth（Change 20 v4，D-A），
 // 不再沿用主系統 /api/auth/line-login。舊版曾嘗試自建 callback + cookie session，
@@ -20,6 +23,11 @@ const AUTH_ERROR_MESSAGES = {
 export default function SurveyAdmin() {
   const [status, setStatus] = useState('checking') // checking | no-user | forbidden | ok
   const [authError, setAuthError] = useState(null)
+  const [forms, setForms] = useState([])
+  const [selectedFormId, setSelectedFormId] = useState(null)
+  const [submissions, setSubmissions] = useState([])
+  const [dashLoading, setDashLoading] = useState(false)
+  const [dashError, setDashError] = useState('')
 
   // 後台是桌機優先（給管理者在電腦上看資料/篩選/匯出），跟全站手機優先的
   // width=device-width 相反。掛載時把 viewport 換成固定寬度，手機開會整頁縮小顯示，
@@ -61,11 +69,52 @@ export default function SurveyAdmin() {
     }
   }, [])
 
+  // 登入完成後載入表單清單，預設選第一筆；token 過期/被撤權（401/403）視同登出。
+  useEffect(() => {
+    if (status !== 'ok') return
+    getAdminForms()
+      .then((res) => {
+        const list = res.data || []
+        setForms(list)
+        setSelectedFormId((prev) => prev ?? list[0]?.id ?? null)
+      })
+      .catch((err) => {
+        if (err.status === 401) {
+          clearAdminToken()
+          setStatus('no-user')
+        } else if (err.status === 403) {
+          setAuthError(AUTH_ERROR_MESSAGES.forbidden)
+          setStatus('forbidden')
+        } else {
+          setDashError(err.message || '載入表單清單失敗')
+        }
+      })
+  }, [status])
+
+  useEffect(() => {
+    if (!selectedFormId) return
+    setDashLoading(true)
+    setDashError('')
+    getAdminSubmissions(selectedFormId)
+      .then((res) => setSubmissions(res.data || []))
+      .catch((err) => {
+        if (err.status === 401) {
+          clearAdminToken()
+          setStatus('no-user')
+        } else {
+          setDashError(err.message || '載入資料失敗')
+        }
+      })
+      .finally(() => setDashLoading(false))
+  }, [selectedFormId])
+
   const handleLogout = () => {
     clearAdminToken()
     setAuthError(null)
     setStatus('no-user')
   }
+
+  const selectedForm = forms.find((f) => f.id === selectedFormId)
 
   if (status === 'checking') {
     return (
@@ -146,9 +195,24 @@ export default function SurveyAdmin() {
               登出
             </button>
           </div>
-          <p style={{ fontSize: 14, color: '#2C2C2C', marginTop: 16 }}>
-            資料檢視、未填名冊、匯出、表單建立器功能開發中。
-          </p>
+          {dashError && (
+            <p style={{ fontSize: 13, color: '#C0392B', marginBottom: 12 }}>{dashError}</p>
+          )}
+
+          <div style={{ display: 'flex', gap: 24 }}>
+            <FormsSidebar forms={forms} selectedId={selectedFormId} onSelect={setSelectedFormId} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {dashLoading && (
+                <p style={{ fontSize: 13, color: '#8A8680' }}>載入中...</p>
+              )}
+              {!dashLoading && selectedForm && (
+                <SubmissionsTable form={selectedForm} submissions={submissions} />
+              )}
+              {!dashLoading && !selectedForm && forms.length === 0 && (
+                <p style={{ fontSize: 13, color: '#8A8680' }}>尚無表單，請先到建立器新增一份</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

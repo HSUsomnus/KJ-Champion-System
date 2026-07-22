@@ -37,7 +37,7 @@ const listConfirmedMembers = async (executor = db) => {
  */
 const listForms = async (executor = db) => {
   const result = await executor.query(
-    `SELECT id, title, token, status, created_at FROM survey_forms ORDER BY created_at DESC`
+    `SELECT id, title, token, fields, status, created_at FROM survey_forms ORDER BY created_at DESC`
   );
   return result.rows;
 };

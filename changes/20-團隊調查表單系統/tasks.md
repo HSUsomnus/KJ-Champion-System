@@ -55,9 +55,9 @@
 
 - [x] **20.18** `[Codex CX-1]` 建 `routes/admin.js`：`GET /admin/forms`、`GET /admin/forms/:id/submissions`（過 `requireAdminSession`）；`server.js` 唯一註冊 `app.use('/admin',...)`
 - [x] **20.19** `[Codex CX-1]` jest：無 bearer→401、非管理者→403、管理者→200+筆數
-- [ ] **20.20** `[Claude]` 側邊欄列 forms 切換
-- [ ] **20.21** `[Claude]` Table 1 全展開 ✅/❎
-- [ ] **20.22** `[Claude]` 篩選（姓名/課程/星等按鈕、推薦人欄不變、單條件互斥、同鈕取消）+ vitest
+- [x] **20.20** `[Claude]` 側邊欄列 forms 切換
+- [x] **20.21** `[Claude]` Table 1 全展開 ✅/❎
+- [x] **20.22** `[Claude]` 篩選（姓名/課程/星等按鈕、推薦人欄不變、單條件互斥、同鈕取消）+ vitest
 
 ---
 

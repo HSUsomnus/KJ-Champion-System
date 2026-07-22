@@ -55,4 +55,12 @@ export function submitForm(token, answers) {
 
 // ========== 後台（Section 3+ 陸續加入 forms/submissions/export 等呼叫，一律走 adminRequest 帶 Bearer） ==========
 
+export function getAdminForms() {
+  return adminRequest('/admin/forms')
+}
+
+export function getAdminSubmissions(formId) {
+  return adminRequest(`/admin/forms/${formId}/submissions`)
+}
+
 export { adminRequest }
