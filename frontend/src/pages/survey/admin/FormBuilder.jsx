@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createAdminForm, patchAdminForm, publishAdminForm } from '../../../services/surveyApi'
+import DeleteQuestionDialog from './DeleteQuestionDialog'
 
 const TYPE_OPTIONS = [
   { value: 'text', label: '文字' },
@@ -45,8 +46,17 @@ export default function FormBuilder({ form, onSaved }) {
   const [publishing, setPublishing] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [draggedRowId, setDraggedRowId] = useState(null)
+  const [deleteTargetRowId, setDeleteTargetRowId] = useState(null)
 
   const published = status === 'published'
+
+  // 十二節 12.1：新副本的 key 必須保持可見並立即標示重複，不得靜默改寫
+  const keyCounts = fields.reduce((acc, f) => {
+    if (f.key) acc[f.key] = (acc[f.key] || 0) + 1
+    return acc
+  }, {})
+  const isDuplicateKey = (key) => Boolean(key) && keyCounts[key] > 1
 
   const updateField = (rowId, patch) => {
     setFields((prev) => prev.map((f) => (f.rowId === rowId ? { ...f, ...patch } : f)))
@@ -79,6 +89,60 @@ export default function FormBuilder({ form, onSaved }) {
     if (focusedRowId === rowId) {
       setFocusedRowId(next[0]?.rowId ?? null)
     }
+  }
+
+  const requestDeleteField = (rowId) => setDeleteTargetRowId(rowId)
+  const cancelDeleteField = () => setDeleteTargetRowId(null)
+  const confirmDeleteField = () => {
+    removeField(deleteTargetRowId)
+    setDeleteTargetRowId(null)
+  }
+
+  // 複製 label/type/required/options；key 原樣保留（會跟原題重複），
+  // 使用者要自己手動改成唯一值，不做靜默改寫（十二節 12.1）
+  const duplicateField = (rowId) => {
+    const idx = fields.findIndex((f) => f.rowId === rowId)
+    if (idx === -1) return
+    const original = fields[idx]
+    const clone = {
+      ...original,
+      rowId: newRowId(),
+      options: original.options
+        ? { ...original.options, values: original.options.values ? [...original.options.values] : undefined }
+        : undefined,
+    }
+    const next = [...fields]
+    next.splice(idx + 1, 0, clone)
+    setFields(next)
+    setFocusedRowId(clone.rowId)
+  }
+
+  // 鍵盤可操作的排序替代方案：上移/下移（十二節 12.1，不是唯一排序方式）
+  const moveField = (rowId, direction) => {
+    setFields((prev) => {
+      const idx = prev.findIndex((f) => f.rowId === rowId)
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (idx === -1 || swapIdx < 0 || swapIdx >= prev.length) return prev
+      const next = [...prev]
+      ;[next[idx], next[swapIdx]] = [next[swapIdx], next[idx]]
+      return next
+    })
+  }
+
+  // 原生 HTML5 drag：把手 dragstart 記住拖曳中的題目，卡片本身接 dragover/drop 換位置（不引入拖曳套件）
+  const handleDragStart = (rowId) => setDraggedRowId(rowId)
+  const handleDrop = (targetRowId) => {
+    if (draggedRowId == null || draggedRowId === targetRowId) return
+    setFields((prev) => {
+      const fromIdx = prev.findIndex((f) => f.rowId === draggedRowId)
+      const toIdx = prev.findIndex((f) => f.rowId === targetRowId)
+      if (fromIdx === -1 || toIdx === -1) return prev
+      const next = [...prev]
+      const [moved] = next.splice(fromIdx, 1)
+      next.splice(toIdx, 0, moved)
+      return next
+    })
+    setDraggedRowId(null)
   }
 
   const addOption = (rowId) => {
@@ -159,16 +223,52 @@ export default function FormBuilder({ form, onSaved }) {
         />
       </div>
 
-      {fields.map((field) => {
+      {fields.map((field, index) => {
         const focused = published || field.rowId === focusedRowId
         return (
           <div
             key={field.rowId}
+            data-testid={`question-card-${index}`}
+            onDragOver={(e) => { if (!published) e.preventDefault() }}
+            onDrop={() => { if (!published) handleDrop(field.rowId) }}
             style={{ ...cardStyle, ...(focused ? { borderLeft: '4px solid #4A7C59' } : {}) }}
           >
+            {!published && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span
+                  draggable
+                  onDragStart={() => handleDragStart(field.rowId)}
+                  aria-label="拖曳排序"
+                  title="拖曳排序"
+                  style={{ color: '#8A8680', fontSize: 14, cursor: 'grab', letterSpacing: -2 }}
+                >
+                  ⋮⋮
+                </span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button
+                    type="button"
+                    onClick={() => moveField(field.rowId, 'up')}
+                    disabled={index === 0}
+                    aria-label="題目上移"
+                    style={moveBtnStyle}
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveField(field.rowId, 'down')}
+                    disabled={index === fields.length - 1}
+                    aria-label="題目下移"
+                    style={moveBtnStyle}
+                  >
+                    ▼
+                  </button>
+                </div>
+              </div>
+            )}
             {focused ? (
               <>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4 }}>
                   <input
                     type="text"
                     placeholder="key"
@@ -196,6 +296,9 @@ export default function FormBuilder({ form, onSaved }) {
                     ))}
                   </select>
                 </div>
+                {isDuplicateKey(field.key) && (
+                  <p style={{ fontSize: 11, color: '#C0392B', margin: '0 0 8px' }}>● key 重複，請修改成唯一值</p>
+                )}
 
                 {field.type === 'searchable_select' && (
                   <div style={{ marginBottom: 12, padding: 12, background: '#F7F5F2', borderRadius: 12 }}>
@@ -254,15 +357,25 @@ export default function FormBuilder({ form, onSaved }) {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #E2DED8' }}>
-                  <button
-                    type="button"
-                    onClick={() => removeField(field.rowId)}
-                    disabled={published}
-                    style={removeBtnStyle}
-                  >
-                    刪除
-                  </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #E2DED8', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => duplicateField(field.rowId)}
+                      disabled={published}
+                      style={linkBtnStyle}
+                    >
+                      複製
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => requestDeleteField(field.rowId)}
+                      disabled={published}
+                      style={removeBtnStyle}
+                    >
+                      刪除
+                    </button>
+                  </div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#2C2C2C' }}>
                     必填
                     <input
@@ -328,6 +441,12 @@ export default function FormBuilder({ form, onSaved }) {
           </button>
         </div>
       )}
+
+      <DeleteQuestionDialog
+        open={deleteTargetRowId != null}
+        onCancel={cancelDeleteField}
+        onConfirm={confirmDeleteField}
+      />
     </div>
   )
 }
@@ -399,6 +518,32 @@ const addBtnStyle = {
   fontSize: 12,
   fontWeight: 500,
   cursor: 'pointer',
+}
+
+const linkBtnStyle = {
+  padding: '6px 12px',
+  borderRadius: 14,
+  border: 'none',
+  background: 'transparent',
+  color: '#4A7C59',
+  fontSize: 12,
+  fontWeight: 500,
+  cursor: 'pointer',
+}
+
+const moveBtnStyle = {
+  width: 24,
+  height: 24,
+  borderRadius: 8,
+  border: '1px solid #E2DED8',
+  background: '#FFFFFF',
+  color: '#8A8680',
+  fontSize: 10,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 0,
 }
 
 const removeBtnStyle = {

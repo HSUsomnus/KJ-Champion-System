@@ -115,12 +115,77 @@ describe('FormBuilder — 編輯既有草稿', () => {
     expect(await screen.findByText('已複製')).toBeInTheDocument()
   })
 
-  it('刪除欄位 → 該欄位從畫面消失', () => {
+  it('點刪除 → 出現確認對話框，點「取消」不刪除', () => {
+    render(<FormBuilder form={DRAFT_FORM} onSaved={() => {}} />)
+
+    fireEvent.click(screen.getByText('刪除'))
+    expect(screen.getByText('刪除這個問題？')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('取消'))
+    expect(screen.queryByText('刪除這個問題？')).not.toBeInTheDocument()
+    expect(screen.getByDisplayValue('name')).toBeInTheDocument()
+  })
+
+  it('點刪除 → 確認對話框點「刪除問題」才真的移除該欄位', () => {
     render(<FormBuilder form={DRAFT_FORM} onSaved={() => {}} />)
     expect(screen.getByDisplayValue('name')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('刪除'))
+    fireEvent.click(screen.getByText('刪除問題'))
+
+    expect(screen.queryByText('刪除這個問題？')).not.toBeInTheDocument()
     expect(screen.queryByDisplayValue('name')).not.toBeInTheDocument()
+  })
+
+  it('複製題目 → 新副本成為焦點、key 原樣保留（會重複）並顯示重複錯誤', () => {
+    render(<FormBuilder form={DRAFT_FORM} onSaved={() => {}} />)
+
+    fireEvent.click(screen.getByText('複製'))
+
+    expect(screen.getByDisplayValue('name')).toBeInTheDocument() // 副本的 key 輸入框可見、值原樣保留
+    expect(screen.getByText('● key 重複，請修改成唯一值')).toBeInTheDocument()
+  })
+
+  it('題目上移/下移 → 交換順序', () => {
+    const twoFields = {
+      ...DRAFT_FORM,
+      fields: [
+        { key: 'a', label: '第一題', type: 'text', required: true },
+        { key: 'b', label: '第二題', type: 'text', required: true },
+      ],
+    }
+    render(<FormBuilder form={twoFields} onSaved={() => {}} />)
+
+    // 第一題預設展開，第二題是摘要卡；點第一張卡的「題目下移」讓第一題往下移
+    fireEvent.click(screen.getAllByLabelText('題目下移')[0])
+
+    // 焦點跟著「題目」走、不是跟著位置走：第一題移到後面仍然是展開編輯中，
+    // 第二題遞補到第一位、變成摘要卡
+    expect(screen.getByDisplayValue('第一題')).toBeInTheDocument()
+    const summaries = screen.getAllByText(/第.題/)
+    expect(summaries[0]).toHaveTextContent('第二題')
+  })
+
+  it('拖曳排序：把手 dragStart + 卡片 drop → 換位置', () => {
+    const twoFields = {
+      ...DRAFT_FORM,
+      fields: [
+        { key: 'a', label: '第一題', type: 'text', required: true },
+        { key: 'b', label: '第二題', type: 'text', required: true },
+      ],
+    }
+    render(<FormBuilder form={twoFields} onSaved={() => {}} />)
+
+    const handles = screen.getAllByLabelText('拖曳排序')
+    const secondCard = screen.getByTestId('question-card-1')
+
+    fireEvent.dragStart(handles[0]) // 抓住「第一題」
+    fireEvent.drop(secondCard) // 丟到「第二題」的卡片上
+
+    // 焦點跟著「題目」走：第一題仍是展開編輯中，只是換到後面；第二題遞補第一位變摘要卡
+    expect(screen.getByDisplayValue('第一題')).toBeInTheDocument()
+    const summaries = screen.getAllByText(/第.題/)
+    expect(summaries[0]).toHaveTextContent('第二題')
   })
 })
 
