@@ -1,5 +1,6 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { vi } from 'vitest'
 import FormBuilder from '../FormBuilder'
 
@@ -21,6 +22,16 @@ beforeEach(() => {
   })
 })
 
+// FormBuilder 用 useBlocker（十二節 12.2 dirty 攔截）必須跑在 data router 裡，
+// 否則 useBlocker 會直接 throw；用 memory router 包一層才能測
+const renderFormBuilder = (props) => {
+  const router = createMemoryRouter(
+    [{ path: '/', element: <FormBuilder {...props} /> }],
+    { initialEntries: ['/'] }
+  )
+  return render(<RouterProvider router={router} />)
+}
+
 const DRAFT_FORM = {
   id: 5,
   title: '既有草稿',
@@ -37,7 +48,7 @@ describe('FormBuilder — 新建表單', () => {
     })
     const onSaved = vi.fn()
 
-    render(<FormBuilder form={null} onSaved={onSaved} />)
+    renderFormBuilder({ form: null, onSaved })
 
     fireEvent.change(screen.getByLabelText('表單標題'), { target: { value: '新表單' } })
     fireEvent.click(screen.getByText('＋ 新增題目'))
@@ -55,7 +66,7 @@ describe('FormBuilder — 新建表單', () => {
   })
 
   it('尚未儲存（無 id）→ 發佈鈕禁用', () => {
-    render(<FormBuilder form={null} onSaved={() => {}} />)
+    renderFormBuilder({ form: null, onSaved: () => {} })
     expect(screen.getByText('發佈表單')).toBeDisabled()
   })
 
@@ -64,7 +75,7 @@ describe('FormBuilder — 新建表單', () => {
     err.data = { error: 'invalid_form', field: 'fields[0].key', reason: 'key 格式錯誤' }
     mockCreateAdminForm.mockRejectedValue(err)
 
-    render(<FormBuilder form={null} onSaved={() => {}} />)
+    renderFormBuilder({ form: null, onSaved: () => {} })
     fireEvent.click(screen.getByText('＋ 新增題目'))
     fireEvent.click(screen.getByText('儲存草稿'))
 
@@ -77,7 +88,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
     mockPatchAdminForm.mockResolvedValue({ success: true, data: { ...DRAFT_FORM, title: '改過的標題' } })
     const onSaved = vi.fn()
 
-    render(<FormBuilder form={DRAFT_FORM} onSaved={onSaved} />)
+    renderFormBuilder({ form: DRAFT_FORM, onSaved })
 
     expect(screen.getByDisplayValue('既有草稿')).toBeInTheDocument()
     expect(screen.getByDisplayValue('name')).toBeInTheDocument()
@@ -101,7 +112,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
     })
     const onSaved = vi.fn()
 
-    render(<FormBuilder form={DRAFT_FORM} onSaved={onSaved} />)
+    renderFormBuilder({ form: DRAFT_FORM, onSaved })
     fireEvent.click(screen.getByText('發佈表單'))
 
     await waitFor(() => expect(mockPublishAdminForm).toHaveBeenCalledWith(5))
@@ -116,7 +127,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
   })
 
   it('點刪除 → 出現確認對話框，點「取消」不刪除', () => {
-    render(<FormBuilder form={DRAFT_FORM} onSaved={() => {}} />)
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
 
     fireEvent.click(screen.getByText('刪除'))
     expect(screen.getByText('刪除這個問題？')).toBeInTheDocument()
@@ -127,7 +138,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
   })
 
   it('點刪除 → 確認對話框點「刪除問題」才真的移除該欄位', () => {
-    render(<FormBuilder form={DRAFT_FORM} onSaved={() => {}} />)
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
     expect(screen.getByDisplayValue('name')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('刪除'))
@@ -138,7 +149,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
   })
 
   it('複製題目 → 新副本成為焦點、key 原樣保留（會重複）並顯示重複錯誤', () => {
-    render(<FormBuilder form={DRAFT_FORM} onSaved={() => {}} />)
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
 
     fireEvent.click(screen.getByText('複製'))
 
@@ -154,7 +165,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
         { key: 'b', label: '第二題', type: 'text', required: true },
       ],
     }
-    render(<FormBuilder form={twoFields} onSaved={() => {}} />)
+    renderFormBuilder({ form: twoFields, onSaved: () => {} })
 
     // 第一題預設展開，第二題是摘要卡；點第一張卡的「題目下移」讓第一題往下移
     fireEvent.click(screen.getAllByLabelText('題目下移')[0])
@@ -174,7 +185,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
         { key: 'b', label: '第二題', type: 'text', required: true },
       ],
     }
-    render(<FormBuilder form={twoFields} onSaved={() => {}} />)
+    renderFormBuilder({ form: twoFields, onSaved: () => {} })
 
     const handles = screen.getAllByLabelText('拖曳排序')
     const secondCard = screen.getByTestId('question-card-1')
@@ -191,7 +202,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
 
 describe('FormBuilder — searchable_select 選項編輯', () => {
   it('切換欄位型別為搜尋選單 → 出現新增選項按鈕，可新增/編輯/刪除選項', () => {
-    render(<FormBuilder form={null} onSaved={() => {}} />)
+    renderFormBuilder({ form: null, onSaved: () => {} })
     fireEvent.click(screen.getByText('＋ 新增題目'))
 
     fireEvent.change(screen.getByDisplayValue('文字'), { target: { value: 'searchable_select' } })
@@ -206,7 +217,7 @@ describe('FormBuilder — searchable_select 選項編輯', () => {
   it('十二節 12.1：static 來源明確存成 {source:"static", values}', async () => {
     mockCreateAdminForm.mockResolvedValue({ success: true, data: { id: 1, fields: [] } })
 
-    render(<FormBuilder form={null} onSaved={() => {}} />)
+    renderFormBuilder({ form: null, onSaved: () => {} })
     fireEvent.click(screen.getByText('＋ 新增題目'))
     fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'course' } })
     fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '課程' } })
@@ -225,7 +236,7 @@ describe('FormBuilder — searchable_select 選項編輯', () => {
   it('十二節 12.1：選「康九成員名單」→ 明確存成 {source:"survey_members"}，不夾帶 values', async () => {
     mockCreateAdminForm.mockResolvedValue({ success: true, data: { id: 1, fields: [] } })
 
-    render(<FormBuilder form={null} onSaved={() => {}} />)
+    renderFormBuilder({ form: null, onSaved: () => {} })
     fireEvent.click(screen.getByText('＋ 新增題目'))
     fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'name' } })
     fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '姓名' } })
@@ -253,7 +264,7 @@ describe('FormBuilder — 單欄題目卡的焦點/摘要狀態（十二節 12.1
   }
 
   it('預設第一題展開、其餘顯示摘要卡（標題+題型）', () => {
-    render(<FormBuilder form={TWO_FIELD_FORM} onSaved={() => {}} />)
+    renderFormBuilder({ form: TWO_FIELD_FORM, onSaved: () => {} })
 
     expect(screen.getByDisplayValue('name')).toBeInTheDocument() // 第一題展開中
     expect(screen.queryByDisplayValue('note')).not.toBeInTheDocument() // 第二題還是摘要卡
@@ -261,7 +272,7 @@ describe('FormBuilder — 單欄題目卡的焦點/摘要狀態（十二節 12.1
   })
 
   it('點摘要卡 → 該題展開、原本展開的題目收回摘要', () => {
-    render(<FormBuilder form={TWO_FIELD_FORM} onSaved={() => {}} />)
+    renderFormBuilder({ form: TWO_FIELD_FORM, onSaved: () => {} })
 
     fireEvent.click(screen.getByText('備註'))
 
@@ -274,12 +285,81 @@ describe('FormBuilder — 單欄題目卡的焦點/摘要狀態（十二節 12.1
 describe('FormBuilder — 已發佈表單唯讀', () => {
   it('published 表單：欄位/標題輸入被 disabled，不顯示儲存/發佈鈕', () => {
     const published = { ...DRAFT_FORM, status: 'published', token: 'tok-xyz' }
-    render(<FormBuilder form={published} onSaved={() => {}} />)
+    renderFormBuilder({ form: published, onSaved: () => {} })
 
     expect(screen.getByDisplayValue('既有草稿')).toBeDisabled()
     expect(screen.queryByText('儲存草稿')).not.toBeInTheDocument()
     expect(screen.queryByText('發佈表單')).not.toBeInTheDocument()
     expect(screen.getByText('已發佈')).toBeInTheDocument()
     expect(screen.getByText(/\/f\/tok-xyz$/)).toBeInTheDocument()
+  })
+})
+
+describe('FormBuilder — dirty state 與離頁攔截（十二節 12.2）', () => {
+  it('修改標題後未儲存就重新整理/關閉 → beforeunload 被攔截', () => {
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    fireEvent.change(screen.getByDisplayValue('既有草稿'), { target: { value: '改過但沒存' } })
+
+    const event = new Event('beforeunload', { cancelable: true })
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault')
+    window.dispatchEvent(event)
+
+    expect(preventDefaultSpy).toHaveBeenCalled()
+  })
+
+  it('沒有未儲存變更時，重新整理/關閉不會被攔截', () => {
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    const event = new Event('beforeunload', { cancelable: true })
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault')
+    window.dispatchEvent(event)
+
+    expect(preventDefaultSpy).not.toHaveBeenCalled()
+  })
+
+  it('儲存成功後 dirty 清除，不再攔截 beforeunload', async () => {
+    mockPatchAdminForm.mockResolvedValue({ success: true, data: DRAFT_FORM })
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    fireEvent.change(screen.getByDisplayValue('既有草稿'), { target: { value: '改過的標題' } })
+    fireEvent.click(screen.getByText('儲存草稿'))
+    // 等到 saving flow 整個跑完（含 finally setSaving(false)）才確定 setSavedSnapshot 也已套用，
+    // 不能只等 mock 被呼叫——那一刻 await 內的後續狀態更新可能都還沒 flush
+    await waitFor(() => expect(screen.queryByText('儲存中...')).not.toBeInTheDocument())
+
+    const event = new Event('beforeunload', { cancelable: true })
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault')
+    window.dispatchEvent(event)
+
+    expect(preventDefaultSpy).not.toHaveBeenCalled()
+  })
+
+  it('儲存失敗時仍保留 dirty（不清除未儲存狀態）', async () => {
+    const err = new Error('儲存失敗')
+    err.data = { error: 'invalid_form', field: 'title', reason: '儲存失敗' }
+    mockPatchAdminForm.mockRejectedValue(err)
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    fireEvent.change(screen.getByDisplayValue('既有草稿'), { target: { value: '改過的標題' } })
+    fireEvent.click(screen.getByText('儲存草稿'))
+    await screen.findByText('title：儲存失敗')
+
+    const event = new Event('beforeunload', { cancelable: true })
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault')
+    window.dispatchEvent(event)
+
+    expect(preventDefaultSpy).toHaveBeenCalled()
+  })
+
+  it('onDirtyChange 會回報目前的 dirty 狀態給父層', () => {
+    const onDirtyChange = vi.fn()
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {}, onDirtyChange })
+
+    expect(onDirtyChange).toHaveBeenCalledWith(false)
+
+    fireEvent.change(screen.getByDisplayValue('既有草稿'), { target: { value: '改過但沒存' } })
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true)
   })
 })

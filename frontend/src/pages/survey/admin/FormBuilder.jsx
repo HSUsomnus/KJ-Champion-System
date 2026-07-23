@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useBlocker } from 'react-router-dom'
 import { createAdminForm, patchAdminForm, publishAdminForm } from '../../../services/surveyApi'
 import DeleteQuestionDialog from './DeleteQuestionDialog'
+import ConfirmLeaveDialog from '../../../components/ConfirmLeaveDialog'
 
 const TYPE_OPTIONS = [
   { value: 'text', label: '文字' },
@@ -34,7 +36,33 @@ const fieldSummary = (field) => {
 
 const typeLabel = (type) => TYPE_OPTIONS.find((t) => t.value === type)?.label || type
 
-export default function FormBuilder({ form, onSaved }) {
+// 十二節 12.2：內容跟最近一次成功載入/儲存有差異即為 dirty
+const serializeForm = (title, fields) => JSON.stringify({ title, fields: fields.map(stripRowId) })
+
+// dirty 時攔截應用程式內導覽（react-router 導航）與重新整理/關閉（beforeunload）；
+// 跟 ConfirmLeaveDialog.jsx 既有的 useLeaveGuard 不同之處：這裡用 dirtyRef 讓
+// shouldBlock 隨 dirty 狀態即時反應（存草稿成功後不再攔，改回編輯又要攔）
+function useDirtyGuard(dirty) {
+  const dirtyRef = useRef(dirty)
+  useEffect(() => { dirtyRef.current = dirty }, [dirty])
+
+  const shouldBlock = useCallback(() => dirtyRef.current, [])
+  const blocker = useBlocker(shouldBlock)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (!dirtyRef.current) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
+
+  return blocker
+}
+
+export default function FormBuilder({ form, onSaved, onDirtyChange }) {
   const initialFields = withRowIds(form?.fields)
   const [formId, setFormId] = useState(form?.id ?? null)
   const [status, setStatus] = useState(form?.status ?? 'draft')
@@ -48,8 +76,13 @@ export default function FormBuilder({ form, onSaved }) {
   const [copied, setCopied] = useState(false)
   const [draggedRowId, setDraggedRowId] = useState(null)
   const [deleteTargetRowId, setDeleteTargetRowId] = useState(null)
+  const [savedSnapshot, setSavedSnapshot] = useState(serializeForm(form?.title ?? '', initialFields))
 
   const published = status === 'published'
+  const dirty = !published && serializeForm(title, fields) !== savedSnapshot
+  const blocker = useDirtyGuard(dirty)
+
+  useEffect(() => { onDirtyChange?.(dirty) }, [dirty, onDirtyChange])
 
   // 十二節 12.1：新副本的 key 必須保持可見並立即標示重複，不得靜默改寫
   const keyCounts = fields.reduce((acc, f) => {
@@ -176,6 +209,8 @@ export default function FormBuilder({ form, onSaved }) {
         setStatus(res.data.status)
         onSaved?.(res.data)
       }
+      // 十二節 12.2：成功儲存才清除 dirty；失敗保留內容與 dirty 狀態不變
+      setSavedSnapshot(serializeForm(title, fields))
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -447,6 +482,7 @@ export default function FormBuilder({ form, onSaved }) {
         onCancel={cancelDeleteField}
         onConfirm={confirmDeleteField}
       />
+      <ConfirmLeaveDialog blocker={blocker} />
     </div>
   )
 }

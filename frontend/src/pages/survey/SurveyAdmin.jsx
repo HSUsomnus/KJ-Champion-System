@@ -7,6 +7,7 @@ import AttendanceRoster from './admin/AttendanceRoster'
 import ExportButtons from './admin/ExportButtons'
 import CopyLinkButton from './admin/CopyLinkButton'
 import FormBuilder from './admin/FormBuilder'
+import ConfirmLeaveDialog from '../../components/ConfirmLeaveDialog'
 
 const TABS = [
   { key: 'table', label: '送出紀錄' },
@@ -40,6 +41,8 @@ export default function SurveyAdmin() {
   const [attendance, setAttendance] = useState(null)
   const [dashLoading, setDashLoading] = useState(false)
   const [dashError, setDashError] = useState('')
+  const [builderDirty, setBuilderDirty] = useState(false)
+  const [pendingAction, setPendingAction] = useState(null)
 
   // 後台是桌機優先（給管理者在電腦上看資料/篩選/匯出），跟全站手機優先的
   // width=device-width 相反。掛載時把 viewport 換成固定寬度，手機開會整頁縮小顯示，
@@ -123,21 +126,36 @@ export default function SurveyAdmin() {
       .finally(() => setDashLoading(false))
   }, [selectedFormId])
 
-  const handleLogout = () => {
+  // 十二節 12.2：切換表單/新增/登出都算「離開目前建立器」，草稿有未儲存變更時要先攔截確認
+  const guardedAction = (action) => {
+    if (builderDirty) {
+      setPendingAction(() => action)
+    } else {
+      action()
+    }
+  }
+  const cancelPendingAction = () => setPendingAction(null)
+  const confirmPendingAction = () => {
+    pendingAction?.()
+    setPendingAction(null)
+    setBuilderDirty(false)
+  }
+
+  const handleLogout = () => guardedAction(() => {
     clearAdminToken()
     setAuthError(null)
     setStatus('no-user')
-  }
+  })
 
-  const handleSelectForm = (id) => {
+  const handleSelectForm = (id) => guardedAction(() => {
     setCreatingNew(false)
     setSelectedFormId(id)
-  }
+  })
 
-  const handleCreateNew = () => {
+  const handleCreateNew = () => guardedAction(() => {
     setCreatingNew(true)
     setSelectedFormId(null)
-  }
+  })
 
   // 建立/儲存草稿/發佈成功後，把回傳的表單塞回清單並選取它；新表單就新增一筆，
   // 既有表單（patch/publish）就地覆蓋，兩種情境共用同一段合併邏輯。
@@ -282,6 +300,7 @@ export default function SurveyAdmin() {
                   key={creatingNew ? 'new' : selectedForm?.id}
                   form={creatingNew ? null : selectedForm}
                   onSaved={handleFormSaved}
+                  onDirtyChange={setBuilderDirty}
                 />
               )}
               {!builderActive && dashLoading && (
@@ -300,6 +319,9 @@ export default function SurveyAdmin() {
           </div>
         </div>
       </div>
+      <ConfirmLeaveDialog
+        blocker={pendingAction ? { state: 'blocked', reset: cancelPendingAction, proceed: confirmPendingAction } : null}
+      />
     </div>
   )
 }
