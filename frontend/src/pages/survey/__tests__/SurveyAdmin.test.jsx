@@ -125,6 +125,24 @@ describe('SurveyAdmin', () => {
     expect(await screen.findByText('尚無表單，請先到建立器新增一份')).toBeInTheDocument()
   })
 
+  it('已發佈表單的 Table 檢視也能複製分享連結（不只建立器畫面才有）', async () => {
+    mockGetAdminForms.mockResolvedValue({
+      success: true,
+      data: [{ id: 1, title: '康九冠軍調查', token: 'abc', status: 'published', fields: [{ key: 'name', label: '姓名', type: 'text' }] }],
+    })
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+
+    setAdminToken('fake.jwt.token')
+    render(<SurveyAdmin />)
+
+    const button = await screen.findByText('複製連結')
+    fireEvent.click(button)
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/f/abc`))
+    expect(await screen.findByText('已複製')).toBeInTheDocument()
+  })
+
   it('點「未填名冊」切換鈕 → 顯示點名表而非送出紀錄表格', async () => {
     mockGetAdminForms.mockResolvedValue({
       success: true,

@@ -5,6 +5,7 @@ import FormsSidebar from './admin/FormsSidebar'
 import SubmissionsTable from './admin/SubmissionsTable'
 import AttendanceRoster from './admin/AttendanceRoster'
 import ExportButtons from './admin/ExportButtons'
+import CopyLinkButton from './admin/CopyLinkButton'
 import FormBuilder from './admin/FormBuilder'
 
 const TABS = [
@@ -269,7 +270,10 @@ export default function SurveyAdmin() {
                       </button>
                     ))}
                   </div>
-                  <ExportButtons formId={selectedForm.id} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <CopyLinkButton token={selectedForm.token} />
+                    <ExportButtons formId={selectedForm.id} />
+                  </div>
                 </div>
               )}
 
