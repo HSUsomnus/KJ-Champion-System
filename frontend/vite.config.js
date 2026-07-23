@@ -29,12 +29,20 @@ export default defineConfig({
         ],
       },
       workbox: {
-        navigateFallbackDenylist: [/^\/api\//],
+        // /survey-api/ 必須排除在 SPA navigation fallback 之外：LINE OAuth callback
+        // 是瀏覽器頂層 navigation，若被 Service Worker 當成 SPA 路由回傳 index.html，
+        // callback 永遠到不了 Cloudflare Pages Worker proxy / kj-survey-server（change 20 診斷報告）
+        navigateFallbackDenylist: [/^\/api\//, /^\/survey-api\//],
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\/api\/.*/,
             handler: 'NetworkFirst',
             options: { cacheName: 'api-cache', networkTimeoutSeconds: 5 },
+          },
+          {
+            urlPattern: /^https?:\/\/.*\/survey-api\/.*/,
+            handler: 'NetworkFirst',
+            options: { cacheName: 'survey-api-cache', networkTimeoutSeconds: 5 },
           },
         ],
       },
