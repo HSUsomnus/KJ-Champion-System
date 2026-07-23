@@ -26,6 +26,7 @@ beforeEach(() => {
     configurable: true,
   })
   useAdminMembers.mockReturnValue({ members: [], status: 'ready', error: '', retry: vi.fn() })
+  Element.prototype.scrollIntoView = vi.fn() // jsdom 沒實作，發布驗證失敗時會呼叫
 })
 
 // FormBuilder 用 useBlocker（十二節 12.2 dirty 攔截）必須跑在 data router 裡，
@@ -120,6 +121,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
 
     renderFormBuilder({ form: DRAFT_FORM, onSaved })
     fireEvent.click(screen.getByText('發佈表單'))
+    fireEvent.click(await screen.findByText('確認發佈'))
 
     await waitFor(() => expect(mockPublishAdminForm).toHaveBeenCalledWith(5))
     expect(await screen.findByText('已發佈')).toBeInTheDocument()
@@ -288,8 +290,8 @@ describe('FormBuilder — 單欄題目卡的焦點/摘要狀態（十二節 12.1
   })
 })
 
-describe('FormBuilder — 已發佈表單唯讀', () => {
-  it('published 表單：欄位/標題輸入被 disabled，不顯示儲存/發佈鈕', () => {
+describe('FormBuilder — 已發佈表單唯讀（十二節 12.1：乾淨摘要，不顯示 disabled 編輯框）', () => {
+  it('published 表單：標題輸入 disabled，不顯示儲存/發佈鈕，題目改成乾淨摘要而非 disabled input', () => {
     const published = { ...DRAFT_FORM, status: 'published', token: 'tok-xyz' }
     renderFormBuilder({ form: published, onSaved: () => {} })
 
@@ -298,6 +300,55 @@ describe('FormBuilder — 已發佈表單唯讀', () => {
     expect(screen.queryByText('發佈表單')).not.toBeInTheDocument()
     expect(screen.getByText('已發佈')).toBeInTheDocument()
     expect(screen.getByText(/\/f\/tok-xyz$/)).toBeInTheDocument()
+
+    // 題目不再是 disabled 的 key/label input，改成乾淨摘要（標題 + 題型）
+    expect(screen.queryByPlaceholderText('key')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('問題標題')).not.toBeInTheDocument()
+    expect(screen.getByText('姓名')).toBeInTheDocument()
+    expect(screen.getByText('文字')).toBeInTheDocument()
+    // 沒有拖曳把手、上移/下移、複製/刪除這些編輯專用操作
+    expect(screen.queryByLabelText('拖曳排序')).not.toBeInTheDocument()
+    expect(screen.queryByText('複製')).not.toBeInTheDocument()
+    expect(screen.queryByText('刪除')).not.toBeInTheDocument()
+  })
+})
+
+describe('FormBuilder — 發布前驗證（十二節 12.2）', () => {
+  it('標題空白 → 點發佈不開確認對話框、不呼叫 API，顯示 inline 錯誤', () => {
+    const emptyTitleForm = { ...DRAFT_FORM, title: '' }
+    renderFormBuilder({ form: emptyTitleForm, onSaved: () => {} })
+
+    fireEvent.click(screen.getByText('發佈表單'))
+
+    expect(screen.queryByText('發布這份表單？')).not.toBeInTheDocument()
+    expect(screen.getByText('● 請輸入表單標題')).toBeInTheDocument()
+    expect(mockPublishAdminForm).not.toHaveBeenCalled()
+  })
+
+  it('題目 key 缺漏 → 點發佈不開確認對話框，該題自動展開並顯示錯誤', () => {
+    const badKeyForm = {
+      ...DRAFT_FORM,
+      fields: [{ key: '', label: '姓名', type: 'text', required: true }],
+    }
+    renderFormBuilder({ form: badKeyForm, onSaved: () => {} })
+
+    fireEvent.click(screen.getByText('發佈表單'))
+
+    expect(screen.queryByText('發布這份表單？')).not.toBeInTheDocument()
+    expect(screen.getByText(/key 格式錯誤/)).toBeInTheDocument()
+    expect(mockPublishAdminForm).not.toHaveBeenCalled()
+  })
+
+  it('驗證通過 → 開確認對話框，點「取消」不呼叫 API', async () => {
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    fireEvent.click(screen.getByText('發佈表單'))
+    expect(await screen.findByText('發布這份表單？')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('取消'))
+
+    expect(screen.queryByText('發布這份表單？')).not.toBeInTheDocument()
+    expect(mockPublishAdminForm).not.toHaveBeenCalled()
   })
 })
 

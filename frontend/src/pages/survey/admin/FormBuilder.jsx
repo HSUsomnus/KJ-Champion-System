@@ -2,8 +2,49 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
 import { createAdminForm, patchAdminForm, publishAdminForm } from '../../../services/surveyApi'
 import DeleteQuestionDialog from './DeleteQuestionDialog'
+import PublishConfirmDialog from './PublishConfirmDialog'
 import ConfirmLeaveDialog from '../../../components/ConfirmLeaveDialog'
 import FormPreview from './FormPreview'
+
+const KEY_REGEX = /^[a-z][a-z0-9_]*$/
+
+// 十二節 12.2：發布前重新驗證完整表單，鏡射後端 formService.js 的規則（五節），
+// 讓錯誤能在送出 API 前就 inline 顯示、聚焦到第一個錯誤題目，不用等後端 400 才知道。
+// 回傳 { title, fields: {rowId: message} }，皆為 undefined 表示驗證通過。
+const validateForPublish = (title, fields) => {
+  const errors = { title: undefined, fields: {} }
+
+  if (!title || !title.trim()) errors.title = '請輸入表單標題'
+  else if (title.length > 200) errors.title = '表單標題不可超過 200 字'
+
+  if (fields.length === 0) return { ...errors, formError: '請至少新增一個問題' }
+  if (fields.length > 50) return { ...errors, formError: '問題數量不可超過 50 個' }
+
+  const seenKeys = new Set()
+  for (const f of fields) {
+    if (!f.key || !KEY_REGEX.test(f.key) || f.key.length > 40) {
+      errors.fields[f.rowId] = 'key 格式錯誤（需以小寫英文字母開頭，只能有小寫英數與底線）'
+    } else if (seenKeys.has(f.key)) {
+      errors.fields[f.rowId] = 'key 重複，請修改成唯一值'
+    }
+    seenKeys.add(f.key)
+
+    if (!errors.fields[f.rowId] && (!f.label || !f.label.trim() || f.label.length > 100)) {
+      errors.fields[f.rowId] = '請輸入問題標題（不可超過 100 字）'
+    }
+
+    if (!errors.fields[f.rowId] && f.type === 'searchable_select' && f.options?.source !== 'survey_members') {
+      const values = f.options?.values || []
+      const uniqueValues = new Set(values)
+      const hasBadValue = values.some((v) => !v || !v.trim() || v.length > 100)
+      if (values.length === 0 || hasBadValue || uniqueValues.size !== values.length) {
+        errors.fields[f.rowId] = '選項不可為空、不可重複，且每項不超過 100 字'
+      }
+    }
+  }
+
+  return errors
+}
 
 const TYPE_OPTIONS = [
   { value: 'text', label: '文字' },
@@ -79,6 +120,10 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
   const [deleteTargetRowId, setDeleteTargetRowId] = useState(null)
   const [savedSnapshot, setSavedSnapshot] = useState(serializeForm(form?.title ?? '', initialFields))
   const [activeView, setActiveView] = useState('edit')
+  const [publishErrors, setPublishErrors] = useState({ title: undefined, fields: {}, formError: '' })
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false)
+  const titleInputRef = useRef(null)
+  const fieldRefs = useRef({})
 
   const published = status === 'published'
   const dirty = !published && serializeForm(title, fields) !== savedSnapshot
@@ -220,8 +265,38 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
     }
   }
 
-  const handlePublish = async () => {
+  // 十二節 12.2：發布前先本地驗證整份表單；有錯誤就不呼叫 API，
+  // 聚焦第一個錯誤題目（若目前收合成摘要卡，先展開）並捲入可視區
+  const requestPublish = () => {
     if (!formId) return
+    const result = validateForPublish(title, fields)
+    setPublishErrors(result)
+
+    const firstErrorRowId = fields.find((f) => result.fields[f.rowId])?.rowId
+
+    if (result.title) {
+      setActiveView('edit')
+      titleInputRef.current?.focus()
+      titleInputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      return
+    }
+    if (result.formError) return
+    if (firstErrorRowId != null) {
+      setActiveView('edit')
+      setFocusedRowId(firstErrorRowId)
+      const el = fieldRefs.current[firstErrorRowId]
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      el?.querySelector('input')?.focus()
+      return
+    }
+
+    setPublishConfirmOpen(true)
+  }
+
+  const cancelPublish = () => setPublishConfirmOpen(false)
+
+  const confirmPublish = async () => {
+    setPublishConfirmOpen(false)
     setPublishing(true)
     setError('')
     try {
@@ -276,6 +351,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
         <label style={labelStyle} htmlFor="form-builder-title">表單標題</label>
         <input
           id="form-builder-title"
+          ref={titleInputRef}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -283,13 +359,19 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
           placeholder="請輸入這份表單的名稱"
           style={{ ...inputStyle, width: '100%', fontSize: 18, fontWeight: 600, border: 'none', borderBottom: '1px solid #E2DED8', borderRadius: 0, padding: '4px 0 8px' }}
         />
+        {publishErrors.title && (
+          <p style={{ fontSize: 11, color: '#C0392B', margin: '6px 0 0' }}>● {publishErrors.title}</p>
+        )}
       </div>
 
       {fields.map((field, index) => {
-        const focused = published || field.rowId === focusedRowId
+        // 已發佈表單不進「聚焦編輯」狀態——一律顯示乾淨唯讀摘要，不再是 disabled 的編輯框
+        // （十二節 12.1：已發佈表單改成乾淨的唯讀摘要）
+        const focused = !published && field.rowId === focusedRowId
         return (
           <div
             key={field.rowId}
+            ref={(el) => { fieldRefs.current[field.rowId] = el }}
             data-testid={`question-card-${index}`}
             onDragOver={(e) => { if (!published) e.preventDefault() }}
             onDrop={() => { if (!published) handleDrop(field.rowId) }}
@@ -360,6 +442,9 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
                 </div>
                 {isDuplicateKey(field.key) && (
                   <p style={{ fontSize: 11, color: '#C0392B', margin: '0 0 8px' }}>● key 重複，請修改成唯一值</p>
+                )}
+                {!isDuplicateKey(field.key) && publishErrors.fields[field.rowId] && (
+                  <p style={{ fontSize: 11, color: '#C0392B', margin: '0 0 8px' }}>● {publishErrors.fields[field.rowId]}</p>
                 )}
 
                 {field.type === 'searchable_select' && (
@@ -449,6 +534,14 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
                   </label>
                 </div>
               </>
+            ) : published ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#2C2C2C' }}>{field.label}</div>
+                  <div style={{ fontSize: 12, color: '#8A8680', marginTop: 2 }}>{fieldSummary(field)}</div>
+                </div>
+                <span style={typeTagStyle}>{typeLabel(field.type)}</span>
+              </div>
             ) : (
               <button
                 type="button"
@@ -485,7 +578,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
         {!published && (
           <button
             type="button"
-            onClick={handlePublish}
+            onClick={requestPublish}
             disabled={!formId || publishing || fields.length === 0}
             style={primaryBtnStyle}
           >
@@ -496,6 +589,10 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
           <span style={{ fontSize: 12, color: '#4A7C59', fontWeight: 500 }}>已發佈</span>
         )}
       </div>
+
+      {publishErrors.formError && (
+        <p style={{ fontSize: 12, color: '#C0392B', marginTop: 8 }}>{publishErrors.formError}</p>
+      )}
 
       {shareUrl && (
         <div style={{ marginTop: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -510,6 +607,11 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
         open={deleteTargetRowId != null}
         onCancel={cancelDeleteField}
         onConfirm={confirmDeleteField}
+      />
+      <PublishConfirmDialog
+        open={publishConfirmOpen}
+        onCancel={cancelPublish}
+        onConfirm={confirmPublish}
       />
       <ConfirmLeaveDialog blocker={blocker} />
     </div>
