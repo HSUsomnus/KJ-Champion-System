@@ -40,9 +40,9 @@ describe('FormBuilder — 新建表單', () => {
     render(<FormBuilder form={null} onSaved={onSaved} />)
 
     fireEvent.change(screen.getByLabelText('表單標題'), { target: { value: '新表單' } })
-    fireEvent.click(screen.getByText('+ 新增欄位'))
+    fireEvent.click(screen.getByText('＋ 新增題目'))
     fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'name' } })
-    fireEvent.change(screen.getByPlaceholderText('標籤'), { target: { value: '姓名' } })
+    fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '姓名' } })
 
     fireEvent.click(screen.getByText('儲存草稿'))
 
@@ -65,7 +65,7 @@ describe('FormBuilder — 新建表單', () => {
     mockCreateAdminForm.mockRejectedValue(err)
 
     render(<FormBuilder form={null} onSaved={() => {}} />)
-    fireEvent.click(screen.getByText('+ 新增欄位'))
+    fireEvent.click(screen.getByText('＋ 新增題目'))
     fireEvent.click(screen.getByText('儲存草稿'))
 
     expect(await screen.findByText('fields[0].key：key 格式錯誤')).toBeInTheDocument()
@@ -119,7 +119,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
     render(<FormBuilder form={DRAFT_FORM} onSaved={() => {}} />)
     expect(screen.getByDisplayValue('name')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('刪除欄位'))
+    fireEvent.click(screen.getByText('刪除'))
     expect(screen.queryByDisplayValue('name')).not.toBeInTheDocument()
   })
 })
@@ -127,7 +127,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
 describe('FormBuilder — searchable_select 選項編輯', () => {
   it('切換欄位型別為搜尋選單 → 出現新增選項按鈕，可新增/編輯/刪除選項', () => {
     render(<FormBuilder form={null} onSaved={() => {}} />)
-    fireEvent.click(screen.getByText('+ 新增欄位'))
+    fireEvent.click(screen.getByText('＋ 新增題目'))
 
     fireEvent.change(screen.getByDisplayValue('文字'), { target: { value: 'searchable_select' } })
     fireEvent.click(screen.getByText('+ 新增選項'))
@@ -136,6 +136,73 @@ describe('FormBuilder — searchable_select 選項編輯', () => {
     // key/label/option 三個空字串輸入框都存在，找 option 那個用刪除選項按鈕反查即可
     expect(screen.getByText('刪除選項')).toBeInTheDocument()
     expect(optionInputs.length).toBeGreaterThan(0)
+  })
+
+  it('十二節 12.1：static 來源明確存成 {source:"static", values}', async () => {
+    mockCreateAdminForm.mockResolvedValue({ success: true, data: { id: 1, fields: [] } })
+
+    render(<FormBuilder form={null} onSaved={() => {}} />)
+    fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'course' } })
+    fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '課程' } })
+    fireEvent.change(screen.getByDisplayValue('文字'), { target: { value: 'searchable_select' } })
+    fireEvent.click(screen.getByText('+ 新增選項'))
+    const textboxes = screen.getAllByRole('textbox')
+    fireEvent.change(textboxes[textboxes.length - 1], { target: { value: '選項1' } })
+
+    fireEvent.click(screen.getByText('儲存草稿'))
+
+    await waitFor(() => expect(mockCreateAdminForm).toHaveBeenCalled())
+    const [, fields] = mockCreateAdminForm.mock.calls[0]
+    expect(fields[0].options).toEqual({ source: 'static', values: ['選項1'] })
+  })
+
+  it('十二節 12.1：選「康九成員名單」→ 明確存成 {source:"survey_members"}，不夾帶 values', async () => {
+    mockCreateAdminForm.mockResolvedValue({ success: true, data: { id: 1, fields: [] } })
+
+    render(<FormBuilder form={null} onSaved={() => {}} />)
+    fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'name' } })
+    fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '姓名' } })
+    fireEvent.change(screen.getByDisplayValue('文字'), { target: { value: 'searchable_select' } })
+    fireEvent.click(screen.getByText('康九成員名單'))
+
+    fireEvent.click(screen.getByText('儲存草稿'))
+
+    await waitFor(() => expect(mockCreateAdminForm).toHaveBeenCalled())
+    const [, fields] = mockCreateAdminForm.mock.calls[0]
+    expect(fields[0].options).toEqual({ source: 'survey_members' })
+  })
+})
+
+describe('FormBuilder — 單欄題目卡的焦點/摘要狀態（十二節 12.1）', () => {
+  const TWO_FIELD_FORM = {
+    id: 5,
+    title: '兩題表單',
+    status: 'draft',
+    token: null,
+    fields: [
+      { key: 'name', label: '姓名', type: 'text', required: true },
+      { key: 'note', label: '備註', type: 'text', required: false },
+    ],
+  }
+
+  it('預設第一題展開、其餘顯示摘要卡（標題+題型）', () => {
+    render(<FormBuilder form={TWO_FIELD_FORM} onSaved={() => {}} />)
+
+    expect(screen.getByDisplayValue('name')).toBeInTheDocument() // 第一題展開中
+    expect(screen.queryByDisplayValue('note')).not.toBeInTheDocument() // 第二題還是摘要卡
+    expect(screen.getByText('備註')).toBeInTheDocument() // 摘要卡顯示題目標題
+  })
+
+  it('點摘要卡 → 該題展開、原本展開的題目收回摘要', () => {
+    render(<FormBuilder form={TWO_FIELD_FORM} onSaved={() => {}} />)
+
+    fireEvent.click(screen.getByText('備註'))
+
+    expect(screen.getByDisplayValue('note')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('name')).not.toBeInTheDocument()
+    expect(screen.getByText('姓名')).toBeInTheDocument() // 姓名變摘要卡
   })
 })
 
