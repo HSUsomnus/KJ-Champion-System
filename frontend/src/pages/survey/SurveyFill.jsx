@@ -42,9 +42,11 @@ export default function SurveyFill() {
     })
   }
 
+  // 十二節 12.5：required:true 或缺少 required 的 legacy 欄位必填；required:false 可留空
   const validate = () => {
     const errors = {}
     for (const field of form.fields) {
+      if (field.required === false) continue
       const value = (answers[field.key] || '').trim()
       if (!value) errors[field.key] = fieldErrorMessage(field)
     }
@@ -111,17 +113,17 @@ export default function SurveyFill() {
   return (
     <div style={pageStyle}>
       <div style={{ width: '100%', maxWidth: 448 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 12 }}>
           <img
             src="/康九_logo.png"
             alt="KJ Champion"
             style={{ width: 112, objectFit: 'contain', marginBottom: 12 }}
           />
-          <h1 style={{ fontSize: 20, fontWeight: 600, color: '#2C2C2C', margin: '0 0 16px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: '#2C2C2C', margin: 0, textAlign: 'center' }}>
             {form.title}
           </h1>
         </div>
-        <form onSubmit={handleSubmit} style={cardStyle}>
+        <form onSubmit={handleSubmit}>
           <FormFieldsPreview
             fields={form.fields}
             answers={answers}

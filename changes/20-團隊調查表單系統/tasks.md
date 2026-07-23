@@ -103,7 +103,7 @@
 
 - [x] **20.38** `[Claude]`（原標 Codex CX-5，直接自己做）新增受 `requireAdminSession` 保護的 `GET /admin/members`：沿用既有 `listConfirmedMembers`（已存在，只回 confirmed 的 `{name,star_rank}`）；jest 涵蓋成功、空名冊、未登入、撤權與 DB error（`buildApp` 補掛 `errorHandler` 才能測到 500 分支）；不動 schema/migration
 - [x] **20.39** `[Claude]` `surveyApi.getAdminMembers()` + `useAdminMembers` hook（loading/error/empty/retry 四態，供 20.41/20.44 消費）；`getMembersByToken`（公開端點）未動、既有測試仍全綠；vitest 15 案例（API client 1 + hook 4，另加既有 surveyApi 案例回歸）
-- [ ] **20.40** `[Claude]` 抽出預覽與 `/f/:token` 共用的逐題卡片 renderer，將公開填寫頁改為 KJ Warm Minimal 的表單標題卡 + 逐題卡；修正 `required:false` 可留空、legacy 缺 `required` 仍必填，補 renderer/SurveyFill Vitest
+- [x] **20.40** `[Claude]` `FormFieldsPreview.jsx` 每題各自一張卡片（`questionCardStyle`）+ 必填星號（`required!==false`）；`SurveyFill.jsx` 標題區改獨立卡片、修正 `validate()` 舊版忽略 `required` 的 bug（`required:false` 可留空、legacy 缺 `required` 仍必填）；新增 `FormFieldsPreview.test.jsx` + `SurveyFill.test.jsx` 補兩案例，vitest 全套 77 案例綠
 - [ ] **20.41** `[Claude]` 重製響應式 FormBuilder：單欄標題卡/問題卡/焦點狀態、手動 key、label/type/required、static 與 `survey_members` 來源切換；static 明確產生 `{source:'static',values}`，member 明確產生 `{source:'survey_members'}`；補欄位驗證與序列化 Vitest
 - [ ] **20.42** `[Claude]` 完成原生 Pointer/HTML5 拖曳排序、鍵盤上移/下移、複製與刪除 Confirm Dialog；複製後保留可見重複 key 並顯示 inline error，不引入拖曳套件；補排序、鍵盤、複製與取消/確認刪除 Vitest
 - [ ] **20.43** `[Claude]` 完成 dirty state 與手動儲存：攔截切換表單、新增、登出、應用程式導航及 `beforeunload`；成功儲存才清除 dirty，失敗保留內容；補各離頁入口、取消離頁、確認離頁與儲存失敗 Vitest

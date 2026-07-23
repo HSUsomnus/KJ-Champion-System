@@ -89,6 +89,40 @@ describe('SurveyFill', () => {
     expect(mockSubmitForm).not.toHaveBeenCalled()
   })
 
+  it('required:false 欄位可留空送出，不會擋下（十二節 12.5）', async () => {
+    const formWithOptional = {
+      ...FORM,
+      fields: [...FORM.fields, { key: 'note', label: '備註', type: 'text', required: false }],
+    }
+    mockGetFormByToken.mockResolvedValue({ success: true, data: formWithOptional })
+    mockGetMembersByToken.mockResolvedValue({ success: true, data: MEMBERS })
+    mockSubmitForm.mockResolvedValue({ success: true, data: { id: 1 } })
+
+    render(<SurveyFill />)
+    await screen.findByText('康九冠軍調查')
+
+    fireEvent.change(screen.getByPlaceholderText('搜尋或選擇姓名'), { target: { value: '徐毓紘' } })
+    fireEvent.click(screen.getByText('是'))
+    fireEvent.click(screen.getByText('送出'))
+
+    await waitFor(() =>
+      expect(mockSubmitForm).toHaveBeenCalledWith('abc123', { name: '徐毓紘', join_master: 'yes' })
+    )
+  })
+
+  it('legacy 缺 required 欄位視為必填（十二節 12.5）', async () => {
+    mockGetFormByToken.mockResolvedValue({ success: true, data: FORM }) // FORM 欄位皆無 required
+    mockGetMembersByToken.mockResolvedValue({ success: true, data: MEMBERS })
+
+    render(<SurveyFill />)
+    await screen.findByText('康九冠軍調查')
+
+    fireEvent.click(screen.getByText('送出')) // 兩欄都沒填
+
+    expect(await screen.findByText(/請選擇姓名/)).toBeInTheDocument()
+    expect(mockSubmitForm).not.toHaveBeenCalled()
+  })
+
   it('補填欄位後，該欄位的錯誤訊息會消失', async () => {
     mockGetFormByToken.mockResolvedValue({ success: true, data: FORM })
     mockGetMembersByToken.mockResolvedValue({ success: true, data: MEMBERS })

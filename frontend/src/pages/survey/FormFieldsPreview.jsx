@@ -181,6 +181,16 @@ function YesNoField({ value, onChange, readOnly }) {
   )
 }
 
+// 十二節 12.5：公開填寫頁與預覽改為「逐題卡片」，每題自成一張卡（非整份表單共用一張大卡），
+// 跟建立器的單欄問題卡視覺一致（KJ Warm Minimal 卡片規範）
+const questionCardStyle = {
+  background: '#FFFFFF',
+  border: '1px solid #E2DED8',
+  borderRadius: 16,
+  padding: 16,
+  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+}
+
 export default function FormFieldsPreview({
   fields,
   answers = {},
@@ -196,10 +206,11 @@ export default function FormFieldsPreview({
         <div
           key={field.key}
           ref={fieldRefs ? (el) => { fieldRefs.current[field.key] = el } : undefined}
-          style={{ marginBottom: 20 }}
+          style={{ ...questionCardStyle, marginBottom: 12 }}
         >
           <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#2C2C2C', marginBottom: 8 }}>
             {field.label}
+            {field.required !== false && <span style={{ color: '#C0392B' }}> *</span>}
           </label>
           {field.type === 'searchable_select' && (
             <SearchableSelect
