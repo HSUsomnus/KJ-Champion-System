@@ -67,6 +67,11 @@ export function getAdminAttendance(formId) {
   return adminRequest(`/admin/forms/${formId}/attendance`)
 }
 
+// 十二節 12.4：草稿預覽用的 confirmed 名冊（管理員專用，跟公開 /forms/:token/members 是兩支不同 API）
+export function getAdminMembers() {
+  return adminRequest('/admin/members')
+}
+
 export function createAdminForm(title, fields) {
   return adminRequest('/admin/forms', {
     method: 'POST',

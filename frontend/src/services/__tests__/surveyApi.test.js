@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getFormByToken, getMembersByToken, submitForm, adminRequest, downloadAdminExport } from '../surveyApi'
+import { getFormByToken, getMembersByToken, submitForm, adminRequest, downloadAdminExport, getAdminMembers } from '../surveyApi'
 import { clearAdminToken, setAdminToken } from '../adminSession'
 
 beforeEach(() => {
@@ -74,6 +74,17 @@ describe('adminRequest（後台端點，D-A Bearer）', () => {
 
     const [, options] = global.fetch.mock.calls[0]
     expect(options.headers.Authorization).toBeUndefined()
+  })
+
+  it('getAdminMembers 打 /admin/members（十二節 12.4，草稿預覽用）', async () => {
+    setAdminToken('fake.jwt.token')
+    global.fetch.mockResolvedValue(mockJsonResponse({ success: true, data: [{ name: '李冠陞', star_rank: '紫' }] }))
+
+    await getAdminMembers()
+
+    const [url, options] = global.fetch.mock.calls[0]
+    expect(url).toBe('/survey-api/admin/members')
+    expect(options.headers.Authorization).toBe('Bearer fake.jwt.token')
   })
 })
 
