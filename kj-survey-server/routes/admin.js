@@ -13,6 +13,12 @@ router.get('/forms', asyncHandler(async (req, res) => {
   res.json({ success: true, data: forms });
 }));
 
+// 十二節 12.4：草稿預覽用的 confirmed 名冊 API，沿用既有 listConfirmedMembers（跟公開 members API 同查詢）
+router.get('/members', asyncHandler(async (req, res) => {
+  const members = await formService.listConfirmedMembers();
+  res.json({ success: true, data: members });
+}));
+
 router.get('/forms/:id/submissions', asyncHandler(async (req, res) => {
   const submissions = await formService.listSubmissionsByFormId(req.params.id);
   res.json({ success: true, data: submissions });

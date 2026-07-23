@@ -1,8 +1,9 @@
-# Change 20 — 團隊調查表單系統（KJ Survey）v4
+# Change 20 — 團隊調查表單系統（KJ Survey）v5
 
-> 版本沿革：v1 → v2（回應 `審查.md`）→ v3（回應 `審核.md`）→ **v4（本版，回應 `覆核.MD`：
-> 4 阻斷歧義 + 4 實作缺口 + 4 驗證項）**。覆核判定「架構正確、只差規格收斂，不需另開 change、不需
-> 動 schema、不需推翻架構」——v4 即把剩餘 HOW 全部**寫死到可機械實作**。本 spec 為唯一事實來源。
+> 版本沿革：v1 → v2（回應 `審查.md`）→ v3（回應 `審核.md`）→ v4（回應 `覆核.MD`：
+> 4 阻斷歧義 + 4 實作缺口 + 4 驗證項）→ **v5（本版，納入 `新增表單重新設計線框圖.md`，
+> 正式定案表單建立器、草稿預覽與填寫頁 UI）**。v4 的安全、資料與部署決策全部保留；
+> v5 新增的 UI 與管理員名冊 API 規格見十二節。本 spec 為唯一事實來源。
 >
 > DB 三表已建於 dev/prod/backup，schema 不動。原則不變：放棄舊 `[x]`、乾淨重規劃、保留已驗證 code。
 
@@ -27,6 +28,8 @@
 | **D-H callback origin（覆核 B-1）** | **經 Worker proxy**：callback 登記 `{FRONTEND_URL}/survey-api/admin-auth/line-callback`，token 交換 `redirect_uri` 用同一字串。**不用**後端裸 origin |
 | **D-I nonce store（覆核 B-2）** | **process memory `Map`（單 instance）** + 10 分 TTL + callback 原子 consume；接受「服務重啟使未完成登入失效」。**前提：Survey 後端單 instance**（此規模成立；若日後多 instance 需指揮官改共享 store） |
 | **D-J rate-limit 政策（覆核 B-3）** | `app.set('trust proxy', 1)`（Zeabur/CF 前有 proxy）；key = 已解析 client IP + form id；`windowMs`=15 分；`max`=10；超限 `429 {error:'too_many_requests'}`；無效 token → 仍按 IP 計，不因換 token 規避 |
+| **D-K 建立器 UI（v5）** | Google Forms 式單欄問題卡，但完整沿用 KJ Warm Minimal 視覺語言；手動儲存、完整響應式、支援排序/複製/刪除/預覽 |
+| **D-L 草稿名冊預覽（v5）** | 新增受 `requireAdminSession` 保護的 confirmed 名冊 API；不改 schema，公開已發布表單仍使用 token 綁定 members API |
 
 ---
 
@@ -150,13 +153,15 @@ CSV：依 fields 欄序、逸出逗號/引號/換行、**公式字首 `= + - @` 
 | **CX-2**（Codex） | `computeAttendance`(confirmed) + attendance route | `services/attendanceService.js`(新)、`routes/admin.js`(追加)、test |
 | **CX-3**（Codex） | 匯出 CSV(公式中和)/xlsx | `services/exportService.js`(新)、`routes/admin.js`(追加)、test |
 | **CX-4**（Codex） | 建立器 create(token)/patch/publish + form 驗證 | `formService.js`、`routes/admin.js`(追加)、test |
-| 前端（Claude） | 側邊欄/Table1/篩選/未填名冊/建立器 UI/匯出鈕 | `frontend/` |
+| 舊版前端（Claude） | 側邊欄/Table1/篩選/未填名冊/既有建立器 UI/匯出鈕 | `frontend/` |
+| **CX-5**（Codex） | 管理員 confirmed 名冊 API + jest（十二節） | `routes/admin.js`(追加)、`formService.js`(沿用/擴充)、test |
+| v5 前端（Claude） | 建立器、互動預覽、公開填寫頁、響應式與無障礙重製（十二節） | `frontend/` |
 | 部署/milestone（使用者） | Section 0 + dev 實測 | — |
 
-> 共用檔紀律：`server.js` 只 PUB-A 與 CX-1 動（PUB-A 掛中介、CX-1 加 `/admin` 註冊，兩者不同區塊）；`routes/admin.js` CX-1 建、CX-2/3/4 追加不覆蓋；`formService.js` 多包動 → **序列**，每包先 pull 最新。
+> 共用檔紀律：`server.js` 只 PUB-A 與 CX-1 動（PUB-A 掛中介、CX-1 加 `/admin` 註冊，兩者不同區塊）；`routes/admin.js` CX-1 建、CX-2/3/4/5 追加不覆蓋；`formService.js` 多包動 → **序列**，每包先 pull 最新。
 
 ### 唯一執行順序（機械可循，不靠解讀例外）
-AUTH → PUB-A → PUB-B → PUB-C → PUB-D → CX-1 → CX-2 → CX-3 → CX-4 → 前端 UI → milestone。
+AUTH → PUB-A → PUB-B → PUB-C → PUB-D → CX-1 → CX-2 → CX-3 → CX-4 → 舊版前端 UI → CX-5 → v5 前端 UI → milestone。
 每包 jest 綠 + 指揮官 review diff 才發下一包。
 
 ---
@@ -183,3 +188,68 @@ milestone 須額外人眼驗證（覆核 M-1~3）：① confirmed 名單經 toke
 
 每包由指揮官 review 後 commit，訊息標 `(auth)`/`(pub-x)`/`(codex CX-N)`；不要求 Codex 自行 commit/push。
 不以 commit 數驗收；**使用者手動 commit 屬正常例外**，不得為湊數 squash/拆分。驗收看 tasks 勾選 + jest/vitest 綠 + review + dev milestone。
+
+---
+
+## 十二、表單建立器與填寫頁重新設計（v5）
+
+> 視覺與互動參考 `新增表單重新設計線框圖.md`；若線框圖與本節衝突，以本 spec 為準。
+> 「Google Forms 式」指資訊架構與操作模式，不複製 Google 品牌。色彩、字體、圓角、陰影、Dialog、
+> inline SVG 與回饋行為一律遵守 KJ `uidesign` 的 Warm Minimal 規範；禁止 emoji、漸層、外部 icon library
+> 及瀏覽器 `alert`／`confirm`／`prompt`。
+
+### 12.1 後台建立器資訊架構
+
+- 編輯器為置中的單欄內容流：表單標題卡在最上方，其後每題一張問題卡；目前焦點題以 accent 邊線標示。
+- 標題卡可編輯表單標題；問題卡可手動編輯 `key`、`label`、`type`、`required`。`key` 不自動產生、不隱藏。
+- `type` 僅提供 Phase 1 的 `text`、`yesno`、`searchable_select`；不得讓使用者建立不可發布的 `upload`。
+- `searchable_select` 必須明確選擇資料來源：
+  - 靜態選項：`options={source:'static', values:[...]}`，可新增、刪除及排序選項。
+  - 團隊名冊：`options={source:'survey_members'}`，不得夾帶 `values`。
+- 每題提供拖曳排序、鍵盤可操作的上移／下移、複製及刪除。不得引入拖曳套件；使用原生
+  Pointer／HTML5 drag 行為，並保留鍵盤替代操作。
+- 複製題目時複製 label/type/required/options；新副本的 `key` 必須保持可見並立即標示重複，
+  由使用者手動改成唯一 key，禁止靜默改寫資料。
+- 刪除題目一律顯示專案 Confirm Dialog；確認後才移除。
+
+### 12.2 儲存、離頁與發布
+
+- 維持明確的「儲存草稿」操作，不做 autosave。內容相對最近一次成功載入／儲存有差異即為 dirty。
+- dirty 時必須攔截：切換側邊欄表單、按「新增」、登出、應用程式內導航、瀏覽器重新整理／關閉。
+  應用程式內使用專案 Dialog；重新整理／關閉只能使用標準 `beforeunload`。
+- 儲存前沿用五節驗證並在欄位旁顯示錯誤；首個錯誤需聚焦並捲入可視區。API 失敗不得清除 dirty。
+- 發布前重新驗證完整表單並顯示「發布後不可再編輯」確認 Dialog；取消不呼叫 API。
+- 發布成功後切換為唯讀摘要，保留分享連結與複製功能；已發布表單不得回到編輯模式。
+
+### 12.3 獨立互動預覽
+
+- 預覽是與編輯狀態分離的 responder 模式，可實際輸入、搜尋與切換答案，但不得建立 submission。
+- 預覽開啟時使用當下尚未儲存的本地 form state，不要求先儲存。
+- `survey_members` 題型透過管理員名冊 API 載入真實 confirmed 成員；載入中、失敗、空名冊皆須有
+  inline 狀態與重試入口。預覽失敗不得阻止返回編輯。
+- 關閉再開預覽時重新建立空答案，避免預覽答案被誤認為表單設定。
+
+### 12.4 管理員 confirmed 名冊 API
+
+- 新增 `GET /api/kj-survey/admin/members`（Router 內實際 path 為 `GET /admin/members`），
+  必須先通過 `requireAdminSession`。
+- 回傳 `{members:[{name,star_rank}]}`；只含 `status='confirmed'`，排序規則沿用既有 members 查詢，
+  不回傳 id、推薦人或其他個資。
+- 未登入／撤權沿用既有 admin session 的 401/403 行為；資料庫錯誤交由共用 async error middleware。
+- 此 API 僅供後台草稿預覽。公開 `/forms/:token/members` 的 published token 綁定與最小揭露規則不變。
+- 沿用既有 `survey_members` 表與查詢服務，不新增 migration、不變更資料庫 schema。
+
+### 12.5 公開填寫頁
+
+- `/f/:token` 改為表單標題卡 + 逐題卡片；題目順序完全依 `fields` 陣列，不改 submission payload。
+- `text`、`yesno`、`searchable_select` 與預覽共用同一 renderer，避免建立器預覽與正式填寫漂移。
+- `required:true` 或缺少 `required` 的 legacy 欄位必填；`required:false` 可留空且不得送出必填錯誤。
+- 驗證失敗採 inline FieldError，聚焦並捲至第一個錯誤；送出中防重複點擊，成功與失敗沿用專案回饋元件。
+
+### 12.6 響應式與無障礙
+
+- 移除後台固定 1280px viewport／內容寬度行為。建立器與預覽須支援 1280px 桌機、平板與
+  360–375px 手機；窄螢幕工具列可重排為底部或精簡操作列，但功能不得消失。
+- 所有 icon button 必須有可讀 `aria-label`；Dialog 要管理焦點、支援 Escape 與返回觸發元素。
+- 拖曳不是唯一排序方式；鍵盤使用者可透過上移／下移完成同一操作。
+- 互動控制維持足夠觸控尺寸，內容不得造成非必要的水平捲動。

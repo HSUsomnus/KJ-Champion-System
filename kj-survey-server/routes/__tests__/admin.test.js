@@ -22,6 +22,7 @@ jest.mock('../../services/formService', () => ({
   createDraftForm: jest.fn(),
   patchForm: jest.fn(),
   publishForm: jest.fn(),
+  listConfirmedMembers: jest.fn(),
 }));
 
 jest.mock('../../services/attendanceService', () => ({
@@ -38,10 +39,13 @@ const formService = require('../../services/formService');
 const attendanceService = require('../../services/attendanceService');
 const exportService = require('../../services/exportService');
 
+const { errorHandler } = require('../../middleware/errorHandler');
+
 const buildApp = () => {
   const app = express();
   app.use(express.json());
   app.use('/admin', require('../admin'));
+  app.use(errorHandler);
   return app;
 };
 
@@ -195,6 +199,56 @@ describe('admin routes', () => {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
     expect(exportService.toXlsxBuffer).toHaveBeenCalledWith(form, submissions);
+  });
+
+  test('無 Authorization header → GET /members 回傳 401，不查資料', async () => {
+    const res = await request(buildApp()).get('/admin/members');
+
+    expect(res.status).toBe(401);
+    expect(formService.listConfirmedMembers).not.toHaveBeenCalled();
+  });
+
+  test('角色不足 → GET /members 回傳 403，不查資料', async () => {
+    const res = await request(buildApp())
+      .get('/admin/members')
+      .set('Authorization', 'Bearer insufficient-role');
+
+    expect(res.status).toBe(403);
+    expect(formService.listConfirmedMembers).not.toHaveBeenCalled();
+  });
+
+  test('角色足夠 → GET /members 回傳 confirmed 名冊', async () => {
+    const members = [{ name: '李冠陞', star_rank: '紫' }, { name: '徐毓紘', star_rank: '橙' }];
+    formService.listConfirmedMembers.mockResolvedValue(members);
+
+    const res = await request(buildApp())
+      .get('/admin/members')
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, data: members });
+  });
+
+  test('空名冊 → GET /members 回傳空陣列', async () => {
+    formService.listConfirmedMembers.mockResolvedValue([]);
+
+    const res = await request(buildApp())
+      .get('/admin/members')
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, data: [] });
+  });
+
+  test('DB 錯誤 → GET /members 交由共用 error middleware 回 500', async () => {
+    formService.listConfirmedMembers.mockRejectedValue(new Error('連線失敗'));
+
+    const res = await request(buildApp())
+      .get('/admin/members')
+      .set('Authorization', 'Bearer admin-token');
+
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
   });
 });
 

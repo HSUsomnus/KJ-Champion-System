@@ -1,7 +1,7 @@
-# Change 20 — 團隊調查表單系統 Tasks（v4）
+# Change 20 — 團隊調查表單系統 Tasks（v5）
 
-> v4：回應 `覆核.MD`。**tasks 依 spec 八節「唯一執行順序」重排**（覆核 B-4）：實作項在前、
-> 部署/milestone 外部依賴移到最後且標非阻塞。標註 `[Codex CX-N]`/`[Claude]`/`[使用者]`。
+> v5：保留 v4 對 `覆核.MD` 的處置，並依 spec 十二節加入表單建立器、草稿預覽與填寫頁重新設計。
+> 實作項在前，部署/milestone 外部依賴置後且標非阻塞。標註 `[Codex CX-N]`/`[Claude]`/`[使用者]`。
 > 數值/HOW 全在 `spec.md` v4 寫死，實作者不需自補。分支 `m_b_調查表單`。
 >
 > Section 1-7（AUTH → PUB → Table1 → 未填名冊 → 匯出 → 建立器前後端 → `_worker.js` 確認 + README）
@@ -96,9 +96,26 @@
 
 ---
 
+## Section 8：表單建立器與填寫頁重新設計（v5）
+
+> 規格依據：`spec.md` 十二節；視覺參考：`新增表單重新設計線框圖.md`。依 20.38 → 20.46 順序執行，
+> 每項完成 source、對應測試與 review 後才能勾選。
+
+- [x] **20.38** `[Claude]`（原標 Codex CX-5，直接自己做）新增受 `requireAdminSession` 保護的 `GET /admin/members`：沿用既有 `listConfirmedMembers`（已存在，只回 confirmed 的 `{name,star_rank}`）；jest 涵蓋成功、空名冊、未登入、撤權與 DB error（`buildApp` 補掛 `errorHandler` 才能測到 500 分支）；不動 schema/migration
+- [ ] **20.39** `[Claude]` `surveyApi` 新增 admin members client；草稿預覽串接 loading/error/empty/retry，確認 public token members API 行為不變；補 API client Vitest
+- [ ] **20.40** `[Claude]` 抽出預覽與 `/f/:token` 共用的逐題卡片 renderer，將公開填寫頁改為 KJ Warm Minimal 的表單標題卡 + 逐題卡；修正 `required:false` 可留空、legacy 缺 `required` 仍必填，補 renderer/SurveyFill Vitest
+- [ ] **20.41** `[Claude]` 重製響應式 FormBuilder：單欄標題卡/問題卡/焦點狀態、手動 key、label/type/required、static 與 `survey_members` 來源切換；static 明確產生 `{source:'static',values}`，member 明確產生 `{source:'survey_members'}`；補欄位驗證與序列化 Vitest
+- [ ] **20.42** `[Claude]` 完成原生 Pointer/HTML5 拖曳排序、鍵盤上移/下移、複製與刪除 Confirm Dialog；複製後保留可見重複 key 並顯示 inline error，不引入拖曳套件；補排序、鍵盤、複製與取消/確認刪除 Vitest
+- [ ] **20.43** `[Claude]` 完成 dirty state 與手動儲存：攔截切換表單、新增、登出、應用程式導航及 `beforeunload`；成功儲存才清除 dirty，失敗保留內容；補各離頁入口、取消離頁、確認離頁與儲存失敗 Vitest
+- [ ] **20.44** `[Claude]` 完成獨立互動預覽：直接使用未儲存 form state、支援真實 confirmed 名冊搜尋、不建立 submission、每次開啟重置答案、失敗可返回編輯；補 preview Vitest
+- [ ] **20.45** `[Claude]` 完成發布前完整驗證、第一錯誤聚焦/捲動、不可逆 Confirm Dialog、取消不送 API、發布後唯讀摘要與分享/複製；補發布流程 Vitest
+- [ ] **20.46** `[Claude]` 移除後台固定 1280px 行為並完成 responsive/accessibility 驗證：1280px、平板、375px、360px；無非必要水平捲動、icon `aria-label`、Dialog focus/Escape/return focus、所有排序操作可鍵盤完成
+
+---
+
 ## Section U：使用者外部依賴（**非阻塞離線實作**，dev milestone 前完成）
 
-> 這些不擋 Section 1-7 的離線 code+jest（覆核 B-4 / M-4）；與實作並行，dev 實測前到位即可。
+> 這些不擋 Section 1-8 的離線 code+jest/vitest（覆核 B-4 / M-4）；與實作並行，dev 實測前到位即可。
 
 - [x] **U.1** `[使用者]` Survey dev/prod 服務網址 + Root Directory=`kj-survey-server/` + start command（dev：`kj-survey-dev.zeabur.app`，建於 `kj-champion-dev` 專案內）
 - [x] **U.2** `[使用者]` 環境變數：DB 內網、LINE_CHANNEL_ID/SECRET、APP_URL/FRONTEND_URL、強隨機 SESSION_SECRET、callback URL（dev 已填齊，`PORT=8080` 對齊 Zeabur 容器埠）
@@ -114,13 +131,13 @@
 - [x] **M.3** `[使用者]` 未填名冊分組/進度與手算一致、pending 未進母數、同名重複不超 total（M-3 覆核）——母數 40（不含 pending 測試甲）、推薦人分組正確、已填/未填狀態正確；驗收過程中兩輪改版 Table 1 篩選 UI（commit `6861158`/`5f183f7`/`821db01`）
 - [x] **M.4** `[使用者]` 匯出 CSV/xlsx 開檔確認（含公式中和）——CSV/Excel 皆正常開啟，欄序與檔名（表單標題）正確
 - [x] **M.5** `[使用者]` confirmed 名單經分享 token 仍全揭露 → 人眼確認可接受（M-1 覆核隱私驗收）——使用者確認此揭露方式為原始需求，可接受
-- [ ] **M.6** `[使用者]` Integration：建表單→分享→填寫(含被擋)→登入(非管理者被擋)→查看→篩選→未填名冊→匯出
+- [ ] **M.6** `[使用者]` v5 Integration：建立含 text/yesno/static select/member select 與 required/optional 的新表單 → 驗證重複 key、空標題、空/重複選項會被擋 → 排序/鍵盤移動、複製、取消與確認刪除 → 修改後逐一驗證切換表單/新增/登出/離頁攔截 → 儲存草稿 → 預覽以真實 confirmed 名冊搜尋且不產生 submission → 取消一次發布後再確認發布 → 分享連結 → 公開頁逐題填寫並驗證 required 被擋、optional 可空 → 管理者登入查看/篩選/未填名冊/匯出；同時人眼驗證 1280px、平板、375px、360px 無功能遺失與非必要水平捲動
 
 ---
 
 ## 執行前提醒
 
-- **唯一順序**：AUTH → PUB-A → PUB-B → PUB-C → PUB-D → CX-1 → CX-2 → CX-3 → CX-4 → 前端 UI →（Section U 並行）→ Section M。每包 jest 綠 + 指揮官 review diff 才發下一包。
-- **共用檔紀律**（spec 八節）：`server.js` 只 PUB-A + CX-1 動；`routes/admin.js` CX-1 建、CX-2/3/4 追加不覆蓋；`formService.js` 多包序列、每包先 pull。
+- **唯一順序**：AUTH → PUB-A → PUB-B → PUB-C → PUB-D → CX-1 → CX-2 → CX-3 → CX-4 → 舊版前端 UI → CX-5 → v5 前端 UI →（Section U 並行）→ Section M。每包 jest/vitest 綠 + 指揮官 review diff 才發下一包。
+- **共用檔紀律**（spec 八節/十二節）：`server.js` 只 PUB-A + CX-1 動；`routes/admin.js` CX-1 建、CX-2/3/4/5 追加不覆蓋；`formService.js` 多包序列、每包先 pull。
 - **Codex 通則**：先讀 `AGENTS.md`+`spec.md` 對應段，比照既有寫法，不 import 主系統 `server/`、不自行加套件（加套件回交 Claude），只跑該模組 jest，連續 2 次同錯停手交還。
 - CCR/win32 連不到 Zeabur、跑不動 npm（`.claude/now.md`）：Section U/M 走使用者本機/Zeabur；後端 jest 走 VPS Codex，前端 vitest 走使用者 PC。
