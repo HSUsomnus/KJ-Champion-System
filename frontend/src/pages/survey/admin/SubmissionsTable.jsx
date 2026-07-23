@@ -161,40 +161,55 @@ export default function SubmissionsTable({ form, submissions }) {
     return submissions.filter((s) => s.answers?.[activeFilter.fieldKey] === activeFilter.value)
   }, [submissions, activeFilter])
 
+  // 無符合資料時的提示文字要講清楚是哪個篩選造成的：yesno 欄位把 yes/no 換成中文說明
+  const activeFilterDescription = useMemo(() => {
+    if (!activeFilter) return ''
+    const field = fields.find((f) => f.key === activeFilter.fieldKey)
+    if (!field) return ''
+    const valueLabel = field.type === 'yesno'
+      ? YESNO_OPTIONS.find((o) => o.value === activeFilter.value)?.label ?? activeFilter.value
+      : activeFilter.value
+    return `${field.label} = ${valueLabel}`
+  }, [activeFilter, fields])
+
   return (
     <div ref={containerRef}>
-      {filteredSubmissions.length === 0 ? (
-        <p style={{ fontSize: 13, color: '#8A8680' }}>沒有符合條件的資料</p>
-      ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              {fields.map((f) => (
+                <ColumnHeader
+                  key={f.key}
+                  field={f}
+                  options={optionsForField(f)}
+                  activeFilter={activeFilter}
+                  isOpen={openColumn === f.key}
+                  onToggleOpen={toggleOpen}
+                  onSelect={handleSelect}
+                />
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSubmissions.length === 0 ? (
               <tr>
-                {fields.map((f) => (
-                  <ColumnHeader
-                    key={f.key}
-                    field={f}
-                    options={optionsForField(f)}
-                    activeFilter={activeFilter}
-                    isOpen={openColumn === f.key}
-                    onToggleOpen={toggleOpen}
-                    onSelect={handleSelect}
-                  />
-                ))}
+                <td colSpan={fields.length} style={{ ...tdStyle, textAlign: 'center', color: '#8A8680', padding: '28px 12px', borderBottom: 'none' }}>
+                  沒有符合條件的資料{activeFilterDescription && `（目前篩選：${activeFilterDescription}）`}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredSubmissions.map((s) => (
+            ) : (
+              filteredSubmissions.map((s) => (
                 <tr key={s.id}>
                   {fields.map((f) => (
                     <td key={f.key} style={tdStyle}>{renderCell(f, s.answers?.[f.key])}</td>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

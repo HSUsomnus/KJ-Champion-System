@@ -108,11 +108,14 @@ describe('SubmissionsTable', () => {
     expect(screen.queryByRole('button', { name: '綠' })).not.toBeInTheDocument()
   })
 
-  it('篩選後無符合資料時顯示提示文字', () => {
+  it('篩選後無符合資料時顯示提示文字（含目前篩選條件），表頭不消失', () => {
     render(<SubmissionsTable form={FORM} submissions={SUBMISSIONS} />)
 
     filterBy('星等', '紫') // 沒有人是紫
 
-    expect(screen.getByText('沒有符合條件的資料')).toBeInTheDocument()
+    expect(screen.getByText(/沒有符合條件的資料.*星等 = 紫/)).toBeInTheDocument()
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: '姓名' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /星等/ })).toBeInTheDocument()
   })
 })
