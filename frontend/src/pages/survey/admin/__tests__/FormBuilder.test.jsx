@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { vi } from 'vitest'
 import FormBuilder from '../FormBuilder'
+import useAdminMembers from '../useAdminMembers'
 
 const mockCreateAdminForm = vi.fn()
 const mockPatchAdminForm = vi.fn()
@@ -14,12 +15,17 @@ vi.mock('../../../../services/surveyApi', () => ({
   publishAdminForm: (...args) => mockPublishAdminForm(...args),
 }))
 
+// 20.44 獨立互動預覽：FormPreview 用 useAdminMembers，這裡不測 hook 內部（見
+// useAdminMembers.test.js/FormPreview.test.jsx），只給一個 ready 狀態的假資料
+vi.mock('../useAdminMembers', () => ({ default: vi.fn() }))
+
 beforeEach(() => {
   vi.clearAllMocks()
   Object.defineProperty(navigator, 'clipboard', {
     value: { writeText: vi.fn().mockResolvedValue(undefined) },
     configurable: true,
   })
+  useAdminMembers.mockReturnValue({ members: [], status: 'ready', error: '', retry: vi.fn() })
 })
 
 // FormBuilder 用 useBlocker（十二節 12.2 dirty 攔截）必須跑在 data router 裡，
@@ -350,6 +356,39 @@ describe('FormBuilder — dirty state 與離頁攔截（十二節 12.2）', () =
     window.dispatchEvent(event)
 
     expect(preventDefaultSpy).toHaveBeenCalled()
+  })
+
+  it('十二節 12.3：切到「預覽」→ 不再顯示題目編輯輸入框，改顯示互動預覽；切回「問題編輯」恢復', () => {
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    fireEvent.click(screen.getByText('預覽'))
+
+    expect(screen.queryByPlaceholderText('key')).not.toBeInTheDocument()
+    expect(screen.getByText('送出（預覽停用）')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('問題編輯'))
+    expect(screen.getByPlaceholderText('key')).toBeInTheDocument()
+    expect(screen.queryByText('送出（預覽停用）')).not.toBeInTheDocument()
+  })
+
+  it('十二節 12.3：關閉再開預覽會重置答案（不會殘留上次填的值）', () => {
+    useAdminMembers.mockReturnValue({
+      members: [], status: 'ready', error: '', retry: vi.fn(),
+    })
+    const yesnoForm = {
+      ...DRAFT_FORM,
+      fields: [{ key: 'join_master', label: '天驥加盟主', type: 'yesno', required: true }],
+    }
+    renderFormBuilder({ form: yesnoForm, onSaved: () => {} })
+
+    fireEvent.click(screen.getByText('預覽'))
+    fireEvent.click(screen.getByText('是')) // 填一個答案
+
+    fireEvent.click(screen.getByText('問題編輯'))
+    fireEvent.click(screen.getByText('預覽')) // 重新打開預覽
+
+    // 重新打開後「是」不應該還停留在已選取的樣式（背景變 accent 色）
+    expect(screen.getByText('是').closest('button')).not.toHaveStyle({ background: '#4A7C59' })
   })
 
   it('onDirtyChange 會回報目前的 dirty 狀態給父層', () => {

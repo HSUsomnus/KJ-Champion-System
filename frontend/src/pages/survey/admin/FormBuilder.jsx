@@ -3,6 +3,7 @@ import { useBlocker } from 'react-router-dom'
 import { createAdminForm, patchAdminForm, publishAdminForm } from '../../../services/surveyApi'
 import DeleteQuestionDialog from './DeleteQuestionDialog'
 import ConfirmLeaveDialog from '../../../components/ConfirmLeaveDialog'
+import FormPreview from './FormPreview'
 
 const TYPE_OPTIONS = [
   { value: 'text', label: '文字' },
@@ -77,6 +78,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
   const [draggedRowId, setDraggedRowId] = useState(null)
   const [deleteTargetRowId, setDeleteTargetRowId] = useState(null)
   const [savedSnapshot, setSavedSnapshot] = useState(serializeForm(form?.title ?? '', initialFields))
+  const [activeView, setActiveView] = useState('edit')
 
   const published = status === 'published'
   const dirty = !published && serializeForm(title, fields) !== savedSnapshot
@@ -243,8 +245,33 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const previewFields = fields.map(stripRowId)
+
   return (
     <div style={{ maxWidth: 680 }}>
+      {!published && (
+        <div style={{ display: 'inline-flex', background: '#EFEDE9', borderRadius: 18, padding: 3, marginBottom: 16 }}>
+          <button
+            type="button"
+            onClick={() => setActiveView('edit')}
+            style={pillTabStyle(activeView === 'edit')}
+          >
+            問題編輯
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('preview')}
+            style={pillTabStyle(activeView === 'preview')}
+          >
+            預覽
+          </button>
+        </div>
+      )}
+
+      {activeView === 'preview' && !published ? (
+        <FormPreview title={title} fields={previewFields} />
+      ) : (
+        <>
       <div style={{ ...cardStyle, borderLeft: '4px solid #4A7C59' }}>
         <label style={labelStyle} htmlFor="form-builder-title">表單標題</label>
         <input
@@ -444,6 +471,8 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
           ＋ 新增題目
         </button>
       )}
+        </>
+      )}
 
       {error && <p style={{ fontSize: 12, color: '#C0392B', marginTop: 12 }}>{error}</p>}
 
@@ -486,6 +515,19 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
     </div>
   )
 }
+
+// 十二節 12.3：問題編輯／預覽 Pill Tab，沿用 KJ Pill Tab 規範
+const pillTabStyle = (active) => ({
+  padding: '6px 16px',
+  borderRadius: 14,
+  border: 'none',
+  fontSize: 12,
+  fontWeight: active ? 500 : 400,
+  background: active ? '#4A7C59' : 'transparent',
+  color: active ? '#FFFFFF' : '#2C2C2C',
+  cursor: 'pointer',
+  transition: 'background 0.15s, color 0.15s',
+})
 
 const labelStyle = {
   display: 'block',
