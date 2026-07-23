@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 
-// [設計決策] 姓名/星等篩選鎖定 key 'name'/'star_rank'（Phase 1 固定表單的欄位命名），
-// 推薦人（key 'recommender'）不建篩選鈕，維持「推薦人欄不變」（spec 五節）。
-// 若未來建立器做出的表單沒有這兩個 key，篩選列會自動不出現對應那組按鈕，表格本身不受影響。
-const NAME_KEY = 'name'
+// [設計決策] 星等篩選鎖定 key 'star_rank'、推薦人篩選鎖定 key 'recommender'
+// （Phase 1 固定表單的欄位命名）。若未來建立器做出的表單沒有這些 key，
+// 對應那組篩選 UI 會自動不出現，表格本身不受影響。
 const STAR_KEY = 'star_rank'
+const RECOMMENDER_KEY = 'recommender'
 
 const renderCell = (field, value) => {
   if (field.type === 'yesno') {
@@ -51,17 +51,15 @@ export default function SubmissionsTable({ form, submissions }) {
   const [activeFilter, setActiveFilter] = useState(null)
 
   const fields = form.fields || []
-  const nameField = fields.find((f) => f.key === NAME_KEY)
   const starField = fields.find((f) => f.key === STAR_KEY)
+  const recommenderField = fields.find((f) => f.key === RECOMMENDER_KEY)
   const courseFields = useMemo(() => fields.filter((f) => f.type === 'yesno'), [fields])
 
-  const nameOptions = useMemo(() => {
-    if (!nameField) return []
-    const names = submissions.map((s) => s.answers?.[NAME_KEY]).filter(Boolean)
-    return [...new Set(names)]
-      .sort((a, b) => a.localeCompare(b, 'zh-Hant'))
-      .map((n) => ({ label: n, value: n, fieldKey: NAME_KEY }))
-  }, [submissions, nameField])
+  const recommenderOptions = useMemo(() => {
+    if (!recommenderField) return []
+    const names = submissions.map((s) => s.answers?.[RECOMMENDER_KEY]).filter(Boolean)
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'zh-Hant'))
+  }, [submissions, recommenderField])
 
   const starOptions = useMemo(() => {
     if (!starField) return []
@@ -79,6 +77,14 @@ export default function SubmissionsTable({ form, submissions }) {
     setActiveFilter((prev) => (prev?.fieldKey === fieldKey && prev?.value === value ? null : { fieldKey, value }))
   }
 
+  // 推薦人下拉與按鈕組共用同一個 activeFilter（單條件互斥）：選了推薦人，
+  // 星等/課程按鈕會自動退回未選取狀態，反之亦然
+  const handleRecommenderChange = (e) => {
+    const value = e.target.value
+    setActiveFilter(value ? { fieldKey: RECOMMENDER_KEY, value } : null)
+  }
+  const recommenderValue = activeFilter?.fieldKey === RECOMMENDER_KEY ? activeFilter.value : ''
+
   const filteredSubmissions = useMemo(() => {
     if (!activeFilter) return submissions
     return submissions.filter((s) => s.answers?.[activeFilter.fieldKey] === activeFilter.value)
@@ -87,7 +93,29 @@ export default function SubmissionsTable({ form, submissions }) {
   return (
     <div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-        <FilterGroup label="姓名" options={nameOptions} activeFilter={activeFilter} onToggle={toggleFilter} />
+        {recommenderOptions.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#8A8680', marginRight: 2 }}>推薦人</span>
+            <select
+              value={recommenderValue}
+              onChange={handleRecommenderChange}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 16,
+                fontSize: 12,
+                border: '1px solid #E2DED8',
+                background: '#FFFFFF',
+                color: '#2C2C2C',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">全部</option>
+              {recommenderOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <FilterGroup label="星等" options={starOptions} activeFilter={activeFilter} onToggle={toggleFilter} />
         <FilterGroup label="課程" options={courseOptions} activeFilter={activeFilter} onToggle={toggleFilter} />
       </div>

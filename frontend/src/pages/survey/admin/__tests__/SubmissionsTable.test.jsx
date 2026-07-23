@@ -37,12 +37,24 @@ describe('SubmissionsTable', () => {
     expect(crosses).toHaveLength(5)
   })
 
-  it('推薦人欄不變：不建推薦人篩選鈕，但欄位資料照常顯示', () => {
+  it('推薦人篩選：用下拉選「潘暻葶」只留下該推薦人底下的列', () => {
     render(<SubmissionsTable form={FORM} submissions={SUBMISSIONS} />)
 
-    expect(screen.queryByRole('button', { name: '李冠陞' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '潘暻葶' })).not.toBeInTheDocument()
-    expect(screen.getAllByText('李冠陞').length).toBeGreaterThan(0)
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '潘暻葶' } })
+
+    expect(rowCount()).toBe(1)
+    expect(within(screen.getByRole('table')).getByText('林義淳')).toBeInTheDocument()
+  })
+
+  it('推薦人篩選：選回「全部」清空篩選', () => {
+    render(<SubmissionsTable form={FORM} submissions={SUBMISSIONS} />)
+
+    const select = screen.getByRole('combobox')
+    fireEvent.change(select, { target: { value: '潘暻葶' } })
+    expect(rowCount()).toBe(1)
+
+    fireEvent.change(select, { target: { value: '' } })
+    expect(rowCount()).toBe(4)
   })
 
   it('星等篩選：點「綠」只留下星等為綠的列', () => {
@@ -54,14 +66,6 @@ describe('SubmissionsTable', () => {
     expect(within(screen.getByRole('table')).getByText('林義淳')).toBeInTheDocument()
   })
 
-  it('姓名篩選：點「徐毓紘」只留下該姓名的列（含重複送出的兩筆）', () => {
-    render(<SubmissionsTable form={FORM} submissions={SUBMISSIONS} />)
-
-    fireEvent.click(screen.getByRole('button', { name: '徐毓紘' }))
-
-    expect(rowCount()).toBe(2)
-  })
-
   it('課程篩選：點「天驥加盟主」只留下該欄位為 yes 的列', () => {
     render(<SubmissionsTable form={FORM} submissions={SUBMISSIONS} />)
 
@@ -70,15 +74,16 @@ describe('SubmissionsTable', () => {
     expect(rowCount()).toBe(2) // id1, id4
   })
 
-  it('單條件互斥：換點另一個篩選鈕會取代前一個，不會疊加', () => {
+  it('單條件互斥：推薦人下拉選了之後再點按鈕型篩選，會取代前一個而非疊加', () => {
     render(<SubmissionsTable form={FORM} submissions={SUBMISSIONS} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '徐毓紘' })) // 2 列
-    expect(rowCount()).toBe(2)
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '潘暻葶' } }) // 1 列
+    expect(rowCount()).toBe(1)
 
     fireEvent.click(screen.getByRole('button', { name: '天驥加盟主' })) // 換成課程條件
-    expect(rowCount()).toBe(2) // id1, id4（徐毓紘的篩選已失效，不是疊加成 0 或交集）
+    expect(rowCount()).toBe(2) // id1, id4（推薦人篩選已失效，不是疊加成 0 或交集）
     expect(within(screen.getByRole('table')).getByText('林義淳')).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toHaveValue('') // 下拉也應退回「全部」
   })
 
   it('同鈕取消：再點一次目前生效的按鈕會清空篩選、回到全部', () => {
