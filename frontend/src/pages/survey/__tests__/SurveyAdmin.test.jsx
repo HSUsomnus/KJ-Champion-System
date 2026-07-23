@@ -211,4 +211,24 @@ describe('SurveyAdmin — dirty state 攔截（十二節 12.2，FormBuilder onDi
 
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
   })
+
+  it('十二節 12.6：攔截對話框開啟時按 Escape 等同取消，畫面留在原本的建立器內容', async () => {
+    mockGetAdminForms.mockResolvedValue({
+      success: true,
+      data: [{ id: 1, title: '康九冠軍調查', token: 'abc', status: 'published', fields: [] }],
+    })
+    setAdminToken('fake.jwt.token')
+    renderWithRouter()
+
+    await screen.findByText('康九冠軍調查')
+    fireEvent.click(screen.getByLabelText('新增表單'))
+    fireEvent.change(screen.getByLabelText('表單標題'), { target: { value: '未儲存的新表單' } })
+    fireEvent.click(screen.getByText('康九冠軍調查'))
+    expect(await screen.findByText('尚未儲存資料，確認離開？')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByText('尚未儲存資料，確認離開？')).not.toBeInTheDocument()
+    expect(screen.getByDisplayValue('未儲存的新表單')).toBeInTheDocument()
+  })
 })

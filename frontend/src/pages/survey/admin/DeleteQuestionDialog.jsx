@@ -1,10 +1,12 @@
 import { createPortal } from 'react-dom'
+import useDialogA11y from '../../../components/useDialogA11y'
 
 // [設計決策] change 12「統一彈出訊息系統」已於 2026-07-11 封存廢除（見 now.md），
 // 專案沒有共用的 useConfirm()/ConfirmDialog。這裡照 uidesign 的 danger variant
 // 視覺規範（fixed 遮罩 + 白卡 + 取消/危險確認雙鈕）做一個僅供本頁使用的 dialog，
 // 樣式跟既有 ConfirmLeaveDialog.jsx 一致，不冒充成全站共用元件。
 export default function DeleteQuestionDialog({ open, onCancel, onConfirm }) {
+  const dialogRef = useDialogA11y(open, onCancel)
   if (!open) return null
 
   return createPortal(
@@ -14,6 +16,7 @@ export default function DeleteQuestionDialog({ open, onCancel, onConfirm }) {
       onClick={onCancel}
     >
       <div
+        ref={dialogRef}
         className="mx-6 w-full max-w-xs rounded-2xl p-6 shadow-lg"
         style={{ background: '#fff' }}
         onClick={(e) => e.stopPropagation()}

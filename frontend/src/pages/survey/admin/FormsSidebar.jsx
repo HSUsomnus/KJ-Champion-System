@@ -5,7 +5,7 @@ const STATUS_LABEL = {
 
 export default function FormsSidebar({ forms, selectedId, onSelect, onCreateNew }) {
   return (
-    <div style={containerStyle}>
+    <div className="w-full md:w-[200px] md:flex-shrink-0" style={containerStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={titleStyle}>表單</h2>
         {onCreateNew && (
@@ -49,8 +49,6 @@ export default function FormsSidebar({ forms, selectedId, onSelect, onCreateNew 
 }
 
 const containerStyle = {
-  width: 200,
-  flexShrink: 0,
   display: 'flex',
   flexDirection: 'column',
   gap: 8,

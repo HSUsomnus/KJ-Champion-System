@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useBlocker } from 'react-router-dom'
+import useDialogA11y from './useDialogA11y'
 
 /**
  * 編輯頁離開守衛
@@ -32,7 +33,9 @@ export function useLeaveGuard() {
 }
 
 export default function ConfirmLeaveDialog({ blocker }) {
-  if (!blocker || blocker.state !== 'blocked') return null
+  const open = Boolean(blocker) && blocker.state === 'blocked'
+  const dialogRef = useDialogA11y(open, () => blocker?.reset())
+  if (!open) return null
 
   return createPortal(
     <div
@@ -41,6 +44,7 @@ export default function ConfirmLeaveDialog({ blocker }) {
       onClick={() => blocker.reset()}
     >
       <div
+        ref={dialogRef}
         className="mx-6 w-full max-w-xs rounded-2xl p-6 shadow-lg"
         style={{ background: '#fff' }}
         onClick={e => e.stopPropagation()}

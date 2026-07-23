@@ -145,6 +145,20 @@ describe('FormBuilder — 編輯既有草稿', () => {
     expect(screen.getByDisplayValue('name')).toBeInTheDocument()
   })
 
+  it('十二節 12.6：確認對話框開啟時按 Escape 等同取消，焦點回到觸發按鈕', () => {
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    const deleteButton = screen.getByText('刪除')
+    deleteButton.focus()
+    fireEvent.click(deleteButton)
+    expect(screen.getByText('刪除這個問題？')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByText('刪除這個問題？')).not.toBeInTheDocument()
+    expect(document.activeElement).toBe(deleteButton)
+  })
+
   it('點刪除 → 確認對話框點「刪除問題」才真的移除該欄位', () => {
     renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
     expect(screen.getByDisplayValue('name')).toBeInTheDocument()

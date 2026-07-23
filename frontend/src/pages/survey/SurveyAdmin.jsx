@@ -44,17 +44,6 @@ export default function SurveyAdmin() {
   const [builderDirty, setBuilderDirty] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
 
-  // 後台是桌機優先（給管理者在電腦上看資料/篩選/匯出），跟全站手機優先的
-  // width=device-width 相反。掛載時把 viewport 換成固定寬度，手機開會整頁縮小顯示，
-  // 而不是被硬擠成手機版面；離開頁面時還原，不影響其他頁面。
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="viewport"]')
-    const original = meta?.getAttribute('content')
-    meta?.setAttribute('content', 'width=1280')
-    return () => {
-      if (original) meta?.setAttribute('content', original)
-    }
-  }, [])
 
   // 讀 line-callback 導回的 #token=<jwt> → 存記憶體 → 清 fragment；
   // authError query（登入失敗）→ 顯示對應訊息 → 清 query。兩者互斥，均只在掛載時處理一次。
@@ -226,7 +215,7 @@ export default function SurveyAdmin() {
   }
 
   return (
-    <div style={desktopPageStyle}>
+    <div className="p-4 md:p-8" style={desktopPageStyle}>
       <div style={{ width: '100%', maxWidth: 1200 }}>
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -254,7 +243,7 @@ export default function SurveyAdmin() {
             <p style={{ fontSize: 13, color: '#C0392B', marginBottom: 12 }}>{dashError}</p>
           )}
 
-          <div style={{ display: 'flex', gap: 24 }}>
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
             <FormsSidebar
               forms={forms}
               selectedId={creatingNew ? null : selectedFormId}
@@ -335,13 +324,13 @@ const pageStyle = {
   overscrollBehavior: 'none',
 }
 
-// 已登入後的桌機版面：不置中限寬 448，撐開到 1200px，給表格/篩選/側邊欄空間
+// 已登入後的桌機版面：不置中限寬 448，撐開到 1200px，給表格/篩選/側邊欄空間；
+// padding 響應式縮小（十二節 12.6：360-375px 手機不得有非必要水平捲動）
 const desktopPageStyle = {
   minHeight: '100svh',
   background: '#F7F5F2',
   display: 'flex',
   justifyContent: 'center',
-  padding: '32px',
   overscrollBehavior: 'none',
 }
 

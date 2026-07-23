@@ -1,8 +1,10 @@
 import { createPortal } from 'react-dom'
+import useDialogA11y from '../../../components/useDialogA11y'
 
 // 十二節 12.2：發布前的不可逆確認（取消不送 API）。跟 DeleteQuestionDialog 同一套
 // 視覺骨架，但這不是危險操作（default variant：深炭灰確認鈕，不是紅色）。
 export default function PublishConfirmDialog({ open, onCancel, onConfirm }) {
+  const dialogRef = useDialogA11y(open, onCancel)
   if (!open) return null
 
   return createPortal(
@@ -12,6 +14,7 @@ export default function PublishConfirmDialog({ open, onCancel, onConfirm }) {
       onClick={onCancel}
     >
       <div
+        ref={dialogRef}
         className="mx-6 w-full max-w-xs rounded-2xl p-6 shadow-lg"
         style={{ background: '#fff' }}
         onClick={(e) => e.stopPropagation()}
