@@ -59,6 +59,7 @@ describe('FormBuilder — 新建表單', () => {
 
     fireEvent.change(screen.getByLabelText('表單標題'), { target: { value: '新表單' } })
     fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.click(screen.getByText(/進階設定/)) // key 移入進階設定區（十二節 12.7），需先展開
     fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'name' } })
     fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '姓名' } })
 
@@ -98,7 +99,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
     renderFormBuilder({ form: DRAFT_FORM, onSaved })
 
     expect(screen.getByDisplayValue('既有草稿')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('name')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('姓名')).toBeInTheDocument() // key 移入進階設定區，預設收合，先以 label 確認載入
 
     fireEvent.change(screen.getByDisplayValue('既有草稿'), { target: { value: '改過的標題' } })
     fireEvent.click(screen.getByText('儲存草稿'))
@@ -142,7 +143,7 @@ describe('FormBuilder — 編輯既有草稿', () => {
 
     fireEvent.click(screen.getByText('取消'))
     expect(screen.queryByText('刪除這個問題？')).not.toBeInTheDocument()
-    expect(screen.getByDisplayValue('name')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('姓名')).toBeInTheDocument()
   })
 
   it('十二節 12.6：確認對話框開啟時按 Escape 等同取消，焦點回到觸發按鈕', () => {
@@ -161,19 +162,20 @@ describe('FormBuilder — 編輯既有草稿', () => {
 
   it('點刪除 → 確認對話框點「刪除問題」才真的移除該欄位', () => {
     renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
-    expect(screen.getByDisplayValue('name')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('姓名')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('刪除'))
     fireEvent.click(screen.getByText('刪除問題'))
 
     expect(screen.queryByText('刪除這個問題？')).not.toBeInTheDocument()
-    expect(screen.queryByDisplayValue('name')).not.toBeInTheDocument()
+    expect(screen.queryByDisplayValue('姓名')).not.toBeInTheDocument()
   })
 
   it('複製題目 → 新副本自動取得不同的 key，不產生重複錯誤（v6 20.47）', () => {
     renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
 
     fireEvent.click(screen.getByText('複製'))
+    fireEvent.click(screen.getByText(/進階設定/)) // key 移入進階設定區（十二節 12.7），需先展開才看得到
 
     expect(screen.getByDisplayValue('field_1')).toBeInTheDocument() // 副本自動配發的 key
     expect(screen.queryByText('● key 重複，請修改成唯一值')).not.toBeInTheDocument()
@@ -183,9 +185,11 @@ describe('FormBuilder — 編輯既有草稿', () => {
     renderFormBuilder({ form: null, onSaved: () => {} })
 
     fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.click(screen.getByText(/進階設定/))
     expect(screen.getByDisplayValue('field_1')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.click(screen.getByText(/進階設定/))
     expect(screen.getByDisplayValue('field_2')).toBeInTheDocument()
   })
 
@@ -199,9 +203,11 @@ describe('FormBuilder — 編輯既有草稿', () => {
     fireEvent.click(screen.getByText('刪除問題'))
 
     // 刪除後只剩 field_1，且自動變回焦點
+    fireEvent.click(screen.getByText(/進階設定/))
     expect(screen.getByDisplayValue('field_1')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.click(screen.getByText(/進階設定/))
     expect(screen.getByDisplayValue('field_2')).toBeInTheDocument()
     expect(screen.queryByText('● key 重複，請修改成唯一值')).not.toBeInTheDocument()
   })
@@ -258,7 +264,7 @@ describe('FormBuilder — searchable_select 選項編輯', () => {
     fireEvent.click(screen.getByText('+ 新增選項'))
 
     const optionInputs = screen.getAllByDisplayValue('')
-    // key/label/option 三個空字串輸入框都存在，找 option 那個用刪除選項按鈕反查即可
+    // label/option 空字串輸入框都存在（key 收在進階設定區，未展開不算），用刪除選項按鈕反查 option 即可
     expect(screen.getByText('刪除選項')).toBeInTheDocument()
     expect(optionInputs.length).toBeGreaterThan(0)
   })
@@ -268,6 +274,7 @@ describe('FormBuilder — searchable_select 選項編輯', () => {
 
     renderFormBuilder({ form: null, onSaved: () => {} })
     fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.click(screen.getByText(/進階設定/)) // key 移入進階設定區（十二節 12.7），需先展開
     fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'course' } })
     fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '課程' } })
     fireEvent.change(screen.getByDisplayValue('文字'), { target: { value: 'searchable_select' } })
@@ -287,6 +294,7 @@ describe('FormBuilder — searchable_select 選項編輯', () => {
 
     renderFormBuilder({ form: null, onSaved: () => {} })
     fireEvent.click(screen.getByText('＋ 新增題目'))
+    fireEvent.click(screen.getByText(/進階設定/)) // key 移入進階設定區（十二節 12.7），需先展開
     fireEvent.change(screen.getByPlaceholderText('key'), { target: { value: 'name' } })
     fireEvent.change(screen.getByPlaceholderText('問題標題'), { target: { value: '姓名' } })
     fireEvent.change(screen.getByDisplayValue('文字'), { target: { value: 'searchable_select' } })
@@ -315,8 +323,8 @@ describe('FormBuilder — 單欄題目卡的焦點/摘要狀態（十二節 12.1
   it('預設第一題展開、其餘顯示摘要卡（標題+題型）', () => {
     renderFormBuilder({ form: TWO_FIELD_FORM, onSaved: () => {} })
 
-    expect(screen.getByDisplayValue('name')).toBeInTheDocument() // 第一題展開中
-    expect(screen.queryByDisplayValue('note')).not.toBeInTheDocument() // 第二題還是摘要卡
+    expect(screen.getByDisplayValue('姓名')).toBeInTheDocument() // 第一題展開中（label input，key 移入進階設定區）
+    expect(screen.queryByDisplayValue('備註')).not.toBeInTheDocument() // 第二題還是摘要卡
     expect(screen.getByText('備註')).toBeInTheDocument() // 摘要卡顯示題目標題
   })
 
@@ -325,9 +333,27 @@ describe('FormBuilder — 單欄題目卡的焦點/摘要狀態（十二節 12.1
 
     fireEvent.click(screen.getByText('備註'))
 
-    expect(screen.getByDisplayValue('note')).toBeInTheDocument()
-    expect(screen.queryByDisplayValue('name')).not.toBeInTheDocument()
+    expect(screen.getByDisplayValue('備註')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('姓名')).not.toBeInTheDocument()
     expect(screen.getByText('姓名')).toBeInTheDocument() // 姓名變摘要卡
+  })
+})
+
+describe('FormBuilder — 進階設定揭露區（十二節 12.7，v6 20.48）', () => {
+  it('預設收合不顯示 key input；展開後可見並可編輯；再收合則消失', () => {
+    renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
+
+    expect(screen.queryByPlaceholderText('key')).not.toBeInTheDocument()
+    const toggle = screen.getByText(/進階設定/)
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(toggle)
+    expect(screen.getByPlaceholderText('key')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('name')).toBeInTheDocument() // 既有表單原有 key 顯示於進階區
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+
+    fireEvent.click(toggle)
+    expect(screen.queryByPlaceholderText('key')).not.toBeInTheDocument()
   })
 })
 
@@ -459,6 +485,7 @@ describe('FormBuilder — dirty state 與離頁攔截（十二節 12.2）', () =
     expect(screen.getByText('送出（預覽停用）')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('問題編輯'))
+    fireEvent.click(screen.getByText(/進階設定/)) // key 移入進階設定區（十二節 12.7），需先展開才看得到
     expect(screen.getByPlaceholderText('key')).toBeInTheDocument()
     expect(screen.queryByText('送出（預覽停用）')).not.toBeInTheDocument()
   })

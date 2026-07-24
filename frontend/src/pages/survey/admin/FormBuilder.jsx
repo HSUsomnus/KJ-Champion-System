@@ -135,6 +135,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
   const [activeView, setActiveView] = useState('edit')
   const [publishErrors, setPublishErrors] = useState({ title: undefined, fields: {}, formError: '' })
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false)
+  const [advancedOpenIds, setAdvancedOpenIds] = useState(() => new Set())
   const titleInputRef = useRef(null)
   const fieldRefs = useRef({})
 
@@ -150,6 +151,20 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
     return acc
   }, {})
   const isDuplicateKey = (key) => Boolean(key) && keyCounts[key] > 1
+
+  // 進階設定揭露區：預設收合，key 輸入移入此區才可見（十二節 12.7）
+  const isAdvancedOpen = (rowId) => advancedOpenIds.has(rowId)
+  const toggleAdvanced = (rowId) => {
+    setAdvancedOpenIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(rowId)) next.delete(rowId)
+      else next.add(rowId)
+      return next
+    })
+  }
+  const openAdvanced = (rowId) => {
+    setAdvancedOpenIds((prev) => new Set(prev).add(rowId))
+  }
 
   const updateField = (rowId, patch) => {
     setFields((prev) => prev.map((f) => (f.rowId === rowId ? { ...f, ...patch } : f)))
@@ -298,6 +313,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
     if (firstErrorRowId != null) {
       setActiveView('edit')
       setFocusedRowId(firstErrorRowId)
+      openAdvanced(firstErrorRowId) // 十二節 12.7：錯誤可能來自 key，自動展開進階設定區
       const el = fieldRefs.current[firstErrorRowId]
       el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       el?.querySelector('input')?.focus()
@@ -429,14 +445,6 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4 }}>
                   <input
                     type="text"
-                    placeholder="key"
-                    value={field.key}
-                    onChange={(e) => updateField(field.rowId, { key: e.target.value })}
-                    disabled={published}
-                    style={{ ...inputStyle, width: 120 }}
-                  />
-                  <input
-                    type="text"
                     placeholder="問題標題"
                     value={field.label}
                     onChange={(e) => updateField(field.rowId, { label: e.target.value })}
@@ -454,11 +462,34 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
                     ))}
                   </select>
                 </div>
-                {isDuplicateKey(field.key) && (
-                  <p style={{ fontSize: 11, color: '#C0392B', margin: '0 0 8px' }}>● key 重複，請修改成唯一值</p>
-                )}
-                {!isDuplicateKey(field.key) && publishErrors.fields[field.rowId] && (
-                  <p style={{ fontSize: 11, color: '#C0392B', margin: '0 0 8px' }}>● {publishErrors.fields[field.rowId]}</p>
+
+                <button
+                  type="button"
+                  onClick={() => toggleAdvanced(field.rowId)}
+                  aria-expanded={isAdvancedOpen(field.rowId)}
+                  style={advancedToggleStyle}
+                >
+                  進階設定 {isAdvancedOpen(field.rowId) ? '▲' : '▼'}
+                </button>
+                {isAdvancedOpen(field.rowId) && (
+                  <div style={advancedPanelStyle}>
+                    <label style={labelStyle} htmlFor={`field-key-${field.rowId}`}>key</label>
+                    <input
+                      id={`field-key-${field.rowId}`}
+                      type="text"
+                      placeholder="key"
+                      value={field.key}
+                      onChange={(e) => updateField(field.rowId, { key: e.target.value })}
+                      disabled={published}
+                      style={{ ...inputStyle, width: 160 }}
+                    />
+                    {isDuplicateKey(field.key) && (
+                      <p style={{ fontSize: 11, color: '#C0392B', margin: '6px 0 0' }}>● key 重複，請修改成唯一值</p>
+                    )}
+                    {!isDuplicateKey(field.key) && publishErrors.fields[field.rowId] && (
+                      <p style={{ fontSize: 11, color: '#C0392B', margin: '6px 0 0' }}>● {publishErrors.fields[field.rowId]}</p>
+                    )}
+                  </div>
                 )}
 
                 {field.type === 'searchable_select' && (
@@ -738,6 +769,29 @@ const moveBtnStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   padding: 0,
+}
+
+// 十二節 12.7：進階設定揭露區——收合時只留一顆原生 button，展開才顯示 key 輸入框
+const advancedToggleStyle = {
+  display: 'block',
+  width: '100%',
+  textAlign: 'left',
+  padding: '6px 0',
+  marginTop: 4,
+  marginBottom: 8,
+  border: 'none',
+  background: 'transparent',
+  color: '#8A8680',
+  fontSize: 12,
+  fontWeight: 500,
+  cursor: 'pointer',
+}
+
+const advancedPanelStyle = {
+  padding: 12,
+  marginBottom: 12,
+  background: '#F7F5F2',
+  borderRadius: 12,
 }
 
 const removeBtnStyle = {
