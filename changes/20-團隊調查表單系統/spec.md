@@ -1,9 +1,12 @@
-# Change 20 — 團隊調查表單系統（KJ Survey）v5
+# Change 20 — 團隊調查表單系統（KJ Survey）v6
 
 > 版本沿革：v1 → v2（回應 `審查.md`）→ v3（回應 `審核.md`）→ v4（回應 `覆核.MD`：
-> 4 阻斷歧義 + 4 實作缺口 + 4 驗證項）→ **v5（本版，納入 `新增表單重新設計線框圖.md`，
-> 正式定案表單建立器、草稿預覽與填寫頁 UI）**。v4 的安全、資料與部署決策全部保留；
-> v5 新增的 UI 與管理員名冊 API 規格見十二節。本 spec 為唯一事實來源。
+> 4 阻斷歧義 + 4 實作缺口 + 4 驗證項）→ v5（納入 `新增表單重新設計線框圖.md`，
+> 正式定案表單建立器、草稿預覽與填寫頁 UI）→ **v6（本版，回應使用者「更接近 Google 表單」需求：
+> 建立器 `key` 由手動可見改為系統自動產生 `field_N` 流水號＋每題「進階設定」區可改；
+> 明確反轉 v5 十二節 12.1「key 不自動產生、不隱藏」與複製題目保留重複 key 之決策。
+> schema／後端驗證／匯出邏輯全不動，僅改前端 `FormBuilder.jsx`。詳見新增 12.7、12.8）**。
+> v4 的安全、資料與部署決策全部保留；v5 新增的 UI 與管理員名冊 API 規格見十二節。本 spec 為唯一事實來源。
 >
 > DB 三表已建於 dev/prod/backup，schema 不動。原則不變：放棄舊 `[x]`、乾淨重規劃、保留已驗證 code。
 
@@ -201,15 +204,17 @@ milestone 須額外人眼驗證（覆核 M-1~3）：① confirmed 名單經 toke
 ### 12.1 後台建立器資訊架構
 
 - 編輯器為置中的單欄內容流：表單標題卡在最上方，其後每題一張問題卡；目前焦點題以 accent 邊線標示。
-- 標題卡可編輯表單標題；問題卡可手動編輯 `key`、`label`、`type`、`required`。`key` 不自動產生、不隱藏。
+- 標題卡可編輯表單標題；問題卡主區可直接編輯 `label`、`type`、`required`。`key` **由系統自動產生並預設隱藏**，
+  收於每題可收合的「進階設定」區，展開後可手動改（v6 定案，詳見 12.7；反轉舊版「key 不自動產生、不隱藏」）。
 - `type` 僅提供 Phase 1 的 `text`、`yesno`、`searchable_select`；不得讓使用者建立不可發布的 `upload`。
 - `searchable_select` 必須明確選擇資料來源：
   - 靜態選項：`options={source:'static', values:[...]}`，可新增、刪除及排序選項。
   - 團隊名冊：`options={source:'survey_members'}`，不得夾帶 `values`。
 - 每題提供拖曳排序、鍵盤可操作的上移／下移、複製及刪除。不得引入拖曳套件；使用原生
   Pointer／HTML5 drag 行為，並保留鍵盤替代操作。
-- 複製題目時複製 label/type/required/options；新副本的 `key` 必須保持可見並立即標示重複，
-  由使用者手動改成唯一 key，禁止靜默改寫資料。
+- 複製題目時複製 label/type/required/options；新副本的 `key` **由系統自動指派新的唯一值**
+  （沿用 12.7 `field_N` 流水號規則），不產生重複、不需使用者手動處理（v6 定案，反轉舊版「保留重複由使用者手改」）。
+  使用者若在進階區自行把 key 改成重複值，仍即時 inline 報錯。
 - 刪除題目一律顯示專案 Confirm Dialog；確認後才移除。
 
 ### 12.2 儲存、離頁與發布
@@ -253,3 +258,32 @@ milestone 須額外人眼驗證（覆核 M-1~3）：① confirmed 名單經 toke
 - 所有 icon button 必須有可讀 `aria-label`；Dialog 要管理焦點、支援 Escape 與返回觸發元素。
 - 拖曳不是唯一排序方式；鍵盤使用者可透過上移／下移完成同一操作。
 - 互動控制維持足夠觸控尺寸，內容不得造成非必要的水平捲動。
+
+### 12.7 key 自動產生與進階編輯（v6）
+
+- **定位不變**：`key` 是每題的內部識別碼——答案 object 的鍵、後端 `validateAnswers` 白名單、後台篩選/統計。
+  匯出（CSV/xlsx）欄名一律用 `label`（見 `exportService.js`，header row 取 `field.label`），與 key 無關。
+  **schema、後端驗證、匯出邏輯本次全不動**；本節只改後台建立器 `FormBuilder.jsx` 的前端行為。
+- **自動產生規則**：新題（新增或複製）的 key 由系統指派為 `field_<N>`。`N` = 當前表單所有符合
+  `^field_(\d+)$` 的 key 之最大數字 + 1（無則 1）。既有非此格式的有意義 key（如固定表單的
+  `nickname`／`star`／`member_name`）不參與編號、原樣保留。
+- **穩定性不變式（安全依據，不可違反）**：key 一旦指派即隨該題存活，排序／刪除其他題都不改動它。
+  **禁止依題目位置（index）計算 key**。已發布表單不可再 patch（後端 409），答案只在發布後收集，
+  因此發布凍結後 key↔答案對應永不位移；未發布草稿階段尚無任何答案，即使刪除最高號題後新增造成號碼
+  「回收」也不會污染任何已收資料。
+- **進階編輯 UI**：每題問題卡提供一個**預設收合**的「進階設定」揭露區（原生 `<button aria-expanded>`＋
+  內容區，遵守 uidesign Warm Minimal，禁止 emoji／外部 icon library／拖曳套件）。展開後顯示可編輯的
+  key 輸入框（`placeholder="key"`），沿用 KEY_REGEX 與同表單唯一性的 inline 驗證與紅字提示。
+- **相容性**：載入既有草稿／已發布表單時，其原有 key（含有意義 key）顯示於進階區、未發布時可改。
+  不做資料遷移、不新增 migration。已發布表單維持 12.2 的乾淨唯讀摘要（不顯示 key 輸入）。
+- **發布驗證延伸**：`validateForPublish` 規則不變；若某題 key 驗證失敗（格式錯／重複／被手動清空），
+  發布時自動展開該題「進階設定」並聚焦、捲入第一個錯誤（沿用 12.2 的聚焦捲動機制）。
+
+### 12.8 Sub-agent 平行執行配置（v6 本次修訂）
+
+- **檔案接觸面**：本次修訂全部集中在單一檔案 `frontend/src/pages/survey/admin/FormBuilder.jsx`
+  及其測試 `__tests__/FormBuilder.test.jsx`，接觸面完全重疊 → **不可平行**。
+- **執行方式**：Section 9 的 task 由**主 session 依序執行**（20.47 → 20.48），每 task 主 session 自行
+  跑 gate（`FormBuilder.test.jsx` 綠）、自行 commit／push，**不派 sub-agent**。
+- **需與使用者互動的步驟**（M.6 人眼驗收）一律主 session。
+- 平行邊界由本 spec 定案，實作 session 照表執行，不自行判斷。

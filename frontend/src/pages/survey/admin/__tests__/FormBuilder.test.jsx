@@ -170,13 +170,40 @@ describe('FormBuilder — 編輯既有草稿', () => {
     expect(screen.queryByDisplayValue('name')).not.toBeInTheDocument()
   })
 
-  it('複製題目 → 新副本成為焦點、key 原樣保留（會重複）並顯示重複錯誤', () => {
+  it('複製題目 → 新副本自動取得不同的 key，不產生重複錯誤（v6 20.47）', () => {
     renderFormBuilder({ form: DRAFT_FORM, onSaved: () => {} })
 
     fireEvent.click(screen.getByText('複製'))
 
-    expect(screen.getByDisplayValue('name')).toBeInTheDocument() // 副本的 key 輸入框可見、值原樣保留
-    expect(screen.getByText('● key 重複，請修改成唯一值')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('field_1')).toBeInTheDocument() // 副本自動配發的 key
+    expect(screen.queryByText('● key 重複，請修改成唯一值')).not.toBeInTheDocument()
+  })
+
+  it('連續新增題目 → key 依序 field_1、field_2（v6 20.47 自動產生）', () => {
+    renderFormBuilder({ form: null, onSaved: () => {} })
+
+    fireEvent.click(screen.getByText('＋ 新增題目'))
+    expect(screen.getByDisplayValue('field_1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('＋ 新增題目'))
+    expect(screen.getByDisplayValue('field_2')).toBeInTheDocument()
+  })
+
+  it('刪除最高編號題目後新增，新 key 不與現存 key 衝突（v6 20.47）', () => {
+    renderFormBuilder({ form: null, onSaved: () => {} })
+
+    fireEvent.click(screen.getByText('＋ 新增題目')) // field_1
+    fireEvent.click(screen.getByText('＋ 新增題目')) // field_2，焦點在此
+
+    fireEvent.click(screen.getByText('刪除'))
+    fireEvent.click(screen.getByText('刪除問題'))
+
+    // 刪除後只剩 field_1，且自動變回焦點
+    expect(screen.getByDisplayValue('field_1')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('＋ 新增題目'))
+    expect(screen.getByDisplayValue('field_2')).toBeInTheDocument()
+    expect(screen.queryByText('● key 重複，請修改成唯一值')).not.toBeInTheDocument()
   })
 
   it('題目上移/下移 → 交換順序', () => {

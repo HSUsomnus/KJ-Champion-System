@@ -7,6 +7,19 @@ import ConfirmLeaveDialog from '../../../components/ConfirmLeaveDialog'
 import FormPreview from './FormPreview'
 
 const KEY_REGEX = /^[a-z][a-z0-9_]*$/
+const FIELD_KEY_PATTERN = /^field_(\d+)$/
+
+// 十二節 12.7：key 由系統自動產生，不依題目位置（index）計算——只依現有 key 內容找最大編號。
+// 非 field_N 格式的既有 key（如固定表單的 nickname/star）不參與編號、不影響下一個號碼。
+const nextFieldKey = (fields) => {
+  const maxN = fields.reduce((acc, f) => {
+    const m = FIELD_KEY_PATTERN.exec(f.key || '')
+    if (!m) return acc
+    const n = parseInt(m[1], 10)
+    return n > acc ? n : acc
+  }, 0)
+  return `field_${maxN + 1}`
+}
 
 // 十二節 12.2：發布前重新驗證完整表單，鏡射後端 formService.js 的規則（五節），
 // 讓錯誤能在送出 API 前就 inline 顯示、聚焦到第一個錯誤題目，不用等後端 400 才知道。
@@ -55,7 +68,7 @@ const TYPE_OPTIONS = [
 let nextRowId = 0
 const newRowId = () => nextRowId++
 
-const emptyField = () => ({ rowId: newRowId(), key: '', label: '', type: 'text', required: true })
+const emptyField = (fields) => ({ rowId: newRowId(), key: nextFieldKey(fields), label: '', type: 'text', required: true })
 
 const withRowIds = (fields) => (fields || []).map((f) => ({ ...f, rowId: newRowId() }))
 const stripRowId = ({ rowId, ...rest }) => rest
@@ -131,7 +144,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
 
   useEffect(() => { onDirtyChange?.(dirty) }, [dirty, onDirtyChange])
 
-  // 十二節 12.1：新副本的 key 必須保持可見並立即標示重複，不得靜默改寫
+  // key 自動產生後理論上不會重複；仍保留即時重複檢查作為使用者手動改 key 時的安全網（十二節 12.7）
   const keyCounts = fields.reduce((acc, f) => {
     if (f.key) acc[f.key] = (acc[f.key] || 0) + 1
     return acc
@@ -158,7 +171,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
   }
 
   const addField = () => {
-    const field = emptyField()
+    const field = emptyField(fields)
     setFields((prev) => [...prev, field])
     setFocusedRowId(field.rowId)
   }
@@ -178,8 +191,8 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
     setDeleteTargetRowId(null)
   }
 
-  // 複製 label/type/required/options；key 原樣保留（會跟原題重複），
-  // 使用者要自己手動改成唯一值，不做靜默改寫（十二節 12.1）
+  // 複製 label/type/required/options；key 改配系統自動產生的新唯一值，不沿用原題 key
+  // （十二節 12.7，反轉舊版「key 原樣保留由使用者手動改」）
   const duplicateField = (rowId) => {
     const idx = fields.findIndex((f) => f.rowId === rowId)
     if (idx === -1) return
@@ -187,6 +200,7 @@ export default function FormBuilder({ form, onSaved, onDirtyChange }) {
     const clone = {
       ...original,
       rowId: newRowId(),
+      key: nextFieldKey(fields),
       options: original.options
         ? { ...original.options, values: original.options.values ? [...original.options.values] : undefined }
         : undefined,

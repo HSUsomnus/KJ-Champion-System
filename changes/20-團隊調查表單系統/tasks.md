@@ -1,5 +1,9 @@
-# Change 20 — 團隊調查表單系統 Tasks（v5）
+# Change 20 — 團隊調查表單系統 Tasks（v6）
 
+> v6：回應使用者「更接近 Google 表單」需求——建立器 `key` 改為系統自動產生（`field_N` 流水號）＋
+> 每題「進階設定」區可改（spec v6 十二節 12.7/12.8）。新增 Section 9（純前端 `FormBuilder.jsx`），
+> 並更新 M.6.1/M.6.3 人眼驗收、新增 M.6.13。Section 1-8 全數不動。
+>
 > v5：保留 v4 對 `覆核.MD` 的處置，並依 spec 十二節加入表單建立器、草稿預覽與填寫頁重新設計。
 > 實作項在前，部署/milestone 外部依賴置後且標非阻塞。標註 `[Codex CX-N]`/`[Claude]`/`[使用者]`。
 > 數值/HOW 全在 `spec.md` v4 寫死，實作者不需自補。分支 `m_b_調查表單`。
@@ -113,6 +117,19 @@
 
 ---
 
+## Section 9：key 自動產生 + 進階編輯（v6，純前端 `FormBuilder.jsx`）
+
+> 規格依據：`spec.md` v6 十二節 12.7/12.8。**單一檔案、不可平行**，主 session 依 20.47 → 20.48 順序執行。
+> 每 task 自跑 gate（`FormBuilder.test.jsx` 綠）＋自行 commit；動 UI 前先載入 `uidesign` skill。
+> Section milestone（20.48 完成後）：跑前端全套 `npm --prefix frontend run test:run` 全綠 + `npm --prefix frontend run build` 通過。
+
+- [x] **20.47** `[Claude]` `FormBuilder.jsx` key 自動產生（資料層）：新增 `nextFieldKey(fields)`（掃現有符合 `^field_(\d+)$` 的 key 取最大 +1，無則 `field_1`；非此格式的有意義 key 不參與編號）；`emptyField()`／`addField()` 產生的新題自動帶 key（依當前 fields 算號）；`duplicateField()` 改為配「新的自動 key」而非原樣保留重複（反轉舊 12.2／20.42 行為）。**保留不動**：`validateForPublish` 的 KEY_REGEX／唯一性檢查、`keyCounts`／`isDuplicateKey`。**同步改測試**：`FormBuilder.test.jsx` 第 173-179 行「複製 → key 原樣保留並顯示重複錯誤」改為「複製 → 新副本帶不同自動 key、**無**重複錯誤」；新增「連續新增 → key 依序 `field_1`/`field_2`」「刪除最高號題後新增不與現存 key 衝突」兩案例。gate：`npm --prefix frontend run test:run -- src/pages/survey/admin/__tests__/FormBuilder.test.jsx` 綠
+- [ ] **20.48** `[Claude]` `FormBuilder.jsx` 進階編輯 UI（視圖層，先載入 `uidesign`）：把 key 輸入框從問題卡主區移入**預設收合**的「進階設定」揭露區（原生 `<button aria-expanded>`＋內容區，遵守 Warm Minimal，禁止 emoji／外部 icon／拖曳套件）；展開後 key input（`placeholder="key"`）可編輯，保留 `isDuplicateKey` 紅字與 `publishErrors` 顯示；發布時某題 key 有錯 → 自動展開該題進階區並聚焦（延伸 20.45 自動展開錯誤題目機制）；既有表單載入時原有 key（含有意義 key）顯示於進階區可改。**同步改測試**：第 62／244／263 行輸入 key 前先展開進階區、第 435 行「展開卡片顯示 key input」需先展開進階區、第 342-352「空 key 發布擋下」改為進階區驗證＋自動展開；確認第 319／431 行「收合狀態 key input 不存在」仍成立。gate：`FormBuilder.test.jsx` 綠 → 全套 `npm --prefix frontend run test:run` 全綠 + `npm --prefix frontend run build` 通過
+
+> **commit 數驗收**：Section 9 每個 task 一個 commit（共 2 個）；若實作中使用者手動 commit，須在驗收報告揭露，不得為湊數 squash 歷史。
+
+---
+
 ## Section U：使用者外部依賴（**非阻塞離線實作**，dev milestone 前完成）
 
 > 這些不擋 Section 1-8 的離線 code+jest/vitest（覆核 B-4 / M-4）；與實作並行，dev 實測前到位即可。
@@ -131,7 +148,20 @@
 - [x] **M.3** `[使用者]` 未填名冊分組/進度與手算一致、pending 未進母數、同名重複不超 total（M-3 覆核）——母數 40（不含 pending 測試甲）、推薦人分組正確、已填/未填狀態正確；驗收過程中兩輪改版 Table 1 篩選 UI（commit `6861158`/`5f183f7`/`821db01`）
 - [x] **M.4** `[使用者]` 匯出 CSV/xlsx 開檔確認（含公式中和）——CSV/Excel 皆正常開啟，欄序與檔名（表單標題）正確
 - [x] **M.5** `[使用者]` confirmed 名單經分享 token 仍全揭露 → 人眼確認可接受（M-1 覆核隱私驗收）——使用者確認此揭露方式為原始需求，可接受
-- [ ] **M.6** `[使用者]` v5 Integration：建立含 text/yesno/static select/member select 與 required/optional 的新表單 → 驗證重複 key、空標題、空/重複選項會被擋 → 排序/鍵盤移動、複製、取消與確認刪除 → 修改後逐一驗證切換表單/新增/登出/離頁攔截 → 儲存草稿 → 預覽以真實 confirmed 名冊搜尋且不產生 submission → 取消一次發布後再確認發布 → 分享連結 → 公開頁逐題填寫並驗證 required 被擋、optional 可空 → 管理者登入查看/篩選/未填名冊/匯出；同時人眼驗證 1280px、平板、375px、360px 無功能遺失與非必要水平捲動
+- [ ] **M.6** `[使用者]` v5 完整 Integration 驗收（以下 M.6.1～M.6.12 全部通過才可勾選）
+  - [ ] **M.6.1 建立新表單**：後台按「新增」，建立含 `text`、`yesno`、static `searchable_select`、member `searchable_select` 的表單，且同時包含 required 與 optional 題目；預期每題以單欄問題卡呈現，**key 由系統自動產生（`field_1`、`field_2`…）且預設隱藏、使用者不需輸入**，資料來源切換正確
+  - [ ] **M.6.2 編輯驗證**：依序製造空標題、格式錯誤 key、重複 key、空 label、static 空選項、重複選項；預期禁止儲存/發布、錯誤顯示在對應欄位旁，並聚焦及捲至第一個錯誤；修正後錯誤消失
+  - [ ] **M.6.3 題目操作**：以拖曳及鍵盤上移/下移改變順序、複製題目、取消一次刪除後再確認刪除；預期順序即時更新，**複製後新副本自動取得不同 key（不產生重複、不需手動處理）**，取消刪除不改資料、確認後才移除；改變順序或刪除其他題後，各題 key 不隨位置改動
+  - [ ] **M.6.4 未儲存攔截**：修改內容後分別嘗試切換表單、按「新增」、登出、應用程式內返回、重新整理/關閉頁面；預期各入口都警告未儲存變更，取消可保留內容，確認才離開
+  - [ ] **M.6.5 儲存草稿**：完成合法內容後按「儲存草稿」再重新載入；預期所有 title、key、label、type、required、題序及 options source/values 完整保存，成功後 dirty 狀態清除
+  - [ ] **M.6.6 草稿預覽**：不再次儲存就修改題目並開啟預覽；預期預覽使用當下本地內容、所有題型可操作、member 題可搜尋真實 confirmed 名冊、送出停用且資料庫不新增 submission；關閉再開時答案重置
+  - [ ] **M.6.7 預覽異常**：模擬管理員名冊載入失敗與空名冊；預期顯示 inline error/empty state，可重試並可正常返回編輯，不遺失草稿
+  - [ ] **M.6.8 發布流程**：先取消一次發布確認，再重新確認發布；預期取消時不呼叫 publish API，確認後才發布，發布後表單唯讀、不能返回編輯，token 不重產，分享連結與複製功能可用
+  - [ ] **M.6.9 公開填寫**：以分享連結開啟 `/f/:token`；預期顯示表單標題卡與逐題卡片，題序/選項與建立器一致，member 題可搜尋 confirmed 名冊
+  - [ ] **M.6.10 送出驗證**：required 留空送出應被 inline error 擋下；只讓 optional 留空則可成功送出；連點送出不得重複建立 submission，成功後後台能看到該筆紀錄
+  - [ ] **M.6.11 後台資料流程**：管理者查看新紀錄並驗證表頭篩選、未填名冊、進度、CSV 與 Excel；預期欄序依表單 fields、篩選結果正確、已填/未填一致、匯出內容及公式中和正確
+  - [ ] **M.6.12 響應式與無障礙**：分別以 1280px、平板、375px、360px 驗證建立器、預覽及公開填寫頁；預期無功能遺失與非必要水平捲動，工具列可操作，icon 有可讀標籤，Dialog 可用鍵盤/Escape 且關閉後焦點返回觸發元素
+  - [ ] **M.6.13 key 進階編輯（v6）**：每題「進階設定」預設收合、展開後可看到自動 key 並可手動改；改成重複 key 即時 inline 報錯，發布時自動展開該錯誤題並聚焦；載入既有（含固定 8 欄有意義 key 如 `nickname`）表單時，其 key 顯示於進階區、未發布可改；發布後表單為乾淨唯讀摘要、不顯示 key 輸入；匯出 CSV/xlsx 欄名仍為題目 `label`（不是 key）
 
 ---
 
